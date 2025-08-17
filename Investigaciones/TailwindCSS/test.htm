@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Gestión Universitaria - Demo TailwindCSS</title>
+
+  <!-- 🚀 TailwindCSS cargado por CDN (ideal para pruebas rápidas)
+       En proyectos reales se recomienda instalarlo con npm -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<!-- bg-gray-100 = color de fondo gris claro
+     text-gray-800 = texto gris oscuro
+     flex flex-col min-h-screen = diseño flexible en columnas ocupando el alto completo de la pantalla -->
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+
+  <!-- =========================
+       HEADER (barra superior)
+  ========================== -->
+  <header class="bg-blue-700 text-white shadow-md">
+    <div class="container mx-auto flex justify-between items-center p-4">
+      <!-- Título/logo -->
+      <h1 class="text-2xl font-bold">SGU - Demo</h1>
+
+      <!-- Navegación -->
+      <nav class="space-x-4">
+        <a href="#" class="hover:underline">Inicio</a>
+        <a href="#" class="hover:underline">Usuarios</a>
+        <a href="#" class="hover:underline">Cursos</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- =========================
+       CONTENIDO PRINCIPAL
+  ========================== -->
+  <main class="flex-grow">
+
+    <!-- === SECCIÓN HERO (saludo principal) === -->
+    <section class="bg-white py-12 shadow-md">
+      <div class="container mx-auto text-center">
+        <!-- Título grande -->
+        <h2 class="text-4xl font-bold mb-4">
+          ¡Bienvenido al Sistema de Gestión Universitaria!
+        </h2>
+
+        <!-- Texto descriptivo -->
+        <p class="text-lg text-gray-600 mb-6">
+          Este es un ejemplo práctico usando 
+          <span class="font-semibold text-blue-600">TailwindCSS</span>
+          inspirado en el informe técnico.
+        </p>
+
+        <!-- Botón de acción -->
+        <button class="bg-blue-600 hover:bg-blue-800 
+                       text-white font-semibold px-6 py-2 
+                       rounded-lg shadow-md transition">
+          Crear Usuario
+        </button>
+      </div>
+    </section>
+
+    <!-- === SECCIÓN TABLA DE USUARIOS === -->
+    <section class="container mx-auto my-12">
+      <!-- Subtítulo -->
+      <h3 class="text-2xl font-semibold mb-4">Usuarios registrados</h3>
+
+      <!-- Contenedor de la tabla -->
+      <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+
+        <!-- Tabla con usuarios -->
+        <table class="min-w-full border-collapse">
+          <thead>
+            <tr class="bg-gray-200 text-gray-700">
+              <th class="p-3 text-left">Nombre</th>
+              <th class="p-3 text-left">Rol</th>
+              <th class="p-3 text-left">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Fila 1 -->
+            <tr class="border-b">
+              <td class="p-3">Juan Pérez</td>
+              <td class="p-3">Estudiante</td>
+              <td class="p-3">
+                <!-- Botón de eliminar -->
+                <button class="bg-red-500 hover:bg-red-700 
+                               text-white px-3 py-1 rounded">
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+            <!-- Fila 2 -->
+            <tr class="border-b">
+              <td class="p-3">María González</td>
+              <td class="p-3">Profesor</td>
+              <td class="p-3">
+                <button class="bg-red-500 hover:bg-red-700 
+                               text-white px-3 py-1 rounded">
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- =========================
+       FOOTER (pie de página)
+  ========================== -->
+  <footer class="bg-gray-800 text-gray-200 py-4">
+    <div class="container mx-auto text-center">
+      <p>&copy; 2025 Sistema de Gestión Universitaria. 
+         Todos los derechos reservados.</p>
+      <p class="text-sm mt-2">
+        Diseñado con <span class="text-blue-400">TailwindCSS</span>
+      </p>
+    </div>
+  </footer>
+
+</body>
+</html>
