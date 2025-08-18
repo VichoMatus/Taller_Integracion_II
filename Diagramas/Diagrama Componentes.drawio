@@ -1,0 +1,61 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36" version="27.2.0">
+  <diagram name="Diagrama de Componentes" id="Cz2scdqk3kK1Zv2MpOPM">
+    <mxGraphModel dx="1042" dy="562" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="3300" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="rrSeAakEbnbv5VYlfjyR-12" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Aplicación Web&#xa;(Next.js + Tailwind)&#xa;Hosting: Vercel&#xa;Admins/Profesores" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#2F80ED;fillColor=#EAF4FE;" vertex="1" parent="1">
+          <mxGeometry x="40" y="380" width="270" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="rrSeAakEbnbv5VYlfjyR-14" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Repositorio&#xa;(GitHub)&#xa;Ramas: Web, API, Movil" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#000000;fillColor=#F2F2F2;" vertex="1" parent="1">
+          <mxGeometry x="413.9" y="270" width="256.1" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="rrSeAakEbnbv5VYlfjyR-15" value="&lt;&lt;component&gt;&#xa;&#xa;&gt;Backend + API&#xa;(FastAPI + SQLAlchemy)&#xa;Hosting: Railway" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#F39C12;fillColor=#FEF5E7;" vertex="1" parent="1">
+          <mxGeometry x="423.9" y="470" width="270" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="rrSeAakEbnbv5VYlfjyR-16" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Aplicacion Movil&#xa;(Flutter Android/IOS)&#xa;Estudiantes/Profesores" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#27AE60;fillColor=#E9F7EF;" vertex="1" parent="1">
+          <mxGeometry x="40" y="530" width="260" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="rrSeAakEbnbv5VYlfjyR-17" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Base de Datos&#xa;(PostgreSQL)&#xa;Hosting: Railway/Heroku&#xa;Tablas: usuarios, cursos, horarios, &#xa;asistencias, noticias, calificaciones, eventos&#xa;" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#8E44AD;fillColor=#F5EEF8;" vertex="1" parent="1">
+          <mxGeometry x="780" y="400" width="310" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="rrSeAakEbnbv5VYlfjyR-18" style="dashed=1;endArrow=open;strokeColor=#263238;entryX=0.995;entryY=0.442;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.061;exitY=0.864;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="rrSeAakEbnbv5VYlfjyR-14" target="rrSeAakEbnbv5VYlfjyR-12">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="423.9" y="370" as="sourcePoint" />
+            <mxPoint x="313.63" y="428.18000000000006" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rrSeAakEbnbv5VYlfjyR-19" style="dashed=1;endArrow=open;strokeColor=#263238;entryX=0.985;entryY=-0.016;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="427.9" y="380" as="sourcePoint" />
+            <mxPoint x="299.9999999999999" y="548.1600000000001" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rrSeAakEbnbv5VYlfjyR-20" style="dashed=1;endArrow=open;strokeColor=#263238;entryX=0.454;entryY=-0.026;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" target="rrSeAakEbnbv5VYlfjyR-15">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="548.4" y="380" as="sourcePoint" />
+            <mxPoint x="548.4" y="430" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rrSeAakEbnbv5VYlfjyR-21" style="endArrow=block;endFill=1;strokeColor=#FBC02D;entryX=0.045;entryY=0.54;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" target="rrSeAakEbnbv5VYlfjyR-17">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="693.9" y="500" as="sourcePoint" />
+            <mxPoint x="802.4999999999999" y="453.78999999999996" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rrSeAakEbnbv5VYlfjyR-22" style="endArrow=block;endFill=1;strokeColor=light-dark(#AD1457,#3333FF);entryX=0.06;entryY=0.166;entryDx=0;entryDy=0;entryPerimeter=0;fillColor=light-dark(transparent,#3333FF);exitX=0.986;exitY=0.609;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="rrSeAakEbnbv5VYlfjyR-12" target="rrSeAakEbnbv5VYlfjyR-15">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="313.9" y="448" as="sourcePoint" />
+            <mxPoint x="373.9" y="462" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rrSeAakEbnbv5VYlfjyR-23" style="endArrow=block;endFill=1;strokeColor=#00695C;entryX=0.057;entryY=0.486;entryDx=0;entryDy=0;entryPerimeter=0;exitX=1;exitY=0.75;exitDx=0;exitDy=0;" edge="1" parent="1" source="rrSeAakEbnbv5VYlfjyR-16" target="rrSeAakEbnbv5VYlfjyR-15">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="303.9" y="606" as="sourcePoint" />
+            <mxPoint x="363.9" y="590" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Página con Sidebar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex">
+
+  <!-- Sidebar (barra lateral izquierda) -->
+  <aside class="hidden md:flex md:flex-col w-64 h-screen bg-gray-800 text-white p-4">
+    <!-- Título del proyecto -->
+    <h1 class="text-2xl font-bold mb-6">LSane</h1>
+
+    <!-- Navegación -->
+    <nav class="flex flex-col space-y-4">
+      <a href="#" class="hover:bg-gray-700 p-2 rounded">Inicio</a>
+      <a href="#" class="hover:bg-gray-700 p-2 rounded">Acerca de</a>
+      <a href="#" class="hover:bg-gray-700 p-2 rounded">Proyectos</a>
+      <a href="#" class="hover:bg-gray-700 p-2 rounded">Contacto</a>
+    </nav>
+  </aside>
+
+  <!-- Contenido principal -->
+  <div class="flex-1 flex flex-col min-h-screen">
+    <!-- Header SOLO visible en móviles -->
+    <header class="md:hidden bg-gray-800 text-white flex justify-between items-center p-4">
+      <h1 class="text-xl font-bold">LSane</h1>
+      <!-- Botón menú hamburguesa (para móviles) -->
+      <button id="menu-btn" class="focus:outline-none">
+        ☰
+      </button>
+    </header>
+
+    <!-- Menú desplegable en móviles -->
+    <nav id="mobile-menu" class="hidden md:hidden bg-gray-700 text-white flex-col space-y-2 p-4">
+      <a href="#" class="hover:bg-gray-600 p-2 rounded">Inicio</a>
+      <a href="#" class="hover:bg-gray-600 p-2 rounded">Acerca de</a>
+      <a href="#" class="hover:bg-gray-600 p-2 rounded">Proyectos</a>
+      <a href="#" class="hover:bg-gray-600 p-2 rounded">Contacto</a>
+    </nav>
+
+    <!-- Contenido -->
+    <main class="flex-1 p-6">
+      <h2 class="text-3xl font-bold mb-4">¡Hola, bienvenido!</h2>
+      <p class="text-gray-700">
+        Esta es una página de prueba con <span class="font-semibold">TailwindCSS</span>.  
+        Se ha construido utilizando información del LATEX anteriormente creado:
+      </p>
+      <ul class="list-disc list-inside mt-4 text-gray-600">
+        <li>Uso de <b>TailwindCSS</b> para maquetar rápidamente.</li>
+        <li>Diseño adaptable (sidebar en escritorio, menú hamburguesa en móviles).</li>
+        <li>Estructura fácil de modificar y expandir.</li>
+      </ul>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white text-center p-4">
+      © 2025 - Proyecto LSane | Desarrollado con TailwindCSS
+    </footer>
+  </div>
+
+  <!-- Script para activar menú hamburguesa en móviles -->
+  <script>
+    const menuBtn = document.getElementById("menu-btn");
+    const mobileMenu = document.getElementById("mobile-menu");
+
+    menuBtn.addEventListener("click", () => {
+      // Alterna entre ocultar/mostrar el menú en móviles
+      mobileMenu.classList.toggle("hidden");
+    });
+  </script>
+</body>
+</html>
