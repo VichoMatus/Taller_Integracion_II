@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+# Archivos y carpetas generados por Docker
+.docker/
+docker-data/
+*.log
