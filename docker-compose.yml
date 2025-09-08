@@ -1,16 +1,34 @@
-version: '3.8'
 services:
-  nextjs:
-    build: .
+  frontend:
+    build: ./sporthub-temuco
     ports:
       - "3000:3000"
     volumes:
-      - .:/app
+      - ./sporthub-temuco:/app
       - /app/node_modules
     environment:
       - NODE_ENV=development
     command: npm run dev
     restart: unless-stopped
+
+  backend:
+    build: ./backend
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=db
+      - DB_USER=sporthub_admin
+      - DB_PASS=1234
+      - DB_NAME=sporthubBD
+    depends_on:
+      - db
+    command: npm run dev
+    restart: unless-stopped
+
   db:
     image: postgres:13
     container_name: pg_local
@@ -23,5 +41,6 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+
 volumes:
   pgdata:
