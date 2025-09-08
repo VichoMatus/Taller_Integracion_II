@@ -1,0 +1,1 @@
+Esta carpeta contiene archivos estáticos que se sirven directamente al navegador, como imágenes, íconos, fuentes, y otros recursos. Todo lo que pongas aquí estará disponible en la raíz del sitio web (por ejemplo, public/favicon.ico será accesible como https://tusitio.com/favicon.ico). No se procesa ni transpila, solo se copia tal cual al build final.
