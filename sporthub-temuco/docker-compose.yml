@@ -11,3 +11,17 @@ services:
       - NODE_ENV=development
     command: npm run dev
     restart: unless-stopped
+  db:
+    image: postgres:13
+    container_name: pg_local
+    restart: always
+    environment:
+      POSTGRES_USER: sporthub_admin
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: sporthubBD
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+volumes:
+  pgdata:

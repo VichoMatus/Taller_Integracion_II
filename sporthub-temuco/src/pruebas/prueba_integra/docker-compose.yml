@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    container_name: pg_local
+    restart: always
+    environment:
+      POSTGRES_USER: sporthub_admin
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: sporthubBD
+    ports:
+      - "5432:5432"                 
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

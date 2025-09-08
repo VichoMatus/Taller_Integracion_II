@@ -1,0 +1,3 @@
+La carpeta styles se utiliza para almacenar archivos de estilos CSS (hojas de estilo) que definen la apariencia visual de la aplicación. Aquí puedes poner archivos globales, temas, variables CSS, o estilos compartidos que serán usados en diferentes partes del proyecto.
+
+Por ejemplo, en tu proyecto, el archivo styles/globals.css probablemente contiene estilos globales que se aplican a toda la aplicación, como tipografías, colores, márgenes, y reglas generales de diseño.
