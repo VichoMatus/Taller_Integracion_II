@@ -1,7 +1,13 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Ignorar cualquier archivo .env en cualquier carpeta
+.env*
+**/.env*
+# Ignorar cualquier carpeta node_modules en cualquier carpeta
+node_modules/
+**/node_modules/
 
 # dependencies
-/node_modules
+/.pnp
 /.pnp
 .pnp.*
 .yarn/*
@@ -14,7 +20,8 @@
 /coverage
 
 # next.js
-/.next/
+/next/
+**/.next/
 /out/
 
 # production
