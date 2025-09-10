@@ -34,13 +34,28 @@ services:
     container_name: pg_local
     restart: always
     environment:
-      POSTGRES_USER: sporthub_admin
-      POSTGRES_PASSWORD: 1234
-      POSTGRES_DB: sporthubBD
+      DOCKER_POSTGRES_USER: ${DOCKER_POSTGRES_USER}
+      DOCKER_POSTGRES_PASSWORD: ${DOCKER_POSTGRES_PASSWORD}
+      DOCKER_POSTGRES_DB: ${DOCKER_POSTGRES_DB}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+
+ 
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    # http://localhost:8080
+
 
 volumes:
   pgdata:
