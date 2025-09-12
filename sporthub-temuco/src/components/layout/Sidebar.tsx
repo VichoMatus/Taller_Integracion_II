@@ -4,10 +4,14 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-const Sidebar = () => {
+interface SidebarProps {
+  userRole: 'admin' | 'superadmin';
+}
+
+const Sidebar = ({ userRole }: SidebarProps) => {
   const pathname = usePathname();
 
-  const menuItems = [
+  const adminMenuItems = [
     {
       name: 'Dashboard',
       icon: '📊',
@@ -46,6 +50,48 @@ const Sidebar = () => {
     }
   ];
 
+  const superAdminMenuItems = [
+    {
+      name: 'Dashboard',
+      icon: '📊',
+      href: '/superadmin',
+      active: pathname === '/superadmin'
+    },
+    {
+      name: 'Gestión Administradores',
+      icon: '👥',
+      href: '/superadmin/administradores',
+      active: pathname === '/superadmin/administradores'
+    },
+    {
+      name: 'Gestión Usuarios',
+      icon: '👤',
+      href: '/superadmin/usuarios',
+      active: pathname === '/superadmin/usuarios'
+    },
+    {
+      name: 'Gestión de Canchas',
+      icon: '🏟️',
+      href: '/superadmin/canchas',
+      active: pathname === '/superadmin/canchas'
+    },
+    {
+      name: 'Estadísticas Globales',
+      icon: '📈',
+      href: '/superadmin/estadisticas',
+      active: pathname === '/superadmin/estadisticas'
+    },
+    {
+      name: 'Perfil',
+      icon: '🔧',
+      href: '/superadmin/perfil',
+      active: pathname === '/superadmin/perfil'
+    }
+  ];
+
+  const menuItems = userRole === 'superadmin' ? superAdminMenuItems : adminMenuItems;
+  const userTitle = userRole === 'superadmin' ? 'Superadministrador' : 'Administrador';
+
   return (
     <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-lg border-r border-gray-200 z-40">
       {/* Logo/Header */}
@@ -56,7 +102,7 @@ const Sidebar = () => {
           </div>
           <div>
             <h1 className="text-lg font-semibold text-gray-900">SportHub</h1>
-            <p className="text-sm text-gray-500">Administrador</p>
+            <p className="text-sm text-gray-500">{userTitle}</p>
           </div>
         </div>
       </div>
