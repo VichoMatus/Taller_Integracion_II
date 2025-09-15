@@ -17,6 +17,10 @@ interface StatsCardProps {
   color?: CardColor;
   onClick?: () => void;
   className?: string;
+  loading?: boolean;               // Skeleton loading
+  empty?: boolean;                 // Mostrar estado vacío (sin datos)
+  emptyMessage?: string;           // Mensaje cuando no hay datos
+  ariaLabel?: string;              // Accesibilidad para el card
 }
 
 const StatsCard: React.FC<StatsCardProps> = ({
@@ -27,7 +31,11 @@ const StatsCard: React.FC<StatsCardProps> = ({
   trend,
   color = 'blue',
   onClick,
-  className = ''
+  className = '',
+  loading = false,
+  empty = false,
+  emptyMessage = 'Sin datos',
+  ariaLabel
 }) => {
   // Color variants
   const colorVariants = {
@@ -38,21 +46,43 @@ const StatsCard: React.FC<StatsCardProps> = ({
     yellow: 'bg-yellow-50 text-yellow-600'
   };
 
+  // Skeleton
+  if (loading) {
+    return (
+      <div
+        className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 ${className}`}
+        aria-busy="true"
+        aria-label={ariaLabel || title}
+      >
+        <div className="flex items-start justify-between animate-pulse">
+          <div className="flex-1">
+            <div className="h-4 w-28 bg-gray-200 rounded mb-3" />
+            <div className="h-6 w-32 bg-gray-200 rounded mb-4" />
+            <div className="h-3 w-16 bg-gray-100 rounded" />
+          </div>
+          <div className="p-3 rounded-full bg-gray-200 w-12 h-12" />
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div 
+    <div
       className={`bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 ${onClick ? 'cursor-pointer' : ''} ${className}`}
       onClick={onClick}
+      role="group"
+      aria-label={ariaLabel || title}
     >
       <div className="flex items-start justify-between">
         <div>
-          <div className="text-lg font-medium text-gray-700 mb-1">
-            {title}
-          </div>
-          <div className="text-2xl font-bold text-gray-900 mb-1">
-            {value}
-          </div>
+          <div className="text-lg font-medium text-gray-700 mb-1">{title}</div>
+          {empty ? (
+            <div className="text-sm text-gray-400" role="note">{emptyMessage}</div>
+          ) : (
+            <div className="text-2xl font-bold text-gray-900 mb-1" aria-live="polite">{value}</div>
+          )}
           
-          {trend && (
+          {!empty && trend && (
             <div className="flex items-center mt-2">
               {trend.isPositive ? (
                 <svg className="w-4 h-4 text-green-500 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -70,14 +100,14 @@ const StatsCard: React.FC<StatsCardProps> = ({
             </div>
           )}
           
-          {subtitle && (
+          {!empty && subtitle && (
             <div className="text-sm text-blue-600 hover:text-blue-800 mt-2">
               {subtitle}
             </div>
           )}
         </div>
         
-        <div className={`p-3 rounded-full ${colorVariants[color]}`}>
+        <div className={`p-3 rounded-full ${colorVariants[color]}`} aria-hidden={empty}>
           {icon}
         </div>
       </div>
