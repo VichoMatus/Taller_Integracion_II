@@ -90,11 +90,13 @@ body {
   margin-left: 200px;
   padding: 20px;
   background-color: var(--light-gray);
-  min-height: 100vh;
+  /* Permitir que la página haga scroll global para ver el Footer */
+  min-height: 0; /* antes: 100vh; esto atrapaba el scroll dentro de main-content */
   display: flex;
   flex-direction: column;
-  max-height: 100vh;
-  overflow-y: auto;
+  max-height: none;
+  overflow: visible;
+  padding-bottom: 4rem; /* espacio de respiración antes del Footer global */
 }
 
 /* Header */
@@ -385,4 +387,26 @@ body {
 
 .footer-links a:hover {
   text-decoration: underline;
+}
+
+/* Overrides para el Footer global (Next) dentro de la página de Admin)
+   Evita que el sidebar fijo lo tape y mejora contraste temporalmente. */
+footer[role='contentinfo'] {
+  /* Alinear con el contenido principal para no quedar bajo el sidebar */
+  margin-left: 200px;
+  /* Asegurar legibilidad mínima en esta vista */
+  background-color: var(--white);
+  color: var(--primary-dark);
+  border-top: 1px solid var(--border-color);
+}
+
+footer[role='contentinfo'] a {
+  color: var(--accent-blue);
+}
+
+/* En móvil, el sidebar suele colapsar, retiramos el margen */
+@media (max-width: 768px) {
+  footer[role='contentinfo'] {
+    margin-left: 0;
+  }
 }

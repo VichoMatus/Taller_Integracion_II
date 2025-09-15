@@ -266,19 +266,7 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="footer">
-          <div className="footer-content">
-            <div className="footer-copyright">
-              &copy; 2024 SportHub Temuco. Todos los derechos reservados.
-            </div>
-            <div className="footer-links">
-              <span>Versión 1.0.0</span>
-              <span>•</span>
-              <a href="#">Soporte</a>
-            </div>
-          </div>
-        </div>
+  {/* Footer global ya está en app/layout.tsx */}
       </div>
     </div>
   );
