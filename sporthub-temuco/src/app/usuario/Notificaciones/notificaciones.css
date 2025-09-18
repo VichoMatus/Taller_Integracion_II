@@ -1,0 +1,84 @@
+.notificaciones-container {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+  min-height: 80vh;
+}
+
+.cancha-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 30%;
+}
+
+.cancha-boton {
+  background-color: #b5e3b5;
+  border-radius: 10px;
+  padding: 12px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  transition: background 0.2s ease;
+}
+
+.cancha-boton:hover {
+  background-color: #98d698;
+}
+
+.panel-derecho {
+  flex: 1;
+  background: white;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+}
+
+.cancha-titulo {
+  font-size: 20px;
+  font-weight: bold;
+  color: #2c7a2c;
+  margin-bottom: 4px;
+}
+
+.cancha-subtitulo {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 15px;
+}
+
+.mensajes-titulo {
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.mensajes-contenedor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 350px;
+  overflow-y: auto;
+}
+
+.mensaje-card {
+  background-color: #f5f5f5;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.mensaje-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: gray;
+  margin-bottom: 5px;
+}
+
+.no-mensajes {
+  text-align: center;
+  color: #aaa;
+}

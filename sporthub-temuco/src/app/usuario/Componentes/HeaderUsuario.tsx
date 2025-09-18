@@ -1,7 +1,6 @@
 "use client";
 
 export default function HeaderUsuario() {
-  // Estado manual para el menú
   let menuOpen = false;
   let menuRef: HTMLDivElement | null = null;
 
@@ -48,14 +47,13 @@ export default function HeaderUsuario() {
   return (
     <header className="p-6 bg-[#EEF2F1]">
       <div className="flex justify-between items-center gap-8">
-        {/* Mensaje de bienvenida */}
+
         <div className="text-2xl font-semibold text-[#232124] ml-2 min-w-[220px] flex items-center justify-center">
           Bienvenido, Usuario
         </div>
 
-        {/* Buscador y perfil */}
+
         <div className="flex items-center gap-6">
-          {/* Buscador */}
           <div
             className="flex items-center bg-[#B8CFCE] rounded-full"
             style={{
@@ -84,7 +82,6 @@ export default function HeaderUsuario() {
             <span className="ml-3 text-xl text-[#4B484E] select-none">🔍</span>
           </div>
 
-          {/* Usuario con menú */}
           <div className="relative flex items-center justify-center" ref={setMenuRef as any}>
             <div
               className="flex items-center gap-2 bg-[#B8CFCE] px-6 py-1 rounded-full cursor-pointer"
@@ -109,7 +106,6 @@ export default function HeaderUsuario() {
               <span className="text-sm text-[#232124]">▼</span>
             </div>
 
-            {/* Menú desplegable */}
             <div
               id="dropdown-menu"
               style={{
