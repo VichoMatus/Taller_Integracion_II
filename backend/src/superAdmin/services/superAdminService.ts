@@ -1,24 +1,56 @@
+/**
+ * SERVICIO SUPERADMIN - CLIENTE HTTP PARA API FASTAPI
+ * ===================================================
+ * 
+ * Este servicio actúa como un cliente HTTP que consume la API FastAPI hosteada en OpenCloud.
+ * Implementa el patrón Backend-for-Frontend (BFF), actuando como proxy entre el frontend
+ * React/Next.js y la API externa.
+ * 
+ * Funcionalidades principales:
+ * - Autenticación con JWT tokens
+ * - Gestión de usuarios del sistema
+ * - Administración de complejos deportivos
+ * - Funciones específicas de SuperAdmin
+ * - Dashboard y búsquedas globales
+ * 
+ * Uso desde el frontend:
+ * - El frontend hace llamadas a este backend (Node.js)
+ * - Este servicio traduce las llamadas a la API FastAPI
+ * - Retorna datos estandarizados en formato ApiResponse<T>
+ */
+
 import axios, { AxiosInstance } from 'axios';
 import { API_CONFIG } from '../../config/config';
 import { LoginRequest, TokenResponse, ApiResponse } from '../types/superAdminTypes';
 
-// Servicio simplificado que maneja directamente las peticiones a la API FastAPI
+/**
+ * CLASE PRINCIPAL DEL SERVICIO SUPERADMIN
+ * =======================================
+ */
 export class SuperAdminService {
-  private apiClient: AxiosInstance;
-  private authToken: string | null = null;
+  private apiClient: AxiosInstance; // Cliente HTTP configurado para la API FastAPI
+  private authToken: string | null = null; // Token JWT almacenado en memoria
 
+  /**
+   * CONSTRUCTOR - Configuración inicial
+   * ===================================
+   * Inicializa el cliente HTTP con configuración base y interceptors
+   */
   constructor() {
+    // Crear instancia de axios con configuración base
     this.apiClient = axios.create({
-      baseURL: API_CONFIG.baseURL,
-      timeout: API_CONFIG.timeout,
-      headers: API_CONFIG.headers,
+      baseURL: API_CONFIG.baseURL,   // URL base de la API FastAPI
+      timeout: API_CONFIG.timeout,   // Timeout para requests
+      headers: API_CONFIG.headers,   // Headers por defecto
     });
 
-    // Interceptor para autenticación
+    // Interceptor para agregar autenticación automáticamente
     this.apiClient.interceptors.request.use((config) => {
+      // Agregar token Bearer si está disponible
       if (this.authToken) {
         config.headers.Authorization = `Bearer ${this.authToken}`;
       }
+      // Agregar API Key si está configurada
       if (API_CONFIG.apiKey) {
         config.headers['X-API-Key'] = API_CONFIG.apiKey;
       }
@@ -26,16 +58,26 @@ export class SuperAdminService {
     });
   }
 
-  // Autenticación
+  /**
+   * MÉTODOS DE AUTENTICACIÓN
+   * ========================
+   */
+
+  /**
+   * Autenticar usuario en el sistema
+   * @param credentials - Email y contraseña del usuario
+   * @returns Promise<ApiResponse<TokenResponse>> - Tokens y datos del usuario
+   */
   async login(credentials: LoginRequest): Promise<ApiResponse<TokenResponse>> {
     try {
       const response = await this.apiClient.post('/api/v1/auth/login', credentials);
       
-      // Verificar rol de superadmin
+      // Verificar que el usuario tiene permisos de administrador
       if (response.data.user.rol !== 'superadmin' && response.data.user.rol !== 'admin') {
-        return { ok: false, error: 'Usuario no autorizado' };
+        return { ok: false, error: 'Usuario no autorizado para el panel de administración' };
       }
 
+      // Almacenar token para futuras peticiones
       this.authToken = response.data.access_token;
       return { ok: true, data: response.data };
     } catch (error: any) {
@@ -43,17 +85,31 @@ export class SuperAdminService {
     }
   }
 
+  /**
+   * Cerrar sesión del usuario
+   * @param refreshToken - Token de refresco para invalidar
+   * @returns Promise<ApiResponse> - Confirmación de logout
+   */
   async logout(refreshToken: string): Promise<ApiResponse> {
     try {
       await this.apiClient.post('/api/v1/auth/logout', { refresh_token: refreshToken });
-      this.authToken = null;
-      return { ok: true };
+      this.authToken = null; // Limpiar token almacenado
+      return { ok: true, message: 'Sesión cerrada exitosamente' };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al cerrar sesión' };
     }
   }
 
-  // Usuarios - Proxy directo a la API
+  /**
+   * MÉTODOS DE GESTIÓN DE USUARIOS
+   * ==============================
+   */
+
+  /**
+   * Obtener lista de usuarios con paginación y filtros
+   * @param params - Parámetros de consulta (page, page_size, filtros)
+   * @returns Promise<ApiResponse> - Lista paginada de usuarios
+   */
   async getUsers(params: any = {}): Promise<ApiResponse> {
     try {
       const response = await this.apiClient.get('/api/v1/usuarios', { params });
@@ -63,6 +119,9 @@ export class SuperAdminService {
     }
   }
 
+  /**
+   * Obtener usuario específico por ID
+   */
   async getUserById(id: number): Promise<ApiResponse> {
     try {
       const response = await this.apiClient.get(`/api/v1/usuarios/${id}`);
@@ -72,6 +131,9 @@ export class SuperAdminService {
     }
   }
 
+  /**
+   * Actualizar datos de usuario
+   */
   async updateUser(id: number, data: any): Promise<ApiResponse> {
     try {
       const response = await this.apiClient.patch(`/api/v1/usuarios/${id}`, data);
@@ -81,16 +143,24 @@ export class SuperAdminService {
     }
   }
 
+  /**
+   * Desactivar/eliminar usuario (soft delete)
+   */
   async deleteUser(id: number): Promise<ApiResponse> {
     try {
       await this.apiClient.delete(`/api/v1/usuarios/${id}`);
-      return { ok: true, message: 'Usuario desactivado' };
+      return { ok: true, message: 'Usuario desactivado correctamente' };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al desactivar usuario' };
     }
   }
 
-  // Complejos - Proxy directo a la API
+  /**
+   * MÉTODOS DE GESTIÓN DE COMPLEJOS DEPORTIVOS
+   * ==========================================
+   */
+
+  /** Obtener lista de complejos con filtros y paginación */
   async getComplejos(params: any = {}): Promise<ApiResponse> {
     try {
       const response = await this.apiClient.get('/api/v1/complejos', { params });

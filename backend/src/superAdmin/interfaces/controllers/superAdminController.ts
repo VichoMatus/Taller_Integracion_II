@@ -1,8 +1,40 @@
+/**
+ * CONTROLADOR SUPERADMIN - ENDPOINTS HTTP
+ * ======================================
+ * 
+ * Este controlador define los endpoints HTTP que el frontend puede consumir.
+ * Actúa como intermediario entre las peticiones del cliente y el servicio que consume la API FastAPI.
+ * 
+ * Patrón utilizado: Backend-for-Frontend (BFF)
+ * - Recibe peticiones HTTP del frontend React/Next.js
+ * - Delega la lógica al SuperAdminService
+ * - Retorna respuestas estandarizadas
+ * 
+ * Endpoints disponibles:
+ * - POST /api/superadmin/auth/login - Autenticación
+ * - POST /api/superadmin/auth/logout - Cerrar sesión
+ * - GET /api/superadmin/users - Listar usuarios
+ * - GET /api/superadmin/users/:id - Obtener usuario
+ * - PATCH /api/superadmin/users/:id - Actualizar usuario
+ * - DELETE /api/superadmin/users/:id - Eliminar usuario
+ * - GET /api/superadmin/complejos - Listar complejos
+ * - GET /api/superadmin/complejos/:id - Obtener complejo
+ * - GET /api/superadmin/complejos/:id/canchas - Canchas del complejo
+ * - POST /api/superadmin/system/parameters - Configuración sistema
+ * - GET /api/superadmin/system/statistics - Estadísticas
+ * - GET /api/superadmin/system/logs - Logs del sistema
+ * - GET /api/superadmin/dashboard - Datos del dashboard
+ * - GET /api/superadmin/search?q=term - Búsqueda global
+ */
+
 import { Request, Response } from 'express';
 import { SuperAdminService } from '../../services/superAdminService';
 import { LoginRequest } from '../../types/superAdminTypes';
 
-// Controlador simplificado - Solo pasa datos entre frontend y API
+/**
+ * CLASE CONTROLADOR PRINCIPAL
+ * ===========================
+ */
 export class SuperAdminController {
   private service: SuperAdminService;
 
@@ -10,7 +42,17 @@ export class SuperAdminController {
     this.service = new SuperAdminService();
   }
 
-  // Auth
+  /**
+   * ENDPOINTS DE AUTENTICACIÓN
+   * ==========================
+   */
+
+  /**
+   * POST /auth/login
+   * Autenticar usuario administrador
+   * Body: { email: string, password: string }
+   * Response: { ok: boolean, data?: TokenResponse, error?: string }
+   */
   login = async (req: Request, res: Response): Promise<void> => {
     try {
       const credentials: LoginRequest = req.body;
@@ -23,6 +65,11 @@ export class SuperAdminController {
     }
   };
 
+  /**
+   * POST /auth/logout
+   * Cerrar sesión del usuario
+   * Body: { refresh_token: string }
+   */
   logout = async (req: Request, res: Response): Promise<void> => {
     try {
       const { refresh_token } = req.body;
@@ -33,7 +80,16 @@ export class SuperAdminController {
     }
   };
 
-  // Users - Proxy directo
+  /**
+   * ENDPOINTS DE GESTIÓN DE USUARIOS
+   * ================================
+   */
+
+  /**
+   * GET /users
+   * Listar usuarios con paginación y filtros
+   * Query params: ?page=1&page_size=20&q=search&rol=admin
+   */
   getUsers = async (req: Request, res: Response): Promise<void> => {
     try {
       const result = await this.service.getUsers(req.query);
