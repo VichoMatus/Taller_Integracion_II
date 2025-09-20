@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { ENV } from "@config/env";
+import { ENV } from "../../../config/env";
 import { buildHttpClient } from "../../../infra/http/client";
 import { getBearerFromReq } from "../../../interfaces/auth";
 import { AdminApiRepository } from "../../../admin/infraestructure/AdminApiRepository";

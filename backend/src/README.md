@@ -7,10 +7,14 @@ Este backend implementa un sistema de gestión de usuarios con arquitectura hexa
 ```
 src/
 ├── admin/                 # Módulo de administración
+├── canchas/              # Módulo de canchas
+├── complejos/            # Módulo de complejos
+├── reservas/             # Módulo de reservas
 ├── domain/               # Entidades del dominio
 ├── app/                  # Utilidades comunes de aplicación
 ├── infra/                # Infraestructura (HTTP, base de datos)
 ├── interfaces/           # Interfaces y contratos
+├── config/               # Configuración centralizada
 └── index.ts             # Punto de entrada de la aplicación
 ```
 
@@ -57,6 +61,29 @@ Definiciones de contratos y estructuras de datos.
 
 - **API Envelope**: Formato estándar de respuestas API
 - **Auth utilities**: Utilidades de autenticación
+
+### 📁 `/reservas` - Módulo de Reservas
+Gestión completa de reservas de canchas deportivas.
+
+**Funcionalidades:**
+- CRUD de reservas con validaciones de negocio
+- Verificación de disponibilidad en tiempo real
+- Gestión de pagos y confirmaciones
+- Sistema de cancelaciones con motivos
+- Filtros avanzados por usuario, cancha, fecha, estado
+
+**Endpoints principales:**
+```
+GET    /reservas                       # Listar reservas (admin)
+POST   /reservas                       # Crear nueva reserva
+GET    /reservas/:id                   # Obtener reserva específica
+PATCH  /reservas/:id                   # Actualizar reserva
+DELETE /reservas/:id                   # Eliminar reserva (admin)
+POST   /reservas/verificar-disponibilidad # Verificar disponibilidad
+GET    /reservas/usuario/:usuarioId    # Reservas de un usuario
+POST   /reservas/:id/confirmar-pago    # Confirmar pago
+POST   /reservas/:id/cancelar          # Cancelar reserva
+```
 
 ## Sistema de Roles
 
@@ -119,6 +146,7 @@ module/
 ├── application/      # Casos de uso
 ├── infrastructure/   # Implementaciones
 └── presentation/     # Controladores y rutas
+└── config/           # 
 ```
 
 ### Patrones Implementados
