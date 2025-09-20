@@ -1,0 +1,124 @@
+
+
+* {
+  box-sizing: border-box;
+}
+.superadmin-dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f3f6f7;
+}
+
+.superadmin-dashboard-main {
+  flex: 1;
+  padding: 2rem 2.5rem;
+  background: #f3f6f7;
+}
+
+.dashboard-title {
+  font-size: 1.7rem;
+  font-weight: 600;
+  margin-bottom: 2rem;
+  color: #222;
+}
+
+.dashboard-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.dashboard-management-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+}
+
+.dashboard-section {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  padding: 1.5rem 1.2rem 1.2rem 1.2rem;
+  margin-bottom: 1.5rem;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  justify-content: flex-start;
+  margin-bottom: 1rem;
+}
+
+.section-header h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #3a4a5a;
+  flex: 1;
+}
+
+.section-add-btn, .section-view-btn {
+  background: #e9ecef;
+  border: none;
+  border-radius: 6px;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.95rem;
+  margin-left: 0.3rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.section-add-btn:hover, .section-view-btn:hover {
+  background: #d1d5db;
+}
+
+.dashboard-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #f8fafc;
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 0.97rem;
+}
+.dashboard-table th {
+  background: #e6f4ea;
+  color: #2d3a3a;
+  font-weight: 600;
+  padding: 0.7rem 0.5rem;
+  text-align: left;
+}
+.dashboard-table td {
+  padding: 0.6rem 0.5rem;
+  background: #fff;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.7rem;
+  border-radius: 12px;
+  font-size: 0.95em;
+  font-weight: 500;
+  color: #fff;
+}
+.badge-success { background: #22c55e; }
+.badge-danger { background: #ef4444; }
+.badge-warning { background: #f59e42; color: #3a2c00; }
+
+.action-btn {
+  background: #f3f4f6;
+  border: none;
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  margin-right: 0.2rem;
+  cursor: pointer;
+  font-size: 1.1em;
+  transition: background 0.2s;
+}
+.action-btn.edit:hover { background: #dbeafe; }
+.action-btn.delete:hover { background: #fee2e2; }
+
+.dashboard-courts-section {
+  margin-top: 1.5rem;
+}
