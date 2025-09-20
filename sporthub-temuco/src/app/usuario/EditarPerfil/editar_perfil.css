@@ -159,6 +159,13 @@ body {
   display: flex;
   flex-direction: column;
   gap: 15px;
+  min-height: 350px; /* Ajusta el mínimo según lo que quieras */
+  max-height: 350px;
+  overflow-y: auto; /* Si el contenido es largo, se activa scroll */
+  background: #f7f7f7;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .textarea-label {
@@ -185,14 +192,17 @@ body {
 
 /* Botón Guardar */
 .btn-save {
-  align-self: flex-end;
+  position: fixed;
+  bottom: 20px;
+  right: 30px;
   background-color: #4ade80;
   border: none;
   border-radius: 20px;
-  padding: 10px 20px;
-  cursor: pointer;
+  padding: 12px 24px;
   font-weight: bold;
-  transition: background 0.3s ease;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
 }
 
 .btn-save:hover {

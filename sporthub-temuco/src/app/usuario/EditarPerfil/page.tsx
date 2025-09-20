@@ -66,11 +66,11 @@ export default function EditarPerfilPage() {
             className="textarea"
             defaultValue="Me gusta jugar a la pelota y ando en busca de una buena aplicación web para poder reservar canchas para jugar a la pelota."
           />
+        </div>
+      </div>
           <button type="button" className="btn-save">
             Guardar Cambios
           </button>
-        </div>
-      </div>
     </div>
   );
 }
