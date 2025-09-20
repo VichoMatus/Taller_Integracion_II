@@ -1,147 +1,191 @@
 "use client";
 
-import Sidebar from "@/components/layout/Sidebar";
-import StatsCard from "@/components/charts/StatsCard";
 import "./dashboard.css";
 
 export default function SuperAdminDashboard() {
   return (
-    <div className="superadmin-dashboard-layout">
-      <Sidebar userRole="superadmin" />
-      <main className="superadmin-dashboard-main">
-        <h1 className="dashboard-title">Bienvenido, Superadministrador</h1>
-        <div className="dashboard-stats-grid">
-          <StatsCard title="Usuarios Totales" value={500} icon={<span>👥</span>} color="blue" />
-          <StatsCard title="Canchas Registradas" value={40} icon={<span>🏠</span>} color="green" />
-          <StatsCard title="Administradores" value={12} icon={<span>🧑‍💼</span>} color="purple" />
-          <StatsCard title="Reservas Hoy" value={10} icon={<span>📅</span>} color="yellow" />
+    <div className="admin-dashboard-container">
+      
+      {/* Grid de estadísticas principales */}
+      <div className="stats-grid">
+        <div className="stats-card">
+          <span className="stats-card-icon">👥</span>
+          <div className="stats-card-value">500</div>
+          <div className="stats-card-title">Usuarios Totales</div>
         </div>
-        <div className="dashboard-management-grid">
-          {/* Gestión Administradores */}
-          <section className="dashboard-section">
-            <div className="section-header">
-              <h2>Gestión Administradores</h2>
-              <button className="section-add-btn">➕ Agregar</button>
-              <button className="section-view-btn">Ver todo</button>
-            </div>
-            <table className="dashboard-table">
-              <thead>
-                <tr>
-                  <th>Administrador</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Ana Lopez</td>
-                  <td><span className="badge badge-success">Activo</span></td>
-                  <td>
-                    <button className="action-btn edit">✏️</button>
-                    <button className="action-btn delete">🗑️</button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Admin123</td>
-                  <td><span className="badge badge-danger">Inactivo</span></td>
-                  <td>
-                    <button className="action-btn edit">✏️</button>
-                    <button className="action-btn delete">🗑️</button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Juan Carlos</td>
-                  <td><span className="badge badge-success">Activo</span></td>
-                  <td>
-                    <button className="action-btn edit">✏️</button>
-                    <button className="action-btn delete">🗑️</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </section>
-          {/* Gestión Usuarios */}
-          <section className="dashboard-section">
-            <div className="section-header">
-              <h2>Gestión Usuarios</h2>
-              <button className="section-view-btn">Ver todo</button>
-            </div>
-            <table className="dashboard-table">
-              <thead>
-                <tr>
-                  <th>Usuario</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Juan Lopez</td>
-                  <td><span className="badge badge-success">Activo</span></td>
-                  <td>
-                    <button className="action-btn edit">✏️</button>
-                    <button className="action-btn delete">🗑️</button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Tiovixo</td>
-                  <td><span className="badge badge-danger">Inactivo</span></td>
-                  <td>
-                    <button className="action-btn edit">✏️</button>
-                    <button className="action-btn delete">🗑️</button>
-                  </td>
-                </tr>
-                <tr>
-                  <td>Patricio Saez</td>
-                  <td><span className="badge badge-warning">Por revisar</span></td>
-                  <td>
-                    <button className="action-btn edit">✏️</button>
-                    <button className="action-btn delete">🗑️</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </section>
+        
+        <div className="stats-card">
+          <span className="stats-card-icon">🏠</span>
+          <div className="stats-card-value">40</div>
+          <div className="stats-card-title">Canchas Registradas</div>
         </div>
-        {/* Gestión de Canchas */}
-        <section className="dashboard-section dashboard-courts-section">
+        
+        <div className="stats-card">
+          <span className="stats-card-icon">🧑‍💼</span>
+          <div className="stats-card-value">12</div>
+          <div className="stats-card-title">Administradores</div>
+        </div>
+        
+        <div className="stats-card">
+          <span className="stats-card-icon">📅</span>
+          <div className="stats-card-value">10</div>
+          <div className="stats-card-title">Reservas Hoy</div>
+        </div>
+      </div>
+
+      {/* Grid de secciones de gestión lado a lado */}
+      <div className="management-sections-grid">
+        {/* Sección Gestionar Administradores */}
+        <div className="management-section">
           <div className="section-header">
-            <h2>Gestión de Canchas</h2>
-            <button className="section-add-btn">➕ Agregar</button>
-            <button className="section-view-btn">Ver todo</button>
+            <h2 className="section-title">Gestionar Administradores</h2>
+            <button className="section-button add-button">
+              <span className="button-icon">+</span>
+              Agregar
+            </button>
+            <button className="section-button view-button">Ver todo</button>
           </div>
-          <table className="dashboard-table">
+          
+          <table className="management-table">
             <thead>
               <tr>
-                <th>Cancha</th>
-                <th>Tipo</th>
+                <th>Administrador</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>Cancha Central</td>
-                <td>Futbol</td>
-                <td><span className="badge badge-success">Disponible</span></td>
+                <td>Ana Lopez</td>
+                <td><span className="status-badge status-active">Activo</span></td>
                 <td>
-                  <button className="action-btn edit">✏️</button>
-                  <button className="action-btn delete">🗑️</button>
+                  <div className="action-buttons">
+                    <button className="action-btn edit">✏️</button>
+                    <button className="action-btn delete">🗑️</button>
+                  </div>
                 </td>
               </tr>
               <tr>
-                <td>Cancha Sur</td>
-                <td>Volleyball</td>
-                <td><span className="badge badge-warning">Mantenimiento</span></td>
+                <td>Admin123</td>
+                <td><span className="status-badge status-inactive">Inactivo</span></td>
                 <td>
-                  <button className="action-btn edit">✏️</button>
-                  <button className="action-btn delete">🗑️</button>
+                  <div className="action-buttons">
+                    <button className="action-btn edit">✏️</button>
+                    <button className="action-btn delete">🗑️</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Juan Carlos</td>
+                <td><span className="status-badge status-active">Activo</span></td>
+                <td>
+                  <div className="action-buttons">
+                    <button className="action-btn edit">✏️</button>
+                    <button className="action-btn delete">🗑️</button>
+                  </div>
                 </td>
               </tr>
             </tbody>
           </table>
-        </section>
-      </main>
+        </div>
+
+        {/* Sección Gestionar Usuarios */}
+        <div className="management-section">
+          <div className="section-header">
+            <h2 className="section-title">Gestionar Usuarios</h2>
+            <button className="section-button view-button">Ver todo</button>
+          </div>
+          
+          <table className="management-table">
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Juan Lopez</td>
+                <td><span className="status-badge status-active">Activo</span></td>
+                <td>
+                  <div className="action-buttons">
+                    <button className="action-btn edit">✏️</button>
+                    <button className="action-btn delete">🗑️</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Tiovixo</td>
+                <td><span className="status-badge status-inactive">Inactivo</span></td>
+                <td>
+                  <div className="action-buttons">
+                    <button className="action-btn edit">✏️</button>
+                    <button className="action-btn delete">🗑️</button>
+                  </div>
+                </td>
+              </tr>
+              <tr>
+                <td>Patricio Saez</td>
+                <td><span className="status-badge status-pending">Por revisar</span></td>
+                <td>
+                  <div className="action-buttons">
+                    <button className="action-btn edit">✏️</button>
+                    <button className="action-btn delete">🗑️</button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Sección de Gestión de Canchas */}
+      <div className="management-section courts-section">
+        <div className="section-header">
+          <h2 className="section-title">Gestión de Canchas</h2>
+          <button className="section-button add-button">
+            <span className="button-icon">+</span>
+            Agregar
+          </button>
+          <button className="section-button view-button">Ver todo</button>
+        </div>
+        
+        <table className="management-table">
+          <thead>
+            <tr>
+              <th>Cancha</th>
+              <th>Tipo</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Cancha Central</td>
+              <td>Futbol</td>
+              <td><span className="status-badge status-active">Disponible</span></td>
+              <td>
+                <div className="action-buttons">
+                  <button className="action-btn edit">✏️</button>
+                  <button className="action-btn delete">🗑️</button>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td>Cancha Sur</td>
+              <td>Volleyball</td>
+              <td><span className="status-badge status-maintenance">Mantenimiento</span></td>
+              <td>
+                <div className="action-buttons">
+                  <button className="action-btn edit">✏️</button>
+                  <button className="action-btn delete">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
