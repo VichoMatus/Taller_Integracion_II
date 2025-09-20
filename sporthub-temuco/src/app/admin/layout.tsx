@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import "../globals.css";
-import "./admin.css";
+import AdminsLayout from '@/components/layout/AdminsLayout';
 
 export default function AdminLayout({
   children,
@@ -10,8 +9,12 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div>
+    <AdminsLayout 
+      userRole="admin" 
+      userName="Administrador" 
+      notificationCount={3}
+    >
       {children}
-    </div>
+    </AdminsLayout>
   );
 }
