@@ -1,0 +1,330 @@
+.lineChartContainer {
+  width: 100%;
+  height: 380px;
+  background-color: white;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.yAxis {
+  position: absolute;
+  left: 0;
+  top: 24px;
+  bottom: 64px;
+  width: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #374151;
+  font-weight: 500;
+}
+
+.yAxisLabel {
+  text-align: right;
+  padding-right: 8px;
+  line-height: 1;
+}
+
+.chartArea {
+  position: absolute;
+  left: 60px;
+  right: 36px;
+  top: 24px;
+  bottom: 64px;
+  border-left: 2px solid #111827;
+  border-bottom: 2px solid #111827;
+  background-color: white;
+  overflow: hidden;
+}
+
+.gridLines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.gridLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #e5e7eb;
+}
+
+.gridLine.bottom25 {
+  bottom: 25%;
+}
+
+.gridLine.bottom50 {
+  bottom: 50%;
+}
+
+.gridLine.bottom75 {
+  bottom: 75%;
+}
+
+.lineContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.chartSvg {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.dataLine {
+  fill: none;
+  stroke: #14b8a6;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dataPoint {
+  fill: #14b8a6;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dataPoint:hover {
+  transform: scale(1.5);
+  fill: #0f766e;
+}
+
+.xAxisLabels {
+  position: absolute;
+  left: 40px;
+  right: 16px;
+  bottom: 24px;
+  height: 40px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 20px;
+}
+
+.xAxisLabel {
+  font-size: 12px;
+  color: #374151;
+  font-weight: 500;
+  text-align: center;
+  width: 15%;
+}
+
+.animated .dataLine {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: drawLine 2s ease-in-out forwards;
+}
+
+.animated .dataPoint {
+  opacity: 0;
+  animation: fadeInPoint 0.5s ease-in-out forwards;
+}
+
+.animated .dataPoint:nth-child(1) { animation-delay: 0.2s; }
+.animated .dataPoint:nth-child(2) { animation-delay: 0.4s; }
+.animated .dataPoint:nth-child(3) { animation-delay: 0.6s; }
+.animated .dataPoint:nth-child(4) { animation-delay: 0.8s; }
+.animated .dataPoint:nth-child(5) { animation-delay: 1.0s; }
+.animated .dataPoint:nth-child(6) { animation-delay: 1.2s; }
+.animated .dataPoint:nth-child(7) { animation-delay: 1.4s; }
+
+@keyframes drawLine {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes fadeInPoint {
+  to {
+    opacity: 1;
+  }
+}
+
+.loadingContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.chartSvg {
+  width: 100%;
+  flex: 1;
+  display: block;
+  margin-left: 40px;
+  margin-bottom: 40px;
+}
+
+.gridLineHorizontal {
+  stroke: #e2e8f0;
+  stroke-width: 1;
+}
+
+.gridLineVertical {
+  stroke: #e2e8f0;
+  stroke-width: 1;
+}
+
+.dataLine {
+  fill: none;
+  stroke: #14b8a6;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dataPoint {
+  fill: #14b8a6;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.dataPoint:hover {
+  transform: scale(1.5);
+  fill: #0f766e;
+}
+
+.labelsBottom {
+  position: absolute;
+  bottom: 0;
+  left: 40px;
+  right: 0;
+  height: 40px;
+  position: relative;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.labelsLeft {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 40px;
+  width: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-end;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+  padding-right: 8px;
+}
+
+.labelItem {
+  line-height: 1;
+}
+
+.labelItemBottom {
+  line-height: 1;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.animated .dataLine {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: drawLine 2s ease-in-out forwards;
+}
+
+.animated .dataPoint {
+  opacity: 0;
+  animation: fadeInPoint 0.5s ease-in-out forwards;
+}
+
+.animated .dataPoint:nth-child(1) { animation-delay: 0.2s; }
+.animated .dataPoint:nth-child(2) { animation-delay: 0.4s; }
+.animated .dataPoint:nth-child(3) { animation-delay: 0.6s; }
+.animated .dataPoint:nth-child(4) { animation-delay: 0.8s; }
+.animated .dataPoint:nth-child(5) { animation-delay: 1.0s; }
+.animated .dataPoint:nth-child(6) { animation-delay: 1.2s; }
+.animated .dataPoint:nth-child(7) { animation-delay: 1.4s; }
+
+@keyframes drawLine {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes fadeInPoint {
+  to {
+    opacity: 1;
+  }
+}
+
+/* Loading skeleton */
+.loadingContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  min-height: 300px;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .lineChartContainer {
+    min-height: 250px;
+  }
+  
+  .labelsBottom {
+    font-size: 10px;
+    left: 35px;
+  }
+  
+  .labelsLeft {
+    font-size: 10px;
+    width: 35px;
+  }
+  
+  .chartSvg {
+    margin-left: 35px;
+  }
+  
+  .dataLine {
+    stroke-width: 2;
+  }
+}

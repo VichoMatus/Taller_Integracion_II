@@ -1,4 +1,4 @@
-/* Dashboard Admin CSS - EXACTO a la imagen objetivo */
+/* Admin Pages CSS - Estilos compartidos para Dashboard y Estadísticas */
 
 /* Reset y variables */
 * {
@@ -13,12 +13,17 @@
   --green-bg: #DCFCE7;
   --green-border: #BBF7D0;
   --blue-link: #3B82F6;
+  --teal-50: #f0fdfa;
+  --teal-100: #ccfbf1;
+  --teal-500: #14b8a6;
+  --teal-700: #0f766e;
   --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   --header-height: 64px;
   --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
 }
 
-/* Contenedor principal */
+/* Contenedores principales - Genéricos para todas las páginas admin */
+.admin-page-container,
 .admin-dashboard-container {
   background-color: var(--bg-gray);
   padding: 24px;
@@ -32,17 +37,17 @@
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 20px;
+  margin-bottom: 24px;
 }
 
 .stats-card {
   background-color: var(--white);
   padding: 24px 20px;
-  border-radius: 12px;
+  border-radius: 8px;
   text-align: center;
-  box-shadow: var(--card-shadow);
-  border: 1px solid #F1F5F9;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #E2E8F0;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -88,17 +93,17 @@
 .management-sections-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 20px;
+  gap: 20px;
+  margin-bottom: 24px;
 }
 
 /* Secciones de gestión */
 .management-section {
   background-color: #FFFFFF;
-  border: 1px solid #B8CFCE;
-  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
   padding: 20px;
-  margin-bottom: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .section-header {
@@ -417,4 +422,258 @@
     height: 24px;
     font-size: 11px;
   }
+}
+
+/* ========================================= */
+/* ESTILOS ESPECÍFICOS PARA ESTADÍSTICAS */
+/* ========================================= */
+
+/* Header de estadísticas */
+.estadisticas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.export-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background-color: var(--teal-100);
+  color: var(--teal-700);
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.export-button:hover {
+  background-color: #99f6e4;
+  transform: translateY(-1px);
+}
+
+/* Gráficos específicos */
+.chart-container {
+  background: var(--white);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  border: 1px solid #E2E8F0;
+  padding: 24px;
+}
+
+.chart-background {
+  background-color: var(--teal-50);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+/* Gráfico de barras personalizado */
+.custom-bar-chart {
+  height: 192px; /* h-48 */
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 8px;
+}
+
+.bar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.bar-value {
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+
+.bar-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.bar-fill {
+  width: 100%;
+  background-color: var(--teal-500);
+  border-radius: 4px 4px 0 0;
+  transition: all 1s ease-out;
+  min-height: 8px;
+  position: relative;
+}
+
+.bar-fill:hover {
+  background-color: #0f766e;
+  transform: scaleY(1.05);
+}
+
+.bar-base {
+  width: 100%;
+  height: 4px;
+  background-color: var(--teal-100);
+  border-radius: 0 0 2px 2px;
+}
+
+.bar-label {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 8px;
+  text-align: center;
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+/* Gráfico de líneas SVG */
+.line-chart-container {
+  position: relative;
+  height: 192px; /* h-48 */
+}
+
+.chart-labels-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-gray);
+  padding: 0 8px;
+}
+
+.chart-labels-left {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-gray);
+  padding-right: 8px;
+}
+
+/* Top canchas */
+.top-canchas-container {
+  background: var(--white);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  border: 1px solid #E2E8F0;
+  padding: 24px;
+}
+
+.top-canchas-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.cancha-item {
+  color: #374151;
+  padding: 8px 0;
+  line-height: 1.5;
+}
+
+/* Responsive para estadísticas */
+@media (max-width: 768px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .top-canchas-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .estadisticas-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+}
+
+/* Personalización del StatsCard para que coincida con el diseño original del dashboard */
+.stats-card-override {
+  /* Eliminar estilos por defecto del StatsCard */
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  padding: 24px 20px !important;
+  text-align: center !important;
+  background-color: white !important;
+  border-radius: 8px !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.stats-card-override:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06) !important;
+}
+
+/* Reorganizar el layout interno del StatsCard para el dashboard */
+.stats-card-override > div {
+  flex-direction: column-reverse !important;
+  align-items: center !important;
+  text-align: center !important;
+}
+
+/* Icono arriba */
+.stats-card-override > div > div:last-child {
+  margin-bottom: 12px !important;
+  margin-left: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+/* Contenido principal */
+.stats-card-override > div > div:first-child {
+  width: 100% !important;
+}
+
+/* Título del StatsCard */
+.stats-card-override .text-lg {
+  font-size: 14px !important;
+  color: #64748B !important;
+  font-weight: 500 !important;
+  margin-bottom: 8px !important;
+  line-height: 1.2 !important;
+}
+
+/* Valor del StatsCard */
+.stats-card-override .text-2xl {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  color: #1A202C !important;
+  margin-bottom: 8px !important;
+  line-height: 1 !important;
+}
+
+/* Subtitle del StatsCard */
+.stats-card-override .text-sm {
+  color: #3B82F6 !important;
+  text-decoration: none !important;
+  font-size: 12px !important;
+}
+
+.stats-card-override .text-sm:hover {
+  text-decoration: underline !important;
 }

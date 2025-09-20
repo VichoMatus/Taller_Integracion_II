@@ -1,171 +1,126 @@
 'use client';
 
 import React, { useState } from 'react';
+import BarChart from '@/components/charts/BarChart';
+import LineChart from '@/components/charts/LineChart';
 import StatsCard from '@/components/charts/StatsCard';
+import '../dashboard.css'; // Importar CSS compartido
 
 export default function EstadisticasPage() {
-  const [period, setPeriod] = useState('month');
+  // Datos para el gráfico de barras - Reservas por cancha
+  const reservasPorCancha = [
+    { label: 'Central', value: 40 },
+    { label: 'Norte', value: 30 },
+    { label: 'Sur', value: 20 },
+    { label: 'Este', value: 35 },
+    { label: 'Oeste', value: 15 }
+  ];
+
+  // Datos para el gráfico de líneas - Reservas por día
+  const reservasPorDia = [
+    { label: 'Lunes', value: 0 },
+    { label: 'Martes', value: 25 },
+    { label: 'Miércoles', value: 12 },
+    { label: 'Jueves', value: 30 },
+    { label: 'Viernes', value: 20 },
+    { label: 'Sábado', value: 25 },
+    { label: 'Domingo', value: 15 }
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Header con selector de período */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Estadísticas</h1>
-          <p className="text-gray-600">Análisis detallado del rendimiento</p>
-        </div>
-        
-        <select 
-          value={period}
-          onChange={(e: any) => setPeriod(e.target.value)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="week">Esta semana</option>
-          <option value="month">Este mes</option>
-          <option value="quarter">Este trimestre</option>
-          <option value="year">Este año</option>
-        </select>
+    <div className="admin-page-container">
+      {/* Header */}
+      <div className="estadisticas-header">
+        <h1 className="text-2xl font-bold text-gray-900">Panel de Estadísticas Generales</h1>
+        <button className="export-button">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          Exportar informe
+        </button>
       </div>
 
-      {/* Stats principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Tarjetas de estadísticas principales */}
+      <div className="stats-grid">
         <StatsCard
-          title="Reservas totales"
-          value="845"
+          title="Ocupación Mensual"
+          value="95%"
+          icon={<span className="text-3xl opacity-80">�</span>}
           color="blue"
-          icon={
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-          }
-          trend={{ value: 12.5, isPositive: true }}
+          className="stats-card-override"
         />
         
         <StatsCard
-          title="Canchas activas"
-          value="28"
-          color="green"
-          icon={
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
-          }
-          trend={{ value: 4.2, isPositive: true }}
+          title="Reservas canceladas"
+          value="25"
+          icon={<span className="text-3xl opacity-80">❌</span>}
+          color="red"
+          className="stats-card-override"
         />
         
         <StatsCard
-          title="Ingresos mensuales"
-          value="$1,246,350"
-          color="yellow"
-          icon={
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-            </svg>
-          }
-          trend={{ value: 23.1, isPositive: true }}
-        />
-        
-        <StatsCard
-          title="Tasa ocupación"
-          value="78.4%"
+          title="Total usuarios"
+          value="25"
+          icon={<span className="text-3xl opacity-80">👥</span>}
           color="purple"
-          icon={
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-          }
-          trend={{ value: -2.3, isPositive: false }}
+          className="stats-card-override"
+        />
+        
+        <StatsCard
+          title="Total canchas"
+          value="25"
+          icon={<span className="text-3xl opacity-80">🏟️</span>}
+          color="green"
+          className="stats-card-override"
         />
       </div>
 
-      {/* Gráficos placeholder */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Reservas por Mes</h3>
-          <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-            <p className="text-gray-500">Gráfico de barras - Próximamente</p>
+      {/* Gráficos */}
+      <div className="charts-grid">
+        {/* Gráfico de barras - Reservas por cancha */}
+        <div className="chart-container">
+          <div className="chart-background">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Reservas por cancha (Último mes)</h3>
+            <BarChart 
+              data={reservasPorCancha}
+              primaryColor="#9fb5b8"
+              animate={true}
+              showValues={true}
+              maxValue={40}
+              className="px-2"
+            />
           </div>
         </div>
         
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Distribución por Tipo de Cancha</h3>
-          <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
-            <p className="text-gray-500">Gráfico circular - Próximamente</p>
+        {/* Gráfico de líneas - Reservas por día */}
+        <div className="chart-container">
+          <div className="chart-background">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Reservas por día</h3>
+            <LineChart 
+              data={reservasPorDia}
+              maxValue={40}
+              lineColor="#14b8a6"
+              pointColor="#14b8a6"
+              animate={true}
+              showPoints={true}
+              gridLines={true}
+            />
           </div>
         </div>
       </div>
 
-      {/* Tabla de rendimiento por cancha */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-900">Rendimiento por Cancha</h3>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Cancha
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Reservas
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ingresos
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ocupación
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Rating
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">Cancha Fútbol #1</div>
-                  <div className="text-sm text-gray-500">Césped sintético</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">89</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$156,720</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                    85%
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">4.8</td>
-              </tr>
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">Cancha Básquet #1</div>
-                  <div className="text-sm text-gray-500">Piso de parquet</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">76</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$98,400</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                    72%
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">4.6</td>
-              </tr>
-              <tr>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900">Cancha Tenis #1</div>
-                  <div className="text-sm text-gray-500">Superficie dura</div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">54</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$72,900</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
-                    61%
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">4.9</td>
-              </tr>
-            </tbody>
-          </table>
+      {/* Top Canchas más activas */}
+      <div className="top-canchas-container">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Canchas más activas</h3>
+        <div className="top-canchas-grid">
+          <div className="space-y-2">
+            <div className="cancha-item">1.- Cancha Norte</div>
+            <div className="cancha-item">2.- Cancha Pataping bong bing</div>
+          </div>
+          <div className="space-y-2">
+            <div className="cancha-item">3.- Hola soy un texto de prueba...</div>
+            <div className="cancha-item">4.- Hola soy un texto de prueba...</div>
+          </div>
         </div>
       </div>
     </div>
