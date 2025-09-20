@@ -1,5 +1,7 @@
 'use client';
 
+import './Input.css';
+
 interface InputProps {
   label?: string;
   error?: string;
@@ -27,23 +29,28 @@ const Input = ({
   error, 
   helperText, 
   className = '', 
+  type = 'text',
   ...props 
 }: InputProps) => {
   return (
-    <div className="w-full">
+    <div className="input-container">
       {label && (
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {label}
         </label>
       )}
       <input
-        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-          error ? 'border-red-500' : 'border-gray-300'
-        } ${className}`}
+        type={type}
+        className={`input-field ${error ? 'input-error' : ''} ${className}`}
         {...props}
       />
+      {type === 'search' && (
+        <button className="search-button" type="button">
+          🔍
+        </button>
+      )}
       {(error || helperText) && (
-        <p className={`mt-1 text-sm ${error ? 'text-red-600' : 'text-gray-500'}`}>
+        <p className={error ? 'error-message' : 'helper-text'}>
           {error || helperText}
         </p>
       )}

@@ -1,0 +1,53 @@
+.status-badge {
+  display: inline-flex;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-active {
+  background-color: #DEF7EC;
+  color: #03543F;
+}
+
+.status-inactive {
+  background-color: #FDE8E8;
+  color: #9B1C1C;
+}
+
+.status-pending {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+.export-button {
+  background-color: #F3F4F6;
+  color: #374151;
+  border: 1px solid #E5E7EB;
+}
+
+.export-button:hover {
+  background-color: #E5E7EB;
+}
+
+.add-admin-button,
+.add-court-button {
+  background-color: #0EA5E9;
+  color: white;
+}
+
+.add-admin-button:hover,
+.add-court-button:hover {
+  background-color: #0284C7;
+}
+
+.search-input {
+  border-color: #E5E7EB;
+  background-color: #F9FAFB;
+}
+
+.search-input:focus {
+  border-color: #0EA5E9;
+  box-shadow: 0 0 0 1px #0EA5E9;
+}
