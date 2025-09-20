@@ -1,0 +1,287 @@
+/* Header Component - Clon exacto del diseño original */
+
+.header-container {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 256px; /* Ancho de la sidebar */
+  height: 64px;
+  background-color: #FFFFFF;
+  border-bottom: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+}
+
+/* Sección izquierda - Título de bienvenida */
+.header-welcome {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.header-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1A202C;
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* Sección central - Barra de búsqueda */
+.header-search {
+  flex: 0 0 auto;
+  width: 300px;
+  margin: 0 24px;
+}
+
+.search-container {
+  position: relative;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: #9CA3AF;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 16px 0 44px;
+  background-color: #F7FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #2D3748;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.search-input::placeholder {
+  color: #9CA3AF;
+}
+
+.search-input:focus {
+  background-color: #FFFFFF;
+  border-color: #8B7DB8;
+  box-shadow: 0 0 0 3px rgba(139, 125, 184, 0.1);
+}
+
+/* Sección derecha - Usuario y notificaciones */
+.header-user {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+/* Botón de notificaciones */
+.notification-button {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  background-color: transparent;
+  border: none;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.notification-button:hover {
+  background-color: #F7FAFC;
+}
+
+.notification-icon {
+  width: 20px;
+  height: 20px;
+  color: #4A5568;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 18px;
+  height: 18px;
+  background-color: #E53E3E;
+  color: white;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+
+/* Perfil de usuario */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.user-profile:hover {
+  background-color: #F7FAFC;
+}
+
+.user-info {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1A202C;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.user-role {
+  font-size: 12px;
+  color: #718096;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  background-color: #8B7DB8;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  flex-shrink: 0;
+}
+
+/* Dropdown del usuario (si se implementa después) */
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  min-width: 200px;
+  background-color: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+}
+
+/* Responsive */
+/* Pantallas grandes (hasta 1200px) */
+@media (max-width: 1200px) {
+  .header-container {
+    padding: 0 20px;
+  }
+  
+  .header-search {
+    width: 280px;
+    margin: 0 20px;
+  }
+}
+
+/* Tablets landscape y pantallas medianas (hasta 1024px) */
+@media (max-width: 1024px) {
+  .header-container {
+    padding: 0 18px;
+  }
+  
+  .header-search {
+    width: 250px;
+    margin: 0 16px;
+  }
+  
+  .header-title {
+    font-size: 16px;
+  }
+}
+
+/* Pantallas tipo tablet portrait (hasta 900px) - NO MOBILE */
+@media (max-width: 900px) {
+  .header-container {
+    padding: 0 16px;
+  }
+  
+  .header-search {
+    width: 220px;
+    margin: 0 12px;
+  }
+  
+  .user-info {
+    display: flex; /* Mantener visible en tablets */
+  }
+  
+  .user-name {
+    font-size: 13px;
+  }
+  
+  .user-role {
+    font-size: 11px;
+  }
+}
+
+/* Pantallas pequeñas (hasta 800px) - NO MOBILE */
+@media (max-width: 800px) {
+  .header-search {
+    width: 200px;
+    margin: 0 10px;
+  }
+  
+  .search-input {
+    height: 36px;
+    font-size: 13px;
+  }
+  
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+}
+
+/* Solo para mobile real (hasta 480px) - SI ES NECESARIO */
+@media (max-width: 480px) {
+  .header-container {
+    left: 0; /* En móvil, el header ocupa todo el ancho */
+    padding: 0 12px;
+  }
+  
+  .header-search {
+    width: 180px;
+    margin: 0 8px;
+  }
+  
+  .header-title {
+    font-size: 14px;
+  }
+  
+  .user-info {
+    display: none; /* Ocultar nombre solo en móvil */
+  }
+}
