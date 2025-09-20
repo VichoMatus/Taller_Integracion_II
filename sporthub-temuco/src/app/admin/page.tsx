@@ -1,5 +1,6 @@
 'use client';
 
+import StatsCard from '@/components/charts/StatsCard';
 import './dashboard.css';
 
 export default function AdminDashboard() {
@@ -8,36 +9,44 @@ export default function AdminDashboard() {
       {/* Grid de estadísticas principales */}
       <div className="stats-grid">
         {/* Tarjeta Canchas */}
-        <div className="stats-card">
-          <span className="stats-card-icon">🏠</span>
-          <div className="stats-card-value">25</div>
-          <div className="stats-card-title">Canchas</div>
-        </div>
+        <StatsCard
+          title="Canchas"
+          value="25"
+          icon={<span className="text-3xl opacity-80">🏠</span>}
+          color="blue"
+          className="stats-card-override"
+        />
         
         {/* Tarjeta Reservas */}
-        <div className="stats-card">
-          <span className="stats-card-icon">📅</span>
-          <div className="stats-card-value">180</div>
-          <div className="stats-card-title">Reservas</div>
-        </div>
+        <StatsCard
+          title="Reservas"
+          value="180"
+          icon={<span className="text-3xl opacity-80">📅</span>}
+          color="green"
+          className="stats-card-override"
+        />
         
         {/* Tarjeta Estadísticas */}
-        <div className="stats-card">
-          <span className="stats-card-icon">📈</span>
-          <div className="stats-card-value">Estadísticas</div>
-          <a href="/admin/estadisticas" className="stats-card-link">
-            Click para ver estadísticas
-          </a>
-        </div>
+        <StatsCard
+          title="Estadísticas"
+          value="Ver estadísticas"
+          icon={<span className="text-3xl opacity-80">📈</span>}
+          subtitle="Click para ver estadísticas"
+          color="purple"
+          onClick={() => window.location.href = '/admin/estadisticas'}
+          className="stats-card-override"
+        />
         
         {/* Tarjeta Reseñas */}
-        <div className="stats-card">
-          <span className="stats-card-icon">👥</span>
-          <div className="stats-card-value">Reseñas</div>
-          <a href="/admin/resenas" className="stats-card-link">
-            Click para ver reseñas
-          </a>
-        </div>
+        <StatsCard
+          title="Reseñas"
+          value="Ver reseñas"
+          icon={<span className="text-3xl opacity-80">👥</span>}
+          subtitle="Click para ver reseñas"
+          color="yellow"
+          onClick={() => window.location.href = '/admin/resenas'}
+          className="stats-card-override"
+        />
       </div>
 
       {/* Grid de secciones de gestión lado a lado */}
