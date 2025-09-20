@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import BarChart from '@/components/charts/BarChart';
-import LineChart from '@/components/charts/LineChart';
 import StatsCard from '@/components/charts/StatsCard';
 import '../dashboard.css'; // Importar CSS compartido
 
@@ -16,15 +15,15 @@ export default function EstadisticasPage() {
     { label: 'Oeste', value: 15 }
   ];
 
-  // Datos para el gráfico de líneas - Reservas por día
+  // Datos para el gráfico de barras - Reservas por día
   const reservasPorDia = [
-    { label: 'Lunes', value: 0 },
-    { label: 'Martes', value: 25 },
-    { label: 'Miércoles', value: 12 },
-    { label: 'Jueves', value: 30 },
-    { label: 'Viernes', value: 20 },
-    { label: 'Sábado', value: 25 },
-    { label: 'Domingo', value: 15 }
+    { label: 'Lun', value: 15 },
+    { label: 'Mar', value: 25 },
+    { label: 'Mié', value: 12 },
+    { label: 'Jue', value: 30 },
+    { label: 'Vie', value: 20 },
+    { label: 'Sáb', value: 35 },
+    { label: 'Dom', value: 18 }
   ];
 
   return (
@@ -92,18 +91,17 @@ export default function EstadisticasPage() {
           </div>
         </div>
         
-        {/* Gráfico de líneas - Reservas por día */}
+        {/* Gráfico de barras - Reservas por día */}
         <div className="chart-container">
           <div className="chart-background">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Reservas por día</h3>
-            <LineChart 
+            <BarChart 
               data={reservasPorDia}
-              maxValue={40}
-              lineColor="#14b8a6"
-              pointColor="#14b8a6"
+              primaryColor="#14b8a6"
               animate={true}
-              showPoints={true}
-              gridLines={true}
+              showValues={true}
+              maxValue={40}
+              className="px-2"
             />
           </div>
         </div>
