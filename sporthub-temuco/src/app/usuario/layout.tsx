@@ -1,22 +1,38 @@
 import "./usuario.css";
-import React from "react";
-import SideBarUsuario from "./Componentes/SideBarUsuario";
-import HeaderUsuario from "./Componentes/HeaderUsuario";
-import FooterUsuario from "./Componentes/FooterUsuario";
+import React, { ReactNode } from "react";
+import Header from "../../components/layout/Header";
+import Footer from "../../components/layout/Footer";
+import Sidebar from "../../components/layout/Sidebar";
 
-export default function UsuarioLayout({ children }: { children: React.ReactNode }) {
+type UsuarioLayoutProps = {
+  children: ReactNode;
+  userName?: string;
+  notificationCount?: number;
+};
+
+export default function UsuarioLayout(props: UsuarioLayoutProps) {
+  const {
+    children,
+    userName = "Usuario",
+    notificationCount = 0,
+  } = props;
+
   return (
     <div className="container">
       {/* Sidebar */}
       <aside className="sidebar">
-        <SideBarUsuario />
+        <Sidebar userRole="usuario" />
       </aside>
 
       {/* Contenido principal */}
       <div className="main">
-        <HeaderUsuario />
+        <Header
+          userName={userName}
+          userRole="usuario"
+          notificationCount={notificationCount}
+        />
         <main>{children}</main>
-        <FooterUsuario />
+        <Footer variant="full" supportHref="/ayuda" className="usuario"/>
       </div>
     </div>
   );

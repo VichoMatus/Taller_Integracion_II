@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 interface SidebarProps {
-  userRole: 'admin' | 'superadmin';
+  userRole: 'admin' | 'superadmin' | 'usuario';
 }
 
 const Sidebar = ({ userRole }: SidebarProps) => {
@@ -89,8 +89,36 @@ const Sidebar = ({ userRole }: SidebarProps) => {
     }
   ];
 
-  const menuItems = userRole === 'superadmin' ? superAdminMenuItems : adminMenuItems;
-  const userTitle = userRole === 'superadmin' ? 'Superadministrador' : 'Administrador';
+const usuarioMenuItems = [
+  {
+    name: 'Inicio',
+    icon: '🏠',
+    href: '/',
+    active: pathname === '/',
+  },
+  {
+    name: 'Canchas',
+    icon: '🏟️',
+    href: '/canchas',
+    active: pathname === '/canchas',
+  },
+  {
+    name: 'Mis Reservas',
+    icon: '📅',
+    href: '/reservas',
+    active: pathname === '/reservas',
+  },
+  {
+    name: 'Perfil',
+    icon: '👤',
+    href: '/perfil',
+    active: pathname === '/perfil',
+  },
+];
+
+  const menuItems = userRole === 'superadmin' ? superAdminMenuItems : userRole === 'admin' ? adminMenuItems : usuarioMenuItems;
+  const userTitle = userRole === 'superadmin' ? 'Superadministrador' : userRole === 'admin' ? 'Administrador' : 'Usuario';
+
 
   return (
     <div className="fixed left-0 top-0 h-full w-64 bg-white shadow-lg border-r border-gray-200 z-40">

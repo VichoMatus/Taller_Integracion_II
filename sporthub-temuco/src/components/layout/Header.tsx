@@ -4,17 +4,19 @@ import React from 'react';
 
 interface HeaderProps {
   userName: string;
-  userRole: 'admin' | 'superadmin';
+  userRole: 'usuario' | 'admin' | 'superadmin';
   notificationCount?: number;
 }
 
 const Header = ({ userName, userRole, notificationCount = 0 }: HeaderProps) => {
   return (
-    <header className="fixed top-0 left-64 right-0 h-16 bg-white shadow-sm border-b border-gray-200 z-30 flex items-center justify-between px-6">
+    <header className={`fixed top-0 left-64 right-0 h-16 bg-white shadow-sm border-b border-gray-200 z-30 flex items-center justify-between px-6 ${userRole}`}>
       <div>
         <h1 className="text-xl font-semibold text-gray-900">
-          {userRole === 'superadmin' ? 'Panel de Superadministrador' : 'Panel de Administración'}
+          {userRole === 'superadmin' ? 'Panel de Superadministrador' : userRole === 'admin' ? 'Panel de Administración' : 'Panel de Usuario'}
         </h1>
+
+
       </div>
       
       <div className="flex items-center space-x-4">
@@ -40,8 +42,9 @@ const Header = ({ userName, userRole, notificationCount = 0 }: HeaderProps) => {
           <div className="text-right hidden md:block">
             <p className="font-medium text-gray-900">{userName}</p>
             <p className="text-sm text-gray-500">
-              {userRole === 'superadmin' ? 'Superadministrador' : 'Administrador'}
+              {userRole === 'superadmin' ? 'Superadministrador' : userRole === 'admin' ? 'Administrador' : 'Usuario'}
             </p>
+
           </div>
           <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
             <span className="text-blue-800 font-semibold">
