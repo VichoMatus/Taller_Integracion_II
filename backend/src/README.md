@@ -10,6 +10,9 @@ src/
 ├── canchas/              # Módulo de canchas
 ├── complejos/            # Módulo de complejos
 ├── reservas/             # Módulo de reservas
+├── bloqueos/             # Módulo de bloqueos
+├── resenas/              # Módulo de reseñas
+├── uploads/              # Módulo de uploads
 ├── domain/               # Entidades del dominio
 ├── app/                  # Utilidades comunes de aplicación
 ├── infra/                # Infraestructura (HTTP, base de datos)
@@ -83,6 +86,84 @@ POST   /reservas/verificar-disponibilidad # Verificar disponibilidad
 GET    /reservas/usuario/:usuarioId    # Reservas de un usuario
 POST   /reservas/:id/confirmar-pago    # Confirmar pago
 POST   /reservas/:id/cancelar          # Cancelar reserva
+```
+
+### 📁 `/bloqueos` - Módulo de Bloqueos
+Gestión completa de bloqueos de disponibilidad de canchas.
+
+**Funcionalidades:**
+- CRUD de bloqueos con validaciones de conflictos
+- Verificación de solapamientos entre bloqueos
+- Gestión de estados (activo, inactivo, vencido, cancelado)
+- Bloqueos recurrentes con patrones personalizados
+- Filtros avanzados por cancha, tipo, fechas, creador
+
+**Endpoints principales:**
+```
+GET    /bloqueos                       # Listar bloqueos (admin)
+POST   /bloqueos                       # Crear nuevo bloqueo
+GET    /bloqueos/:id                   # Obtener bloqueo específico
+PATCH  /bloqueos/:id                   # Actualizar bloqueo
+DELETE /bloqueos/:id                   # Eliminar bloqueo (admin)
+POST   /bloqueos/verificar-conflicto   # Verificar conflictos
+GET    /bloqueos/activos/:canchaId     # Bloqueos activos de cancha
+GET    /bloqueos/creador/:creadoPorId  # Bloqueos de un creador
+POST   /bloqueos/:id/activar           # Activar bloqueo
+POST   /bloqueos/:id/desactivar        # Desactivar bloqueo
+```
+
+### 📁 `/resenas` - Módulo de Reseñas
+Gestión completa de reseñas y calificaciones de complejos deportivos.
+
+**Funcionalidades:**
+- CRUD de reseñas con validaciones de contenido
+- Sistema de calificaciones de 1-5 estrellas
+- Likes y reportes de reseñas
+- Respuestas de dueños a reseñas
+- Estadísticas detalladas de calificaciones
+- Prevención de reseñas duplicadas
+- Moderación de contenido inapropiado
+
+**Endpoints principales:**
+```
+GET    /resenas                       # Listar reseñas (admin)
+POST   /resenas                       # Crear nueva reseña
+GET    /resenas/:id                   # Obtener reseña específica
+PATCH  /resenas/:id                   # Actualizar reseña
+DELETE /resenas/:id                   # Eliminar reseña (admin)
+GET    /resenas/complejo/:complejoId  # Reseñas de un complejo
+GET    /resenas/usuario/:usuarioId    # Reseñas de un usuario
+POST   /resenas/:id/like              # Dar like a reseña
+DELETE /resenas/:id/like              # Quitar like de reseña
+POST   /resenas/:id/reportar          # Reportar reseña
+POST   /resenas/:id/responder         # Responder a reseña (dueño)
+GET    /resenas/estadisticas/:complejoId # Estadísticas de reseñas
+```
+
+### 📁 `/uploads` - Módulo de Uploads
+Gestión completa de archivos subidos (imágenes, documentos, videos).
+
+**Funcionalidades:**
+- Upload de archivos con validaciones de seguridad
+- Procesamiento automático de imágenes (thumbnails, compresión)
+- Gestión de metadatos y categorización
+- Detección de duplicados por hash
+- Limpieza automática de archivos expirados
+- Estadísticas de uso y almacenamiento
+- Asociación con entidades del sistema
+
+**Endpoints principales:**
+```
+GET    /uploads                       # Listar uploads (admin)
+POST   /uploads                       # Subir nuevo archivo
+GET    /uploads/:id                   # Obtener upload específico
+PATCH  /uploads/:id                   # Actualizar metadatos
+DELETE /uploads/:id                   # Eliminar archivo
+GET    /uploads/usuario/:usuarioId    # Uploads de un usuario
+GET    /uploads/entidad/:tipo/:id     # Uploads de una entidad
+POST   /uploads/:id/processed         # Marcar como procesado
+GET    /uploads/stats                 # Estadísticas de uso
+POST   /uploads/cleanup               # Limpiar archivos expirados
 ```
 
 ## Sistema de Roles

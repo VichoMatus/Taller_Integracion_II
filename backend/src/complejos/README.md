@@ -166,16 +166,6 @@ El módulo se comunica con endpoints FastAPI:
 - `/complejos/duenio/{duenio_id}` - Complejos por dueño
 - `/complejos/{id}/estado` - Gestión de estados
 
-## Casos de Uso Futuros
-
-- [ ] Sistema de reseñas y calificaciones
-- [ ] Gestión de horarios especiales
-- [ ] Integración con sistema de reservas
-- [ ] Notificaciones para dueños
-- [ ] Dashboard de estadísticas
-- [ ] Gestión de promociones y descuentos
-- [ ] Integración con mapas y geolocalización
-
 ---
 
 Para más información sobre la arquitectura general, consulta el README principal en `/src`.
