@@ -1,13 +1,36 @@
 import dotenv from 'dotenv';
+import path from 'path';
 
-// Carga las variables de entorno desde el archivo .env
-dotenv.config();
+// Cargar variables de entorno desde el .env de la raíz del proyecto
+// En Docker, el .env se monta en /app/.env
+// En desarrollo local, está en ../../../.env
+dotenv.config({ 
+  path: process.env.NODE_ENV === 'development' && process.cwd().includes('/app')
+    ? path.resolve(__dirname, '../../.env')     // Docker (montado en /app/.env)
+    : path.resolve(__dirname, '../../../.env')  // Desarrollo local
+});
+
+/**
+ * VALIDACIÓN DE VARIABLES DE ENTORNO REQUERIDAS
+ * =============================================
+ */
+const requiredEnvVars = ['API_BASE_URL'];
+const missingEnvVars = requiredEnvVars.filter(varName => !process.env[varName]);
+
+if (missingEnvVars.length > 0) {
+  console.error('🚨 ERROR: Variables de entorno faltantes:');
+  missingEnvVars.forEach(varName => {
+    console.error(`   - ${varName}`);
+  });
+  console.error('💡 Asegúrate de tener un archivo .env con estas variables configuradas');
+  process.exit(1);
+}
 
 // Configuración para la API de FastAPI
 export const API_CONFIG = {
-  baseURL: process.env.API_BASE_URL || 'https://api.opencloude.com',
+  baseURL: process.env.API_BASE_URL!,  // Ya validamos que existe arriba
   apiKey: process.env.API_KEY || '',
-  timeout: parseInt(process.env.API_TIMEOUT || '5000'),
+  timeout: parseInt(process.env.API_TIMEOUT || '10000'),
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
