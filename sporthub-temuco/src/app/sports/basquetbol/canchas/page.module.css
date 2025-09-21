@@ -5,14 +5,13 @@
   font-family: 'Inter', sans-serif;
 }
 
-.sidebarPlaceholder {
-  width: 400px;
-  flex-shrink: 0;
-}
-
 .mainContent {
   flex: 1;
-  padding: 24px;
+  margin-left: 256px; /* 🔥 Agregar margen para el sidebar */
+  padding: 20px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  overflow-x: auto;
 }
 
 /* Header Styles */
@@ -236,6 +235,7 @@
   padding: 24px;
   border-radius: 16px;
   box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.80);
+  margin-bottom: 10px;
 }
 
 .cardsGrid {

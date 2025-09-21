@@ -9,44 +9,42 @@
   flex-direction: column;
   overflow: hidden;
   font-family: 'Inter', sans-serif;
-  cursor: pointer; /* 🔥 Indica que es interactivo */
-  transition: all 0.3s ease; /* 🔥 Transición suave para todos los efectos */
+  cursor: pointer; 
+  transition: all 0.3s ease; 
 }
 
-/* 🔥 Efectos hover para las tarjetas de canchas */
+
 .courtCard:hover {
-  transform: translateY(-8px); /* 🔥 Elevación más pronunciada */
+  transform: translateY(-8px); 
   box-shadow: 
     0 12px 30px rgba(249, 115, 22, 0.15),
-    0 4px 8px rgba(249, 115, 22, 0.1); /* 🔥 Doble sombra naranja */
-  border-color: #fed7aa; /* 🔥 Borde naranja claro */
-  background: linear-gradient(135deg, #ffffff 0%, #fef7f0 100%); /* 🔥 Gradiente sutil */
+    0 4px 8px rgba(249, 115, 22, 0.1); 
+  border-color: #fed7aa;
+  background: linear-gradient(135deg, #ffffff 0%, #fef7f0 100%); 
 }
 
-/* 🔥 Efecto en la imagen al hacer hover */
 .courtCard:hover .cardImage {
-  transform: scale(1.05); /* 🔥 Zoom ligero en la imagen */
-  filter: brightness(1.1); /* 🔥 Aumenta ligeramente el brillo */
+  transform: scale(1.05); 
+  filter: brightness(1.1); 
 }
 
-/* 🔥 Efecto en el título al hacer hover */
 .courtCard:hover .cardTitle {
-  color: #ea580c; /* 🔥 Color naranja para el título */
+  color: #ea580c; 
 }
 
-/* 🔥 Efecto en el rating badge al hacer hover */
+
 .courtCard:hover .ratingBadge {
-  transform: scale(1.05); /* 🔥 Agranda ligeramente el badge */
-  border-color: #f97316; /* 🔥 Borde naranja más intenso */
-  background: #fef7f0; /* 🔥 Fondo ligeramente naranja */
+  transform: scale(1.05);
+  border-color: #f97316;
+  background: #fef7f0;
 }
 
-/* 🔥 Efecto en los tags al hacer hover */
+
 .courtCard:hover .tag {
-  transform: translateY(-2px); /* 🔥 Elevación ligera de los tags */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* 🔥 Sombra más pronunciada */
-  background: #fcd34d; /* 🔥 Color más vibrante */
-  border-color: #f59e0b; /* 🔥 Borde más intenso */
+  transform: translateY(-2px); 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); 
+  background: #fed7aa;
+  border-color: #f59e0b;
 }
 
 /* 🔥 Efecto en el botón al hacer hover de la tarjeta */
@@ -94,13 +92,14 @@
   color: #000000;
   line-height: 1.2;
   margin: 0 0 4px 0;
-  transition: color 0.3s ease; /* 🔥 Transición para el título */
+  transition: color 0.3s ease; 
 }
 
 .cardAddress {
   font-size: 12px;
   color: #333333;
   line-height: 1.2;
+  margin-top: 10px;
 }
 
 .ratingBadge {
@@ -114,7 +113,7 @@
   margin-left: 12px;
   min-width: 110px;
   justify-content: center;
-  transition: all 0.3s ease; /* 🔥 Transición para el badge */
+  transition: all 0.3s ease; 
 }
 
 .starIcon {
@@ -142,6 +141,7 @@
   flex-wrap: wrap;
   gap: 8px;
   margin: 16px 0;
+  margin-top: 2px;
 }
 
 .tag {

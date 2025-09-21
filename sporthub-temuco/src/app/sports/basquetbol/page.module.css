@@ -1,20 +1,24 @@
 .pageContainer {
   display: flex;
   min-height: 100vh;
-  background: #EAEFEF;
+  width: 100vw;
+  margin: 0 !important; /* 🔥 Forzar sin margen */
+  padding-left: 0 !important; /* 🔥 Forzar sin padding */
+  background: #f3f4f6;
   font-family: 'Inter', sans-serif;
-}
-
-.sidebarPlaceholder {
-  width: 240px;
-  background: #FF743E;
-  flex-shrink: 0;
+  position: fixed; /* 🔥 Alternativa: posición fija */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .mainContent {
   flex: 1;
   padding: 20px;
+  margin-left: 256px;
   overflow-y: auto;
+  height: 100vh; /* 🔥 Altura fija */
 }
 
 /* Header Styles */
@@ -22,10 +26,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: white;
+  background: #f3f4f6;
   padding: 20px 30px;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
 }
 

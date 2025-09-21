@@ -4,11 +4,12 @@ import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
 import LocationMap from '../../../../components/LocationMap';
 import Modal from '../../../../components/Modal';
+import Sidebar from '../../../../components/layout/Sidebar'; // 🔥 Importar Sidebar
 import styles from './page.module.css';
 
 const canchas = [
   {
-    imageUrl: "/path/to/basketball-court1.jpg",
+    imageUrl: "/sports/basquetbol/canchas/Cancha1.png",
     name: "Basquetbol - Centro",
     address: "Norte, Centro, Sur",
     rating: 4.3,
@@ -19,7 +20,7 @@ const canchas = [
     nextAvailable: "20:00-21:00", 
   },
   {
-    imageUrl: "/path/to/basketball-court2.jpg",
+    imageUrl: "/sports/basquetbol/canchas/Cancha2.png",
     name: "Basquetbol - Norte",
     address: "Sector Norte",
     rating: 4.5,
@@ -54,30 +55,25 @@ const canchas = [
 ];
 
 export default function Page() {
-  const [searchTerm, setSearchTerm] = useState(''); // Término de búsqueda
-  const [filteredCanchas, setFilteredCanchas] = useState(canchas); // Resultados filtrados
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredCanchas, setFilteredCanchas] = useState(canchas);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Solo actualiza el término de búsqueda, NO filtra
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
-  // Se ejecuta solo cuando se hace clic en buscar o Enter
   const handleSearch = () => {
-  if (searchTerm.trim() === '') {
-    // Si está vacío, muestra todas las canchas
-    setFilteredCanchas(canchas);
-  } else {
-    // Filtra SOLO por nombre de la cancha
-    const filtered = canchas.filter(cancha =>
-      cancha.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setFilteredCanchas(filtered);
-  }
-};
+    if (searchTerm.trim() === '') {
+      setFilteredCanchas(canchas);
+    } else {
+      const filtered = canchas.filter(cancha =>
+        cancha.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredCanchas(filtered);
+    }
+  };
 
-  // Calcular canchas disponibles ahora (ejemplo)
   const availableNow = filteredCanchas.filter(cancha => 
     cancha.nextAvailable !== "No disponible hoy" && 
     !cancha.nextAvailable.includes("Mañana")
@@ -85,10 +81,8 @@ export default function Page() {
 
   return (
     <div className={styles.pageContainer}>
-      {/* Espacio reservado para sidebar (400px) */}
-      <div className={styles.sidebarPlaceholder}>
-        {/* Sidebar placeholder */}
-      </div>
+      {/* 🔥 Reemplazar placeholder con Sidebar real */}
+      <Sidebar userRole="usuario" sport="basquetbol" />
 
       {/* Contenido principal */}
       <div className={styles.mainContent}>
@@ -103,7 +97,7 @@ export default function Page() {
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Buscar por nombre de cancha..." // 🔥 Placeholder más específico
+              placeholder="Buscar por nombre de cancha..."
             />
             <button className={styles.userButton}>
               <span>👤</span>
@@ -157,7 +151,6 @@ export default function Page() {
                 max="100"
                 className={styles.priceSlider}
               />
-            
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>

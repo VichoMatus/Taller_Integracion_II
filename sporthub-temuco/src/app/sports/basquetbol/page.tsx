@@ -1,14 +1,17 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
+import Sidebar from '../../../components/layout/Sidebar';
 import styles from './page.module.css';
+
+// 🔥 Ya no necesitas el SidebarPlaceholder
 
 // Datos de ejemplo para las canchas mejor calificadas (6 tarjetas)
 const topRatedCourts = [
   {
-    imageUrl: "/path/to/basketball-court1.jpg",
+    imageUrl: "/sports/basquetbol/canchas/Cancha1.png",
     name: "Basquetbol - Centro",
     address: "Norte, Centro, Sur",
     rating: 4.3,
@@ -19,7 +22,7 @@ const topRatedCourts = [
     nextAvailable: "20:00-21:00", 
   },
   {
-    imageUrl: "/path/to/basketball-court2.jpg",
+    imageUrl: "/sports/basquetbol/canchas/Cancha2.png",
     name: "Basquetbol - Norte",
     address: "Sector Norte",
     rating: 4.5,
@@ -51,7 +54,6 @@ const topRatedCourts = [
     price: "26",
     nextAvailable: "Disponible ahora",
   },
-  // 🔥 Nuevas tarjetas
   {
     imageUrl: "/path/to/basketball-court5.jpg",
     name: "Basquetbol - Elite",
@@ -80,9 +82,42 @@ export default function BasquetbolPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [locationSearch, setLocationSearch] = useState('');
   const [radiusKm, setRadiusKm] = useState('5');
-  const [currentSlide, setCurrentSlide] = useState(0); // 🔥 Estado para el carrusel
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [cardsToShow, setCardsToShow] = useState(4);
+  const [isClient, setIsClient] = useState(false);
+  // 🔥 Elimina el estado sidebarLoaded
 
-  // Stats de ejemplo (podrían venir de una API)
+  useEffect(() => {
+    setIsClient(true);
+    
+    const calculateCardsToShow = () => {
+      const screenWidth = window.innerWidth;
+      const cardWidth = 320;
+      const gap = 20;
+      const sidebarWidth = 240;
+      const padding = 40;
+      
+      const availableWidth = screenWidth - sidebarWidth - padding;
+      return Math.max(1, Math.min(4, Math.floor(availableWidth / (cardWidth + gap))));
+    };
+
+    setCardsToShow(calculateCardsToShow());
+
+    const handleResize = () => {
+      setCardsToShow(calculateCardsToShow());
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // 🔥 Elimina el setTimeout del sidebar
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      // 🔥 Elimina el clearTimeout
+    };
+  }, []);
+
+  // Stats de ejemplo
   const stats = {
     disponiblesHoy: 12,
     precioPromedio: { min: 24, max: 30 },
@@ -90,20 +125,6 @@ export default function BasquetbolPage() {
     cantidadJugadores: 10
   };
 
-  // 🔥 Lógica del carrusel actualizada para tarjetas de tamaño fijo
-  const getCardsToShow = () => {
-    // Calcular cuántas tarjetas caben según el ancho de la pantalla
-    const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
-    const cardWidth = 320;
-    const gap = 20;
-    const sidebarWidth = 240;
-    const padding = 40;
-    
-    const availableWidth = screenWidth - sidebarWidth - padding;
-    return Math.floor(availableWidth / (cardWidth + gap));
-  };
-
-  const cardsToShow = Math.max(1, Math.min(4, getCardsToShow())); // Mínimo 1, máximo 4
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -120,22 +141,32 @@ export default function BasquetbolPage() {
 
   const handleSearch = () => {
     console.log('Buscando:', searchTerm);
-    // Aquí implementarías la lógica de búsqueda
   };
 
   const handleLocationSearch = () => {
     console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
-    // Aquí implementarías la búsqueda por ubicación
   };
+
+  // 🔥 Elimina el estado de carga inicial
+  if (!isClient) {
+    return (
+      <div className={styles.pageContainer}>
+        <Sidebar userRole="usuario" sport="basquetbol" />
+        <div className={styles.mainContent}>
+          <div style={{ height: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <p>Cargando...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.pageContainer}>
-      {/* Sidebar placeholder */}
-      <div className={styles.sidebarPlaceholder}></div>
+      {/* 🔥 Siempre mostrar el Sidebar real */}
+      <Sidebar userRole="usuario" sport="basquetbol" />
 
-      {/* Contenido principal */}
       <div className={styles.mainContent}>
-        {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>🏀</div>
@@ -209,7 +240,7 @@ export default function BasquetbolPage() {
             <div 
               className={styles.courtsGrid}
               style={{
-                transform: `translateX(-${currentSlide * (320 + 20)}px)`, // 🔥 Desplazamiento en píxeles exactos
+                transform: `translateX(-${currentSlide * (320 + 20)}px)`,
               }}
             >
               {topRatedCourts.map((court, index) => (
@@ -227,13 +258,12 @@ export default function BasquetbolPage() {
         <div className={styles.mapSection}>
           <h2 className={styles.sectionTitle}>Ubicación en el mapa de las canchas</h2>
           
-          {/* Búsqueda por ubicación */}
           <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>
               <span className={styles.locationIcon}>📍</span>
               <input
                 type="text"
-                placeholder="Dirección o barrio"
+                placeholder="Dirección, barrio o ciudad"
                 value={locationSearch}
                 onChange={(e) => setLocationSearch(e.target.value)}
                 className={styles.locationInput}
@@ -257,10 +287,8 @@ export default function BasquetbolPage() {
             </button>
           </div>
 
-            {/* Mapa */}
           <LocationMap />
 
-          {/* Botones inferiores */}
           <div className={styles.mapActions}>
             <button className={styles.helpButton}>
               ❓ Ayuda
