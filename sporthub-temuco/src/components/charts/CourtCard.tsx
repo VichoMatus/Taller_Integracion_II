@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from './stylesCourtCards/BasquetbolCard.module.css';
+import styles from './stylesCourtCards/BasquetbolCanchasCard.module.css';
 
 interface CourtCardProps {
   imageUrl: string;
@@ -10,7 +10,7 @@ interface CourtCardProps {
   tags: string[];
   description: string;
   price: string;
-  nextAvailable: string; 
+  nextAvailable: string;
   sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel';
   onClick?: () => void;
 }
@@ -27,6 +27,9 @@ const CourtCard: React.FC<CourtCardProps> = ({
   nextAvailable,
   onClick,
 }) => {
+  // 🔥 Limitar a máximo 4 tags
+  const displayTags = tags.slice(0, 4);
+  
   return (
     <div className={styles.courtCard}>
       <img
@@ -52,7 +55,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
         </div>
 
         <div className={styles.tagsContainer}>
-          {tags.map((tag, index) => (
+          {displayTags.map((tag, index) => (
             <span key={index} className={styles.tag}>
               {tag}
             </span>

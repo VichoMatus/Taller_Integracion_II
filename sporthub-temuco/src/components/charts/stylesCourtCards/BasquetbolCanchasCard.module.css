@@ -3,19 +3,62 @@
   width: 342px;
   height: 453px;
   border-radius: 12px;
-  box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.55);
   border: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   font-family: 'Inter', sans-serif;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.6)
+  cursor: pointer; /* 🔥 Indica que es interactivo */
+  transition: all 0.3s ease; /* 🔥 Transición suave para todos los efectos */
 }
 
+/* 🔥 Efectos hover para las tarjetas de canchas */
 .courtCard:hover {
-  transform: translateY(-2px);
-  box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8)
+  transform: translateY(-8px); /* 🔥 Elevación más pronunciada */
+  box-shadow: 
+    0 12px 30px rgba(249, 115, 22, 0.15),
+    0 4px 8px rgba(249, 115, 22, 0.1); /* 🔥 Doble sombra naranja */
+  border-color: #fed7aa; /* 🔥 Borde naranja claro */
+  background: linear-gradient(135deg, #ffffff 0%, #fef7f0 100%); /* 🔥 Gradiente sutil */
+}
+
+/* 🔥 Efecto en la imagen al hacer hover */
+.courtCard:hover .cardImage {
+  transform: scale(1.05); /* 🔥 Zoom ligero en la imagen */
+  filter: brightness(1.1); /* 🔥 Aumenta ligeramente el brillo */
+}
+
+/* 🔥 Efecto en el título al hacer hover */
+.courtCard:hover .cardTitle {
+  color: #ea580c; /* 🔥 Color naranja para el título */
+}
+
+/* 🔥 Efecto en el rating badge al hacer hover */
+.courtCard:hover .ratingBadge {
+  transform: scale(1.05); /* 🔥 Agranda ligeramente el badge */
+  border-color: #f97316; /* 🔥 Borde naranja más intenso */
+  background: #fef7f0; /* 🔥 Fondo ligeramente naranja */
+}
+
+/* 🔥 Efecto en los tags al hacer hover */
+.courtCard:hover .tag {
+  transform: translateY(-2px); /* 🔥 Elevación ligera de los tags */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* 🔥 Sombra más pronunciada */
+  background: #fcd34d; /* 🔥 Color más vibrante */
+  border-color: #f59e0b; /* 🔥 Borde más intenso */
+}
+
+/* 🔥 Efecto en el botón al hacer hover de la tarjeta */
+.courtCard:hover .actionButton {
+  transform: scale(1.05); /* 🔥 Agranda el botón */
+  box-shadow: 0 6px 12px rgba(249, 115, 22, 0.4); /* 🔥 Sombra más intensa */
+  background: #ea580c; /* 🔥 Color más intenso */
+}
+
+/* 🔥 Efecto de pulso al hacer clic */
+.courtCard:active {
+  transform: translateY(-4px) scale(0.98);
 }
 
 .cardImage {
@@ -24,6 +67,7 @@
   object-fit: cover;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
+  transition: all 0.3s ease; /* 🔥 Transición para la imagen */
 }
 
 .cardContent {
@@ -50,6 +94,7 @@
   color: #000000;
   line-height: 1.2;
   margin: 0 0 4px 0;
+  transition: color 0.3s ease; /* 🔥 Transición para el título */
 }
 
 .cardAddress {
@@ -69,6 +114,7 @@
   margin-left: 12px;
   min-width: 110px;
   justify-content: center;
+  transition: all 0.3s ease; /* 🔥 Transición para el badge */
 }
 
 .starIcon {
@@ -152,11 +198,10 @@
   border-radius: 8px;
   border: none;
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(249, 115, 22, 0.2);
-  transition: background-color 0.2s, box-shadow 0.2s;
+  box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s ease; /* 🔥 Transición suave */
   min-width: 100px;
   height: 32px;
-  box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.25)
 }
 
 .actionButton:hover {
