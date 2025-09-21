@@ -14,7 +14,7 @@ export default function EditarPerfilPage() {
       <div className="profile-grid">
         {/* Columna izquierda */}
         <div className="profile-left">
-          <img src="/usuario/perro.jpg" alt="Usuario" className="profile-photo" />
+          <img src="https://placedog.net/200/200?id=12" alt="Foto de perfil" className="profile-photo" />
 
           <button onClick={handleChangePhoto} className="btn-change-photo">
             Cambiar Foto

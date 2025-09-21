@@ -1,0 +1,111 @@
+.reserva-layout {
+  display: flex;
+  height: 100vh;
+  background-color: #f5f7fa;
+}
+
+/* Panel izquierdo */
+.reserva-listado {
+  width: 60%;
+  padding: 30px;
+  overflow-y: auto;
+  background-color: #ffffff;
+  border-right: 1px solid #e0e0e0;
+}
+
+.reserva-listado h2 {
+  margin-bottom: 20px;
+}
+
+.reserva-listado-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.resumen-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+
+.btn-ver-info {
+  align-self: center; /* Esto lo centra horizontalmente */
+  margin-top: 10px;
+  padding: 8px 14px;
+  background-color: #5a6993;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+
+/* Panel derecho */
+.reserva-detalle {
+  width: 40%;
+  padding: 30px;
+  overflow-y: auto;
+  background-color: #ffffff;
+}
+
+.detalle-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.detalle-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.estado-disponible {
+  color: green;
+  font-weight: bold;
+}
+
+.detalle-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.btn-contactar,
+.btn-anular {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.btn-contactar {
+  background-color: #4caf50;
+  color: white;
+}
+
+.btn-anular {
+  background-color: #f44336;
+  color: white;
+}
+
+.detalle-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #888;
+  font-size: 16px;
+  text-align: center;
+}
