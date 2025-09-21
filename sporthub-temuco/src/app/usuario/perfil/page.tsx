@@ -19,6 +19,7 @@ export default function PerfilUsuario() {
           <div><span>Correo</span><span>Usuario@gmail.com</span></div>
           <div><span>Deporte favorito</span><span style={{ color: 'green' }}>Fútbol</span></div>
           <div><span>Edad</span><span>28</span></div>
+          <div><span>Género</span><span>Masculino</span></div>
         </div>
 
         <button className="edit-btn">Editar Perfil</button>

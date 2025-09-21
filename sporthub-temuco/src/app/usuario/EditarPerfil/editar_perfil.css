@@ -137,7 +137,8 @@ body {
 
 .link {
   color: #0066cc;
-  text-decoration: underline;
+  text-decoration: none;
+  font-weight: bold;
 }
 
 .btn-security {
@@ -147,10 +148,15 @@ body {
   padding: 10px 15px;
   font-weight: bold;
   cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
   transition: background 0.3s ease;
 }
 
-.btn-security:hover {
+.btn-security:hover,
+.btn-security:focus {
+  text-decoration: none;
+  font-weight: bold;
   background-color: #c084fc;
 }
 

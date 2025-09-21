@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import './reserva.css';
+import { Button } from '../componentes/compUser';
 
 type Reserva = {
   id: number;
@@ -20,12 +21,12 @@ const reservasMock: Reserva[] = [
     id: 1,
     titulo: 'Fútbol 7 - Club Centro',
     direccion: 'Av. Principal 123',
-    horario: '16:00 - 17:00',
+    horario: '10:00 - 11:00',
     fecha: '08 Junio 2025',
     descripcion:
       'Cancha de gran espacio, techada y con opción a utilizar o fregar en un evento como el administrador lo desee, además de contar con gradas en buen estado y con administración excelente al medio.',
     estado: 'Disponible',
-    precio: 100,
+    precio: 500,
     imagen: '/usuario/cancha.jpg',
   },
   {
@@ -49,20 +50,22 @@ export default function ReservaPage() {
     <div className="reserva-layout">
       {/* Panel izquierdo */}
       <div className="reserva-listado">
-        <h2>Mis Reservas</h2>
+        <h2 className="text-2xl font-bold mb-5 text-center">Mis Reservas</h2>
         <div className="reserva-listado-grid">
           {reservasMock.map((reserva) => (
             <div key={reserva.id} className="resumen-card">
-              <h3>{reserva.titulo}</h3>
+              <h3 className="text-lg font-semibold">{reserva.titulo}</h3>
               <p><strong>Dirección:</strong> {reserva.direccion}</p>
               <p><strong>Horario:</strong> {reserva.horario}</p>
               <p><strong>Fecha:</strong> {reserva.fecha}</p>
-              <button
-                className="btn-ver-info"
+
+              {/* Botón con componente Button */}
+              <Button
+                className="btn-ver-info w-full mt-2"
                 onClick={() => setReservaActiva(reserva)}
               >
                 Ver Información de Reserva
-              </button>
+              </Button>
             </div>
           ))}
         </div>
@@ -73,18 +76,20 @@ export default function ReservaPage() {
         {reservaActiva ? (
           <div className="detalle-card">
             <img src={reservaActiva.imagen} alt="Cancha" className="detalle-img" />
-            <h2>{reservaActiva.titulo}</h2>
+            <h2 className="text-xl font-bold mb-2">{reservaActiva.titulo}</h2>
             <p><strong>Dirección:</strong> {reservaActiva.direccion}</p>
             <p><strong>Estado:</strong> <span className="estado-disponible">{reservaActiva.estado}</span></p>
             <p><strong>Descripción:</strong> {reservaActiva.descripcion}</p>
             <p><strong>Cancha:</strong> {reservaActiva.titulo}</p>
             <p><strong>Horario:</strong> {reservaActiva.horario}</p>
             <p><strong>Fecha:</strong> {reservaActiva.fecha}</p>
-            <p><strong>Precio:</strong> ${reservaActiva.precio}</p>
+            <p><strong>Jugadores:</strong> 10</p>
+            <p><strong>Precio / h:</strong> ${reservaActiva.precio}</p>
 
-            <div className="detalle-actions">
-              <button className="btn-contactar">Contactar Administrador</button>
-              <button className="btn-anular">Anular Reserva</button>
+            <div className="detalle-actions flex gap-2 mt-2">
+              {/* Botones con componente Button */}
+              <Button className="btn-contactar flex-1">Contactar Administrador</Button>
+              <Button className="btn-anular flex-1">Anular Reserva</Button>
             </div>
           </div>
         ) : (
