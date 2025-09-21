@@ -1,41 +1,48 @@
+/* BarChart CSS Simplificado - Compatible con Admin CSS */
 .chartContainer {
   width: 100%;
   height: 380px;
-  background-color: white;
+  background: transparent;
   position: relative;
-  border-radius: 8px;
-  overflow: hidden;
+  border-radius: 12px;
+  padding: 16px;
+  overflow: visible;
+}
+
+.chartTitle {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 20px;
 }
 
 .yAxis {
   position: absolute;
-  left: 0;
-  top: 24px;
-  bottom: 64px;
-  width: 32px;
+  left: 8px;
+  top: 20px;
+  bottom: 60px;
+  width: 40px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  font-size: 14px;
-  color: #374151;
-  font-weight: 500;
+  font-size: 12px;
+  color: #6b7280;
 }
 
 .yAxisLabel {
   text-align: right;
   padding-right: 8px;
-  line-height: 1;
 }
 
 .chartArea {
   position: absolute;
-  left: 40px;
-  right: 16px;
-  top: 24px;
-  bottom: 64px;
-  border-left: 2px solid #111827;
-  border-bottom: 2px solid #111827;
-  background-color: white;
+  left: 50px;
+  right: 20px;
+  top: 20px;
+  bottom: 60px;
+  border-left: 2px solid #e5e7eb;
+  border-bottom: 2px solid #e5e7eb;
 }
 
 .gridLines {
@@ -51,7 +58,7 @@
   left: 0;
   right: 0;
   height: 1px;
-  background-color: #d1d5db;
+  background: #f3f4f6;
 }
 
 .gridLine.bottom25 {
@@ -79,83 +86,61 @@
 }
 
 .barWrapper {
-  width: 15%;
+  width: 14%;
   height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  position: relative;
+  position: static;
 }
 
 .bar {
   width: 100%;
-  background-color: #9fb5b8;
-  transition: height 1000ms ease-out;
+  background: #3b82f6;
   min-height: 2px;
-  position: relative;
-  bottom: 0;
+  border-radius: 3px 3px 0 0;
+  position: static;
 }
 
-.bar.animate {
-  animation: growBar 1500ms ease-out forwards;
-}
-
-@keyframes growBar {
-  from {
-    height: 0 !important;
-  }
-  to {
-    /* Height will be set via inline style */
-  }
+.bar:hover {
+  background: #2563eb;
 }
 
 .barValue {
-  position: absolute;
-  top: -25px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 13px;
-  font-weight: 600;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 500;
   color: #374151;
-  white-space: nowrap;
+  text-align: center;
 }
 
 .xAxisLabels {
   position: absolute;
   bottom: 0;
-  left: 40px;
-  right: 16px;
-  height: 64px;
+  left: 50px;
+  right: 20px;
+  height: 60px;
   display: flex;
   justify-content: space-around;
   align-items: center;
-  padding: 0 20px;
 }
 
 .xAxisLabel {
-  width: 15%;
+  width: 14%;
   text-align: center;
-  font-size: 14px;
-  color: #111827;
-  font-weight: 600;
+  font-size: 12px;
+  color: #4b5563;
+  font-weight: 500;
 }
 
-/* Responsive adjustments */
+/* Media queries simples */
 @media (max-width: 768px) {
   .chartContainer {
-    height: 320px;
+    height: 300px;
   }
   
-  .yAxis {
-    font-size: 12px;
-  }
-  
-  .xAxisLabel {
-    font-size: 12px;
-  }
-  
-  .barValue {
-    font-size: 11px;
+  .yAxis, .xAxisLabel {
+    font-size: 10px;
   }
 }

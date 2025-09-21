@@ -27,8 +27,8 @@ export default function EstadisticasPage() {
   ];
 
   return (
-    <div className="admin-page-container">
-      {/* Header */}
+    <div className="admin-dashboard-container">
+      {/* Header con animación de entrada */}
       <div className="estadisticas-header">
         <h1 className="text-2xl font-bold text-gray-900">Panel de Estadísticas Generales</h1>
         <button className="export-button">
