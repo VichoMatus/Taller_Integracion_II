@@ -84,27 +84,30 @@ export default function CourtsManagementPage() {
 
   return (
     <div className="admin-panel">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">
-          Panel de Gestión de Canchas
-        </h1>
-        <div className="flex gap-4">
-          <Button variant="outline" className="export-button">
-            Exportar Informe
+      <div className="panel-header">
+        <h1>Panel de Gestión de Canchas</h1>
+        <div className="header-actions">
+          <Button variant="secondary" className="export-button">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>Exportar Informe</span>
           </Button>
-          <Button variant="primary" className="add-court-button">
-            Crear Cancha
+          <Button variant="primary" className="add-button">
+            <span>+</span>
+            <span>Crear Cancha</span>
           </Button>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-medium text-gray-700">
-            Lista de Canchas
-          </h2>
-          <div className="w-64">
+      <div className="panel-content">
+        <div className="content-header">
+          <h2>Lista de Canchas</h2>
+          <div className="header-controls">
             <Input
+              type="text"
               placeholder="Buscar..."
               value={searchTerm}
               onChange={handleSearch}
