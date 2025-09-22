@@ -9,6 +9,8 @@ html, body {
   height: 100%;
   background-color: rgba(234, 239, 239, 0.8); /* Fondo #EAEFEF con 80% */
   font-family: Arial, sans-serif;
+  margin-top: 14px; /* espacio para el header fijo xd*/
+  margin-left: 130px; /*espacio para el sidebar fijo, a las malas fue alfinal, no pude automatizarlo*/
 }
 
 /* ===== Layout General ===== */
