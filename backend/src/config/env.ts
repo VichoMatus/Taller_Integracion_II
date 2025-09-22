@@ -44,7 +44,7 @@ const getEnvVar = (key: string, defaultValue?: string): string => {
 export const ENV: Environment = {
   PORT: parseInt(getEnvVar("PORT", "3000")),
   NODE_ENV: getEnvVar("NODE_ENV", "development"),
-  FASTAPI_URL: getEnvVar("FASTAPI_URL"),
+  FASTAPI_URL: getEnvVar("FASTAPI_URL", process.env.API_BASE_URL || "http://localhost:8000"),
   JWT_SECRET: getEnvVar("JWT_SECRET"),
   DATABASE_URL: process.env.DATABASE_URL,
   LOG_LEVEL: getEnvVar("LOG_LEVEL", "info"),

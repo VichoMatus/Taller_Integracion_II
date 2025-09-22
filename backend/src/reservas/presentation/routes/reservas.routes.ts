@@ -43,9 +43,65 @@ const ctrl = (req: any) => {
   );
 };
 
+// === Endpoint de Prueba de Conectividad ===
+/** GET /reservas/test-api - Prueba conectividad REAL con la API de reservas */
+router.get("/test-api", async (req, res) => {
+  try {
+    const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
+    
+    let response;
+    let endpoint_tested = "";
+    
+    try {
+      // Probar endpoint de verificar disponibilidad
+      response = await http.post('/reservas/verificar-disponibilidad', {
+        cancha_id: 1,
+        fecha_inicio: "2024-12-20T10:00:00Z",
+        fecha_fin: "2024-12-20T12:00:00Z"
+      }, { validateStatus: () => true });
+      endpoint_tested = "/reservas/verificar-disponibilidad";
+    } catch (error) {
+      try {
+        // Intentar listar reservas
+        response = await http.get('/reservas', { validateStatus: () => true });
+        endpoint_tested = "/reservas";
+      } catch (error2) {
+        // Fallback a docs
+        response = await http.get('/docs', { validateStatus: () => true });
+        endpoint_tested = "/docs (fallback)";
+      }
+    }
+    
+    res.json({
+      ok: response.status < 400,
+      message: response.status < 400 ? "API de reservas respondió correctamente" : "API respondió con error",
+      fastapi_url: ENV.FASTAPI_URL,
+      endpoint_tested,
+      status: response.status,
+      module: "reservas",
+      available_endpoints: [
+        "POST /reservas/verificar-disponibilidad",
+        "GET /reservas",
+        "POST /reservas",
+        "GET /reservas/usuario/{usuario_id}"
+      ]
+    });
+    
+  } catch (error: any) {
+    res.json({
+      ok: false,
+      message: "Error conectando con API de reservas",
+      fastapi_url: ENV.FASTAPI_URL,
+      module: "reservas",
+      error: error.message,
+      connection_issue: !error.response ? "No se pudo establecer conexión" : "API respondió con error"
+    });
+  }
+});
+
 // === Endpoints Públicos ===
 
-/** POST /reservas/verificar-disponibilidad - Verifica disponibilidad de cancha (público) */
+/** POST /reservas/verificar-disponibilidad - Verificar disponibilidad de cancha (público) */
 router.post("/verificar-disponibilidad", (req, res) => ctrl(req).verificarDisponibilidad(req, res));
 
 // === Endpoints de Usuario Autenticado ===

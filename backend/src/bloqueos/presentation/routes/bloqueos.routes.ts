@@ -45,6 +45,62 @@ const ctrl = (req: any) => {
   );
 };
 
+// === Endpoint de Prueba de Conectividad ===
+/** GET /bloqueos/test-api - Prueba conectividad REAL con la API de bloqueos */
+router.get("/test-api", async (req, res) => {
+  try {
+    const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
+    
+    // Probar diferentes endpoints que podrían existir
+    let response;
+    let endpoint_tested = "";
+    
+    try {
+      // Intentar obtener bloqueos
+      response = await http.get('/bloqueos', { validateStatus: () => true });
+      endpoint_tested = "/bloqueos";
+    } catch (error) {
+      try {
+        // Intentar endpoint de verificación de conflictos
+        response = await http.post('/bloqueos/verificar-conflicto', {
+          cancha_id: 1,
+          fecha_inicio: "2024-12-20T10:00:00Z",
+          fecha_fin: "2024-12-20T12:00:00Z"
+        }, { validateStatus: () => true });
+        endpoint_tested = "/bloqueos/verificar-conflicto";
+      } catch (error2) {
+        // Fallback a docs
+        response = await http.get('/docs', { validateStatus: () => true });
+        endpoint_tested = "/docs (fallback)";
+      }
+    }
+    
+    res.json({
+      ok: response.status < 400,
+      message: response.status < 400 ? "API de bloqueos respondió correctamente" : "API respondió con error",
+      fastapi_url: ENV.FASTAPI_URL,
+      endpoint_tested,
+      status: response.status,
+      module: "bloqueos",
+      available_endpoints: [
+        "POST /bloqueos/verificar-conflicto",
+        "GET /bloqueos/activos/{cancha_id}",
+        "GET /bloqueos"
+      ]
+    });
+    
+  } catch (error: any) {
+    res.json({
+      ok: false,
+      message: "Error conectando con API de bloqueos",
+      fastapi_url: ENV.FASTAPI_URL,
+      module: "bloqueos",
+      error: error.message,
+      connection_issue: !error.response ? "No se pudo establecer conexión" : "API respondió con error"
+    });
+  }
+});
+
 // === Endpoints Públicos ===
 
 /** POST /bloqueos/verificar-conflicto - Verifica conflictos entre bloqueos (público) */

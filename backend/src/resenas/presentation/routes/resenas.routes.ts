@@ -49,6 +49,64 @@ const ctrl = (req: any) => {
   );
 };
 
+// === Endpoint de Prueba de Conectividad ===
+/** GET /resenas/test-api - Prueba conectividad REAL con la API de reseñas */
+router.get("/test-api", async (req, res) => {
+  try {
+    const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
+    
+    let response;
+    let endpoint_tested = "";
+    
+    try {
+      // Probar endpoint de reseñas por complejo
+      response = await http.get('/resenas/complejo/1', { validateStatus: () => true });
+      endpoint_tested = "/resenas/complejo/1";
+    } catch (error) {
+      try {
+        // Intentar estadísticas
+        response = await http.get('/resenas/estadisticas/1', { validateStatus: () => true });
+        endpoint_tested = "/resenas/estadisticas/1";
+      } catch (error2) {
+        try {
+          // Intentar listar reseñas
+          response = await http.get('/resenas', { validateStatus: () => true });
+          endpoint_tested = "/resenas";
+        } catch (error3) {
+          // Fallback a docs
+          response = await http.get('/docs', { validateStatus: () => true });
+          endpoint_tested = "/docs (fallback)";
+        }
+      }
+    }
+    
+    res.json({
+      ok: response.status < 400,
+      message: response.status < 400 ? "API de reseñas respondió correctamente" : "API respondió con error",
+      fastapi_url: ENV.FASTAPI_URL,
+      endpoint_tested,
+      status: response.status,
+      module: "resenas",
+      available_endpoints: [
+        "GET /resenas/complejo/{complejo_id}",
+        "GET /resenas/estadisticas/{complejo_id}",
+        "GET /resenas",
+        "POST /resenas"
+      ]
+    });
+    
+  } catch (error: any) {
+    res.json({
+      ok: false,
+      message: "Error conectando con API de reseñas",
+      fastapi_url: ENV.FASTAPI_URL,
+      module: "resenas",
+      error: error.message,
+      connection_issue: !error.response ? "No se pudo establecer conexión" : "API respondió con error"
+    });
+  }
+});
+
 // === Endpoints Públicos (solo lectura) ===
 
 /** GET /resenas/complejo/:complejoId - Obtiene reseñas de un complejo (público) */

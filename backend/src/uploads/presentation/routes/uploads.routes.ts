@@ -100,45 +100,44 @@ const ctrl = (req: any) => {
   );
 };
 
+// === Endpoint de Prueba de Conectividad ===
+router.get("/test-api", async (req, res) => {
+  try {
+    const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
+    const response = await http.get('/api/v1/healthz', { validateStatus: () => true });
+    
+    res.json({
+      ok: response.status < 400,
+      message: response.status < 400 ? "API de uploads funcionando" : "API no disponible",
+      fastapi_url: ENV.FASTAPI_URL,
+      status: response.status,
+      module: "uploads"
+    });
+  } catch (error: any) {
+    res.json({
+      ok: false,
+      message: "Error conectando con API de uploads",
+      fastapi_url: ENV.FASTAPI_URL,
+      module: "uploads",
+      error: error.message
+    });
+  }
+});
+
 // === Endpoints Públicos ===
-
-/** GET /uploads/entidad/:tipoEntidad/:entidadId - Obtiene uploads de una entidad (público) */
 router.get("/entidad/:tipoEntidad/:entidadId", (req, res) => ctrl(req).getByEntidad(req, res));
-
-/** GET /uploads/:id - Obtiene upload específico (público para lectura) */
 router.get("/:id", (req, res) => ctrl(req).get(req, res));
 
 // === Endpoints de Usuario Autenticado ===
-// Requieren autenticación para subir y gestionar archivos
-
-/** POST /uploads - Sube un nuevo archivo */
-router.post("/", 
-  uploadMiddleware.single('file'),
-  (req, res) => ctrl(req).upload(req, res)
-);
-
-/** GET /uploads/usuario/:usuarioId - Obtiene uploads de un usuario */
+router.post("/", uploadMiddleware.single('file'), (req, res) => ctrl(req).upload(req, res));
 router.get("/usuario/:usuarioId", (req, res) => ctrl(req).getByUsuario(req, res));
-
-/** PATCH /uploads/:id - Actualiza metadatos de upload (solo el propietario) */
 router.patch("/:id", (req, res) => ctrl(req).update(req, res));
-
-/** DELETE /uploads/:id - Elimina upload (solo el propietario) */
 router.delete("/:id", (req, res) => ctrl(req).delete(req, res));
-
-/** POST /uploads/:id/processed - Marca upload como procesado (interno) */
 router.post("/:id/processed", (req, res) => ctrl(req).markProcessed(req, res));
 
 // === Endpoints Administrativos ===
-// Requieren rol admin o superadmin
-
-/** GET /uploads - Lista todos los uploads con filtros */
 router.get("/", requireRole("admin", "superadmin"), (req, res) => ctrl(req).list(req, res));
-
-/** GET /uploads/stats - Obtiene estadísticas de uploads */
 router.get("/stats", requireRole("admin", "superadmin"), (req, res) => ctrl(req).getStats(req, res));
-
-/** POST /uploads/cleanup - Limpia uploads expirados */
 router.post("/cleanup", requireRole("admin", "superadmin"), (req, res) => ctrl(req).cleanup(req, res));
 
 export default router;

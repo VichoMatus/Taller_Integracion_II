@@ -20,7 +20,8 @@ export class AdminApiRepository implements AdminRepository {
    */
   async listUsers(p: { page?: number; pageSize?: number; q?: string; rol?: Rol }): Promise<Paginated<User>> {
     try {
-      const { data } = await this.http.get(`/usuarios`, { params: p });
+      // Usar endpoint real de tu API
+      const { data } = await this.http.get(`/api/v1/usuarios`, { params: p });
       return normalizePage<User>(data, x => toUser(x as FastUser));
     } catch (e) { throw httpError(e); }
   }
@@ -31,7 +32,11 @@ export class AdminApiRepository implements AdminRepository {
    * @returns Promise con el usuario encontrado
    */
   async getUser(id: number): Promise<User> {
-    try { const { data } = await this.http.get<FastUser>(`/usuarios/${id}`); return toUser(data); }
+    try { 
+      // Usar endpoint real de tu API
+      const { data } = await this.http.get<FastUser>(`/api/v1/usuarios/${id}`); 
+      return toUser(data); 
+    }
     catch (e) { throw httpError(e); }
   }
 
@@ -44,14 +49,9 @@ export class AdminApiRepository implements AdminRepository {
    */
   async patchUser(id: number, input: Partial<Omit<User,"id"|"rol">> & { rol?: Rol }): Promise<User> {
     try {
-      // Enviar snake_case al FastAPI
-      const payload = toSnake({
-        ...input,
-        // por si tu API espera estos nombres exactos:
-        activo: input.activo,
-        avatarUrl: input.avatarUrl,
-      });
-      const { data } = await this.http.patch<FastUser>(`/usuarios/${id}`, payload);
+      // Usar endpoint real de tu API
+      const payload = toSnake(input);
+      const { data } = await this.http.patch<FastUser>(`/api/v1/usuarios/${id}`, payload);
       return toUser(data);
     } catch (e) { throw httpError(e); }
   }
@@ -61,7 +61,10 @@ export class AdminApiRepository implements AdminRepository {
    * @param id - ID del usuario a eliminar
    */
   async removeUser(id: number): Promise<void> {
-    try { await this.http.delete(`/usuarios/${id}`); }
+    try { 
+      // Usar endpoint real de tu API
+      await this.http.delete(`/api/v1/usuarios/${id}`); 
+    }
     catch (e) { throw httpError(e); }
   }
 
@@ -74,9 +77,9 @@ export class AdminApiRepository implements AdminRepository {
    */
   async asignarRol(userId: number, rol: Rol): Promise<User> {
     try {
-      const { data } = await this.http.post<FastUser | { detail: string }>(`/admin/usuarios/${userId}/rol`, { rol });
+      // Usar endpoint real de tu API
+      const { data } = await this.http.post<FastUser | { detail: string }>(`/api/v1/admin/usuarios/${userId}/rol`, { rol });
       if ((data as any)?.id_usuario) return toUser(data as FastUser);
-      // Fallback si el endpoint solo devuelve {detail}
       return { id: userId, email: "", rol, activo: true, verificado: true } as User;
     } catch (e) { throw httpError(e); }
   }

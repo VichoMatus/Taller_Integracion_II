@@ -52,4 +52,69 @@ router.delete("/users/:id", requireRole("admin", "superadmin"), (req, res) => ct
 /** POST /admin/users/:id/role - Asigna rol a usuario (con validación de permisos) */
 router.post("/users/:id/role", requireRole("admin", "superadmin"), (req, res) => ctrl(req).asignarRol(req, res));
 
+// === Endpoint de Prueba de Conectividad ===
+/** GET /admin/test-api - Prueba conectividad REAL con la API de usuarios */
+router.get("/test-api", async (req, res) => {
+  try {
+    const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
+    
+    let response;
+    let endpoint_tested = "";
+    let endpoints_found = [];
+    let success = false;
+    
+    // Probar endpoints reales que existen en tu API
+    const endpointsToTest = [
+      '/api/v1/usuarios',
+      '/api/v1/healthz',
+      '/api/v1/version'
+    ];
+    
+    for (const endpoint of endpointsToTest) {
+      try {
+        const testResponse = await http.get(endpoint, { validateStatus: () => true });
+        if (testResponse.status < 500) {
+          endpoints_found.push(`${endpoint} ✅ (${testResponse.status})`);
+          if (testResponse.status < 400) {
+            endpoint_tested = endpoint;
+            response = testResponse;
+            success = true;
+          }
+        } else {
+          endpoints_found.push(`${endpoint} ❌ (${testResponse.status})`);
+        }
+      } catch (error) {
+        endpoints_found.push(`${endpoint} ❌ (error)`);
+      }
+    }
+    
+    res.json({
+      ok: success,
+      message: success ? "API de usuarios funcionando" : "Algunos endpoints con errores",
+      fastapi_url: ENV.FASTAPI_URL,
+      endpoint_tested,
+      status: response?.status || 0,
+      module: "admin",
+      endpoints_found,
+      success,
+      real_endpoints: [
+        "GET /api/v1/usuarios",
+        "GET /api/v1/usuarios/{id_usuario}",
+        "PATCH /api/v1/usuarios/{id_usuario}",
+        "DELETE /api/v1/usuarios/{id_usuario}",
+        "POST /api/v1/admin/usuarios/{id_usuario}/rol"
+      ]
+    });
+    
+  } catch (error: any) {
+    res.json({
+      ok: false,
+      message: "Error conectando con FastAPI",
+      fastapi_url: ENV.FASTAPI_URL,
+      module: "admin",
+      error: error.message
+    });
+  }
+});
+
 export default router;
