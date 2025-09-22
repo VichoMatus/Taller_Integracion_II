@@ -2,7 +2,18 @@
  * SERVIDOR PRINCIPAL - BACKEND FOR FRONTEND (BFF)
  * ===============================================
  * 
- * Este servidor Express actúa como BFF entre el frontend y la API FastAPI.
+ * Este servidor Expr  console.log('🚀 Servidor BFF iniciado correctamente');
+  console.log(`🌍 URL: http://localhost:${PORT}`);
+  console.log(`🌐 API FastAPI: ${process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me'}`);
+  console.log(`📄 Documentación FastAPI: ${process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me'}/docs`);
+  console.log(`🔗 Endpoints disponibles:`);
+  console.log(`   - GET  /health`);
+  console.log(`   - GET  /api`);
+  console.log(`   - POST /api/auth/register`);
+  console.log(`   - POST /api/auth/login`);
+  console.log(`   - GET  /api/auth/me`);
+  console.log(`   - GET  /api/superadmin/users`);
+  console.log(`   - Y muchos más...`);BFF entre el frontend y la API FastAPI.
  */
 
 import express from 'express';
@@ -11,9 +22,6 @@ import dotenv from 'dotenv';
 import path from 'path';
 import authRoutes from './auth/routes/authRoutes';
 import superAdminRoutes from './superAdmin/routes/superAdminRoutes';
-import pricingRoutes from './pricing/routes/pricingRoutes';
-import promocionesRoutes from './promociones/routes/promocionesRoutes';
-import bloqueosRoutes from './bloqueos/routes/bloqueosRoutes';
 
 // Cargar variables de entorno desde el .env de la raíz del proyecto
 // En Docker, el .env se monta en /app/.env
@@ -85,15 +93,6 @@ app.use('/api/auth', authRoutes);
 // Rutas de administración
 app.use('/api/superadmin', superAdminRoutes);
 
-// Rutas de pricing (reglas de precio)
-app.use('/api/pricing', pricingRoutes);
-
-// Rutas de promociones
-app.use('/api/promociones', promocionesRoutes);
-
-// Rutas de bloqueos
-app.use('/api/bloqueos', bloqueosRoutes);
-
 // Ruta de información general
 app.get('/api', (req, res) => {
   res.json({
@@ -103,10 +102,7 @@ app.get('/api', (req, res) => {
     endpoints: {
       health: '/health',
       auth: '/api/auth/*',
-      superadmin: '/api/superadmin/*',
-      pricing: '/api/pricing/*',
-      promociones: '/api/promociones/*',
-      bloqueos: '/api/bloqueos/*'
+      superadmin: '/api/superadmin/*'
     },
     api: {
       fastapi: process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me',
