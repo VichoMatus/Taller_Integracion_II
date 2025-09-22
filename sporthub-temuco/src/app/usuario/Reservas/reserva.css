@@ -114,3 +114,21 @@ h2 {
   font-size: 16px;
   text-align: center;
 }
+
+.page-wrapper {
+  margin-top: 14px;   /* espacio para header */
+  margin-left: 256px; /* espacio para sidebar */
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: calc(100% - 256px);
+  padding: 20px;
+}
+
+.titulo-principal {
+  font-size: 1.8rem;
+  font-weight: bold;
+  text-align: center; /* centra horizontalmente */
+  color: #333;
+  margin-bottom: 20px; /* espacio con el contenido debajo */
+}

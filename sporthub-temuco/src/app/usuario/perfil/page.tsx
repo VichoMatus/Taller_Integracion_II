@@ -3,57 +3,64 @@
 import './perfil.css';
 import React from 'react';
 import UserLayout from '../UsuarioLayout';
+import Link from 'next/link';
 
 export default function PerfilUsuario() {
   return (
     <UserLayout
-      userName="Perro Inteligente"
+      userName="Usuario"
       sport="futbol"
-      notificationCount={2} // puedes ajustar este número dinámicamente si lo necesitas
+      notificationCount={2}
     >
-      <div className="profile-card">
-        {/* Columna izquierda: perfil */}
-        <div className="profile-left">
-          <img src="https://placedog.net/200/200?id=12" alt="Foto de perfil" />
+      {/* Wrapper que respeta header y sidebar */}
+      <div className="page-wrapper">
+        <div className="profile-card">
+          {/* Columna izquierda: perfil */}
+          <div className="profile-left">
+            <img src="https://placedog.net/200/200?id=12" alt="Foto de perfil" />
 
-          <h2>Perro Inteligente</h2>
-          <p>Usuario</p>
+            <h2>Usuario</h2>
+            <p>Usuario</p>
 
-          <div className="profile-details">
-            <div><span>Ubicación</span><span>Padre Las Casas</span></div>
-            <div><span>Número de Teléfono</span><span>+569 28102374</span></div>
-            <div><span>Correo</span><span>Usuario@gmail.com</span></div>
-            <div><span>Deporte favorito</span><span style={{ color: 'green' }}>Fútbol</span></div>
-            <div><span>Edad</span><span>28</span></div>
-            <div><span>Género</span><span>Masculino</span></div>
+            <div className="profile-details">
+              <div><span>Ubicación</span><span>Padre Las Casas</span></div>
+              <div><span>Número de Teléfono</span><span>+569 28102374</span></div>
+              <div><span>Correo</span><span>Usuario@gmail.com</span></div>
+              <div><span>Deporte favorito</span><span style={{ color: 'green' }}>Fútbol</span></div>
+              <div><span>Edad</span><span>28</span></div>
+              <div><span>Género</span><span>Masculino</span></div>
+            </div>
+
+            <Link href="/usuario/editarperfil">
+                <button className="edit-btn">Editar Perfil</button>
+            </Link>
+            
           </div>
 
-          <button className="edit-btn">Editar Perfil</button>
-        </div>
+          {/* Columna derecha: info y reservas */}
+          <div className="profile-right">
+            <div className="info-box">
+              <h3>Información del Usuario</h3>
+              <p>
+                Me gusta jugar a la pelota y ando en busca de una buena aplicación web
+                para poder reservar canchas para jugar a la pelota.
+              </p>
+            </div>
 
-        {/* Columna derecha: info y reservas */}
-        <div className="profile-right">
-          <div className="info-box">
-            <h3>Información del Usuario</h3>
-            <p>
-              Me gusta jugar a la pelota y ando en busca de una buena aplicación web
-              para poder reservar canchas para jugar a la pelota.
-            </p>
-          </div>
-
-          <div className="reservas-box">
-            <h3>Últimas Reservas Activas</h3>
-            <div className="reservas-grid">
-              <div className="reserva-card">
-                <img src="/usuario/cancha.jpg" alt="Reserva" />
-                <p><b>Fútbol 7 - Club Centro</b></p>
-                <p>Av. Principal 123</p>
-                <p>Horario: 10:00 - 11:00</p>
-                <p>Fecha: 08 Junio 2025</p>
-                <button className="reserva-btn">Ir a Reservas</button>
-              </div>
-              <div className="reserva-card">
-                {/* Otra reserva futura */}
+            <div className="reservas-box">
+              <h3>Últimas Reservas Activas</h3>
+              <div className="reservas-grid">
+                <div className="reserva-card">
+                  <img src="/usuario/cancha.jpg" alt="Reserva" />
+                  <p><b>Fútbol 7 - Club Centro</b></p>
+                  <p>Av. Principal 123</p>
+                  <p>Horario: 10:00 - 11:00</p>
+                  <p>Fecha: 08 Junio 2025</p>
+                  <button className="reserva-btn">Ir a Reservas</button>
+                </div>
+                <div className="reserva-card">
+                  {/* Otra reserva futura */}
+                </div>
               </div>
             </div>
           </div>
