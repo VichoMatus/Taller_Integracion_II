@@ -1,0 +1,65 @@
+services:
+  frontend:
+    build: ./sporthub-temuco
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./sporthub-temuco:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./.env:/app/.env  # Montar el archivo .env de la raíz
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=db
+      - DB_USER=${DOCKER_POSTGRES_USER}
+      - DB_PASS=${DOCKER_POSTGRES_PASSWORD}
+      - DB_NAME=${DOCKER_POSTGRES_DB}
+      - API_BASE_URL=${API_BASE_URL}
+      - BFF_PORT=${BFF_PORT}
+      - FRONTEND_URL=${FRONTEND_URL}
+    depends_on:
+      - db
+    command: npm run dev
+    restart: unless-stopped
+
+  db:
+    image: postgres:13
+    container_name: pg_local
+    restart: always
+    environment:
+      DOCKER_POSTGRES_USER: ${DOCKER_POSTGRES_USER}
+      DOCKER_POSTGRES_PASSWORD: ${DOCKER_POSTGRES_PASSWORD}
+      DOCKER_POSTGRES_DB: ${DOCKER_POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+ 
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    # http://localhost:8080
+
+
+volumes:
+  pgdata:
