@@ -5,7 +5,7 @@ import './Header.css';
 
 interface HeaderProps {
   userName: string;
-  userRole: 'admin' | 'superadmin';
+  userRole: 'usuario' | 'admin' | 'superadmin';
   notificationCount?: number;
 }
 
