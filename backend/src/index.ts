@@ -11,6 +11,9 @@ import dotenv from 'dotenv';
 import path from 'path';
 import authRoutes from './auth/routes/authRoutes';
 import superAdminRoutes from './superAdmin/routes/superAdminRoutes';
+import pricingRoutes from './pricing/routes/pricingRoutes';
+import promocionesRoutes from './promociones/routes/promocionesRoutes';
+import bloqueosRoutes from './bloqueos/routes/bloqueosRoutes';
 
 // Cargar variables de entorno desde el .env de la raíz del proyecto
 // En Docker, el .env se monta en /app/.env
@@ -58,7 +61,10 @@ app.get('/', (req, res) => {
       info: '/api',
       health: '/health',
       auth: '/api/auth',
-      admin: '/api/superadmin'
+      admin: '/api/superadmin',
+      pricing: '/api/pricing',
+      promociones: '/api/promociones',
+      bloqueos: '/api/bloqueos'
     }
   });
 });
@@ -79,6 +85,15 @@ app.use('/api/auth', authRoutes);
 // Rutas de administración
 app.use('/api/superadmin', superAdminRoutes);
 
+// Rutas de pricing (reglas de precio)
+app.use('/api/pricing', pricingRoutes);
+
+// Rutas de promociones
+app.use('/api/promociones', promocionesRoutes);
+
+// Rutas de bloqueos
+app.use('/api/bloqueos', bloqueosRoutes);
+
 // Ruta de información general
 app.get('/api', (req, res) => {
   res.json({
@@ -88,7 +103,10 @@ app.get('/api', (req, res) => {
     endpoints: {
       health: '/health',
       auth: '/api/auth/*',
-      superadmin: '/api/superadmin/*'
+      superadmin: '/api/superadmin/*',
+      pricing: '/api/pricing/*',
+      promociones: '/api/promociones/*',
+      bloqueos: '/api/bloqueos/*'
     },
     api: {
       fastapi: process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me',
@@ -137,6 +155,9 @@ app.listen(PORT, () => {
   console.log(`   - POST /api/auth/login`);
   console.log(`   - GET  /api/auth/me`);
   console.log(`   - GET  /api/superadmin/users`);
+  console.log(`   - GET  /api/pricing`);
+  console.log(`   - GET  /api/promociones`);
+  console.log(`   - GET  /api/bloqueos`);
   console.log(`   - Y muchos más...`);
 });
 
