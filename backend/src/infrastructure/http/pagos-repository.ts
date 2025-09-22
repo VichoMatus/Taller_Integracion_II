@@ -5,7 +5,7 @@ import { Pago, PagosList, PagoQueryParams, PagoDetalle } from '../../domain/pago
 export class HttpPagoRepository implements PagoRepository {
   private apiClient;
 
-  constructor(baseURL: string = process.env.API_BASE_URL || 'http://localhost:8000') {
+  constructor(baseURL: string = process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me') {
     this.apiClient = axios.create({
       baseURL,
       timeout: 10000,

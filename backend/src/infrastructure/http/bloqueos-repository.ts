@@ -5,7 +5,7 @@ import { Bloqueo, BloqueosList, BloqueoQueryParams } from '../../domain/bloqueos
 export class HttpBloqueoRepository implements BloqueoRepository {
   private apiClient;
 
-  constructor(baseURL: string = 'http://localhost:8000') {
+  constructor(baseURL: string = 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me') {
     this.apiClient = axios.create({
       baseURL,
       timeout: 10000,

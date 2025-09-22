@@ -5,7 +5,7 @@ import { ReglaPrecio, Promocion, PricingRulesList, PromocionList, PricingQueryPa
 export class HttpPricingRepository implements PricingRepository {
   private apiClient;
 
-  constructor(baseURL: string = 'http://localhost:8000') {
+  constructor(baseURL: string = 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me') {
     this.apiClient = axios.create({
       baseURL,
       timeout: 10000,

@@ -5,7 +5,7 @@ import { Cancha, CanchasList, CanchaQueryParams } from '../../domain/canchas/ent
 export class HttpCanchaRepository implements CanchaRepository {
   private apiClient;
 
-  constructor(baseURL: string = process.env.API_BASE_URL || 'http://localhost:8000') {
+  constructor(baseURL: string = process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me') {
     this.apiClient = axios.create({
       baseURL,
       timeout: 10000,
