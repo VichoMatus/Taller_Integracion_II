@@ -1,0 +1,170 @@
+.admin-layout {
+  display: flex;
+  height: 100vh;
+  background-color: #f5f7fa;
+}
+
+/* Panel izquierdo */
+.admin-info {
+  width: 35%;
+  background: white;
+  padding: 30px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-right: 1px solid #ddd;
+}
+
+.admin-avatar {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.avatar-placeholder {
+  font-size: 60px;
+  background-color: #e0e0e0;
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+}
+
+.admin-role {
+  color: gray;
+  font-size: 14px;
+}
+
+.admin-details {
+  width: 100%;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.btn-editar {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #5a6993;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Panel derecho */
+.admin-content {
+  width: 65%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+/* Parte superior */
+.admin-header {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.admin-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.admin-placeholder {
+  flex: 1;
+  background-color: #ffffff;
+  border-radius: 12px;
+  margin-top: 10px;
+  width: 100%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* Espacio vacío sobre el gráfico */
+.grafico-espacio-vacio {
+  height: 30px;
+}
+
+/* Parte inferior: gráfico */
+.grafico-box {
+  height: 40%;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.grafico-barras {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 120px;
+  margin-top: 20px;
+  border-bottom: 1px solid #ccc;
+}
+
+.barra-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+
+.barra {
+  width: 24px;
+  background-color: #5a6993;
+  border-radius: 4px 4px 0 0;
+  margin-bottom: 5px;
+  position: relative;
+  transition: height 0.3s ease;
+}
+
+.barra-item span {
+  font-size: 12px;
+  color: #333;
+}
+
+/* Tooltip */
+.tooltip {
+  position: absolute;
+  top: -24px;
+  background-color: #333;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* Footer gráfico */
+.grafico-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+}
+
+.semana-label {
+  font-size: 14px;
+  color: gray;
+}
+
+.btn-excel {
+  padding: 8px 16px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
