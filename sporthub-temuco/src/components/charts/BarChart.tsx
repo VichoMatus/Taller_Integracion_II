@@ -1,5 +1,6 @@
 'use client';
 
+import React, { useState } from 'react';
 import styles from './BarChart.module.css';
 
 interface DataItem {
@@ -10,18 +11,14 @@ interface DataItem {
 interface BarChartProps {
   data: DataItem[];
   title?: string;
-  height?: string;               
-  className?: string;            
-  primaryColor?: string;         
-  secondaryColor?: string;       
-  showValues?: boolean;          
-  animate?: boolean;             
-  maxValue?: number;             
-  emptyMessage?: string;         
-  ariaLabel?: string;            
-  loading?: boolean;             
-  onBarClick?: (item: DataItem, index: number) => void; 
-  formatValue?: (value: number) => string | number;     
+  height?: string;
+  className?: string;
+  showValues?: boolean;
+  maxValue?: number;
+  emptyMessage?: string;
+  ariaLabel?: string;
+  loading?: boolean;
+  formatValue?: (value: number) => string | number;
 }
 
 const BarChart: React.FC<BarChartProps> = ({
@@ -29,35 +26,42 @@ const BarChart: React.FC<BarChartProps> = ({
   title,
   height = 'h-60',
   className = '',
-  primaryColor = '#A3BCBF',
-  secondaryColor = 'bg-blue-100',
   showValues = true,
-  animate = true,
   maxValue,
   emptyMessage = 'Sin datos disponibles',
   ariaLabel = 'Gráfico de barras',
   loading = false,
-  onBarClick,
   formatValue
 }) => {
   
-  // Determine the maximum value from the data if not provided
+  // Calcular valor máximo
   const calculatedMax = maxValue || Math.max(...data.map(item => item.value), 0);
-  
-  // For this specific case, use 40 as max to match the reference
-  const yAxisMax = maxValue || 40;
+  const yAxisMax = calculatedMax || 40;
 
   // Loading skeleton
   if (loading) {
     return (
       <div className={`w-full ${className}`} aria-busy="true" aria-live="polite">
         {title && <h3 className="text-lg font-medium text-gray-800 mb-4">{title}</h3>}
-        <div className={`${height} flex items-end gap-2 animate-pulse`}> 
+        <div className={`${height} flex items-end gap-2`}> 
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center">
-              <div className="w-full bg-gray-200 rounded-t-md" style={{ height: `${20 + (i % 5) * 10}%` }} />
-              <div className="w-full h-1 bg-gray-100 mt-1" />
-              <span className="text-xs text-gray-400 mt-2 block w-6 h-3 bg-gray-100 rounded" />
+            <div 
+              key={i} 
+              className="flex-1 flex flex-col items-center"
+              style={{ animationDelay: `${i * 0.1}s` }}
+            >
+              <div 
+                className={`w-full ${styles.skeletonBar}`}
+                style={{ 
+                  height: `${20 + (i % 5) * 10}%`,
+                  animationDelay: `${i * 0.2}s`
+                }} 
+              />
+              <div className="w-full h-1 bg-gray-100 mt-1 rounded animate-pulse" />
+              <span 
+                className={`text-xs text-gray-400 mt-2 block w-6 h-3 bg-gray-100 rounded ${styles.skeletonLabel}`}
+                style={{ animationDelay: `${i * 0.15}s` }}
+              />
             </div>
           ))}
         </div>
@@ -91,18 +95,17 @@ const BarChart: React.FC<BarChartProps> = ({
             {data.map((item, index) => {
               const heightPercent = (item.value / yAxisMax) * 100;
               return (
-                <div key={index} className={styles.barWrapper}>
+                <div 
+                  key={index} 
+                  className={styles.barWrapper}
+                >
                   <div 
-                    className={`${styles.bar} ${animate ? styles.animate : ''}`}
+                    className={styles.bar}
                     style={{ 
-                      height: `${heightPercent}%`,
-                      backgroundColor: primaryColor
+                      height: `${heightPercent}%`
                     }}
                     role="img"
                     aria-label={`${item.label}: ${item.value}`}
-                    onClick={onBarClick ? () => onBarClick(item, index) : undefined}
-                    tabIndex={onBarClick ? 0 : -1}
-                    onKeyDown={onBarClick ? (e) => { if (e.key === 'Enter') onBarClick(item, index); } : undefined}
                   >
                     {/* Valor encima de la barra */}
                     {showValues && (
