@@ -6,7 +6,6 @@ import StatsCard from '@/components/charts/StatsCard';
 import LineChart from '@/components/charts/LineChart';
 import PieChart from '@/components/charts/PieChart';
 import ChartCard from '@/components/charts/ChartCard';
-import '../styles/adminPanel.css';
 import './estadisticas.css';
 
 export default function EstadisticasPage() {
