@@ -20,7 +20,7 @@
  */
 
 import axios, { AxiosInstance } from 'axios';
-import { API_CONFIG } from '../../config/config';
+import { API_CONFIG, API_ENDPOINTS } from '../../config/config';
 import { LoginRequest, TokenResponse, ApiResponse } from '../types/superAdminTypes';
 
 /**
@@ -70,7 +70,7 @@ export class SuperAdminService {
    */
   async login(credentials: LoginRequest): Promise<ApiResponse<TokenResponse>> {
     try {
-      const response = await this.apiClient.post('/api/v1/auth/login', credentials);
+      const response = await this.apiClient.post(API_ENDPOINTS.auth.login, credentials);
       
       // Verificar que el usuario tiene permisos de administrador
       if (response.data.user.rol !== 'superadmin' && response.data.user.rol !== 'admin') {
@@ -92,7 +92,7 @@ export class SuperAdminService {
    */
   async logout(refreshToken: string): Promise<ApiResponse> {
     try {
-      await this.apiClient.post('/api/v1/auth/logout', { refresh_token: refreshToken });
+      await this.apiClient.post(API_ENDPOINTS.auth.logout, { refresh_token: refreshToken });
       this.authToken = null; // Limpiar token almacenado
       return { ok: true, message: 'Sesión cerrada exitosamente' };
     } catch (error: any) {
@@ -112,7 +112,7 @@ export class SuperAdminService {
    */
   async getUsers(params: any = {}): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.get('/api/v1/usuarios', { params });
+      const response = await this.apiClient.get(API_ENDPOINTS.usuarios.base, { params });
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al obtener usuarios' };
@@ -124,7 +124,7 @@ export class SuperAdminService {
    */
   async getUserById(id: number): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.get(`/api/v1/usuarios/${id}`);
+      const response = await this.apiClient.get(API_ENDPOINTS.usuarios.byId(id));
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al obtener usuario' };
@@ -136,7 +136,7 @@ export class SuperAdminService {
    */
   async updateUser(id: number, data: any): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.patch(`/api/v1/usuarios/${id}`, data);
+      const response = await this.apiClient.patch(API_ENDPOINTS.usuarios.byId(id), data);
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al actualizar usuario' };
@@ -148,7 +148,7 @@ export class SuperAdminService {
    */
   async deleteUser(id: number): Promise<ApiResponse> {
     try {
-      await this.apiClient.delete(`/api/v1/usuarios/${id}`);
+      await this.apiClient.delete(API_ENDPOINTS.usuarios.byId(id));
       return { ok: true, message: 'Usuario desactivado correctamente' };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al desactivar usuario' };
@@ -163,7 +163,7 @@ export class SuperAdminService {
   /** Obtener lista de complejos con filtros y paginación */
   async getComplejos(params: any = {}): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.get('/api/v1/complejos', { params });
+      const response = await this.apiClient.get(API_ENDPOINTS.complejos.base, { params });
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al obtener complejos' };
@@ -172,7 +172,7 @@ export class SuperAdminService {
 
   async getComplejoById(id: number, params: any = {}): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.get(`/api/v1/complejos/${id}`, { params });
+      const response = await this.apiClient.get(API_ENDPOINTS.complejos.byId(id), { params });
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al obtener complejo' };
@@ -181,7 +181,7 @@ export class SuperAdminService {
 
   async getComplejoCanchas(id: number): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.get(`/api/v1/complejos/${id}/canchas`);
+      const response = await this.apiClient.get(API_ENDPOINTS.complejos.canchas(id));
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al obtener canchas' };
@@ -191,7 +191,7 @@ export class SuperAdminService {
   // SuperAdmin específico
   async updateSystemParameters(parametros: any): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.post('/api/v1/superadmin/parametros', parametros);
+      const response = await this.apiClient.post(API_ENDPOINTS.superadmin.parametros, parametros);
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al actualizar parámetros' };
@@ -200,7 +200,7 @@ export class SuperAdminService {
 
   async getSystemStatistics(): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.get('/api/v1/superadmin/estadisticas');
+      const response = await this.apiClient.get(API_ENDPOINTS.superadmin.estadisticas);
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al obtener estadísticas' };
@@ -209,7 +209,7 @@ export class SuperAdminService {
 
   async getSystemLogs(): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.get('/api/v1/superadmin/logs');
+      const response = await this.apiClient.get(API_ENDPOINTS.superadmin.logs);
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al obtener logs' };
