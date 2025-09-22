@@ -67,23 +67,33 @@ export default function NotificacionesPage() {
   };
 
   return (
-    <div className="notificaciones-container">
-      <div className="cancha-lista">
-        {notificaciones.map((notif, index) => (
-          <button
-            key={index}
-            onClick={() => mostrarMensajes(index)}
-            className="cancha-boton"
-          >
-            <p>{notif.cancha}</p>
-            <span className="text-sm">{notif.direccion}</span>
-          </button>
-        ))}
-      </div>
+    <>
+      {/* Título principal */}
+      <h1 className="text-3xl font-bold text-center py-6 bg-white shadow">
+        Panel de Notificaciones
+      </h1>
 
-      <div id="panel-derecho" className="panel-derecho">
-        Selecciona una Reserva de cancha para ver los mensajes.
+      <div className="notificaciones-container">
+        {/* Panel izquierdo */}
+        <div className="cancha-lista">
+          <h2 className="text-lg font-bold text-center mb-2">Tus Reservas</h2>
+          {notificaciones.map((notif, index) => (
+            <button
+              key={index}
+              onClick={() => mostrarMensajes(index)}
+              className="cancha-boton"
+            >
+              <p>{notif.cancha}</p>
+              <span className="text-sm">{notif.direccion}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Panel derecho */}
+        <div id="panel-derecho" className="panel-derecho">
+          Selecciona una Reserva de cancha para ver los mensajes.
+        </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -52,7 +52,7 @@ export default function EditarPerfilPage() {
             onChange={(e) => setSelectedSport(e.target.value)}
             className={`input ${getSportColor()}`}
           >
-            <option value="">Selecciona un deporte</option>
+            <option value="">Selecciona tu deporte Favorito</option>
             <option value="futbol" className="text-green-600">Fútbol</option>
             <option value="basket" className="text-orange-600">Basketball</option>
             <option value="tenis" className="text-blue-600">Tenis</option>

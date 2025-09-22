@@ -57,3 +57,53 @@ export function Button({ variant = "primary", ...props }: ButtonProps) {
 
   return <button className={`${baseClasses} ${variants[variant]}`} {...props} />;
 }
+
+
+// --- SELECT ---";
+
+// --- SELECT ---
+interface Option {
+  value: string;
+  label: string;
+}
+
+interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  options: Option[];
+  error?: boolean;
+}
+
+export function Select({ options, error, className, ...props }: SelectProps) {
+  return (
+    <select
+      className={`
+        px-3 py-3
+        border border-gray-400/30
+        rounded-md
+        bg-white
+        shadow-sm
+        hover:border-gray-500/40
+        hover:shadow
+        focus:outline-none
+        focus:ring-1 focus:ring-blue-300 focus:ring-opacity-25
+        focus:border-blue-300
+        transition-all duration-200
+        placeholder:text-gray-400
+        disabled:bg-gray-100 disabled:cursor-not-allowed
+        ${error ? "border-red-400 focus:border-red-400 focus:ring-red-300 focus:ring-opacity-25" : ""}
+        ${className || ""}
+      `}
+      {...props}
+    >
+      {options.map((opt) => (
+        <option
+          key={opt.value}
+          value={opt.value}
+          className={opt.label.toLowerCase() === "fútbol" ? "text-green-600" : ""}
+        >
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  );
+}
+
