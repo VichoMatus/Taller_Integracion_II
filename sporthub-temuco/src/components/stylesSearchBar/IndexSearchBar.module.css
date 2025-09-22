@@ -1,10 +1,10 @@
-/* 🔥 ANIMACIONES PARA BASQUETBOL SEARCHBAR */
+/* 🔥 ANIMACIONES PARA INDEX SEARCHBAR */
 @keyframes searchPulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.4);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(249, 115, 22, 0);
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
   }
 }
 
@@ -38,26 +38,26 @@
   }
 }
 
-/* 🔥 CONTENEDOR PRINCIPAL - TEMA BASQUETBOL */
+/* 🔥 CONTENEDOR PRINCIPAL */
 .searchContainer {
   position: relative;
   display: flex;
   align-items: center;
   width: 100%;
-  max-width: 500px;
+  max-width: 1400px;
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(255, 255, 255, 0.85) 100%
+    rgba(241, 245, 249, 0.95) 0%,
+    rgba(226, 232, 240, 0.85) 100%
   );
   backdrop-filter: blur(20px);
-  border: 2px solid rgba(249, 115, 22, 0.2);
+  border: 2px solid rgba(59, 130, 246, 0.2);
   border-radius: 16px;
   padding: 4px;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   box-shadow: 
-    0 8px 32px rgba(249, 115, 22, 0.1),
+    0 8px 32px rgba(59, 130, 246, 0.1),
     0 0 0 1px rgba(255, 255, 255, 0.3);
 }
 
@@ -71,7 +71,7 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(249, 115, 22, 0.1) 50%,
+    rgba(18, 58, 122, 0.1) 50%,
     transparent 100%
   );
   transition: left 0.6s ease;
@@ -82,18 +82,18 @@
 }
 
 .searchContainer:hover {
-  border-color: rgba(249, 115, 22, 0.4);
+  border-color: rgba(123, 129, 139, 0.4);
   box-shadow: 
-    0 12px 40px rgba(249, 115, 22, 0.15),
-    0 0 0 1px rgba(249, 115, 22, 0.2);
+    0 12px 40px rgba(144, 160, 185, 0.15),
+    0 0 0 1px rgba(111, 119, 131, 0.2);
   transform: translateY(-2px);
 }
 
 .searchContainer:focus-within {
-  border-color: #f97316;
+  border-color: #858a92;
   box-shadow: 
-    0 0 0 4px rgba(249, 115, 22, 0.2),
-    0 12px 40px rgba(249, 115, 22, 0.2);
+    0 0 0 4px rgba(80, 85, 92, 0.2),
+    0 12px 40px rgba(68, 70, 73, 0.2);
   animation: searchPulse 2s infinite;
 }
 
@@ -105,7 +105,7 @@
   background: transparent;
   font-size: 16px;
   font-weight: 500;
-  color: #1f2937;
+  color: #4a525c;
   outline: none;
   transition: all 0.3s ease;
   border-radius: 12px;
@@ -124,7 +124,7 @@
 
 .searchInput:focus {
   color: #374151;
-  background: rgba(249, 115, 22, 0.02);
+  background: rgba(59, 130, 246, 0.02);
 }
 
 /* 🔥 SEARCH ICON */
@@ -138,30 +138,30 @@
   border-radius: 8px;
   background: linear-gradient(
     135deg,
-    rgba(249, 115, 22, 0.1) 0%,
-    rgba(234, 88, 12, 0.05) 100%
+    rgba(59, 130, 246, 0.1) 0%,
+    rgba(147, 51, 234, 0.05) 100%
   );
   animation: iconFloat 3s ease-in-out infinite;
 }
 
 .searchIcon:hover {
-  color: #f97316;
+  color: #3b82f6;
   background: linear-gradient(
     135deg,
-    rgba(249, 115, 22, 0.2) 0%,
-    rgba(234, 88, 12, 0.1) 100%
+    rgba(59, 130, 246, 0.2) 0%,
+    rgba(147, 51, 234, 0.1) 100%
   );
   transform: scale(1.1) rotate(10deg);
-  box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
 }
 
-/* 🔥 SEARCH BUTTON - TEMA NARANJA */
+/* 🔥 SEARCH BUTTON */
 .searchButton {
   padding: 12px 20px;
   background: linear-gradient(
     135deg,
-    #f97316 0%,
-    #ea580c 100%
+    #535353 0%,
+    #455166 100%
   );
   background-size: 200% 200%;
   color: white;
@@ -175,7 +175,7 @@
   overflow: hidden;
   min-width: 100px;
   box-shadow: 
-    0 4px 15px rgba(249, 115, 22, 0.3),
+    0 4px 15px rgba(59, 130, 246, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.2);
   animation: gradientShift 3s ease infinite;
 }
@@ -201,19 +201,19 @@
 .searchButton:hover {
   background: linear-gradient(
     135deg,
-    #ea580c 0%,
-    #dc2626 100%
+    #535b68 0%,
+    #283346 100%
   );
   transform: translateY(-2px) scale(1.05);
   box-shadow: 
-    0 8px 25px rgba(249, 115, 22, 0.4),
+    0 8px 25px rgba(59, 130, 246, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.3);
 }
 
 .searchButton:active {
   transform: translateY(0) scale(1);
   box-shadow: 
-    0 4px 15px rgba(249, 115, 22, 0.3),
+    0 4px 15px rgba(59, 130, 246, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 
@@ -236,28 +236,3 @@
     opacity: 0.7;
   }
 }
-
-/* 🔥 RESPONSIVE */
-@media (max-width: 768px) {
-  .searchContainer {
-    max-width: 100%;
-    padding: 3px;
-  }
-  
-  .searchInput {
-    padding: 12px 16px;
-    font-size: 14px;
-  }
-  
-  .searchButton {
-    padding: 10px 16px;
-    font-size: 13px;
-    min-width: 80px;
-  }
-  
-  .searchIcon {
-    padding: 10px;
-    font-size: 16px;
-  }
-}
-
