@@ -1,0 +1,153 @@
+/* Sidebar Component - Clon exacto del diseño original */
+
+.sidebarContainer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 256px;
+  height: 100vh;
+  background-color: #FF743E;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+  z-index: 40;
+  overflow-y: auto;
+}
+
+/* Header de la sidebar */
+.sidebarHeader {
+  padding: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebarLogoContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sidebarLogoIcon {
+  width: 32px;
+  height: 32px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  color: white;
+}
+
+.sidebarTitle {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.sidebarSubtitle {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  margin: 2px 0 0 0;
+  line-height: 1.2;
+}
+
+/* Navegación */
+.sidebarNav {
+  margin-top: 24px;
+  padding: 0 16px;
+}
+
+.sidebarMenu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebarMenuItem {
+  margin: 0;
+}
+
+.sidebarMenuLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: transparent;
+}
+
+.sidebarMenuLink:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.sidebarMenuLink.active {
+  background-color: #ffab89 !important;
+  color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+}
+
+.sidebarMenuLink.active:hover {
+  background-color: #FF9368 !important;
+  color: #ffffff !important;
+}
+
+.sidebarMenuIcon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.sidebarMenuText {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Botón de logout */
+.sidebarLogout {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+}
+
+.sidebarLogoutButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebarLogoutButton:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.sidebarLogoutIcon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
