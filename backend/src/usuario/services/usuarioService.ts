@@ -1,50 +1,51 @@
-import axios from 'axios';
-import { LoginRequest, Usuario } from '../types/usuarioTypes';
+// src/usuario/service/usuarioService.ts
+import axios from "axios";
+import {
+  Usuario,
+  UsuarioCreateRequest,
+  UsuarioUpdateRequest,
+  UsuarioListQuery,
+} from "../types/usuarioTypes";
 
-export class UserService {
-    async login(credentials: LoginRequest): Promise<any> {
-        // Simulación de llamada a API de autenticación
-        const response = await axios.post('http://api-url/usuario/auth/login', credentials);
-        return response.data;
-    }
+const API_BASE = "http://api-h1d7oi-6fc869-168-232-167-73.traefik.me";
 
-    async logout(refresh_token: string): Promise<any> {
-        // Simulación de llamada a API de logout
-        const response = await axios.post('http://api-url/usuario/auth/logout', { refresh_token });
-        return response.data;
-    }
+export class UsuarioService {
+  async crear(payload: UsuarioCreateRequest): Promise<Usuario> {
+    const { data } = await axios.post(`${API_BASE}/usuarios`, payload);
+    return data;
+  }
 
-    async getUserById(id: number): Promise<{ ok: boolean, data?: Usuario, error?: string }> {
-        // Simulación de llamada a API para obtener usuario
-        try {
-            const response = await axios.get(`http://api-url/usuario/${id}`);
-            return { ok: true, data: response.data };
-        } catch {
-            return { ok: false, error: 'Usuario no encontrado' };
-        }
-    }
+  async listar(query?: UsuarioListQuery): Promise<Usuario[]> {
+    const { data } = await axios.get(`${API_BASE}/usuarios`, { params: query });
+    return data;
+  }
 
-    async updateUser(id: number, updateData: Partial<Usuario>): Promise<any> {
-        // Simulación de llamada a API para actualizar usuario
-        const response = await axios.patch(`http://api-url/usuario/${id}`, updateData);
-        return response.data;
-    }
+  async obtener(id: number | string): Promise<Usuario> {
+    const { data } = await axios.get(`${API_BASE}/usuarios/${id}`);
+    return data;
+  }
 
-    async getComplejosByUserId(userId: number, params?: any): Promise<any> {
-        // Simulación de llamada a API para obtener complejos del usuario
-        const response = await axios.get(`http://api-url/usuario/${userId}/complejos`, { params });
-        return response.data;
-    }
+  async actualizar(id: number | string, payload: UsuarioUpdateRequest): Promise<Usuario> {
+    const { data } = await axios.put(`${API_BASE}/usuarios/${id}`, payload);
+    return data;
+  }
 
-    async getComplejoByIdAndUserId(complejoId: number, userId: number, params?: any): Promise<any> {
-        // Simulación de llamada a API para obtener un complejo específico del usuario
-        const response = await axios.get(`http://api-url/usuario/${userId}/complejos/${complejoId}`, { params });
-        return response.data;
-    }
+  async eliminar(id: number | string): Promise<void> {
+    await axios.delete(`${API_BASE}/usuarios/${id}`);
+  }
 
-    async getComplejoCanchas(complejoId: number): Promise<any> {
-        // Simulación de llamada a API para obtener canchas de un complejo
-        const response = await axios.get(`http://api-url/complejos/${complejoId}/canchas`);
-        return response.data;
-    }
+  async activar(id: number | string): Promise<Usuario> {
+    const { data } = await axios.patch(`${API_BASE}/usuarios/${id}/activar`);
+    return data;
+  }
+
+  async desactivar(id: number | string): Promise<Usuario> {
+    const { data } = await axios.patch(`${API_BASE}/usuarios/${id}/desactivar`);
+    return data;
+  }
+
+  async verificar(id: number | string): Promise<Usuario> {
+    const { data } = await axios.patch(`${API_BASE}/usuarios/${id}/verificar`);
+    return data;
+  }
 }

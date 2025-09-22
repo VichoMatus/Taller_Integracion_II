@@ -1,38 +1,33 @@
-import { Router } from 'express';
-import { UserController } from '../interfaces/controllers/usuarioControllers';
+// src/usuario/route/usuarioRoute.ts
+import { Router } from "express";
+import { UsuarioController } from "../interfaces/controllers/usuarioControllers";
 
-// Instancia de router y controlador
 const router = Router();
-const controller = new UserController();
+const controller = new UsuarioController();
 
 /**
- * RUTAS DE AUTENTICACIÓN
+ * Montar en app:
+ * app.use("/api/usuarios", usuarioRouter)
  */
-// POST /api/usuario/auth/login - Iniciar sesión
-router.post('/auth/login', controller.login);
 
-// POST /api/usuario/auth/logout - Cerrar sesión
-router.post('/auth/logout', controller.logout);
+// Crear
+router.post("/", controller.crear);
 
-/**
- * RUTAS DE PERFIL DE USUARIO
- */
-// GET /api/usuario/profile - Obtener perfil
-router.get('/profile', controller.getProfile);
+// Listar (filtros: q, rol, esta_activo, verificado, page, size)
+router.get("/", controller.listar);
 
-// PATCH /api/usuario/profile - Actualizar perfil
-router.patch('/profile', controller.updateProfile);
+// Obtener uno por id
+router.get("/:id", controller.obtener);
 
-/**
- * RUTAS DE COMPLEJOS DEL USUARIO
- */
-// GET /api/usuario/complejos - Listar complejos del usuario
-router.get('/complejos', controller.getComplejos);
+// Actualizar por id
+router.put("/:id", controller.actualizar);
 
-// GET /api/usuario/complejos/:id - Obtener complejo específico del usuario
-router.get('/complejos/:id', controller.getComplejoById);
+// Eliminar por id
+router.delete("/:id", controller.eliminar);
 
-// GET /api/usuario/complejos/:id/canchas - Obtener canchas de un complejo
-router.get('/complejos/:id/canchas', controller.getComplejoCanchas);
+// Activar/Desactivar/Verificar
+router.patch("/:id/activar", controller.activar);
+router.patch("/:id/desactivar", controller.desactivar);
+router.patch("/:id/verificar", controller.verificar);
 
 export default router;

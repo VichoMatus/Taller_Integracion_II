@@ -9,7 +9,7 @@ import {
 } from "../types/resenaTypes";
 
 // Mueve a env/config en tu proyecto real
-const API_BASE = "http://api-url";
+const API_BASE = "http://api-h1d7oi-6fc869-168-232-167-73.traefik.me";
 
 export class ResenaService {
   async crearResena(payload: ResenaCreateRequest): Promise<Resena> {

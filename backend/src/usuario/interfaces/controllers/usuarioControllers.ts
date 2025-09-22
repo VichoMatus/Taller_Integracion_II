@@ -1,172 +1,124 @@
-/**
- * CONTROLADOR USUARIO - ENDPOINTS HTTP
- * ===================================
- * 
- * Este controlador define los endpoints HTTP para la gestión de usuarios.
- * Actúa como intermediario entre las peticiones del cliente y el servicio correspondiente.
- * 
- * Patrón utilizado: Backend-for-Frontend (BFF)
- * - Recibe peticiones HTTP del frontend React/Next.js
- * - Delega la lógica al UserService
- * - Retorna respuestas estandarizadas
- * 
- * Endpoints disponibles:
- * - POST /api/usuario/auth/login - Autenticación
- * - POST /api/usuario/auth/logout - Cerrar sesión
- * - GET /api/usuario/profile - Obtener perfil de usuario
- * - PATCH /api/usuario/profile - Actualizar perfil de usuario
- * - GET /api/usuario/complejos - Listar complejos del usuario
- * - GET /api/usuario/complejos/:id - Obtener complejo del usuario
- * - GET /api/usuario/complejos/:id/canchas - Canchas del complejo del usuario
- */
+// src/usuario/interfaces/controllers/usuarioControllers.ts
+import { Request, Response } from "express";
+import {
+  UsuarioCreateRequest,
+  UsuarioUpdateRequest,
+  UsuarioListQuery,
+} from "../../types/usuarioTypes";
+import { UsuarioService } from "../../services/usuarioService";
 
-import { Request, Response } from 'express';
-import { UserService } from '../../services/usuarioService';
-import { LoginRequest } from '../../types/usuarioTypes';
+export class UsuarioController {
+  private service = new UsuarioService();
 
-/**
- * CLASE CONTROLADOR PRINCIPAL
- * ===========================
- */
-export class UserController {
-  private service: UserService;
-
-  constructor() {
-    this.service = new UserService();
-  }
-
-  /**
-   * ENDPOINTS DE AUTENTICACIÓN
-   * ==========================
-   */
-
-  /**
-   * POST /auth/login
-   * Autenticar usuario
-   * Body: { email: string, password: string }
-   * Response: { ok: boolean, data?: TokenResponse, error?: string }
-   */
-  login = async (req: Request, res: Response): Promise<void> => {
+  // POST /usuarios
+  crear = async (req: Request, res: Response) => {
     try {
-      const credentials: LoginRequest = req.body;
-      const result = await this.service.login(credentials);
-      
-      const status = result.ok ? 200 : 401;
-      res.status(status).json(result);
-    } catch (error) {
-      res.status(500).json({ ok: false, error: 'Error interno del servidor' });
+      const body = req.body as UsuarioCreateRequest;
+
+      if (!body?.nombre || !body?.apellido || !body?.email) {
+        return res.status(400).json({ error: "nombre, apellido y email son requeridos" });
+      }
+
+      // valida que venga 'contrasena' o 'contrasena_hash' si tu backend lo exige
+      if (!body.contrasena && !body.contrasena_hash && !body.google_id) {
+        // si permites registro social, puedes no exigir contraseña al venir google_id
+        return res.status(400).json({ error: "contrasena o contrasena_hash o google_id es requerido" });
+      }
+
+      const created = await this.service.crear(body);
+      res.status(201).json(created);
+    } catch (err: any) {
+      res.status(err?.response?.status || 500).json({ error: err?.message || "Error al crear usuario" });
     }
   };
 
-  /**
-   * POST /auth/logout
-   * Cerrar sesión del usuario
-   * Body: { refresh_token: string }
-   */
-  logout = async (req: Request, res: Response): Promise<void> => {
+  // GET /usuarios
+  listar = async (req: Request, res: Response) => {
     try {
-      const { refresh_token } = req.body;
-      const result = await this.service.logout(refresh_token);
-      res.status(200).json(result);
-    } catch (error) {
-      res.status(500).json({ ok: false, error: 'Error interno del servidor' });
+      const query: UsuarioListQuery = {
+        q: req.query.q as string,
+        rol: req.query.rol as any,
+        esta_activo: typeof req.query.esta_activo !== "undefined"
+          ? req.query.esta_activo === "true"
+          : undefined,
+        verificado: typeof req.query.verificado !== "undefined"
+          ? req.query.verificado === "true"
+          : undefined,
+        page: req.query.page ? Number(req.query.page) : undefined,
+        size: req.query.size ? Number(req.query.size) : undefined,
+      };
+
+      const list = await this.service.listar(query);
+      res.json(list);
+    } catch (err: any) {
+      res.status(err?.response?.status || 500).json({ error: err?.message || "Error al listar usuarios" });
     }
   };
 
-  /**
-   * ENDPOINTS DE GESTIÓN DE USUARIOS
-   * ================================
-   */
-
-  /**
-   * GET /profile
-   * Obtener perfil del usuario autenticado
-   */
-  getProfile = async (req: Request, res: Response): Promise<void> => {
+  // GET /usuarios/:id
+  obtener = async (req: Request, res: Response) => {
     try {
-      const userId = req.userId; // Suponiendo que el ID de usuario está en el token
-      const result = await this.service.getUserById(userId);
-      
-      const status = result.ok ? 200 : 404;
-      res.status(status).json(result);
-    } catch (error) {
-      res.status(500).json({ ok: false, error: 'Error interno del servidor' });
+      const { id } = req.params;
+      const entity = await this.service.obtener(id);
+      res.json(entity);
+    } catch (err: any) {
+      res.status(err?.response?.status || 500).json({ error: err?.message || "Error al obtener usuario" });
     }
   };
 
-  /**
-   * PATCH /profile
-   * Actualizar perfil del usuario autenticado
-   * Body: { nombre?: string, email?: string, telefono?: string }
-   */
-  updateProfile = async (req: Request, res: Response): Promise<void> => {
+  // PUT /usuarios/:id
+  actualizar = async (req: Request, res: Response) => {
     try {
-      const userId = req.userId;
-      const result = await this.service.updateUser(userId, req.body);
-      
-      const status = result.ok ? 200 : 400;
-      res.status(status).json(result);
-    } catch (error) {
-      res.status(500).json({ ok: false, error: 'Error interno del servidor' });
+      const { id } = req.params;
+      const body = req.body as UsuarioUpdateRequest;
+      const updated = await this.service.actualizar(id, body);
+      res.json(updated);
+    } catch (err: any) {
+      res.status(err?.response?.status || 500).json({ error: err?.message || "Error al actualizar usuario" });
     }
   };
 
-  // Complejos del usuario - Proxy directo
-  getComplejos = async (req: Request, res: Response): Promise<void> => {
+  // DELETE /usuarios/:id
+  eliminar = async (req: Request, res: Response) => {
     try {
-      const userId = req.userId;
-      const result = await this.service.getComplejosByUserId(userId, req.query);
-      res.status(200).json(result);
-    } catch (error) {
-      res.status(500).json({ ok: false, error: 'Error interno del servidor' });
+      const { id } = req.params;
+      await this.service.eliminar(id);
+      res.status(204).send();
+    } catch (err: any) {
+      res.status(err?.response?.status || 500).json({ error: err?.message || "Error al eliminar usuario" });
     }
   };
 
-  getComplejoById = async (req: Request, res: Response): Promise<void> => {
+  // PATCH /usuarios/:id/activar
+  activar = async (req: Request, res: Response) => {
     try {
-      const userId = req.userId;
-      const id = parseInt(req.params.id);
-      const result = await this.service.getComplejoByIdAndUserId(id, userId, req.query);
-      
-      const status = result.ok ? 200 : 404;
-      res.status(status).json(result);
-    } catch (error) {
-      res.status(500).json({ ok: false, error: 'Error interno del servidor' });
+      const { id } = req.params;
+      const entity = await this.service.activar(id);
+      res.json(entity);
+    } catch (err: any) {
+      res.status(err?.response?.status || 500).json({ error: err?.message || "Error al activar usuario" });
     }
   };
 
-  getComplejoCanchas = async (req: Request, res: Response): Promise<void> => {
+  // PATCH /usuarios/:id/desactivar
+  desactivar = async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id);
-      const result = await this.service.getComplejoCanchas(id);
-      res.status(200).json(result);
-    } catch (error) {
-      res.status(500).json({ ok: false, error: 'Error interno del servidor' });
+      const { id } = req.params;
+      const entity = await this.service.desactivar(id);
+      res.json(entity);
+    } catch (err: any) {
+      res.status(err?.response?.status || 500).json({ error: err?.message || "Error al desactivar usuario" });
     }
   };
 
-  /**
-   * Normaliza los datos de usuario recibidos de la API para el frontend.
-   * - Renombra campos
-   * - Elimina información innecesaria
-   * - Formatea fechas
-   * - Convierte valores nulos/undefined
-   */
-  normalizeUsuarioData(apiData: any): any {
-    if (!apiData) return null;
-
-    return {
-        id: apiData.id,
-        nombre: apiData.nombre,
-        email: apiData.email,
-        telefono: apiData.telefono ?? '',
-        rol: apiData.rol,
-        activo: Boolean(apiData.activo),
-        fechaRegistro: apiData.fecha_registro 
-            ? new Date(apiData.fecha_registro).toISOString() 
-            : null,
-        // Puedes agregar más campos normalizados según lo que requiera el frontend
-        // Ejemplo: avatar: apiData.avatar_url ?? null,
-    };
-  }
+  // PATCH /usuarios/:id/verificar
+  verificar = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const entity = await this.service.verificar(id);
+      res.json(entity);
+    } catch (err: any) {
+      res.status(err?.response?.status || 500).json({ error: err?.message || "Error al verificar usuario" });
+    }
+  };
 }
