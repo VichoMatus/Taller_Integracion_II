@@ -1,0 +1,93 @@
+@import '../admin/dashboard.css';
+
+/* Override y estilos específicos para el superadmin */
+.dashboard-title {
+  color: #2D3748;
+  font-size: 1.875rem;
+  margin-bottom: 2rem;
+}
+
+/* Botones de acción */
+.section-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  margin-left: 0.5rem;
+}
+
+.add-button {
+  background-color: var(--teal-500);
+  color: white;
+}
+
+.add-button:hover {
+  background-color: var(--teal-700);
+}
+
+.view-button {
+  background-color: var(--teal-50);
+  color: var(--teal-700);
+}
+
+.view-button:hover {
+  background-color: var(--teal-100);
+}
+
+.button-icon {
+  margin-right: 0.5rem;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+/* Estados específicos */
+.status-badge.status-pending {
+  background-color: #FCD34D;
+  color: #92400E;
+}
+
+.status-badge.status-maintenance {
+  background-color: #FCD34D;
+  color: #92400E;
+}
+
+/* Ajustes para la sección de canchas */
+.courts-section {
+  margin-top: 1.5rem;
+  background-color: var(--white);
+  border-radius: 0.5rem;
+  box-shadow: var(--card-shadow);
+}
+
+/* Ajustes responsivos */
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .management-sections-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .section-button {
+    margin: 0.5rem 0;
+    width: 100%;
+    justify-content: center;
+  }
+}

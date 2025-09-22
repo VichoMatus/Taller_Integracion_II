@@ -1,16 +1,20 @@
+'use client';
+
 import React from 'react';
 import AdminsLayout from '@/components/layout/AdminsLayout';
 
-export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
-  const userName = 'Super Admin'; // TODO: Reemplazar por valor real
-  const notificationCount = 5; // TODO: Reemplazar por valor real
-  
+export default function SuperadminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <AdminsLayout 
       userRole="superadmin" 
-      userName={userName} 
-      notificationCount={notificationCount}
+      userName="Superadministrador" 
+      notificationCount={3}
     >
+      {children}
     </AdminsLayout>
   );
 }
