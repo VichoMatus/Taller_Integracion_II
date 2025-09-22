@@ -1,0 +1,146 @@
+/* BarChart CSS Simplificado - Compatible con Admin CSS */
+.chartContainer {
+  width: 100%;
+  height: 380px;
+  background: transparent;
+  position: relative;
+  border-radius: 12px;
+  padding: 16px;
+  overflow: visible;
+}
+
+.chartTitle {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 20px;
+}
+
+.yAxis {
+  position: absolute;
+  left: 8px;
+  top: 20px;
+  bottom: 60px;
+  width: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.yAxisLabel {
+  text-align: right;
+  padding-right: 8px;
+}
+
+.chartArea {
+  position: absolute;
+  left: 50px;
+  right: 20px;
+  top: 20px;
+  bottom: 60px;
+  border-left: 2px solid #e5e7eb;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.gridLines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.gridLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #f3f4f6;
+}
+
+.gridLine.bottom25 {
+  bottom: 25%;
+}
+
+.gridLine.bottom50 {
+  bottom: 50%;
+}
+
+.gridLine.bottom75 {
+  bottom: 75%;
+}
+
+.barsContainer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  padding: 0 20px;
+}
+
+.barWrapper {
+  width: 14%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  position: static;
+}
+
+.bar {
+  width: 100%;
+  background: #3b82f6;
+  min-height: 2px;
+  border-radius: 3px 3px 0 0;
+  position: static;
+}
+
+.bar:hover {
+  background: #2563eb;
+}
+
+.barValue {
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #374151;
+  text-align: center;
+}
+
+.xAxisLabels {
+  position: absolute;
+  bottom: 0;
+  left: 50px;
+  right: 20px;
+  height: 60px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.xAxisLabel {
+  width: 14%;
+  text-align: center;
+  font-size: 12px;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+/* Media queries simples */
+@media (max-width: 768px) {
+  .chartContainer {
+    height: 300px;
+  }
+  
+  .yAxis, .xAxisLabel {
+    font-size: 10px;
+  }
+}

@@ -10,6 +10,10 @@
   flex-direction: column;
   gap: 12px;
   width: 30%;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
 }
 
 .cancha-boton {
@@ -30,9 +34,9 @@
 .panel-derecho {
   flex: 1;
   background: white;
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.08);
   overflow-y: auto;
 }
 
@@ -81,4 +85,12 @@
 .no-mensajes {
   text-align: center;
   color: #aaa;
+}
+
+.titulo-principal {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #000000;
+  margin-bottom: 10px;
 }

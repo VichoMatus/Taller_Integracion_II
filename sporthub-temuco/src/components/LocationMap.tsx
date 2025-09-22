@@ -1,26 +1,29 @@
 import React from 'react';
+import styles from './stylesLocationMap/BasquetbolLocationMap.module.css';
 
-const LocationMap: React.FC = () => (
-  <div
-    style={{
-      width: '100%',
-      maxWidth: 1080,
-      height: 320,
-      border: '1px solid #cfcfcf',
-      borderRadius: 12,
-      background: '#f5f5f5',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontFamily: 'Inter, sans-serif',
-      fontSize: 16,
-      color: '#666',
-      margin: '0 auto',
-      marginBottom: 32,
-    }}
-  >
-    Mapa (pendiente de implementación)
-  </div>
-);
+const LocationMap: React.FC = () => {
+  const handleImplementClick = () => {
+    console.log('Implementar mapa interactivo');
+    // Aquí puedes agregar la lógica para implementar el mapa real
+  };
+
+  return (
+    <div className={styles.mapContainer}>
+      <div className={styles.mapPlaceholder}>
+        <div className={styles.mapIcon}>🗺️</div>
+        <h3 className={styles.mapTitle}>Mapa de Ubicaciones</h3>
+        <p className={styles.mapMessage}>
+          Mapa interactivo en desarrollo
+        </p>
+        <button 
+          className={styles.implementButton}
+          onClick={handleImplementClick}
+        >
+          Ver próximamente
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default LocationMap;
