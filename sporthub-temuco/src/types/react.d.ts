@@ -3,10 +3,10 @@ declare module 'react' {
   export = React;
   export as namespace React;
   namespace React {
-    type ReactNode = any;
-    interface FC<P = {}> {
+    type ReactNode = React.ReactElement | string | number | boolean | null | undefined;
+    interface FC<P = Record<string, unknown>> {
       (props: P & { children?: ReactNode }): ReactElement | null;
     }
-    type ReactElement = any;
+    type ReactElement = React.ReactElement;
   }
 }
