@@ -5,7 +5,7 @@ const Footer: React.FC = () => {
   return (
     <footer className='footer-minimal'>
       <div className='footer-minimal-text'>
-         2024 SportHub Temuco. Todos los derechos reservados.
+         2025 SportHub Temuco. Todos los derechos reservados.
       </div>
     </footer>
   );
