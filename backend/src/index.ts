@@ -84,11 +84,8 @@ app.get('/', (req, res) => {
       reservas: '/api/reservas',
       resenas: '/api/resenas',
       notificaciones: '/api/notificaciones',
-      favoritos: '/api/favoritos'
-      admin: '/api/admin',
-      reservas: '/api/reservas',
+      favoritos: '/api/favoritos',
       bloqueos: '/api/bloqueos',
-      resenas: '/api/resenas',
       uploads: '/api/uploads',
       superadmin: '/api/superadmin'
     }
@@ -173,13 +170,10 @@ app.get('/api', (req, res) => {
       reservas: '/api/reservas/*',
       resenas: '/api/resenas/*',
       notificaciones: '/api/notificaciones/*',
-      favoritos: '/api/favoritos/*'
+      favoritos: '/api/favoritos/*',
       admin: '/api/admin/*',
-      reservas: '/api/reservas/*',
       bloqueos: '/api/bloqueos/*',
-      resenas: '/api/resenas/*',
       uploads: '/api/uploads/*',
-      superadmin: '/api/superadmin/*'
     },
     api: {
       fastapi: process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me',
