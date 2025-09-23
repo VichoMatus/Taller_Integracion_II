@@ -11,6 +11,11 @@ import dotenv from 'dotenv';
 import path from 'path';
 import authRoutes from './auth/routes/authRoutes';
 import superAdminRoutes from './superAdmin/routes/superAdminRoutes';
+import usuarioRoutes from './usuario/routes/usuarioRoutes';
+import reservaRoutes from './reserva/routes/reservaRoute';
+import resenaRoutes from './resena/routes/resenaRouters';
+import notificacionesRoutes from './notificaciones/routes/notificacionesRoutes';
+import favoritosRoutes from './favoritos/routes/favoritosRoute';
 
 // Cargar variables de entorno desde el .env de la raíz del proyecto
 // En Docker, el .env se monta en /app/.env
@@ -40,12 +45,6 @@ app.use(express.json({ limit: '10mb' }));
 // Parse URL-encoded bodies
 app.use(express.urlencoded({ extended: true }));
 
-// Logging middleware simple
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
-  next();
-});
-
 /**
  * RUTAS PRINCIPALES
  */
@@ -58,7 +57,12 @@ app.get('/', (req, res) => {
       info: '/api',
       health: '/health',
       auth: '/api/auth',
-      admin: '/api/superadmin'
+      admin: '/api/superadmin',
+      usuarios: '/api/usuarios',
+      reservas: '/api/reservas',
+      resenas: '/api/resenas',
+      notificaciones: '/api/notificaciones',
+      favoritos: '/api/favoritos'
     }
   });
 });
@@ -79,6 +83,33 @@ app.use('/api/auth', authRoutes);
 // Rutas de administración
 app.use('/api/superadmin', superAdminRoutes);
 
+// Middleware de debug para ver todas las rutas
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Original URL: ${req.originalUrl}`);
+  next();
+});
+
+// Ruta de prueba simple para usuarios
+app.get('/api/usuarios/test', (req, res) => {
+  res.json({ message: 'Endpoint de usuarios funciona', timestamp: new Date() });
+});
+
+// Rutas de usuarios
+console.log('Montando rutas de usuarios...');
+app.use('/api/usuarios', usuarioRoutes);
+
+// Rutas de reservas
+app.use('/api/reservas', reservaRoutes);
+
+// Rutas de reseñas
+app.use('/api/resenas', resenaRoutes);
+
+// Rutas de notificaciones
+app.use('/api/notificaciones', notificacionesRoutes);
+
+// Rutas de favoritos
+app.use('/api/favoritos', favoritosRoutes);
+
 // Ruta de información general
 app.get('/api', (req, res) => {
   res.json({
@@ -88,7 +119,12 @@ app.get('/api', (req, res) => {
     endpoints: {
       health: '/health',
       auth: '/api/auth/*',
-      superadmin: '/api/superadmin/*'
+      superadmin: '/api/superadmin/*',
+      usuarios: '/api/usuarios/*',
+      reservas: '/api/reservas/*',
+      resenas: '/api/resenas/*',
+      notificaciones: '/api/notificaciones/*',
+      favoritos: '/api/favoritos/*'
     },
     api: {
       fastapi: process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me',
@@ -137,6 +173,11 @@ app.listen(PORT, () => {
   console.log(`   - POST /api/auth/login`);
   console.log(`   - GET  /api/auth/me`);
   console.log(`   - GET  /api/superadmin/users`);
+  console.log(`   - GET  /api/usuarios`);
+  console.log(`   - GET  /api/reservas`);
+  console.log(`   - GET  /api/resenas`);
+  console.log(`   - GET  /api/notificaciones`);
+  console.log(`   - GET  /api/favoritos`);
   console.log(`   - Y muchos más...`);
 });
 
