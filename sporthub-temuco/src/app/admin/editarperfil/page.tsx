@@ -53,7 +53,7 @@ export default function EditarPerfilAdministrador() {
 
               <Button
                 className="btn-red btn-full"
-                onClick={() => router.push('admin/cambioContra')}
+                onClick={() => router.push('http://localhost:3000/admin/cambiocontra')}
               >
                 Cambiar Contraseña
               </Button>
