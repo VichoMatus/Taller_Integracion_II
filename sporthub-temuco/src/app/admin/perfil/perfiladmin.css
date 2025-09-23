@@ -1,36 +1,42 @@
+/* Contenedor principal ocupa el espacio disponible del Layout */
+/* perfiladmin.css */
+
 .admin-layout {
   display: flex;
-  height: 100vh;
-  background-color: #f5f7fa;
+  gap: 2rem;
+  padding: 20px;
+  margin-left: -256px;  /* Mueve todo hacia la izquierda */
+  margin-top: 70px;    /* Baja un poco todo el contenido */
+  box-sizing: border-box;
 }
 
-/* Panel izquierdo */
+
+/* Panel izquierdo (perfil administrador) */
 .admin-info {
-  width: 35%;
+  flex: 0 0 300px;
   background: white;
   padding: 30px;
-  box-sizing: border-box;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   align-items: center;
-  border-right: 1px solid #ddd;
+  height: auto;
 }
 
-.admin-avatar {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.avatar-placeholder {
-  font-size: 60px;
-  background-color: #e0e0e0;
+.avatar-img {
+  width: 128px;
+  height: 128px;
   border-radius: 50%;
-  width: 100px;
-  height: 100px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: auto;
+  background-color: #e0e0e0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  object-fit: cover;
+}
+
+.admin-nombre {
+  font-size: 20px;
+  font-weight: bold;
+  margin-top: 8px;
 }
 
 .admin-role {
@@ -40,8 +46,18 @@
 
 .admin-details {
   width: 100%;
-  margin-top: 10px;
+  margin-top: 15px;
   font-size: 14px;
+}
+
+.admin-detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.detail-label {
+  font-weight: 600;
 }
 
 .btn-editar {
@@ -56,60 +72,50 @@
 
 /* Panel derecho */
 .admin-content {
-  width: 65%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 30px;
-  box-sizing: border-box;
-}
-
-/* Parte superior */
-.admin-header {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  gap: 20px;
+}
+
+/* Header de la sección */
+.admin-header {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  text-align: center;
 }
 
 .admin-title {
-  text-align: center;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: bold;
 }
 
-.admin-placeholder {
-  flex: 1;
-  background-color: #ffffff;
-  border-radius: 12px;
-  margin-top: 10px;
-  width: 100%;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
-
-/* Espacio vacío sobre el gráfico */
-.grafico-espacio-vacio {
-  height: 30px;
-}
-
-/* Parte inferior: gráfico */
+/* Gráfico */
 .grafico-box {
-  height: 40%;
   background: white;
-  padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+}
+
+.grafico-title {
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
 }
 
 .grafico-barras {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  height: 120px;
-  margin-top: 20px;
+  height: 140px;
+  margin-top: 15px;
   border-bottom: 1px solid #ccc;
 }
 
@@ -117,25 +123,17 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  flex: 1;
   position: relative;
+  flex: 1;
 }
 
 .barra {
   width: 24px;
-  background-color: #5a6993;
   border-radius: 4px 4px 0 0;
   margin-bottom: 5px;
-  position: relative;
-  transition: height 0.3s ease;
+  transition: background-color 0.3s ease;
 }
 
-.barra-item span {
-  font-size: 12px;
-  color: #333;
-}
-
-/* Tooltip */
 .tooltip {
   position: absolute;
   top: -24px;
@@ -144,20 +142,13 @@
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
-  white-space: nowrap;
 }
 
-/* Footer gráfico */
 .grafico-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 15px;
-}
-
-.semana-label {
-  font-size: 14px;
-  color: gray;
+  margin-top: 10px;
 }
 
 .btn-excel {

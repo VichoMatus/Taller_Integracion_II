@@ -10,7 +10,7 @@ interface HeaderProps {
 }
 
 const Header = ({ userName, userRole, notificationCount = 0 }: HeaderProps) => {
-  const userTitle = userRole === 'superadmin' ? 'Superadministrador' : 'Administrador';
+  const userTitle = userRole === 'superadmin' ? 'Superadministrador' : userRole === 'admin' ? 'Administrador' : 'Usuario';
   const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase();
 
   return (

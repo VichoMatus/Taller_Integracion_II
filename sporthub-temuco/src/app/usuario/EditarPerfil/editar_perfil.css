@@ -214,3 +214,12 @@ body {
 .btn-save:hover {
   background-color: #22c55e;
 }
+
+.page-wrapper {
+  margin-top: 14px;  /* espacio para el header fijo */
+  margin-left: 256px; /* espacio para el sidebar fijo */
+  display: flex;
+  justify-content: center; /* centra el contenido horizontalmente */
+  align-items: flex-start; /* que el contenido inicie desde arriba */
+  min-height: calc(100vh - 14px); /* ocupa el alto de la pantalla menos el header */
+}

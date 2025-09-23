@@ -1,13 +1,14 @@
-"use client";
+'use client';
 import React from "react";
 import "./notificaciones.css";
+import UserLayout from "../UsuarioLayout";
 
 export default function NotificacionesPage() {
   let canchaSeleccionada: number | null = null;
 
   const notificaciones = [
     {
-      cancha: "Fútbol 7 • Club Centro",
+      cancha: "Basquetball 7 • Club Centro",
       direccion: "Av. Principal 123",
       mensajes: [
         {
@@ -27,7 +28,7 @@ export default function NotificacionesPage() {
       ],
     },
     {
-      cancha: "Fútbol 5 • Cancha Sur",
+      cancha: "Basquetball 5 • Cancha Sur",
       direccion: "Calle Secundaria 456",
       mensajes: [],
     },
@@ -41,7 +42,7 @@ export default function NotificacionesPage() {
       panelDerecho.innerHTML = `
         <h2 class="cancha-titulo">${cancha.cancha}</h2>
         <p class="cancha-subtitulo">
-          Administrador de la cancha deportiva para jugar fútbol.
+          Administrador de la cancha deportiva para jugar basquetball.
         </p>
         <h3 class="mensajes-titulo">Últimos Mensajes</h3>
         <div class="mensajes-contenedor">
@@ -67,33 +68,41 @@ export default function NotificacionesPage() {
   };
 
   return (
-    <>
-      {/* Título principal */}
-      <h1 className="text-3xl font-bold text-center py-6 bg-white shadow">
-        Panel de Notificaciones
-      </h1>
+  <UserLayout
+    userName="Usuario"
+    sport="futbol"
+    notificationCount={2}
+  >
+    <div className="page-wrapper">
+      {/* Contenedor vertical */}
+      <div className="page-content">
+        {/* Título principal */}
+        <h1 className="titulo-principal">Panel de Notificaciones</h1>
 
-      <div className="notificaciones-container">
-        {/* Panel izquierdo */}
-        <div className="cancha-lista">
-          <h2 className="text-lg font-bold text-center mb-2">Tus Reservas</h2>
-          {notificaciones.map((notif, index) => (
-            <button
-              key={index}
-              onClick={() => mostrarMensajes(index)}
-              className="cancha-boton"
-            >
-              <p>{notif.cancha}</p>
-              <span className="text-sm">{notif.direccion}</span>
-            </button>
-          ))}
-        </div>
+        {/* Paneles de reservas y mensajes */}
+        <div className="notificaciones-container">
+          {/* Panel izquierdo */}
+          <div className="cancha-lista">
+            <h2 className="text-lg font-bold text-center mb-2">Tus Reservas</h2>
+            {notificaciones.map((notif, index) => (
+              <button
+                key={index}
+                onClick={() => mostrarMensajes(index)}
+                className="cancha-boton"
+              >
+                <p>{notif.cancha}</p>
+                <span className="text-sm">{notif.direccion}</span>
+              </button>
+            ))}
+          </div>
 
-        {/* Panel derecho */}
-        <div id="panel-derecho" className="panel-derecho">
-          Selecciona una Reserva de cancha para ver los mensajes.
+          {/* Panel derecho */}
+          <div id="panel-derecho" className="panel-derecho">
+            Selecciona una Reserva de cancha para ver los mensajes.
+          </div>
         </div>
       </div>
-    </>
-  );
-}
+    </div>
+  </UserLayout>
+    );
+  }

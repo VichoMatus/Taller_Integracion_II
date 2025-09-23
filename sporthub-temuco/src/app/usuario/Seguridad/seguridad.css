@@ -179,3 +179,13 @@
     gap: 2rem;
   }
 }
+
+.seguridad-wrapper {
+  margin-top: 14px;   /* espacio para header fijo */
+  margin-left: 256px; /* espacio para sidebar fijo */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* centra contenido horizontalmente */
+  width: calc(100% - 256px);
+  padding: 20px;
+}
