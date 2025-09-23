@@ -2,7 +2,18 @@
  * SERVIDOR PRINCIPAL - BACKEND FOR FRONTEND (BFF)
  * ===============================================
  * 
- * Este servidor Express actúa como BFF entre el frontend y la API FastAPI.
+ * Este servidor Expr  console.log('🚀 Servidor BFF iniciado correctamente');
+  console.log(`🌍 URL: http://localhost:${PORT}`);
+  console.log(`🌐 API FastAPI: ${process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me'}`);
+  console.log(`📄 Documentación FastAPI: ${process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me'}/docs`);
+  console.log(`🔗 Endpoints disponibles:`);
+  console.log(`   - GET  /health`);
+  console.log(`   - GET  /api`);
+  console.log(`   - POST /api/auth/register`);
+  console.log(`   - POST /api/auth/login`);
+  console.log(`   - GET  /api/auth/me`);
+  console.log(`   - GET  /api/superadmin/users`);
+  console.log(`   - Y muchos más...`);BFF entre el frontend y la API FastAPI.
  */
 
 import express from 'express';
@@ -58,7 +69,10 @@ app.get('/', (req, res) => {
       info: '/api',
       health: '/health',
       auth: '/api/auth',
-      admin: '/api/superadmin'
+      admin: '/api/superadmin',
+      pricing: '/api/pricing',
+      promociones: '/api/promociones',
+      bloqueos: '/api/bloqueos'
     }
   });
 });
@@ -137,6 +151,9 @@ app.listen(PORT, () => {
   console.log(`   - POST /api/auth/login`);
   console.log(`   - GET  /api/auth/me`);
   console.log(`   - GET  /api/superadmin/users`);
+  console.log(`   - GET  /api/pricing`);
+  console.log(`   - GET  /api/promociones`);
+  console.log(`   - GET  /api/bloqueos`);
   console.log(`   - Y muchos más...`);
 });
 
