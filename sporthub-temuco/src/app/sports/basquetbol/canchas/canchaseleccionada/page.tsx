@@ -81,7 +81,7 @@ export default function CanchaSeleccionadaPage() {
     }
   };
 
-  const renderStars = (rating) => {
+  const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <span 
         key={i} 
@@ -92,7 +92,7 @@ export default function CanchaSeleccionadaPage() {
     ));
   };
 
-  const formatPrice = (price) => {
+  const formatPrice = (price: number) => {
     return new Intl.NumberFormat('es-CL', {
       style: 'currency',
       currency: 'CLP',

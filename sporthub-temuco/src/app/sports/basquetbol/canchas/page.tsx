@@ -185,7 +185,7 @@ export default function Page() {
         {/* Mostrar mensaje si no hay resultados */}
         {filteredCanchas.length === 0 && searchTerm && (
           <div className={styles.noResults}>
-            <h3>No se encontraron resultados para "{searchTerm}"</h3>
+            <h3>No se encontraron resultados para &quot;{searchTerm}&quot;</h3>
             <p>Intenta con otros términos de búsqueda</p>
             <button onClick={() => {setSearchTerm(''); setFilteredCanchas(canchas);}}>
               Ver todas las canchas

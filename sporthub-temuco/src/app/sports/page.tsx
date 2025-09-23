@@ -169,7 +169,7 @@ export default function SportsPage() {
         {/* Mensaje si no hay resultados */}
         {filteredSports.length === 0 && searchTerm && (
           <div className={styles.noResults}>
-            <h3>No se encontraron deportes para "{searchTerm}"</h3>
+            <h3>No se encontraron deportes para &quot;{searchTerm}&quot;</h3>
             <p>Intenta con otros términos de búsqueda</p>
             <button 
               onClick={() => {

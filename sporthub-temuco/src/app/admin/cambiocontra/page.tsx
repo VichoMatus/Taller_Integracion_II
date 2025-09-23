@@ -61,13 +61,13 @@ export default function NuevaContrasenaPage() {
                 type="password"
                 placeholder="Vuelve a Introducir la Contraseña"
                 value={confirmar}
-                onChange={(e: any) => setConfirmar(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmar(e.target.value)}
                 className="input"
             />
 
             {/* Botones */}
             <div className="botones">
-                <Button onClick={() => router.back("http://localhost:3000/admin/editarperfil")} className="btn volver">
+                <Button onClick={() => router.push("/admin/editarperfil")} className="btn volver">
                 Volver
                 </Button>
                 <Button onClick={handleGuardar} className="btn guardar">

@@ -1,12 +1,9 @@
-// Declaración para los tipos de React
-declare module 'react' {
-  export = React;
-  export as namespace React;
+// Tipos personalizados para React - No redeclarar módulo completo
+// Next.js ya incluye React por defecto
+
+// Tipos adicionales si necesitamos extender React
+declare global {
   namespace React {
-    type ReactNode = React.ReactElement | string | number | boolean | null | undefined;
-    interface FC<P = Record<string, unknown>> {
-      (props: P & { children?: ReactNode }): ReactElement | null;
-    }
-    type ReactElement = React.ReactElement;
+    // Agregar tipos personalizados aquí si es necesario
   }
 }

@@ -44,7 +44,7 @@ export default function ReservaCancha() {
   return (
     <div className={styles.container}>
       {/* Sidebar Component */}
-      <Sidebar />
+      <Sidebar userRole="usuario" />
       {/* Main Content */}
       <div className={styles.mainContent}>
         {/* Header */}

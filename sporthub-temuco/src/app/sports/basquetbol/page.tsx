@@ -148,7 +148,7 @@ export default function BasquetbolPage() {
     console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
   };
 
-  const handleCanchaClick = (court) => {
+  const handleCanchaClick = (court: any) => {
   console.log('Test navigation...');
   router.push('/sports/basquetbol/canchas/canchaseleccionada');
 };
@@ -309,7 +309,13 @@ export default function BasquetbolPage() {
             </button>
           </div>
 
-          <LocationMap />
+          <LocationMap 
+            latitude={-38.7359}
+            longitude={-72.5904}
+            address="Temuco, Chile"
+            zoom={13}
+            height="400px"
+          />
 
           <div className={styles.mapActions}>
             <button className={styles.helpButton}>
