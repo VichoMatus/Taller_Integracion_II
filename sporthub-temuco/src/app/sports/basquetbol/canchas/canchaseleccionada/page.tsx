@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Sidebar from '../../../../../components/layout/Sidebar'; 
 import SearchBar from '../../../../../components/SearchBar'; 
@@ -258,12 +259,14 @@ export default function CanchaSeleccionadaPage() {
                 ←
               </button>
               <div className={styles.imageContainer}>
-                <img 
-                  src={cancha.images[currentImageIndex] || "/sports/basquetbol/canchas/Cancha1.png"} 
+                <Image 
+                  src={cancha.images[currentImageIndex] || "/sports/basquetbol/canchas/Cim.png"} 
                   alt={`${cancha.name} - Imagen ${currentImageIndex + 1}`}
                   className={styles.courtImage}
-                  onError={(e) => {
-                    e.target.src = "/sports/basquetbol/canchas/Cancha1.png";
+                  width={600}
+                  height={400}
+                  onError={(e: any) => {
+                    e.target.src = "/sports/basquetbol/canchas/Cim.png";
                   }}
                 />
                 <div className={styles.imageOverlay}>

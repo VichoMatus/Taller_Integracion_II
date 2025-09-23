@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import styles from './stylesCourtCards/BasquetbolCanchasCard.module.css';
 
@@ -108,10 +109,12 @@ const CourtCard: React.FC<CourtCardProps> = ({
   
   return (
     <div className={`${styles.courtCard} ${sport ? styles[`courtCard${sport.charAt(0).toUpperCase() + sport.slice(1)}`] : ''}`}>
-      <img
+      <Image
         src={imageUrl}
         alt={name}
         className={styles.cardImage}
+        width={300}
+        height={200}
       />
       
       <div className={styles.cardContent}>
