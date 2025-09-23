@@ -19,9 +19,9 @@
   height: 100vh;
   background: linear-gradient(
     145deg, 
-    rgba(107, 114, 128, 0.95) 0%,
-    rgba(75, 85, 99, 0.98) 50%,
-    rgba(55, 65, 81, 0.95) 100%
+    rgba(87, 93, 105, 0.95) 0%,
+    rgba(51, 58, 68, 0.98) 50%,
+    rgba(28, 34, 43, 0.95) 100%
   );
   backdrop-filter: blur(10px);
   box-shadow: 

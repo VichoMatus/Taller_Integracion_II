@@ -28,6 +28,10 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
     if (pathname === '/' || pathname === '/sports' || pathname === '/sports/') {
       return indexStyles;
     }
+
+    if (pathname === '/' || pathname === '/sports/reservacancha' || pathname === '/sports/reservacancha/') {
+      return indexStyles;
+    }
  
     switch (sport) {
       case 'basquetbol':

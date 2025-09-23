@@ -1,14 +1,19 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Sidebar from '../../../../../components/layout/Sidebar';
-import SearchBar from '../../../../../components/SearchBar';
-import LocationMap from '../../../../../components/LocationMap';
+import { useRouter } from 'next/navigation';
+import Sidebar from '../../../../../components/layout/Sidebar'; 
+import SearchBar from '../../../../../components/SearchBar'; 
+import LocationMap from '../../../../../components/LocationMap'; 
 import styles from './page.module.css';
 
-// Mock data que coincide con las canchas
-const canchasData = [
-  {
+export default function CanchaSeleccionadaPage() {
+  const router = useRouter();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState(0);
+  
+  // 🔥 DATOS ESTÁTICOS - Sin parámetros URL
+  const cancha = {
     id: 1,
     name: "Club Centro",
     location: "Av. Alemania 1234, Temuco, Chile",
@@ -26,7 +31,7 @@ const canchasData = [
       "/sports/basquetbol/canchas/Cancha2.png",
       "/sports/futbol/futbol.png"
     ],
-    amenities: ["Estacionamientos", "Buenos Vestuarios", "Cancha de cemento"],
+    amenities: ["Estacionamientos", "Buenos Vestuarios", "Cancha de cemento", "Iluminación LED"],
     reviewsList: [
       {
         name: "María P.",
@@ -47,115 +52,17 @@ const canchasData = [
         comment: "Las redes están nuevas y hay buen espacio para calentar."
       }
     ]
-  },
-  {
-    id: 2,
-    name: "Cancha Municipal",
-    location: "Av. Pablo Neruda 567, Temuco, Chile",
-    coordinates: { lat: -38.7400, lng: -72.5950 },
-    phone: "(45) 555-5678",
-    instagram: "@municipaltemuco",
-    description: "Cancha al aire libre con excelente mantenimiento, ideal para entrenamientos y partidos.",
-    schedule: "Lunes a Viernes • 07:00 a 22:00",
-    capacity: "10 jugadores (5vs5)",
-    rating: 4.2,
-    reviews: 85,
-    priceFrom: 20000,
-    images: [
-      "/images/basketball-court.jpg",
-      "/images/basketball-court-2.jpg"
-    ],
-    amenities: ["Estacionamientos", "Iluminación LED", "Superficie de concreto"],
-    reviewsList: [
-      {
-        name: "Carlos R.",
-        rating: 4,
-        date: "hace 3 días",
-        comment: "Muy buena cancha, solo falta mejorar los vestuarios."
-      },
-      {
-        name: "Ana M.",
-        rating: 5,
-        date: "hace 1 semana",
-        comment: "Perfecta para entrenamientos, muy limpia."
-      }
-    ]
-  },
-  {
-    id: 3,
-    name: "Sports Center",
-    location: "Av. Balmaceda 890, Temuco, Chile",
-    coordinates: { lat: -38.7320, lng: -72.5850 },
-    phone: "(45) 555-9012",
-    instagram: "@sportscentertemuco",
-    description: "Moderno centro deportivo con canchas de última generación y servicios premium.",
-    schedule: "Todos los días • 06:00 a 24:00",
-    capacity: "12 jugadores (6vs6)",
-    rating: 4.8,
-    reviews: 156,
-    priceFrom: 35000,
-    images: [
-      "/images/basketball-court.jpg",
-      "/images/basketball-court-2.jpg",
-      "/images/basketball-court-3.jpg"
-    ],
-    amenities: ["Estacionamientos", "Vestuarios Premium", "Cancha sintética", "Cafetería"],
-    reviewsList: [
-      {
-        name: "Diego L.",
-        rating: 5,
-        date: "hace 1 día",
-        comment: "Instalaciones de primer nivel, vale la pena cada peso."
-      },
-      {
-        name: "Camila S.",
-        rating: 5,
-        date: "hace 4 días",
-        comment: "La mejor cancha de Temuco sin dudas."
-      },
-      {
-        name: "Roberto K.",
-        rating: 4,
-        date: "hace 1 semana",
-        comment: "Excelente servicio y muy buena ubicación."
-      }
-    ]
-  }
-];
-
-export default function CanchaSeleccionadaPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [cancha, setCancha] = useState(null);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState(0);
+  };
   
   useEffect(() => {
-    const canchaId = searchParams.get('id');
-    const canchaName = searchParams.get('name');
-    
-    let foundCancha = null;
-    
-    if (canchaId) {
-      foundCancha = canchasData.find(c => c.id === parseInt(canchaId));
-    } else if (canchaName) {
-      foundCancha = canchasData.find(c => 
-        c.name.toLowerCase().includes(canchaName.toLowerCase())
-      );
-    }
-    
-    setCancha(foundCancha || canchasData[0]);
-    
     // Simular carga
     const timer = setTimeout(() => setIsLoading(false), 1200);
     return () => clearTimeout(timer);
-  }, [searchParams]);
+  }, []);
 
   const handleBackToCanchas = () => {
     router.push('/sports/basquetbol/canchas');
   };
-
 
   const nextImage = () => {
     if (cancha && cancha.images.length > 0) {
@@ -193,8 +100,7 @@ export default function CanchaSeleccionadaPage() {
   };
 
   const handleReserve = () => {
-    // Aquí podrías redirigir a una página de reserva
-    alert(`Redirigiendo a reserva para ${cancha.name}...`);
+    router.push('/sports/reservacancha');
   };
 
   const handleCall = () => {
@@ -218,7 +124,7 @@ export default function CanchaSeleccionadaPage() {
     alert('Función de escribir reseña próximamente...');
   };
 
-  if (isLoading || !cancha) {
+  if (isLoading) {
     return (
       <div className={styles.pageContainer}>
         <Sidebar userRole="usuario" sport="basquetbol" />
@@ -328,7 +234,6 @@ export default function CanchaSeleccionadaPage() {
           <div className={styles.locationSection}>
             <h3 className={styles.sectionTitle}>Ubicación</h3>
             <div className={styles.mapContainer}>
-              {/* Componente de mapa integrado */}
               <LocationMap 
                 latitude={cancha.coordinates.lat} 
                 longitude={cancha.coordinates.lng}
@@ -354,11 +259,11 @@ export default function CanchaSeleccionadaPage() {
               </button>
               <div className={styles.imageContainer}>
                 <img 
-                  src={cancha.images[currentImageIndex] || "/images/basketball-court.jpg"} 
+                  src={cancha.images[currentImageIndex] || "/sports/basquetbol/canchas/Cancha1.png"} 
                   alt={`${cancha.name} - Imagen ${currentImageIndex + 1}`}
                   className={styles.courtImage}
                   onError={(e) => {
-                    e.target.src = "/images/basketball-court.jpg";
+                    e.target.src = "/sports/basquetbol/canchas/Cancha1.png";
                   }}
                 />
                 <div className={styles.imageOverlay}>
@@ -371,7 +276,6 @@ export default function CanchaSeleccionadaPage() {
                 →
               </button>
             </div>
-            {/* Indicadores de imagen */}
             <div className={styles.imageIndicators}>
               {cancha.images.map((_, index) => (
                 <button

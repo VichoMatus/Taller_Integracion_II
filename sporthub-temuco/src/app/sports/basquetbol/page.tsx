@@ -1,12 +1,12 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import styles from './page.module.css';
 
-// 🔥 Ya no necesitas el SidebarPlaceholder
 
 // Datos de ejemplo para las canchas mejor calificadas (6 tarjetas)
 const topRatedCourts = [
@@ -80,6 +80,7 @@ const topRatedCourts = [
 
 export default function BasquetbolPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
   const [radiusKm, setRadiusKm] = useState('5');
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -146,6 +147,11 @@ export default function BasquetbolPage() {
   const handleLocationSearch = () => {
     console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
   };
+
+  const handleCanchaClick = (court) => {
+  console.log('Test navigation...');
+  router.push('/sports/basquetbol/canchas/canchaseleccionada');
+};
 
   // 🔥 Elimina el estado de carga inicial
   if (!isClient) {
@@ -262,7 +268,8 @@ export default function BasquetbolPage() {
                 <CourtCard 
                   key={index} 
                   {...court} 
-                  onClick={() => console.log('Navegando a:', court.name)}
+                  sport="basquetbol"
+                  onClick={() => router.push('/sports/basquetbol/canchas/canchaseleccionada')}
                 />
               ))}
             </div>
