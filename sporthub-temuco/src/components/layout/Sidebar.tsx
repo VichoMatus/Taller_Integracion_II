@@ -4,9 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-// 🔥 CSS para admins (usando el CSS normal que ya tienes)
-import './Sidebar.css';  // 🔥 Así se importa CSS normal, no como módulo
-// 🔥 CSS específicos para usuarios por deporte
+import './Sidebar.css'; 
+import indexStyles from './StylesSportsSideBar/IndexSideBar.module.css';
 import basquetbolStyles from './StylesSportsSideBar/BasquetbolSideBar.module.css';
 // import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
 // import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
@@ -24,6 +23,14 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
     // 🔥 Si es admin o superadmin, devolver null (usará las clases CSS normales)
     if (userRole === 'admin' || userRole === 'superadmin') {
       return null; 
+    }
+
+    if (pathname === '/' || pathname === '/sports' || pathname === '/sports/') {
+      return indexStyles;
+    }
+
+    if (pathname === '/' || pathname === '/sports/reservacancha' || pathname === '/sports/reservacancha/') {
+      return indexStyles;
     }
  
     switch (sport) {
@@ -76,8 +83,8 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
     {
       name: 'Perfil',
       icon: '👤',
-      href: '/usuario/perfil',
-      active: pathname === '/usuario/perfil'
+      href: '/admin/perfil',
+      active: pathname === '/admin/perfil'
     }
   ];
 
@@ -122,10 +129,10 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
 
   const usuarioMenuItems = [
     {
-      name: 'Canchas',
+      name: 'Deportes',
       icon: '🏟️',
-      href: '/canchas',
-      active: pathname === '/canchas' || pathname.startsWith('/sports/')
+      href: '/sports',
+      active: pathname === '/sports' || pathname === '/sports/' || pathname === '/'
     },
     {
       name: 'Reservas',

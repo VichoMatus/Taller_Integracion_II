@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import './perfiladmin.css';
+import AdminLayout from '@/components/layout/AdminsLayout';
 
 export default function PerfilAdministrador() {
   const horasPorDia = [
@@ -17,84 +18,82 @@ export default function PerfilAdministrador() {
   const [hoveredDia, setHoveredDia] = useState<string | null>(null);
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Panel izquierdo */}
-      <div className="admin-info">
-        <div className="admin-avatar">
-          <img
-            src="https://www.svgrepo.com/show/382106/default-avatar.svg"
-            alt="Foto del administrador"
-            className="rounded-full shadow-md w-32 h-32 bg-gray-200"
-          />
+    <AdminLayout userRole="admin" userName="Admin" notificationCount={3}>
+      <div className="admin-layout">
+        
+        {/* Panel Izquierdo */}
+        <div className="admin-info">
+          <div className="admin-avatar">
+            <img src="https://placedog.net/200/200?id=12" alt="Foto de perfil" className="avatar-img"/>
+          </div>
+
+          <h2 className="admin-nombre">Administrador</h2>
+          <p className="admin-role">Administrador</p>
+
+          <div className="admin-details">
+            <div className="admin-detail-row">
+              <span className="detail-label">Número Telefónico:</span>
+              <span className="detail-value">+569 12098456</span>
+            </div>
+            <div className="admin-detail-row">
+              <span className="detail-label">Correo:</span>
+              <span className="detail-value">Admin@gmail.com</span>
+            </div>
+            <div className="admin-detail-row">
+              <span className="detail-label">Edad:</span>
+              <span className="detail-value">41</span>
+            </div>
+            <div className="admin-detail-row">
+              <span className="detail-label">Encargado:</span>
+              <span className="encargado-text">Reservas</span>
+            </div>
+          </div>
+
+          <button className="btn-editar">Editar Perfil</button>
         </div>
 
-        <h2 className="text-xl font-bold mt-2">Administrador</h2>
-        <p className="admin-role text-amber-800">Administrador</p>
-
-        <div className="admin-details">
-          <div className="flex justify-between">
-            <span className="font-semibold">Teléfono:</span>
-            <span>+569 12345656</span>
+        {/* Panel Derecho */}
+        <div className="admin-content">
+          <div className="admin-header">
+            <h2 className="admin-title">Panel del Administrador</h2>
           </div>
-          <div className="flex justify-between">
-            <span className="font-semibold">Correo:</span>
-            <span>admin@gmail.com</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-semibold">Edad:</span>
-            <span>41</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="font-semibold">Área:</span>
-            <span>Reservas</span>
-          </div>
-        </div>
 
-        <button className="btn-editar hover:opacity-90 transition">
-          Editar Perfil
-        </button>
-      </div>
+          {/* Gráfico de Horas */}
+          <div className="grafico-box">
+            <h3 className="grafico-title">Gráfico de Horas Semanales</h3>
 
-      {/* Panel derecho */}
-      <div className="admin-content">
-        <div className="admin-header">
-          <h2 className="admin-title">Información para el Administrador</h2>
-          <div className="admin-placeholder" />
-        </div>
-
-        <div className="grafico-espacio-vacio" />
-
-        <div className="grafico-box">
-          <h3 className="text-lg font-semibold">Gráfico de Horas Semanales</h3>
-          <div className="grafico-barras">
-            {horasPorDia.map((dia) => (
-              <div
-                key={dia.dia}
-                className="barra-item"
-                onMouseEnter={() => setHoveredDia(dia.dia)}
-                onMouseLeave={() => setHoveredDia(null)}
-              >
+            <div className="grafico-barras">
+              {horasPorDia.map((dia) => (
                 <div
-                  className="barra"
-                  style={{ height: `${dia.horas * 10}px` }}
+                  key={dia.dia}
+                  className="barra-item"
+                  onMouseEnter={() => setHoveredDia(dia.dia)}
+                  onMouseLeave={() => setHoveredDia(null)}
                 >
-                  {hoveredDia === dia.dia && (
-                    <div className="tooltip">{dia.horas}h</div>
-                  )}
+                  <div
+                    className="barra"
+                    style={{
+                      height: `${dia.horas * 10}px`,
+                      backgroundColor:
+                        hoveredDia === dia.dia ? '#ffb347' : '#5a6993',
+                    }}
+                  >
+                    {hoveredDia === dia.dia && (
+                      <div className="tooltip">{dia.horas}h</div>
+                    )}
+                  </div>
+                  <span className="dia-label">{dia.dia}</span>
                 </div>
-                <span>{dia.dia}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          <div className="grafico-footer">
-            <p className="semana-label">Semana: 12</p>
-            <button className="btn-excel hover:opacity-90 transition">
-              Generar Excel
-            </button>
+            <div className="grafico-footer">
+              <p className="semana-label">Semana: 12</p>
+              <button className="btn-excel">Generar Excel</button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }

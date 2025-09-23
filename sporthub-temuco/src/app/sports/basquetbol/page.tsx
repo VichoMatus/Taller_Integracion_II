@@ -1,12 +1,12 @@
 'use client';
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import styles from './page.module.css';
 
-// 🔥 Ya no necesitas el SidebarPlaceholder
 
 // Datos de ejemplo para las canchas mejor calificadas (6 tarjetas)
 const topRatedCourts = [
@@ -80,6 +80,7 @@ const topRatedCourts = [
 
 export default function BasquetbolPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
   const [radiusKm, setRadiusKm] = useState('5');
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -147,6 +148,11 @@ export default function BasquetbolPage() {
     console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
   };
 
+  const handleCanchaClick = (court) => {
+  console.log('Test navigation...');
+  router.push('/sports/basquetbol/canchas/canchaseleccionada');
+};
+
   // 🔥 Elimina el estado de carga inicial
   if (!isClient) {
     return (
@@ -174,15 +180,17 @@ export default function BasquetbolPage() {
           </div>
           <div className={styles.headerRight}>
             <SearchBar
-              value={searchTerm}
-              onChange={handleSearchChange}
-              onSearch={handleSearch}
-              placeholder="Buscar por nombre de la cancha o buscar barrio"
+            value={searchTerm}
+            onChange={handleSearchChange}
+            onSearch={handleSearch}
+            placeholder="Nombre de la cancha..."
+            sport="basquetbol" 
             />
             <button className={styles.userButton}>
               <span>👤</span>
               <span>usuario</span>
             </button>
+            
           </div>
         </div>
 
@@ -204,6 +212,19 @@ export default function BasquetbolPage() {
             <div className={styles.statNumber}>{stats.cantidadJugadores}</div>
             <div className={styles.statLabel}>Cantidad de jugadores en cancha</div>
           </div>
+        </div>
+        <div className={styles.quickAccessSection}>
+        <button 
+            className={styles.mainCourtButton}
+            onClick={() => window.location.href = '/sports/basquetbol/canchas'}
+            >
+            <div className={styles.courtButtonIcon}>🏀</div>
+            <div className={styles.courtButtonText}>
+            <span className={styles.courtButtonTitle}>Explorar Canchas</span>
+            <span className={styles.courtButtonSubtitle}>Ver todas las canchas disponibles</span>
+            </div>
+            <div className={styles.courtButtonArrow}>→</div>
+        </button>
         </div>
 
         {/* Canchas mejor calificadas con carrusel */}
@@ -247,7 +268,8 @@ export default function BasquetbolPage() {
                 <CourtCard 
                   key={index} 
                   {...court} 
-                  onClick={() => console.log('Navegando a:', court.name)}
+                  sport="basquetbol"
+                  onClick={() => router.push('/sports/basquetbol/canchas/canchaseleccionada')}
                 />
               ))}
             </div>
@@ -292,9 +314,6 @@ export default function BasquetbolPage() {
           <div className={styles.mapActions}>
             <button className={styles.helpButton}>
               ❓ Ayuda
-            </button>
-            <button className={styles.viewCourtsButton}>
-              🏀 Canchas
             </button>
           </div>
         </div>

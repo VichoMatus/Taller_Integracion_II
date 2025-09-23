@@ -1,0 +1,296 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0" version="28.2.3">
+  <diagram name="Diagrama de Componentes Actualizado" id="UpdatedComponentDiagram2025">
+    <mxGraphModel dx="1753" dy="777" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2339" pageHeight="3300" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="frontend-nextjs-1" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Next.js Frontend&#xa;(sporthub-temuco)" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#1976D2;fillColor=#E3F2FD;" parent="1" vertex="1">
+          <mxGeometry x="190" y="680" width="250" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="backend-express-2" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Express Backend&#xa;(TypeScript + Node.js)" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#F57C00;fillColor=#FFF3E0;" parent="1" vertex="1">
+          <mxGeometry x="630" y="250" width="250" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="postgresql-db-3" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;PostgreSQL Database&#xa;(+ PostGIS)" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#7B1FA2;fillColor=#F3E5F5;" parent="1" vertex="1">
+          <mxGeometry x="1400" y="135" width="250" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="pgadmin-4" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;PgAdmin 4&#xa;(Database Management)" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#388E3C;fillColor=#E8F5E8;" parent="1" vertex="1">
+          <mxGeometry x="1780" y="135" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="domain-layer-5" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Domain Layer" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#5D4037;fillColor=#EFEBE9;" parent="1" vertex="1">
+          <mxGeometry x="390" y="50" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="application-layer-6" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Application Layer" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#455A64;fillColor=#ECEFF1;" parent="1" vertex="1">
+          <mxGeometry x="560" y="50" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="infrastructure-layer-7" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Infrastructure Layer" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#795548;fillColor=#EFEBE9;" parent="1" vertex="1">
+          <mxGeometry x="730" y="50" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="interfaces-layer-8" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Interface Layer" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#E91E63;fillColor=#FCE4EC;" parent="1" vertex="1">
+          <mxGeometry x="910" y="50" width="150" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="user-management-9" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;User Management&#xa;(Usuarios, Roles)" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#303F9F;fillColor=#E8EAF6;" parent="1" vertex="1">
+          <mxGeometry x="180" y="170" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="complex-management-10" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Complex Management&#xa;(Complejos, Canchas)" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#FF6F00;fillColor=#FFF8E1;" parent="1" vertex="1">
+          <mxGeometry x="180" y="260" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="reservation-system-11" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Reservation System&#xa;(Reservas, Horarios)" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#C62828;fillColor=#FFEBEE;" parent="1" vertex="1">
+          <mxGeometry x="180" y="360" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="payment-system-12" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Payment System&#xa;(Pagos, Promociones)" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#2E7D32;fillColor=#E8F5E8;" parent="1" vertex="1">
+          <mxGeometry x="180" y="460" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="location-services-13" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Location Services&#xa;(PostGIS, Geolocation)" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#6A1B9A;fillColor=#F3E5F5;" parent="1" vertex="1">
+          <mxGeometry x="1440" y="360" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="group-management-14" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Group Management&#xa;(Grupos, Membresías)" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#AD1457;fillColor=#FCE4EC;" parent="1" vertex="1">
+          <mxGeometry x="1010" y="700" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="review-reports-15" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Review &amp; Reports&#xa;(Reseñas, Denuncias)" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#BF360C;fillColor=#FBE9E7;" parent="1" vertex="1">
+          <mxGeometry x="1010" y="630" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="superadmin-interface-16" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;SuperAdmin Interface" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#000000;fillColor=#F5F5F5;" parent="1" vertex="1">
+          <mxGeometry x="390" y="905" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="admin-interface-17" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Admin Interface" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#000000;fillColor=#F5F5F5;" parent="1" vertex="1">
+          <mxGeometry x="590" y="910" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="owner-interface-18" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Owner Interface&#xa;(Dueño Complejo)" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#000000;fillColor=#F5F5F5;" parent="1" vertex="1">
+          <mxGeometry x="795" y="910" width="185" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="user-interface-19" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;User Interface" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#000000;fillColor=#F5F5F5;" parent="1" vertex="1">
+          <mxGeometry x="1004.5" y="910" width="180" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="docker-container-20" value="&lt;&lt;container&gt;&gt;&#xa;&#xa;Docker Compose&#xa;Environment" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#0288D1;fillColor=#E1F5FE;" parent="1" vertex="1">
+          <mxGeometry x="150" y="910" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="auth-security-21" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Authentication&#xa;&amp; Security Layer" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#D32F2F;fillColor=#FFEBEE;" parent="1" vertex="1">
+          <mxGeometry x="580" y="560" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="external-apis-22" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;External APIs&#xa;(Maps, Payments)" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#FF5722;fillColor=#FBE9E7;" parent="1" vertex="1">
+          <mxGeometry x="980" y="440" width="160" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="notification-system-23" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;Notification System" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#9C27B0;fillColor=#F3E5F5;" parent="1" vertex="1">
+          <mxGeometry x="780" y="560" width="180" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="frontend-backend-conn-24" style="endArrow=none;html=1;rounded=0;dashed=1;endFill=0;startArrow=open;startFill=0;entryX=0.195;entryY=1.034;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="frontend-nextjs-1" target="backend-express-2" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="450" y="340" as="sourcePoint" />
+            <mxPoint x="600" y="340" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="520" y="720" />
+              <mxPoint x="520" y="360" />
+              <mxPoint x="680" y="360" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="backend-db-conn-25" style="endArrow=oval;html=1;rounded=0;endFill=0;endSize=15;exitX=1.004;exitY=0.152;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="backend-express-2" target="postgresql-db-3" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="850" y="340" as="sourcePoint" />
+            <mxPoint x="1100" y="340" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1040" y="260" />
+              <mxPoint x="1040" y="175" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="pgadmin-db-conn-26" style="endArrow=halfCircle;html=1;rounded=0;endFill=0;endSize=9;" parent="1" source="pgadmin-4" target="postgresql-db-3" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1660" y="340" as="sourcePoint" />
+            <mxPoint x="1610" y="340" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="domain-backend-conn-27" style="endArrow=none;html=1;rounded=0;dashed=1;endFill=0;startArrow=open;startFill=0;exitX=0.473;exitY=1.033;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.158;entryY=0.009;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="domain-layer-5" target="backend-express-2" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="575" y="200" as="sourcePoint" />
+            <mxPoint x="725" y="300" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="460" y="200" />
+              <mxPoint x="670" y="200" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="application-backend-conn-28" style="endArrow=none;html=1;rounded=0;dashed=1;endFill=0;startArrow=open;startFill=0;exitX=0.527;exitY=1.033;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.28;entryY=0.015;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="application-layer-6" target="backend-express-2" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="755" y="200" as="sourcePoint" />
+            <mxPoint x="725" y="300" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="640" y="160" />
+              <mxPoint x="700" y="160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="infrastructure-backend-conn-29" style="endArrow=none;html=1;rounded=0;dashed=1;endFill=0;startArrow=open;startFill=0;exitX=0.473;exitY=0.986;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="infrastructure-layer-7" target="backend-express-2" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="935" y="200" as="sourcePoint" />
+            <mxPoint x="725" y="300" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="800" y="180" />
+              <mxPoint x="760" y="180" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="interfaces-backend-conn-30" style="endArrow=none;html=1;rounded=0;dashed=1;endFill=0;startArrow=open;startFill=0;entryX=0.92;entryY=-0.039;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.327;exitY=1.052;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="interfaces-layer-8" target="backend-express-2" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1115" y="200" as="sourcePoint" />
+            <mxPoint x="725" y="300" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="960" y="160" />
+              <mxPoint x="860" y="160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="user-mgmt-backend-31" style="endArrow=none;html=1;rounded=0;dashed=1;endFill=0;startArrow=open;startFill=0;entryX=0.07;entryY=0.119;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="user-management-9" target="backend-express-2" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="240" y="450" as="sourcePoint" />
+            <mxPoint x="600" y="380" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="400" y="200" />
+              <mxPoint x="400" y="260" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="complex-mgmt-backend-32" style="endArrow=none;html=1;rounded=0;dashed=1;endFill=0;startArrow=open;startFill=0;entryX=0.01;entryY=0.35;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="complex-management-10" target="backend-express-2" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="440" y="450" as="sourcePoint" />
+            <mxPoint x="600" y="380" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="400" y="290" />
+              <mxPoint x="400" y="280" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="reservation-backend-33" style="endArrow=none;html=1;rounded=0;dashed=1;endFill=0;startArrow=open;startFill=0;" parent="1" source="reservation-system-11" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="640" y="450" as="sourcePoint" />
+            <mxPoint x="630" y="300" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="440" y="390" />
+              <mxPoint x="440" y="300" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="payment-backend-34" style="endArrow=none;html=1;rounded=0;dashed=1;endFill=0;startArrow=open;startFill=0;entryX=0.057;entryY=0.879;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="payment-system-12" target="backend-express-2" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="840" y="450" as="sourcePoint" />
+            <mxPoint x="725" y="380" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="460" y="490" />
+              <mxPoint x="460" y="320" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="location-backend-35" style="endArrow=none;html=1;rounded=0;dashed=1;endFill=0;startArrow=open;startFill=0;" parent="1" source="location-services-13" target="backend-express-2" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1040" y="450" as="sourcePoint" />
+            <mxPoint x="850" y="380" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1040" y="390" />
+              <mxPoint x="1040" y="290" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="superadmin-frontend-36" style="endArrow=oval;html=1;rounded=0;endFill=0;endSize=15;entryX=0.521;entryY=0.981;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="superadmin-interface-16" target="frontend-nextjs-1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="490" y="600" as="sourcePoint" />
+            <mxPoint x="325" y="380" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="485" y="870" />
+              <mxPoint x="320" y="870" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="admin-frontend-37" style="endArrow=oval;html=1;rounded=0;endFill=0;endSize=15;entryX=0.628;entryY=1.003;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="admin-interface-17" target="frontend-nextjs-1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="690" y="600" as="sourcePoint" />
+            <mxPoint x="325" y="380" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="680" y="850" />
+              <mxPoint x="347" y="850" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="owner-frontend-38" style="endArrow=oval;html=1;rounded=0;endFill=0;endSize=15;entryX=0.757;entryY=1.013;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="owner-interface-18" target="frontend-nextjs-1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="890" y="600" as="sourcePoint" />
+            <mxPoint x="380" y="760" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="888" y="830" />
+              <mxPoint x="380" y="830" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="user-frontend-39" value="" style="endArrow=oval;html=1;rounded=0;endFill=0;endSize=15;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1084.6" y="910" as="sourcePoint" />
+            <mxPoint x="410" y="760" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="1085" y="810" />
+              <mxPoint x="410" y="810" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="auth-backend-40" style="endArrow=none;html=1;rounded=0;dashed=1;endFill=0;startArrow=open;startFill=0;exitX=0.966;exitY=0.012;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="auth-security-21" target="backend-express-2" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="440" y="700" as="sourcePoint" />
+            <mxPoint x="725" y="380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="external-backend-41" style="endArrow=none;html=1;rounded=0;dashed=1;endFill=0;startArrow=open;startFill=0;entryX=0.922;entryY=1.045;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="external-apis-22" target="backend-express-2" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1650" y="330" as="sourcePoint" />
+            <mxPoint x="850" y="340" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="950" y="480" />
+              <mxPoint x="950" y="400" />
+              <mxPoint x="860" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="mainapi-backend-54" style="endArrow=oval;html=1;rounded=0;endFill=0;endSize=15;" parent="1" source="main-api-53" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1180" y="270" as="sourcePoint" />
+            <mxPoint x="881" y="280" as="targetPoint" />
+            <Array as="points" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="location-db-42" style="endArrow=oval;html=1;rounded=0;endFill=0;endSize=15;" parent="1" source="location-services-13" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="1300" y="450" as="sourcePoint" />
+            <mxPoint x="1530" y="220" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="docker-all-43" style="endArrow=halfCircle;html=1;rounded=0;endFill=0;endSize=9;entryX=0.25;entryY=1;entryDx=0;entryDy=0;" parent="1" source="docker-container-20" target="frontend-nextjs-1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="200" y="700" as="sourcePoint" />
+            <mxPoint x="250" y="770" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="web-interface-label-45" value="Interfaz Web Next.js 15" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="210" y="640" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="db-interface-label-47" value="PostgreSQL + PostGIS" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="1460" y="420" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="admin-panel-label-48" value="Panel Admin DB" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="1820" y="100" width="110" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="docker-label-49" value="Contenedores Docker" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="190" y="970" width="140" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="auth-label-50" value="JWT + Bcrypt" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="620" y="630" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="notification-label-51" value="Sistema Notificaciones" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="810" y="630" width="150" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="external-label-52" value="APIs Externas" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+          <mxGeometry x="1025" y="510" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="main-api-53" value="&lt;&lt;component&gt;&gt;&#xa;&#xa;API Principal&#xa;(FastAPI)" style="shape=component;align=center;verticalAlign=middle;rounded=0;shadow=0;glass=0;strokeColor=#0288D1;fillColor=#E1F5FE;" parent="1" vertex="1">
+          <mxGeometry x="1170" y="250" width="200" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
