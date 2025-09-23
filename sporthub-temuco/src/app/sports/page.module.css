@@ -1,0 +1,679 @@
+/* 🔥 ANIMACIONES GLOBALES */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes floatAnimation {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes cardGlow {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.15);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+@keyframes textShadowPulse {
+  0%, 100% {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    text-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+  }
+}
+
+/* 🔥 CONTENEDOR PRINCIPAL ANIMADO */
+.pageContainer {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  background: linear-gradient(-45deg, #a5bfcc, #b8d4e3, #c9dce9, #dae8f2);
+  background-size: 400% 400%;
+  animation: gradientShift 8s ease infinite;
+  font-family: 'Inter', sans-serif;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+
+.pageContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+  animation: floatAnimation 20s ease-in-out infinite;
+}
+
+/* 🔥 CONTENIDO PRINCIPAL CENTRADO */
+.mainContent {
+  flex: 1;
+  padding: 20px;
+  margin-left: 250px;
+  overflow-y: auto;
+  height: 100vh;
+  padding-bottom: 300px; /* 🔥 AUMENTADO SIGNIFICATIVAMENTE de 180px a 300px */
+  animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(5px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mainContent::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mainContent::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.mainContent::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, rgba(59, 130, 246, 0.6), rgba(147, 51, 234, 0.6));
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.mainContent::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, rgba(59, 130, 246, 0.8), rgba(147, 51, 234, 0.8));
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 35px 35px;
+  border-radius: 20px;
+  margin-bottom: 30px;
+  position: relative;
+  overflow: hidden;
+  animation: slideInRight 1s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+  width: 100%;
+  max-width: 1300px;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  transition: left 2s ease;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.pageTitle {
+  font-size: 32px;
+  font-weight: 800;
+  color: #1f2937;
+  margin: 0;
+  background: linear-gradient(135deg, #1f2937 0%, #374151 50%, #4b5563 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: textShadowPulse 3s ease-in-out infinite;
+  position: relative;
+}
+
+.pageTitle::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 2px;
+}
+
+.header:hover .pageTitle::after {
+  width: 100%;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  animation: fadeInUp 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.4s both;
+}
+
+.userButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(55, 65, 81, 0.3);
+}
+
+.userButton::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  transition: all 0.6s ease;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+
+.userButton:hover::before {
+  width: 300px;
+  height: 300px;
+}
+
+.userButton:hover {
+  background: linear-gradient(135deg, #4b5563 0%, #6b7280 100%);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(55, 65, 81, 0.4);
+}
+
+/* 🔥 SECCIÓN DE BÚSQUEDA CENTRADA */
+.searchSection {
+  margin-bottom: 40px;
+  animation: fadeInUp 1s cubic-bezier(0.4, 0, 0.2, 1) 0.6s both;
+  width: 100%;
+  max-width: 2000px;
+  display: flex;
+  justify-content: center;
+}
+
+/* 🔥 CONTENEDOR CENTRALIZADO DE DEPORTES */
+.cardsSection {
+  position: relative;
+  z-index: 10;
+  background: transparent;
+  padding: 0;
+  margin-bottom: 200px; /* 🔥 AUMENTADO SIGNIFICATIVAMENTE de 120px a 200px */
+  width: 100%;
+  max-width: 1300px;
+  display: flex;
+  justify-content: center;
+}
+
+/* 🔥 GRID EXACTAMENTE 3 COLUMNAS MÁS ANCHAS */
+.sportsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 400px);
+  gap: 30px;
+  justify-content: center;
+  align-items: start;
+  position: relative;
+  z-index: 20;
+  animation: fadeInUp 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.8s both;
+  width: fit-content;
+  padding-bottom: 50px; /* 🔥 AGREGADO padding extra al grid */
+}
+
+/* 🔥 CARDS CON ANIMACIONES INCREÍBLES MÁS ANCHAS */
+.sportCard {
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.7) 100%
+  );
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  z-index: 25;
+  margin-bottom: 40px; /* 🔥 AUMENTADO de 30px a 40px */
+  animation: cardGlow 4s ease-in-out infinite;
+  transform-style: preserve-3d;
+  width: 400px;
+}
+
+.sportCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    rgba(59, 130, 246, 0.1) 0%,
+    rgba(147, 51, 234, 0.1) 50%,
+    rgba(236, 72, 153, 0.1) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 20px;
+}
+
+.sportCard:hover::before {
+  opacity: 1;
+}
+
+.sportCard:hover {
+  transform: translateY(-15px) rotateX(5deg) scale(1.03);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.2),
+    0 0 30px rgba(59, 130, 246, 0.2);
+  z-index: 30;
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.sportCard:nth-child(1) { animation-delay: 0.1s; }
+.sportCard:nth-child(2) { animation-delay: 0.2s; }
+.sportCard:nth-child(3) { animation-delay: 0.3s; }
+.sportCard:nth-child(4) { animation-delay: 0.4s; }
+.sportCard:nth-child(5) { animation-delay: 0.5s; }
+.sportCard:nth-child(6) { animation-delay: 0.6s; }
+
+/* 🔥 IMÁGENES CON EFECTOS AVANZADOS */
+.sportImageContainer {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sportImageContainer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    transparent 60%,
+    rgba(0, 0, 0, 0.3) 100%
+  );
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.sportCard:hover .sportImageContainer::after {
+  opacity: 0.7;
+}
+
+.sportImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 2;
+}
+
+.sportCard:hover .sportImage {
+  transform: scale(1.1) rotate(2deg);
+  filter: brightness(1.1) contrast(1.1) saturate(1.2);
+}
+
+/* 🔥 TAGS SÚPER ANIMADOS */
+.sportTag {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  color: white;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.sportTag:hover {
+  transform: scale(1.1) rotate(-3deg);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* 🔥 CONTENIDO DE CARD MEJORADO */
+.sportContent {
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  position: relative;
+  backdrop-filter: blur(5px);
+}
+
+.sportName {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1f2937;
+  margin: 0;
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.sportCard:hover .sportName {
+  transform: translateX(5px);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sportDescription {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0;
+  flex: 1;
+  transition: all 0.3s ease;
+}
+
+.sportCard:hover .sportDescription {
+  color: #374151;
+  transform: translateX(3px);
+}
+
+/* 🔥 BOTÓN EXPLORAR ÉPICO */
+.exploreButton {
+  align-self: flex-start;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(55, 65, 81, 0.3);
+}
+
+.exploreButton::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  transition: all 0.6s ease;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+
+.exploreButton:hover::before {
+  width: 200px;
+  height: 200px;
+}
+
+.exploreButton:hover {
+  background: linear-gradient(135deg, #4b5563 0%, #6b7280 100%);
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: 0 8px 25px rgba(55, 65, 81, 0.4);
+}
+
+/* 🔥 FALLBACK IMAGES MEJORADO */
+.sportImageContainer.fallback::before {
+  content: '🏃‍♂️';
+  font-size: 64px;
+  opacity: 0.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  animation: floatAnimation 3s ease-in-out infinite;
+}
+
+.sportImageContainer.fallback::after {
+  content: 'Imagen no disponible';
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 100%);
+  backdrop-filter: blur(10px);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 🔥 NO RESULTS MEJORADO Y CENTRADO */
+.noResults {
+  text-align: center;
+  padding: 80px 40px;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 255, 255, 0.7) 100%
+  );
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  margin-top: 40px;
+  margin-bottom: 200px; /* 🔥 AUMENTADO SIGNIFICATIVAMENTE de 120px a 200px */
+  z-index: 20;
+  position: relative;
+  animation: fadeInUp 1s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  max-width: 600px;
+}
+
+.noResults h3 {
+  font-size: 28px;
+  color: #1f2937;
+  margin-bottom: 15px;
+  animation: textShadowPulse 3s ease-in-out infinite;
+}
+
+.noResults p {
+  color: #6b7280;
+  margin-bottom: 30px;
+  font-size: 16px;
+}
+
+.resetButton {
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.resetButton:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+/* 🔥 RESPONSIVE MEJORADO */
+@media (max-width: 1300px) {
+  .sportsGrid {
+    grid-template-columns: repeat(2, 400px);
+  }
+  
+  .header {
+    max-width: 900px;
+  }
+  
+  .cardsSection {
+    max-width: 900px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0;
+    padding: 15px;
+    padding-bottom: 200px; /* 🔥 AUMENTADO para móviles también */
+  }
+  
+  .sportsGrid {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+    justify-items: center;
+    padding-bottom: 30px; /* 🔥 Menos padding en móviles */
+  }
+  
+  .sportCard {
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 30px; /* 🔥 AUMENTADO para móviles */
+  }
+  
+  .header {
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
+    padding: 20px 25px;
+    max-width: 100%;
+  }
+  
+  .pageTitle {
+    font-size: 24px;
+  }
+  
+  .sportCard:hover {
+    transform: translateY(-10px) scale(1.02);
+  }
+  
+  .searchSection {
+    max-width: 100%;
+  }
+  
+  .cardsSection {
+    margin-bottom: 150px; /* 🔥 AUMENTADO para móviles */
+  }
+  
+  .noResults {
+    margin-bottom: 150px; /* 🔥 AUMENTADO para móviles */
+  }
+}
+
+@media (max-width: 480px) {
+  .sportsGrid {
+    max-width: 100%;
+  }
+  
+  .sportCard {
+    width: 100%;
+    max-width: none;
+  }
+}

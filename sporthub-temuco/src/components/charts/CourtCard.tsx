@@ -1,4 +1,5 @@
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './stylesCourtCards/BasquetbolCanchasCard.module.css';
 
 interface CourtCardProps {
@@ -25,13 +26,88 @@ const CourtCard: React.FC<CourtCardProps> = ({
   description,
   price,
   nextAvailable,
+  sport = 'basquetbol', // Valor por defecto
   onClick,
 }) => {
+  const router = useRouter();
+  
   // 🔥 Limitar a máximo 4 tags
   const displayTags = tags.slice(0, 4);
   
+  // 🔥 Función para manejar navegación específica por deporte
+  const handleInternalClick = () => {
+    if (onClick) {
+      // Si viene onClick como prop, úsalo (para casos especiales)
+      onClick();
+    } else {
+      // Navegación automática según el deporte
+      switch (sport) {
+        case 'basquetbol':
+          router.push('/sports/basquetbol/canchas/canchaseleccionada');
+          break;
+          
+        case 'futbol':
+          const futbolParams = new URLSearchParams({
+            id: Date.now().toString(),
+            name: name,
+            location: address,
+            description: description,
+            rating: rating.toString(),
+            reviews: reviews.toString().replace(' reseñas', ''),
+            priceFrom: (parseInt(price) * 1000).toString(),
+          });
+          router.push(`/sports/futbol/canchas/canchaseleccionada?${futbolParams.toString()}`);
+          break;
+          
+        case 'tenis':
+          const tenisParams = new URLSearchParams({
+            id: Date.now().toString(),
+            name: name,
+            location: address,
+            description: description,
+            rating: rating.toString(),
+            reviews: reviews.toString().replace(' reseñas', ''),
+            priceFrom: (parseInt(price) * 1000).toString(),
+          });
+          router.push(`/sports/tenis/canchas/canchaseleccionada?${tenisParams.toString()}`);
+          break;
+          
+        case 'voleibol':
+          const voleibolParams = new URLSearchParams({
+            id: Date.now().toString(),
+            name: name,
+            location: address,
+            description: description,
+            rating: rating.toString(),
+            reviews: reviews.toString().replace(' reseñas', ''),
+            priceFrom: (parseInt(price) * 1000).toString(),
+          });
+          router.push(`/sports/voleibol/canchas/canchaseleccionada?${voleibolParams.toString()}`);
+          break;
+          
+        case 'padel':
+          const padelParams = new URLSearchParams({
+            id: Date.now().toString(),
+            name: name,
+            location: address,
+            description: description,
+            rating: rating.toString(),
+            reviews: reviews.toString().replace(' reseñas', ''),
+            priceFrom: (parseInt(price) * 1000).toString(),
+          });
+          router.push(`/sports/padel/canchas/canchaseleccionada?${padelParams.toString()}`);
+          break;
+          
+        default:
+          console.log('Deporte no configurado:', sport);
+          // Fallback a basquetbol
+          router.push('/sports/basquetbol/canchas/canchaseleccionada');
+      }
+    }
+  };
+  
   return (
-    <div className={styles.courtCard}>
+    <div className={`${styles.courtCard} ${sport ? styles[`courtCard${sport.charAt(0).toUpperCase() + sport.slice(1)}`] : ''}`}>
       <img
         src={imageUrl}
         alt={name}
@@ -72,7 +148,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
             <span className={styles.nextTime}>Próximo: {nextAvailable}</span>
           </div>
           
-          <button onClick={onClick} className={styles.actionButton}>
+          <button onClick={handleInternalClick} className={styles.actionButton}>
             Ir a cancha →
           </button>
         </div>
