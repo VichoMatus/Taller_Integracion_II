@@ -5,8 +5,11 @@ import React from 'react';
 import Layout from '@/components/layout/AdminsLayout';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import { useRouter } from 'next/navigation';
 
 export default function EditarPerfilAdministrador() {
+  const router = useRouter();
+
   return (
     <Layout userRole="admin" userName="Administrador">
       <div className="page-wrapper">
@@ -14,77 +17,52 @@ export default function EditarPerfilAdministrador() {
           {/* Columna izquierda */}
           <div className="profile-left">
             <div className="foto-circle">
-              <span>👤</span>
-            </div>
-
-            <h2>Administrador</h2>
-            <p>Administrador</p>
-
-            <div className="profile-details">
-              <div>
-                <span>Número de Teléfono</span>
-                <span>+569 00000000</span>
-              </div>
-              <div>
-                <span>Edad</span>
-                <span>35</span>
-              </div>
-              <div>
-                <span>Correo</span>
-                <span>correoAdministrador241@gmail.com</span>
-              </div>
+              <img
+                src="https://placedog.net/200/200?id=12"
+                alt="Foto de perfil"
+                className="avatar-img"
+              />
             </div>
 
             <Button className="edit-btn" onClick={() => alert('Cambiar Foto')}>
               Cambiar Foto
             </Button>
 
-            <Button className="edit-btn" onClick={() => alert('Volver al Perfil')}>
+            <div className="info-box-small">
+              <p>
+                Hola Administrador, te recordamos que tus datos son de suma importancia, es por eso que el{' '}
+                <span style={{ color: 'purple', fontWeight: 'bold' }}>
+                  Correo Electrónico
+                </span>{' '}
+                no se puede modificar ya que ese es su dato clave que los vuelve administradores
+              </p>
+            </div>
+
+            <Button className="edit-btn-orange" onClick={() => router.push('http://localhost:3000/admin/perfil')}>
               Volver al Perfil
             </Button>
           </div>
 
           {/* Columna derecha */}
           <div className="profile-right">
-            {/* Tarjeta del info-box */}
-            <div className="info-box">
-              <h3>Información</h3>
-              <p>
-                Recuerda que tu <strong>correo electrónico</strong> es clave y no se puede modificar.
-              </p>
-            </div>
-
-            {/* Tarjeta del formulario */}
             <div className="form-card">
-              <h3>Editar Información</h3>
-              <Input
-                label="Nombre"
-                placeholder="Nombre Administrador"
-                name="nombre"
-              />
-              <Input
-                label="Número de Teléfono"
-                placeholder="Número Telefonico"
-                name="telefono"
-              />
-              <Input
-                label="Edad"
-                placeholder="Edad"
-                name="edad"
-                type="number"
-              />
+              <h1>Editar Perfil Administrador</h1>
+              <Input label="Nombre  " placeholder="Nombre Administrador" name="nombre" />
+              <Input label="Número de Teléfono" placeholder="Número Telefonico" name="telefono" />
+              <Input label="Edad  " placeholder="Ingrese su Edad" name="edad" type="number" />
 
-              <div className="password-row">
-                <Input
-                  label="Contraseña"
-                  placeholder="********"
-                  name="password"
-                  type="password"
-                />
-                <Button className="btn-red" onClick={() => alert('Cambiar Contraseña')}>
-                  Cambiar Contraseña
-                </Button>
-              </div>
+              <Button
+                className="btn-red btn-full"
+                onClick={() => router.push('admin/cambioContra')}
+              >
+                Cambiar Contraseña
+              </Button>
+
+              <Input
+                label="Correo Electrónico"
+                value="correoAdministrador241@gmail.com"
+                disabled
+              />
 
               <div className="action-buttons">
                 <Button className="btn-green" onClick={() => alert('Guardar Cambios')}>
