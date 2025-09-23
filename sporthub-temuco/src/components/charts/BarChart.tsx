@@ -15,6 +15,8 @@ interface BarChartProps {
   className?: string;
   showValues?: boolean;
   maxValue?: number;
+  primaryColor?: string;
+  animate?: boolean;
   emptyMessage?: string;
   ariaLabel?: string;
   loading?: boolean;
@@ -28,6 +30,8 @@ const BarChart: React.FC<BarChartProps> = ({
   className = '',
   showValues = true,
   maxValue,
+  primaryColor = '#3b82f6',
+  animate = true,
   emptyMessage = 'Sin datos disponibles',
   ariaLabel = 'Gráfico de barras',
   loading = false,

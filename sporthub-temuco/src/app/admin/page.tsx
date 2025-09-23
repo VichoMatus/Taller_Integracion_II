@@ -163,13 +163,13 @@ export default function AdminDashboard() {
         <h3>Reseñas Recientes</h3>
         <div className="review-item">
           <div className="review-content">
-            Cancha Central: "Instalaciones Limpias" - 5 Estrellas
+            Cancha Central: &quot;Instalaciones Limpias&quot; - 5 Estrellas
           </div>
           <div className="review-time">Hace 1 hora</div>
         </div>
         <div className="review-item">
           <div className="review-content">
-            Cancha Central: "Instalaciones Limpias" - 5 Estrellas
+            Cancha Central: &quot;Instalaciones Limpias&quot; - 5 Estrellas
           </div>
           <div className="review-time">Hace 1 hora</div>
         </div>

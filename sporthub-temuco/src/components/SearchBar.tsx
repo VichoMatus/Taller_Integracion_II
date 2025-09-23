@@ -1,14 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import indexStyles from './stylesSearchBar/IndexSearchBar.module.css';
 import basquetbolStyles from './stylesSearchBar/BasquetbolSearchBar.module.css';
 
 interface SearchBarProps {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSearch: () => void;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSearch: (term: string) => void;
   placeholder?: string;
   sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel';
 }
@@ -21,6 +21,7 @@ const SearchBar = ({
   sport 
 }: SearchBarProps) => {
   const pathname = usePathname();
+  const [internalValue, setInternalValue] = useState(value || '');
 
   // 🔥 Función para obtener los estilos según la ubicación
   const getSearchStyles = () => {
@@ -46,9 +47,21 @@ const SearchBar = ({
 
   const styles = getSearchStyles();
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setInternalValue(newValue);
+    if (onChange) {
+      onChange(e);
+    }
+  };
+
+  const handleSearch = () => {
+    onSearch(internalValue);
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      onSearch();
+      onSearch(internalValue);
     }
   };
 
@@ -59,14 +72,14 @@ const SearchBar = ({
       </div>
       <input
         type="text"
-        value={value}
-        onChange={onChange}
+        value={value !== undefined ? value : internalValue}
+        onChange={handleInputChange}
         onKeyPress={handleKeyPress}
         placeholder={placeholder}
         className={styles.searchInput}
       />
       <button
-        onClick={onSearch}
+        onClick={handleSearch}
         className={styles.searchButton}
         type="button"
       >

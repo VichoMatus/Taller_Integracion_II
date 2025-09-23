@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
     "http://localhost:8081",
     "http://localhost:3000"
   ]
+  // ESLint y TypeScript habilitados para verificar errores
 };
 
 export default nextConfig;

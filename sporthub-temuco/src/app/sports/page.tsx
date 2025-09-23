@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import Image from 'next/image'
 import Sidebar from '../../components/layout/Sidebar';
 import SearchBar from '../../components/SearchBar';
 import styles from './page.module.css';
@@ -93,15 +94,6 @@ export default function SportsPage() {
     }
   };
 
-  // 🔥 Función para manejar errores de imagen
-  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    e.currentTarget.style.display = 'none';
-    const container = e.currentTarget.parentElement;
-    if (container) {
-      container.classList.add(styles.fallback);
-    }
-  };
-
   return (
     <div className={styles.pageContainer}>
       {/* Sidebar */}
@@ -142,12 +134,15 @@ export default function SportsPage() {
             >
               {/* Imagen del deporte */}
               <div className={styles.sportImageContainer}>
-                <img 
-                  src={sport.imageUrl} 
-                  alt={sport.name}
-                  className={styles.sportImage}
-                  onError={handleImageError} // 🔥 Mejorado manejo de errores
-                />
+                <Image 
+                    src={sport.imageUrl} 
+                    alt={sport.name}
+                    className={styles.sportImage}
+                    width={300}  // Requerido
+                    height={200} // Requerido
+                    placeholder="blur"
+                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+                  />
                 {/* Tag del deporte */}
                 <div 
                   className={styles.sportTag}
@@ -174,7 +169,7 @@ export default function SportsPage() {
         {/* Mensaje si no hay resultados */}
         {filteredSports.length === 0 && searchTerm && (
           <div className={styles.noResults}>
-            <h3>No se encontraron deportes para "{searchTerm}"</h3>
+            <h3>No se encontraron deportes para &quot;{searchTerm}&quot;</h3>
             <p>Intenta con otros términos de búsqueda</p>
             <button 
               onClick={() => {

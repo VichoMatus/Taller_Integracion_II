@@ -33,18 +33,18 @@ const CourtForm: React.FC<CourtFormProps> = ({ court, onSubmit, onCancel, loadin
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const ok = validate();
     if (!ok) {
       // Foco en el primer campo inválido sin usar useRef/useEffect
       if (!formData.name.trim()) {
-        const el = document.getElementById('name') as any;
+        const el = document.getElementById('name') as HTMLInputElement;
         el && typeof el.focus === 'function' && el.focus();
         return;
       }
       if (!['Activo','Inactivo'].includes(formData.status)) {
-        const el = document.getElementById('status') as any;
+        const el = document.getElementById('status') as HTMLSelectElement;
         el && typeof el.focus === 'function' && el.focus();
         return;
       }
@@ -53,9 +53,9 @@ const CourtForm: React.FC<CourtFormProps> = ({ court, onSubmit, onCancel, loadin
     onSubmit(formData);
   };
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-  setFormData((prev: any) => {
+  setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       // Validación en caliente minimal (solo campo modificado)
       validate(updated);

@@ -134,7 +134,7 @@ export default function UserReviewsPage() {
       <div className="admin-content">
         {userReviews.length === 0 ? (
           <div className="admin-empty-state">
-            <p>No se encontraron reseñas para el usuario "{nombreUsuario}"</p>
+            <p>No se encontraron reseñas para el usuario &quot;{nombreUsuario}&quot;</p>
             <button 
               className="btn-primary" 
               onClick={() => router.back()}

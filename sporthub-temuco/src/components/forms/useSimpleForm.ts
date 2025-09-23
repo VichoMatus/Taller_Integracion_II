@@ -2,18 +2,30 @@
 // Objetivo: Proveer una API consistente que permita migrar luego a react-hook-form reemplazando
 // solo la implementación interna.
 
-import { useState } from 'react';
+import { useState, ChangeEvent, FocusEvent } from 'react';
 
-// Versión simplificada compatible con configuración TS laxa actual.
-// Evita generics avanzados para prevenir errores de tipo en el entorno.
+// Tipos para el hook
+interface FormOptions<T = Record<string, unknown>> {
+  initialValues?: T;
+  validate?: (values: T) => Record<string, string>;
+  onValidate?: (errors: Record<string, string>) => void;
+}
 
-export function useSimpleForm(options: any) {
+interface FormErrors {
+  [key: string]: string;
+}
+
+interface FormTouched {
+  [key: string]: boolean;
+}
+
+export function useSimpleForm<T = Record<string, unknown>>(options: FormOptions<T>) {
   const { initialValues, validate, onValidate } = options;
-  const [values, setValues] = useState(initialValues || {});
-  const [errors, setErrors] = useState({} as any);
-  const [touched, setTouched] = useState({} as any);
+  const [values, setValues] = useState<T>(initialValues || {} as T);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [touched, setTouched] = useState<FormTouched>({});
 
-  const runValidation = (nextValues: any = values) => {
+  const runValidation = (nextValues: T = values) => {
     if (typeof validate !== 'function') return true;
     const result = validate(nextValues) || {};
     setErrors(result);
@@ -21,32 +33,32 @@ export function useSimpleForm(options: any) {
     return Object.keys(result).length === 0;
   };
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setValues((prev: any) => {
+    setValues((prev: T) => {
       const updated = { ...prev, [name]: value };
       runValidation(updated);
       return updated;
     });
-    setTouched((prev: any) => ({ ...prev, [name]: true }));
+    setTouched((prev: FormTouched) => ({ ...prev, [name]: true }));
   };
 
-  const handleBlur = (e: any) => {
+  const handleBlur = (e: FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name } = e.target;
-    setTouched((prev: any) => ({ ...prev, [name]: true }));
+    setTouched((prev: FormTouched) => ({ ...prev, [name]: true }));
     runValidation();
   };
 
-  const setValue = (field: string, value: any) => {
-    setValues((prev: any) => {
+  const setValue = (field: string, value: unknown) => {
+    setValues((prev: T) => {
       const updated = { ...prev, [field]: value };
       runValidation(updated);
       return updated;
     });
-    setTouched((prev: any) => ({ ...prev, [field]: true }));
+    setTouched((prev: FormTouched) => ({ ...prev, [field]: true }));
   };
 
-  const reset = (next: any = initialValues || {}) => {
+  const reset = (next: T = initialValues || {} as T) => {
     setValues(next);
     setErrors({});
     setTouched({});

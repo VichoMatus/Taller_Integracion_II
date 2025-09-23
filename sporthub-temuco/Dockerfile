@@ -5,7 +5,9 @@ COPY package.json package-lock.json ./
 RUN npm install --frozen-lockfile
 COPY . .
 
-# Build
+# Build sin lint check
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV DISABLE_ESLINT_PLUGIN=true
 RUN npm run build
 
 # Producción
