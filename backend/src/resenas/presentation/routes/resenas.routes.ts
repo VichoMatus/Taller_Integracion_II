@@ -50,59 +50,68 @@ const ctrl = (req: any) => {
 };
 
 // === Endpoint de Prueba de Conectividad ===
-/** GET /resenas/test-api - Prueba conectividad REAL con la API de reseñas */
-router.get("/test-api", async (req, res) => {
+/** GET /resenas/status - Verifica estado y conectividad del módulo reseñas */
+router.get("/status", async (req, res) => {
   try {
     const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
     
     let response;
     let endpoint_tested = "";
+    let endpoints_found = [];
+    let success = false;
     
-    try {
-      // Probar endpoint de reseñas por complejo
-      response = await http.get('/resenas/complejo/1', { validateStatus: () => true });
-      endpoint_tested = "/resenas/complejo/1";
-    } catch (error) {
+    const endpointsToTest = [
+      '/api/v1/resenas',
+      '/api/v1/resenas/complejo/1',
+      '/api/v1/resenas/estadisticas/1',
+      '/api/v1/healthz'
+    ];
+    
+    for (const endpoint of endpointsToTest) {
       try {
-        // Intentar estadísticas
-        response = await http.get('/resenas/estadisticas/1', { validateStatus: () => true });
-        endpoint_tested = "/resenas/estadisticas/1";
-      } catch (error2) {
-        try {
-          // Intentar listar reseñas
-          response = await http.get('/resenas', { validateStatus: () => true });
-          endpoint_tested = "/resenas";
-        } catch (error3) {
-          // Fallback a docs
-          response = await http.get('/docs', { validateStatus: () => true });
-          endpoint_tested = "/docs (fallback)";
+        const testResponse = await http.get(endpoint, { validateStatus: () => true });
+        if (testResponse.status < 500) {
+          endpoints_found.push(`${endpoint} ✅ (${testResponse.status})`);
+          if (testResponse.status < 400) {
+            endpoint_tested = endpoint;
+            response = testResponse;
+            success = true;
+          }
+        } else {
+          endpoints_found.push(`${endpoint} ❌ (${testResponse.status})`);
         }
+      } catch (error) {
+        endpoints_found.push(`${endpoint} ❌ (error)`);
       }
     }
     
     res.json({
-      ok: response.status < 400,
-      message: response.status < 400 ? "API de reseñas respondió correctamente" : "API respondió con error",
+      ok: success,
+      module: "resenas",
+      message: success ? "Módulo reseñas funcionando correctamente" : "Algunos endpoints con errores",
       fastapi_url: ENV.FASTAPI_URL,
       endpoint_tested,
-      status: response.status,
-      module: "resenas",
+      status: response?.status || 0,
+      endpoints_found,
       available_endpoints: [
-        "GET /resenas/complejo/{complejo_id}",
-        "GET /resenas/estadisticas/{complejo_id}",
-        "GET /resenas",
-        "POST /resenas"
-      ]
+        "GET /api/v1/resenas",
+        "POST /api/v1/resenas",
+        "GET /api/v1/resenas/complejo/{complejo_id}",
+        "GET /api/v1/resenas/estadisticas/{complejo_id}",
+        "PATCH /api/v1/resenas/{id}",
+        "DELETE /api/v1/resenas/{id}"
+      ],
+      timestamp: new Date().toISOString()
     });
     
   } catch (error: any) {
     res.json({
       ok: false,
+      module: "resenas",
       message: "Error conectando con API de reseñas",
       fastapi_url: ENV.FASTAPI_URL,
-      module: "resenas",
       error: error.message,
-      connection_issue: !error.response ? "No se pudo establecer conexión" : "API respondió con error"
+      timestamp: new Date().toISOString()
     });
   }
 });

@@ -46,57 +46,77 @@ const ctrl = (req: any) => {
 };
 
 // === Endpoint de Prueba de Conectividad ===
-/** GET /bloqueos/test-api - Prueba conectividad REAL con la API de bloqueos */
-router.get("/test-api", async (req, res) => {
+/** GET /bloqueos/status - Verifica estado y conectividad del módulo bloqueos */
+router.get("/status", async (req, res) => {
   try {
     const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
     
-    // Probar diferentes endpoints que podrían existir
     let response;
     let endpoint_tested = "";
+    let endpoints_found = [];
+    let success = false;
     
-    try {
-      // Intentar obtener bloqueos
-      response = await http.get('/bloqueos', { validateStatus: () => true });
-      endpoint_tested = "/bloqueos";
-    } catch (error) {
+    const endpointsToTest = [
+      '/api/v1/bloqueos',
+      '/api/v1/bloqueos/verificar-conflicto',
+      '/api/v1/healthz'
+    ];
+    
+    for (const endpoint of endpointsToTest) {
       try {
-        // Intentar endpoint de verificación de conflictos
-        response = await http.post('/bloqueos/verificar-conflicto', {
-          cancha_id: 1,
-          fecha_inicio: "2024-12-20T10:00:00Z",
-          fecha_fin: "2024-12-20T12:00:00Z"
-        }, { validateStatus: () => true });
-        endpoint_tested = "/bloqueos/verificar-conflicto";
-      } catch (error2) {
-        // Fallback a docs
-        response = await http.get('/docs', { validateStatus: () => true });
-        endpoint_tested = "/docs (fallback)";
+        let testResponse;
+        if (endpoint.includes('verificar-conflicto')) {
+          testResponse = await http.post(endpoint, {
+            cancha_id: 1,
+            fecha_inicio: "2024-12-20T10:00:00Z",
+            fecha_fin: "2024-12-20T12:00:00Z"
+          }, { validateStatus: () => true });
+        } else {
+          testResponse = await http.get(endpoint, { validateStatus: () => true });
+        }
+        
+        if (testResponse.status < 500) {
+          endpoints_found.push(`${endpoint} ✅ (${testResponse.status})`);
+          if (testResponse.status < 400) {
+            endpoint_tested = endpoint;
+            response = testResponse;
+            success = true;
+          }
+        } else {
+          endpoints_found.push(`${endpoint} ❌ (${testResponse.status})`);
+        }
+      } catch (error) {
+        endpoints_found.push(`${endpoint} ❌ (error)`);
       }
     }
     
     res.json({
-      ok: response.status < 400,
-      message: response.status < 400 ? "API de bloqueos respondió correctamente" : "API respondió con error",
+      ok: success,
+      module: "bloqueos",
+      message: success ? "Módulo bloqueos funcionando correctamente" : "Algunos endpoints con errores",
       fastapi_url: ENV.FASTAPI_URL,
       endpoint_tested,
-      status: response.status,
-      module: "bloqueos",
+      status: response?.status || 0,
+      endpoints_found,
       available_endpoints: [
-        "POST /bloqueos/verificar-conflicto",
-        "GET /bloqueos/activos/{cancha_id}",
-        "GET /bloqueos"
-      ]
+        "GET /api/v1/bloqueos",
+        "POST /api/v1/bloqueos",
+        "POST /api/v1/bloqueos/verificar-conflicto",
+        "GET /api/v1/bloqueos/activos/{cancha_id}",
+        "PATCH /api/v1/bloqueos/{id}",
+        "DELETE /api/v1/bloqueos/{id}"
+      ],
+      timestamp: new Date().toISOString()
     });
     
   } catch (error: any) {
     res.json({
       ok: false,
+      module: "bloqueos",
       message: "Error conectando con API de bloqueos",
       fastapi_url: ENV.FASTAPI_URL,
-      module: "bloqueos",
       error: error.message,
-      connection_issue: !error.response ? "No se pudo establecer conexión" : "API respondió con error"
+      timestamp: new Date().toISOString()
     });
   }
 });

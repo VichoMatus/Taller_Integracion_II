@@ -139,6 +139,33 @@ app.get('/api', (req, res) => {
   });
 });
 
+// === Endpoint Global de Status ===
+app.get("/status", async (req, res) => {
+  const modules = [
+    { name: "admin", url: "/admin/status" },
+    { name: "canchas", url: "/canchas/status" },
+    { name: "complejos", url: "/complejos/status" },
+    { name: "reservas", url: "/reservas/status" },
+    { name: "bloqueos", url: "/bloqueos/status" },
+    { name: "resenas", url: "/resenas/status" },
+    { name: "uploads", url: "/uploads/status" }
+  ];
+
+  res.json({
+    ok: true,
+    message: "SportHub Backend API funcionando",
+    version: "1.0.0",
+    environment: process.env.NODE_ENV,
+    fastapi_url: process.env.API_BASE_URL,
+    modules: modules.map(m => ({
+      name: m.name,
+      status_endpoint: `${req.protocol}://${req.get('host')}${m.url}`
+    })),
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 /**
  * MANEJO DE ERRORES
  */

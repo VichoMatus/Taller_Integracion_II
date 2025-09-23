@@ -52,9 +52,8 @@ router.delete("/users/:id", requireRole("admin", "superadmin"), (req, res) => ct
 /** POST /admin/users/:id/role - Asigna rol a usuario (con validación de permisos) */
 router.post("/users/:id/role", requireRole("admin", "superadmin"), (req, res) => ctrl(req).asignarRol(req, res));
 
-// === Endpoint de Prueba de Conectividad ===
-/** GET /admin/test-api - Prueba conectividad REAL con la API de usuarios */
-router.get("/test-api", async (req, res) => {
+/** GET /admin/status - Verifica estado y conectividad del módulo admin */
+router.get("/status", async (req, res) => {
   try {
     const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
     
@@ -90,29 +89,31 @@ router.get("/test-api", async (req, res) => {
     
     res.json({
       ok: success,
-      message: success ? "API de usuarios funcionando" : "Algunos endpoints con errores",
+      module: "admin",
+      message: success ? "Módulo admin funcionando correctamente" : "Algunos endpoints con errores",
       fastapi_url: ENV.FASTAPI_URL,
       endpoint_tested,
       status: response?.status || 0,
-      module: "admin",
       endpoints_found,
       success,
-      real_endpoints: [
+      available_endpoints: [
         "GET /api/v1/usuarios",
         "GET /api/v1/usuarios/{id_usuario}",
         "PATCH /api/v1/usuarios/{id_usuario}",
         "DELETE /api/v1/usuarios/{id_usuario}",
         "POST /api/v1/admin/usuarios/{id_usuario}/rol"
-      ]
+      ],
+      timestamp: new Date().toISOString()
     });
     
   } catch (error: any) {
     res.json({
       ok: false,
+      module: "admin", 
       message: "Error conectando con FastAPI",
       fastapi_url: ENV.FASTAPI_URL,
-      module: "admin",
-      error: error.message
+      error: error.message,
+      timestamp: new Date().toISOString()
     });
   }
 });

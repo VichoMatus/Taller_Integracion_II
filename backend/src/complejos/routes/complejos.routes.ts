@@ -5,8 +5,8 @@ import { getBearerFromReq } from "../../interfaces/auth";
 
 const router = Router();
 
-/** GET /complejos/test-api - Prueba conectividad REAL con la API de complejos */
-router.get("/test-api", async (req, res) => {
+/** GET /complejos/status - Verifica estado y conectividad del módulo complejos */
+router.get("/status", async (req, res) => {
   try {
     const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
     
@@ -32,6 +32,8 @@ router.get("/test-api", async (req, res) => {
             response = testResponse;
             success = true;
           }
+        } else {
+          endpoints_found.push(`${endpoint} ❌ (${testResponse.status})`);
         }
       } catch (error) {
         endpoints_found.push(`${endpoint} ❌ (error)`);
@@ -40,13 +42,13 @@ router.get("/test-api", async (req, res) => {
     
     res.json({
       ok: success,
-      message: success ? "API de complejos funcionando" : "API responde con errores",
+      module: "complejos",
+      message: success ? "Módulo complejos funcionando correctamente" : "Algunos endpoints con errores",
       fastapi_url: ENV.FASTAPI_URL,
       endpoint_tested,
       status: response?.status || 0,
-      module: "complejos",
       endpoints_found,
-      real_endpoints: [
+      available_endpoints: [
         "GET /api/v1/complejos",
         "POST /api/v1/complejos",
         "GET /api/v1/complejos/{id_complejo}",
@@ -56,16 +58,18 @@ router.get("/test-api", async (req, res) => {
         "GET /api/v1/complejos/{id_complejo}/horarios",
         "GET /api/v1/complejos/{id_complejo}/bloqueos",
         "GET /api/v1/complejos/{id_complejo}/resumen"
-      ]
+      ],
+      timestamp: new Date().toISOString()
     });
     
   } catch (error: any) {
     res.json({
       ok: false,
+      module: "complejos",
       message: "Error conectando con API de complejos",
       fastapi_url: ENV.FASTAPI_URL,
-      module: "complejos",
-      error: error.message
+      error: error.message,
+      timestamp: new Date().toISOString()
     });
   }
 });

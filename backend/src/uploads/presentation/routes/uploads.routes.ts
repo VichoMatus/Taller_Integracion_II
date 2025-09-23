@@ -101,25 +101,67 @@ const ctrl = (req: any) => {
 };
 
 // === Endpoint de Prueba de Conectividad ===
-router.get("/test-api", async (req, res) => {
+/** GET /uploads/status - Verifica estado y conectividad del módulo uploads */
+router.get("/status", async (req, res) => {
   try {
     const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
-    const response = await http.get('/api/v1/healthz', { validateStatus: () => true });
+    
+    let response;
+    let endpoint_tested = "";
+    let endpoints_found = [];
+    let success = false;
+    
+    const endpointsToTest = [
+      '/api/v1/uploads',
+      '/api/v1/uploads/stats',
+      '/api/v1/healthz'
+    ];
+    
+    for (const endpoint of endpointsToTest) {
+      try {
+        const testResponse = await http.get(endpoint, { validateStatus: () => true });
+        if (testResponse.status < 500) {
+          endpoints_found.push(`${endpoint} ✅ (${testResponse.status})`);
+          if (testResponse.status < 400) {
+            endpoint_tested = endpoint;
+            response = testResponse;
+            success = true;
+          }
+        } else {
+          endpoints_found.push(`${endpoint} ❌ (${testResponse.status})`);
+        }
+      } catch (error) {
+        endpoints_found.push(`${endpoint} ❌ (error)`);
+      }
+    }
     
     res.json({
-      ok: response.status < 400,
-      message: response.status < 400 ? "API de uploads funcionando" : "API no disponible",
+      ok: success,
+      module: "uploads",
+      message: success ? "Módulo uploads funcionando correctamente" : "Algunos endpoints con errores",
       fastapi_url: ENV.FASTAPI_URL,
-      status: response.status,
-      module: "uploads"
+      endpoint_tested,
+      status: response?.status || 0,
+      endpoints_found,
+      available_endpoints: [
+        "GET /api/v1/uploads",
+        "POST /api/v1/uploads",
+        "GET /api/v1/uploads/stats",
+        "GET /api/v1/uploads/usuario/{usuario_id}",
+        "PATCH /api/v1/uploads/{id}",
+        "DELETE /api/v1/uploads/{id}"
+      ],
+      timestamp: new Date().toISOString()
     });
+    
   } catch (error: any) {
     res.json({
       ok: false,
+      module: "uploads",
       message: "Error conectando con API de uploads",
       fastapi_url: ENV.FASTAPI_URL,
-      module: "uploads",
-      error: error.message
+      error: error.message,
+      timestamp: new Date().toISOString()
     });
   }
 });

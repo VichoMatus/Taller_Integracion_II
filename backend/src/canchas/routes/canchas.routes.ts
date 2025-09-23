@@ -5,8 +5,8 @@ import { getBearerFromReq } from "../../interfaces/auth";
 
 const router = Router();
 
-/** GET /canchas/test-api - Prueba conectividad REAL con la API de canchas */
-router.get("/test-api", async (req, res) => {
+/** GET /canchas/status - Verifica estado y conectividad del módulo canchas */
+router.get("/status", async (req, res) => {
   try {
     const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
     
@@ -40,13 +40,13 @@ router.get("/test-api", async (req, res) => {
     
     res.json({
       ok: success,
-      message: success ? "API de canchas funcionando" : "API responde con errores",
+      module: "canchas",
+      message: success ? "Módulo canchas funcionando correctamente" : "API responde con errores",
       fastapi_url: ENV.FASTAPI_URL,
       endpoint_tested,
       status: response?.status || 0,
-      module: "canchas",
       endpoints_found,
-      real_endpoints: [
+      available_endpoints: [
         "GET /api/v1/canchas",
         "POST /api/v1/canchas",
         "GET /api/v1/canchas/{id_cancha}",
@@ -55,16 +55,18 @@ router.get("/test-api", async (req, res) => {
         "GET /api/v1/canchas/{id_cancha}/fotos",
         "POST /api/v1/canchas/{id_cancha}/fotos",
         "DELETE /api/v1/canchas/{id_cancha}/fotos/{id_foto}"
-      ]
+      ],
+      timestamp: new Date().toISOString()
     });
     
   } catch (error: any) {
     res.json({
       ok: false,
+      module: "canchas",
       message: "Error conectando con API de canchas",
       fastapi_url: ENV.FASTAPI_URL,
-      module: "canchas",
-      error: error.message
+      error: error.message,
+      timestamp: new Date().toISOString()
     });
   }
 });
