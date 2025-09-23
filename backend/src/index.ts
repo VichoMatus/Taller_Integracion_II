@@ -27,6 +27,17 @@ import reservaRoutes from './reserva/routes/reservaRoute';
 import resenaRoutes from './resena/routes/resenaRouters';
 import notificacionesRoutes from './notificaciones/routes/notificacionesRoutes';
 import favoritosRoutes from './favoritos/routes/favoritosRoute';
+import adminRoutes from './admin/presentation/routes/admin.routes';
+import bloqueoRoutes from './bloqueos/presentation/routes/bloqueos.routes';
+import reservasRoutes from './reservas/presentation/routes/reservas.routes';
+import resenasRoutes from './resenas/presentation/routes/resenas.routes';
+import uploadsRoutes from './uploads/presentation/routes/uploads.routes';
+import canchasRoutes from './canchas/routes/canchas.routes';
+import complejosRoutes from './complejos/routes/complejos.routes';
+
+/**
+ * CARGA DE VARIABLES DE ENTORNO
+ */
 
 // Cargar variables de entorno desde el .env de la raíz del proyecto
 // En Docker, el .env se monta en /app/.env
@@ -74,6 +85,12 @@ app.get('/', (req, res) => {
       resenas: '/api/resenas',
       notificaciones: '/api/notificaciones',
       favoritos: '/api/favoritos'
+      admin: '/api/admin',
+      reservas: '/api/reservas',
+      bloqueos: '/api/bloqueos',
+      resenas: '/api/resenas',
+      uploads: '/api/uploads',
+      superadmin: '/api/superadmin'
     }
   });
 });
@@ -92,6 +109,27 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 
 // Rutas de administración
+app.use('/api/admin', adminRoutes);
+
+// Rutas de bloqueos
+app.use('/api/bloqueos', bloqueoRoutes);
+
+// Rutas de reservas
+app.use('/api/reservas', reservasRoutes);
+
+// Rutas de reseñas
+app.use('/api/resenas', resenasRoutes);
+
+// Rutas de uploads
+app.use('/api/uploads', uploadsRoutes);
+
+// Rutas de canchas
+app.use('/api/canchas', canchasRoutes);
+
+// Rutas de complejos
+app.use('/api/complejos', complejosRoutes);
+
+// Rutas de administración (legacy)
 app.use('/api/superadmin', superAdminRoutes);
 
 // Middleware de debug para ver todas las rutas
@@ -136,11 +174,44 @@ app.get('/api', (req, res) => {
       resenas: '/api/resenas/*',
       notificaciones: '/api/notificaciones/*',
       favoritos: '/api/favoritos/*'
+      admin: '/api/admin/*',
+      reservas: '/api/reservas/*',
+      bloqueos: '/api/bloqueos/*',
+      resenas: '/api/resenas/*',
+      uploads: '/api/uploads/*',
+      superadmin: '/api/superadmin/*'
     },
     api: {
       fastapi: process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me',
       docs: `${process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me'}/docs`
     }
+  });
+});
+
+// === Endpoint Global de Status ===
+app.get("/status", async (req, res) => {
+  const modules = [
+    { name: "admin", url: "/admin/status" },
+    { name: "canchas", url: "/canchas/status" },
+    { name: "complejos", url: "/complejos/status" },
+    { name: "reservas", url: "/reservas/status" },
+    { name: "bloqueos", url: "/bloqueos/status" },
+    { name: "resenas", url: "/resenas/status" },
+    { name: "uploads", url: "/uploads/status" }
+  ];
+
+  res.json({
+    ok: true,
+    message: "SportHub Backend API funcionando",
+    version: "1.0.0",
+    environment: process.env.NODE_ENV,
+    fastapi_url: process.env.API_BASE_URL,
+    modules: modules.map(m => ({
+      name: m.name,
+      status_endpoint: `${req.protocol}://${req.get('host')}${m.url}`
+    })),
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
   });
 });
 
@@ -174,9 +245,9 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 
 app.listen(PORT, () => {
   console.log('🚀 Servidor BFF iniciado correctamente');
-  console.log(`� URL: http://localhost:${PORT}`);
+  console.log(`📍 URL: http://localhost:${PORT}`);
   console.log(`🌐 API FastAPI: ${process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me'}`);
-  console.log(`� Documentación FastAPI: ${process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me'}/docs`);
+  console.log(`📖 Documentación FastAPI: ${process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me'}/docs`);
   console.log(`🔗 Endpoints disponibles:`);
   console.log(`   - GET  /health`);
   console.log(`   - GET  /api`);
@@ -189,6 +260,14 @@ app.listen(PORT, () => {
   console.log(`   - GET  /api/resenas`);
   console.log(`   - GET  /api/notificaciones`);
   console.log(`   - GET  /api/favoritos`);
+  console.log(`   - GET  /api/admin/users`);
+  console.log(`   - GET  /api/canchas`);
+  console.log(`   - GET  /api/complejos`);
+  console.log(`   - POST /api/reservas/verificar-disponibilidad`);
+  console.log(`   - GET  /api/reservas`);
+  console.log(`   - POST /api/bloqueos/verificar-conflicto`);
+  console.log(`   - GET  /api/resenas/complejo/:id`);
+  console.log(`   - POST /api/uploads`);
   console.log(`   - Y muchos más...`);
 });
 
