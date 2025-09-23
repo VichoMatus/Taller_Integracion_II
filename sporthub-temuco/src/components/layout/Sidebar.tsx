@@ -76,8 +76,8 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
     {
       name: 'Perfil',
       icon: '👤',
-      href: '/usuario/perfil',
-      active: pathname === '/usuario/perfil'
+      href: '/admin/perfil',
+      active: pathname === '/admin/perfil'
     }
   ];
 
