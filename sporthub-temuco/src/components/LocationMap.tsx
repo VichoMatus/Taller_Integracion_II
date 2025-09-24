@@ -1,7 +1,21 @@
 import React from 'react';
 import styles from './stylesLocationMap/BasquetbolLocationMap.module.css';
 
-const LocationMap: React.FC = () => {
+interface LocationMapProps {
+  latitude: number;
+  longitude: number;
+  address?: string;
+  zoom?: number;
+  height?: string;
+}
+
+const LocationMap: React.FC<LocationMapProps> = ({
+  latitude,
+  longitude,
+  address,
+  zoom = 15,
+  height = '250px'
+}) => {
   const handleImplementClick = () => {
     console.log('Implementar mapa interactivo');
     // Aquí puedes agregar la lógica para implementar el mapa real

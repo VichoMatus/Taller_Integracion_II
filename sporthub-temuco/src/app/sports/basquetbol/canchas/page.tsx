@@ -1,10 +1,9 @@
 'use client';
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
-import LocationMap from '../../../../components/LocationMap';
-import Modal from '../../../../components/Modal';
-import Sidebar from '../../../../components/layout/Sidebar'; // 🔥 Importar Sidebar
+import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
 
 const canchas = [
@@ -55,6 +54,7 @@ const canchas = [
 ];
 
 export default function Page() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCanchas, setFilteredCanchas] = useState(canchas);
   const [modalOpen, setModalOpen] = useState(false);
@@ -72,6 +72,10 @@ export default function Page() {
       );
       setFilteredCanchas(filtered);
     }
+  };
+
+  const handleBackToBasketball = () => {
+    router.push('/sports/basquetbol');
   };
 
   const availableNow = filteredCanchas.filter(cancha => 
@@ -94,10 +98,11 @@ export default function Page() {
           </div>
           <div className={styles.headerRight}>
             <SearchBar
-              value={searchTerm}
-              onChange={handleSearchChange}
-              onSearch={handleSearch}
-              placeholder="Buscar por nombre de cancha..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            onSearch={handleSearch}
+            placeholder="Nombre de la cancha"
+            sport="basquetbol" 
             />
             <button className={styles.userButton}>
               <span>👤</span>
@@ -106,9 +111,12 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Breadcrumb */}
+        {/* Breadcrumb con navegación */}
         <div className={styles.breadcrumb}>
-          <button className={styles.breadcrumbButton}>
+          <button 
+            className={styles.breadcrumbButton}
+            onClick={handleBackToBasketball} // 🔥 Agregar onClick
+          >
             <span>←</span>
             <span>Basquetbol</span>
           </button>
@@ -173,16 +181,11 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Modal genérico */}
-        <Modal open={modalOpen} onClose={() => setModalOpen(false)}>
-          <h2>Modal de ejemplo</h2>
-          <p>Contenido del modal...</p>
-        </Modal>
 
         {/* Mostrar mensaje si no hay resultados */}
         {filteredCanchas.length === 0 && searchTerm && (
           <div className={styles.noResults}>
-            <h3>No se encontraron resultados para "{searchTerm}"</h3>
+            <h3>No se encontraron resultados para &quot;{searchTerm}&quot;</h3>
             <p>Intenta con otros términos de búsqueda</p>
             <button onClick={() => {setSearchTerm(''); setFilteredCanchas(canchas);}}>
               Ver todas las canchas

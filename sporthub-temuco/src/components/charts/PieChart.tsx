@@ -125,7 +125,7 @@ const PieChart: React.FC<PieChartProps> = ({
                   tabIndex={onSegmentClick ? 0 : -1}
                   aria-label={`${item.label}: ${item.value} (${item.percentage.toFixed(1)}%)`}
                   onClick={onSegmentClick ? () => onSegmentClick(item, index) : undefined}
-                  onKeyDown={onSegmentClick ? (e: any) => { if (e.key === 'Enter') onSegmentClick(item, index); } : undefined}
+                  onKeyDown={onSegmentClick ? (e: React.KeyboardEvent) => { if (e.key === 'Enter') onSegmentClick(item, index); } : undefined}
                 />
               ))}
               {donut && <circle cx="50" cy="50" r="25" fill="white" />}

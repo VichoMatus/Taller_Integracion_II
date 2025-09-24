@@ -1,54 +1,90 @@
-import React from 'react';
-import styles from './stylesSearchBar/BasquetbolSearchBar.module.css';
+'use client';
+
+import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import indexStyles from './stylesSearchBar/IndexSearchBar.module.css';
+import basquetbolStyles from './stylesSearchBar/BasquetbolSearchBar.module.css';
 
 interface SearchBarProps {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSearch: () => void; // Solo se ejecuta cuando se hace clic en buscar
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSearch: (term: string) => void;
   placeholder?: string;
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel';
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({
-  value,
-  onChange,
-  onSearch,
-  placeholder = "Buscar por nombre...",
-}) => {
-  const handleIconClick = () => {
-    onSearch(); // Ejecuta búsqueda solo al hacer clic
+const SearchBar = ({ 
+  value, 
+  onChange, 
+  onSearch, 
+  placeholder = "Buscar...",
+  sport 
+}: SearchBarProps) => {
+  const pathname = usePathname();
+  const [internalValue, setInternalValue] = useState(value || '');
+
+  // 🔥 Función para obtener los estilos según la ubicación
+  const getSearchStyles = () => {
+    // Si está en el index o página de deportes principal, usar IndexSearchBar
+    if (pathname === '/' || pathname === '/sports' || pathname === '/sports/') {
+      return indexStyles;
+    }
+
+    // Para páginas específicas de deportes, usar los estilos correspondientes
+    switch (sport) {
+      case 'basquetbol':
+        return basquetbolStyles;
+      case 'futbol':
+        // return futbolStyles; // Cuando lo crees
+        return basquetbolStyles; // temporal
+      case 'tenis':
+        // return tenisStyles; // Cuando lo crees
+        return indexStyles; // temporal
+      default:
+        return indexStyles; // fallback al index
+    }
+  };
+
+  const styles = getSearchStyles();
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setInternalValue(newValue);
+    if (onChange) {
+      onChange(e);
+    }
+  };
+
+  const handleSearch = () => {
+    onSearch(internalValue);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      onSearch(); // También permite buscar con Enter
+      onSearch(internalValue);
     }
   };
 
   return (
     <div className={styles.searchContainer}>
+      <div className={styles.searchIcon}>
+        🔍
+      </div>
       <input
         type="text"
-        value={value}
-        onChange={onChange} // Solo actualiza el estado, no busca
+        value={value !== undefined ? value : internalValue}
+        onChange={handleInputChange}
+        onKeyPress={handleKeyPress}
         placeholder={placeholder}
         className={styles.searchInput}
-        onKeyDown={handleKeyPress}
       />
-      <div 
-        className={styles.searchIconContainer}
-        onClick={handleIconClick}
-        title="Buscar" // Tooltip para mejor UX
+      <button
+        onClick={handleSearch}
+        className={styles.searchButton}
+        type="button"
       >
-        <svg 
-          className={styles.searchIcon} 
-          fill="none" 
-          stroke="currentColor" 
-          viewBox="0 0 24 24"
-        >
-          <circle cx="11" cy="11" r="8" />
-          <path d="m21 21-4.35-4.35" />
-        </svg>
-      </div>
+        Buscar
+      </button>
     </div>
   );
 };

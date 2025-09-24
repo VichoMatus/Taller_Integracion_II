@@ -26,6 +26,7 @@ services:
       - DB_PASS=${DOCKER_POSTGRES_PASSWORD}
       - DB_NAME=${DOCKER_POSTGRES_DB}
       - API_BASE_URL=${API_BASE_URL}
+      - FASTAPI_URL=${API_BASE_URL}
       - BFF_PORT=${BFF_PORT}
       - FRONTEND_URL=${FRONTEND_URL}
     depends_on:

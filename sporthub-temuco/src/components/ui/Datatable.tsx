@@ -50,8 +50,10 @@ function DataTable<T extends object>({
   const sortedData = [...data].sort((a, b) => {
     if (!sortField) return 0;
 
-    const aValue = (a as any)[sortField];
-    const bValue = (b as any)[sortField];
+    // Uso de function helper para acceder de forma segura
+    const getNestedValue = (obj: T, key: keyof T): unknown => obj[key];
+    const aValue = getNestedValue(a, sortField);
+    const bValue = getNestedValue(b, sortField);
 
     if (typeof aValue === 'string' && typeof bValue === 'string') {
       return sortDirection === 'asc' 
@@ -59,8 +61,12 @@ function DataTable<T extends object>({
         : bValue.localeCompare(aValue);
     }
 
-    if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-    if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    // Comparación segura para números y otros tipos
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+    }
+    
     return 0;
   });
 

@@ -6,7 +6,6 @@ import StatsCard from '@/components/charts/StatsCard';
 import LineChart from '@/components/charts/LineChart';
 import PieChart from '@/components/charts/PieChart';
 import ChartCard from '@/components/charts/ChartCard';
-import '../styles/adminPanel.css';
 import './estadisticas.css';
 
 export default function EstadisticasPage() {
@@ -106,57 +105,105 @@ export default function EstadisticasPage() {
 
       {/* Tablas de datos */}
       <div className="data-tables-grid">
-        <ChartCard 
-          title="Canchas más populares"
-          className="panel-content"
-        >
+        <div className="admin-table-container">
+          <div className="admin-table-header">
+            <h2 className="admin-table-title">Canchas más populares</h2>
+          </div>
+          
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="admin-table">
+              <thead>
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cancha</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reservas</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ocupación</th>
+                  <th>Cancha</th>
+                  <th>Reservas totales</th>
+                  <th>Ocupación</th>
+                  <th>Tendencia</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody>
                 {statsData.canchasPopulares.map((cancha, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cancha.nombre}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cancha.reservas}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cancha.ocupacion}</td>
+                  <tr key={index}>
+                    <td>
+                      <div className="admin-cell-title">
+                        <div className="admin-avatar bg-emerald-100 text-emerald-800">
+                          {cancha.nombre[0]}
+                        </div>
+                        {cancha.nombre}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="admin-cell-subtitle">{cancha.reservas} reservas</div>
+                    </td>
+                    <td>
+                      <span className={`status-badge ${
+                        parseInt(cancha.ocupacion) > 80 ? 'status-activo' :
+                        parseInt(cancha.ocupacion) > 50 ? 'status-por-revisar' :
+                        'status-inactivo'
+                      }`}>
+                        {cancha.ocupacion}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="flex items-center space-x-1">
+                        <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                        <span className="text-emerald-500 font-medium">+12%</span>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </ChartCard>
-        
-        <ChartCard 
-          title="Horarios más solicitados" 
-          className="panel-content"
-        >
+        </div>
+
+        <div className="admin-table-container">
+          <div className="admin-table-header">
+            <h2 className="admin-table-title">Horarios más solicitados</h2>
+          </div>
+          
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="admin-table">
+              <thead>
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horarios</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reservas</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ingresos</th>
+                  <th>Horario</th>
+                  <th>Reservas</th>
+                  <th>Ingresos</th>
+                  <th>Tendencia</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody>
                 {statsData.horariosPopulares.map((horario, index) => (
-                  <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{horario.horario}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{horario.reservas}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{horario.ingresos}</td>
+                  <tr key={index}>
+                    <td>
+                      <div className="admin-cell-title">
+                        <div className="admin-avatar bg-blue-100 text-blue-800">
+                          {horario.horario.split(' ')[0][0]}
+                        </div>
+                        {horario.horario}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="admin-cell-subtitle">{horario.reservas} reservas</div>
+                    </td>
+                    <td>
+                      <div className="admin-cell-text font-medium text-emerald-600">{horario.ingresos}</div>
+                    </td>
+                    <td>
+                      <div className="flex items-center space-x-1">
+                        <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                        </svg>
+                        <span className="text-emerald-500 font-medium">+8%</span>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </ChartCard>
+        </div>
       </div>
     </div>
   );

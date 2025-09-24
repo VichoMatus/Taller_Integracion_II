@@ -57,3 +57,4 @@ docker-data/
 # Repositorio de cuarto - Excluir completamente la carpeta Taller4
 Taller4/
 Taller4/**
+backend/tests/prueba_integra/practice-node-pg/env
