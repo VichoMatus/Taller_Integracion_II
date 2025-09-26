@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState } from "react";
 import "./editar_perfil.css";
@@ -6,97 +6,192 @@ import { Input, Button } from "../componentes/compUser";
 import Link from "next/link";
 import UserLayout from "../UsuarioLayout";
 
-export default function PerfilUsuario() {
-  const [selectedSport, setSelectedSport] = useState("");
+// Definición del tipo SportType para los deportes (los mismos del Sidebar)
+type SportType = 'futbol' | 'tenis' | 'basquetbol' | 'voleibol' | 'padel' | undefined;
+
+export default function EditarPerfil() {
+  const [formData, setFormData] = useState({
+    name: "Usuario",
+    phone: "+569 28102374",
+    email: "Usuario@gmail.com",
+    sport: "futbol" as SportType,
+    age: "28",
+    location: "Padre Las Casas",
+    bio: "Me gusta jugar a la pelota y ando en busca de una buena aplicación web para poder reservar canchas.",
+    gender: "Masculino"
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value as SportType
+    });
+  };
 
   const handleChangePhoto = () => {
     alert("Funcionalidad para cambiar foto (a implementar)");
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('Datos actualizados:', formData);
+    alert('Perfil actualizado correctamente');
+  };
+
   const getSportColor = () => {
-    switch (selectedSport) {
+    switch (formData.sport) {
       case "futbol":
         return "text-green-600";
-      case "basket":
+      case "basquetbol":
         return "text-orange-600";
       case "tenis":
         return "text-blue-600";
+      case "voleibol":
+        return "text-purple-600";
+      case "padel":
+        return "text-red-600";
       default:
         return "text-gray-700";
     }
   };
 
   return (
-    <UserLayout userName="Usuario" sport="futbol" notificationCount={2}>
+    <UserLayout userName={formData.name} sport={formData.sport} notificationCount={2}>
       <div className="page-wrapper">
         <div className="profile-container">
           <h2 className="profile-title">Editar Perfil</h2>
 
-          <div className="profile-grid">
-            {/* Columna izquierda */}
+          <form onSubmit={handleSubmit} className="profile-grid">
+            {/* Columna izquierda - Foto y datos básicos */}
             <div className="profile-left">
-              <img
-                src="https://placedog.net/200/200?id=12"
-                alt="Foto de perfil"
-                className="profile-photo"
+              <div className="avatar-section">
+                <div className="avatar-iniciales-editar">
+                  <span>{formData.name.charAt(0).toUpperCase()}</span>
+                </div>
+                <Button onClick={handleChangePhoto} className="btn-change-photo w-full">
+                  Cambiar Foto
+                </Button>
+              </div>
+
+              <Input 
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Nombre Usuario" 
+                className="input" 
               />
 
-              <Button onClick={handleChangePhoto} className="btn-change-photo w-full">
-                Cambiar Foto
-              </Button>
-
-              <Input placeholder="Nombre Usuario" className="input" />
-
               <select
-                value={selectedSport}
-                onChange={(e) => setSelectedSport(e.target.value)}
+                name="sport"
+                value={formData.sport || ""}
+                onChange={handleChange}
                 className={`input ${getSportColor()}`}
               >
                 <option value="">Selecciona tu deporte Favorito</option>
                 <option value="futbol" className="text-green-600">Fútbol</option>
-                <option value="basket" className="text-orange-600">Basketball</option>
+                <option value="basquetbol" className="text-orange-600">Basketball</option>
                 <option value="tenis" className="text-blue-600">Tenis</option>
+                <option value="voleibol" className="text-purple-600">Vóleibol</option>
+                <option value="padel" className="text-red-600">Pádel</option>
               </select>
 
-              <Input type="number" placeholder="Edad" className="input-small" />
+              <div className="form-row">
+                <Input 
+                  type="number" 
+                  name="age"
+                  value={formData.age}
+                  onChange={handleChange}
+                  placeholder="Edad" 
+                  className="input-small" 
+                />
+                <select 
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  className="input input-small"
+                >
+                  <option value="Masculino">Masculino</option>
+                  <option value="Femenino">Femenino</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
 
-              <Link href="/usuario/perfil" className="btn-back w-full text-center font-bold text-blue-600 no-underline hover:underline">
-                Volver a Perfil
+              <Input 
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+                placeholder="Ubicación" 
+                className="input" 
+              />
+
+              <Link href="/usuario/perfil" className="btn-back w-full text-center">
+                ← Volver a Perfil
               </Link>
             </div>
 
-            {/* Columna central */}
+            {/* Columna central - Contacto y seguridad */}
             <div className="profile-center">
-              <Input type="tel" placeholder="Número Telefónico" defaultValue="+56 9" className="input" />
-              <Input type="email" defaultValue="CorreoUsuario@gmail.com" disabled className="input-disabled" />
-              <Input type="password" defaultValue="************" disabled className="input-disabled" />
+              <Input 
+                type="tel" 
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                placeholder="Número Telefónico" 
+                className="input" 
+              />
+              
+              <Input 
+                type="email" 
+                name="email"
+                value={formData.email}
+                disabled
+                className="input-disabled" 
+              />
+              
+              <Input 
+                type="password" 
+                defaultValue="************" 
+                disabled 
+                className="input-disabled" 
+              />
 
               <p className="password-info">
                 Para realizar el cambio de contraseña se debe realizar en el apartado de{" "}
-                <Link href="/usuario/seguridad" className="link font-bold">
+                <Link href="/usuario/seguridad" className="link">
                   Seguridad
                 </Link>
                 , ahí encontrarás los pasos a seguir.
               </p>
 
-              <Link href="/usuario/seguridad" className="btn-security font-bold text-blue-600 no-underline hover:underline">
-                Seguridad
+              <Link href="/usuario/seguridad" className="btn-security">
+                Configurar Seguridad
               </Link>
             </div>
 
-            {/* Columna derecha */}
+            {/* Columna derecha - Biografía */}
             <div className="profile-right">
-              <label className="textarea-label">Escribe tu información:</label>
+              <label className="textarea-label">Información personal</label>
               <textarea
+                name="bio"
+                value={formData.bio}
+                onChange={handleChange}
                 className="textarea"
-                defaultValue="Me gusta jugar a la pelota y ando en busca de una buena aplicación web para poder reservar canchas."
+                rows={6}
+                placeholder="Cuéntanos sobre ti..."
               />
+              
+              <div className="char-count">
+                {formData.bio.length}/500 caracteres
+              </div>
             </div>
-          </div>
 
-          <div className="flex justify-end mt-5">
-            <Button className="btn-save">Guardar Cambios</Button>
-          </div>
+            {/* Botón Guardar */}
+            <div className="form-actions">
+              <Button type="submit" className="btn-save">
+                Guardar Cambios
+              </Button>
+            </div>
+          </form>
         </div>
       </div>
     </UserLayout>
