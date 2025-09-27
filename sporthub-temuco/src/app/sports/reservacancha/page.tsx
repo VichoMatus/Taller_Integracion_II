@@ -67,7 +67,7 @@ export default function ReservaCancha() {
                 <div className={styles.clubName}>Club Centro</div>
                 <div className={styles.clubAddress}>Dirección: Av. Principal 123</div>
               </div>
-              <div className={styles.userInfo}>
+              <div className={styles.userInfo} onClick={() => router.push('/usuario/perfil')} style={{cursor: 'pointer'}}>
                 <div className={styles.avatar}></div>
                 <span>Usuario</span>
                 <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{marginLeft: '8px'}}>
