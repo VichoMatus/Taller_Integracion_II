@@ -1,0 +1,328 @@
+/* Variables simples */
+:root {
+  --primary-color: #3b82f6;
+  --primary-hover: #2563eb;
+  --background-light: #f8fafc;
+  --text-dark: #1f2937;
+  --text-light: #6b7280;
+  --border-color: #e5e7eb;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Animaciones suaves */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Estructura principal */
+.mensajeria-wrapper {
+  margin-top: 14px;
+  margin-left: 256px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: calc(100vh - 14px);
+  background: #f8fafc;
+  padding: 20px;
+}
+
+.mensajeria-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 1200px;
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Header */
+.mensajeria-header {
+  text-align: center;
+  animation: slideIn 0.6s ease-out;
+}
+
+.mensajeria-titulo {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+}
+
+.mensajeria-subtitulo {
+  font-size: 1rem;
+  color: var(--text-light);
+  font-weight: 400;
+}
+
+/* Contenedor principal */
+.mensajeria-container {
+  display: flex;
+  gap: 20px;
+  min-height: 600px;
+  animation: fadeIn 0.8s ease-out;
+}
+
+/* Panel izquierdo - Lista de reservas */
+.reservas-lista {
+  display: flex;
+  flex-direction: column;
+  width: 350px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.lista-header {
+  background: var(--primary-color);
+  color: white;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lista-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.reservas-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.reservas-items {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.reserva-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  animation: slideIn 0.4s ease-out;
+}
+
+.reserva-item:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+.reserva-item.active {
+  border-color: var(--primary-color);
+  background: var(--background-light);
+}
+
+.reserva-info h3 {
+  margin: 0 0 6px 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.reserva-info p {
+  margin: 0 0 8px 0;
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.reserva-fecha {
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  font-weight: 500;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.mensajes-indicador {
+  background: var(--primary-color);
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* Panel derecho - Mensajes */
+.mensajes-panel {
+  flex: 1;
+  background: white;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mensajes-header {
+  background: #f8fafc;
+  padding: 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.mensajes-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.mensajes-header p {
+  margin: 0 0 12px 0;
+  color: var(--text-light);
+  font-size: 0.95rem;
+}
+
+.reserva-status {
+  font-size: 0.9rem;
+  color: var(--primary-color);
+  font-weight: 500;
+  background: rgba(59, 130, 246, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.mensajes-contenedor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.mensajes-info {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mensajes-info h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.mensajes-info span {
+  font-size: 0.9rem;
+  color: var(--text-light);
+}
+
+.mensajes-lista {
+  flex: 1;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Mensajes */
+.mensaje-card {
+  background: var(--background-light);
+  border-radius: 8px;
+  padding: 16px;
+  border-left: 3px solid var(--primary-color);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.mensaje-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.mensaje-autor {
+  font-weight: 600;
+  color: var(--primary-color);
+  font-size: 0.9rem;
+}
+
+.mensaje-fecha {
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+.mensaje-texto {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+}
+
+/* Estados vacíos */
+.sin-mensajes, .seleccionar-reserva {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-light);
+}
+
+.sin-mensajes-icon, .seleccionar-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.sin-mensajes h4, .seleccionar-reserva h3 {
+  margin: 16px 0 8px 0;
+  color: var(--text-dark);
+}
+
+/* Scrollbar simple */
+.mensajes-lista::-webkit-scrollbar {
+  width: 4px;
+}
+
+.mensajes-lista::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.mensajes-lista::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 2px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .mensajeria-container {
+    flex-direction: column;
+  }
+  
+  .reservas-lista {
+    width: 100%;
+  }
+  
+  .mensajeria-wrapper {
+    margin-left: 0;
+    padding: 16px;
+  }
+}
