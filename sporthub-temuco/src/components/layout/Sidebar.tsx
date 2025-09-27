@@ -32,6 +32,11 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
     if (pathname === '/' || pathname === '/sports/reservacancha' || pathname === '/sports/reservacancha/') {
       return indexStyles;
     }
+    
+    // Ensure Favoritos and Mensajería use the generic Sports styles (not the sport-specific ones)
+    if (pathname && (pathname.startsWith('/sports/favoritos') || pathname.startsWith('/sports/mensajeria'))) {
+      return indexStyles;
+    }
  
     switch (sport) {
       case 'basquetbol':
@@ -149,20 +154,20 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
     {
       name: 'Favoritos',
       icon: '⭐',
-      href: '/favoritos',
-      active: pathname === '/favoritos'
+      href: '/sports/favoritos',
+      active: pathname === '/sports/favoritos'
     },
     {
       name: 'Perfil',
       icon: '👤',
-      href: '/perfil',
-      active: pathname === '/perfil'
+      href: '/usuario/perfil',
+      active: pathname === '/usuario/perfil'
     },
     {
       name: 'Mensajería',
       icon: '💬',
-      href: '/mensajeria',
-      active: pathname === '/mensajeria'
+      href: '/sports/mensajeria',
+      active: pathname && pathname.startsWith('/sports/mensajeria')
     }
   ];
 
