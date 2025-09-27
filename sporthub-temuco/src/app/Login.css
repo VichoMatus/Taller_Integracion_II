@@ -1,137 +1,249 @@
+/* Login.css - Actualizado */
 body {
     background-color: #f0f2f5;
     font-family: sans-serif;
     margin: 0;
-  }
-  
-  .header-logo {
-    text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #4F46E5, 0 0 40px #4F46E5, 0 0 50px #4F46E5, 0 0 60px #4F46E5, 0 0 70px #4F46E5;
-  }
+}
 
-  .login-container {
+.header-logo {
+    text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #4F46E5, 0 0 40px #4F46E5, 0 0 50px #4F46E5, 0 0 60px #4F46E5, 0 0 70px #4F46E5;
+}
+
+.login-container {
     display: flex;
     justify-content: center;
     align-items: center;
     width: 100%;
-    min-height: calc(100vh - 60px); /* Adjust based on header height */
+    min-height: calc(100vh - 80px); /* Reducido para mejor ajuste */
     padding: 20px;
-  }
-  
-  .login-form {
+    padding-bottom: 60px; /* Espacio reducido para el footer */
+    box-sizing: border-box;
+}
+
+.login-form {
     background-color: white;
     border-radius: 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     display: flex;
-    max-width: 900px;
-    width: 100%;
-    overflow: hidden;
-  }
-  
-  .login-left {
-    padding: 50px;
-    width: 50%;
+    max-width: 1000px; /* Aumentado un poco */
+    width: 95%; /* Más flexible */
+    min-height: 600px; /* Altura mínima consistente */
+    max-height: 700px; /* Altura máxima para evitar que crezca demasiado */
+}
+
+.login-left {
+    padding: 40px; /* Reducido padding */
+    width: 55%; /* Un poco más ancho para formularios largos */
     display: flex;
     flex-direction: column;
     justify-content: center;
-  }
-  
-  .login-left h1 {
-    font-size: 24px;
+   /* overflow-y: auto;  Scroll interno si es necesario */
+    max-height: 100%;
+}
+
+.login-left h1 {
+    font-size: 28px; /* Un poco más grande */
     margin-bottom: 10px;
-  }
-  
-  .login-left p {
+    color: #333;
+}
+
+.login-left p {
     color: #666;
-    margin-bottom: 30px;
-  }
-  
-  .login-left label {
-    display: block;
-    margin-bottom: 5px;
+    margin-bottom: 25px;
     font-size: 14px;
-  }
-  
-  .password-container {
+}
+
+.login-left label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+
+.password-container {
     position: relative;
     width: 100%;
-  }
+}
 
-  .login-left input {
-    border: 1px solid #ccc;
+/* INPUTS CON MISMO TAMAÑO QUE EL BOTÓN */
+.login-left input {
+    border: 1px solid #ddd;
     border-radius: 8px;
-    padding: 10px;
+    padding: 12px 15px; /* Padding ajustado */
     width: 100%;
-    margin-bottom: 20px;
-  }
+    margin-bottom: 15px; /* Espacio reducido entre campos */
+    box-sizing: border-box;
+    font-size: 14px;
+    transition: border-color 0.3s;
+}
 
-  .password-toggle-icon {
+.login-left input:focus {
+    outline: none;
+    border-color: #4F46E5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+}
+
+.password-toggle-icon {
     position: absolute;
-    top: 35%;
+    top: 50%;
     right: 15px;
     transform: translateY(-50%);
     cursor: pointer;
     color: #999;
-  }
-  
-  .login-left button {
+}
+
+.login-left button {
     background-color: #4F46E5;
     color: white;
     border: none;
     border-radius: 8px;
-    padding: 15px;
+    padding: 14px; /* Ajustado */
     width: 100%;
     cursor: pointer;
     font-size: 16px;
+    font-weight: 600;
     transition: background-color 0.3s, transform 0.2s;
-  }
+    box-sizing: border-box;
+    margin-top: 10px;
+}
 
-  .login-left button:hover {
+.login-left button:hover {
     background-color: #4338CA;
-    transform: translateY(-2px);
-  }
-  
-  .login-left .or {
+    transform: translateY(-1px);
+}
+
+.login-left .or {
     text-align: center;
     margin: 20px 0;
     color: #999;
     font-size: 14px;
-  }
-  
-  .login-left .google-btn {
+    position: relative;
+}
+
+.login-left .or::before,
+.login-left .or::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 45%;
+    height: 1px;
+    background-color: #eee;
+}
+
+.login-left .or::before {
+    left: 0;
+}
+
+.login-left .or::after {
+    right: 0;
+}
+
+.login-left .google-btn {
     background-color: white;
     color: #333;
-    border: 1px solid #ccc;
+    border: 1px solid #ddd;
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-  
-  .login-left .google-btn img {
+    padding: 12px;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.login-left .google-btn:hover {
+    border-color: #4F46E5;
+    transform: translateY(-1px);
+}
+
+.login-left .google-btn img {
     width: 18px;
     margin-right: 10px;
-  }
-  
-  .login-left .signup {
+}
+
+.login-left .signup {
     text-align: center;
-    margin-top: 20px;
+    margin-top: 25px;
     font-size: 14px;
-  }
-  
-  .login-left .signup a {
+    color: #666;
+}
+
+.login-left .signup a {
     color: #4F46E5;
     text-decoration: none;
-  }
-  
-  .login-right {
-    background-color: #F3F4F6;
+    font-weight: 600;
+}
+
+.login-left .signup a:hover {
+    text-decoration: underline;
+}
+
+.login-right {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); /* Fondo degradado atractivo */
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 50%;
-  }
-  
-  .login-right img {
-    max-width: 90%;
+    width: 45%; /* Un poco más estrecho */
+    padding: 20px;
+    position: relative;
+    border-radius: 0 20px 20px 0;
+}
+
+.login-right::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.1); /* Overlay sutil */
+    border-radius: 0 20px 20px 0;
+}
+
+.login-right img {
+    max-width: 100%;
+    max-height: 100%;
     height: auto;
-  }
-  
+    object-fit: contain;
+    position: relative;
+    z-index: 2;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilos específicos para el formulario de registro (más campos) */
+.login-form.registro-form {
+    min-height: 650px; /* Un poco más alto para registro */
+    max-height: 750px;
+}
+
+.login-form.registro-form .login-left {
+    padding: 30px 40px; /* Padding vertical reducido */
+}
+
+.login-form.registro-form .login-left input {
+    margin-bottom: 12px; /* Espacio reducido entre campos */
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .login-form {
+        flex-direction: column;
+        max-height: none;
+        min-height: auto;
+    }
+    
+    .login-left,
+    .login-right {
+        width: 100%;
+    }
+    
+    .login-right {
+        height: 200px;
+        order: -1; /* Imagen arriba en móviles */
+    }
+    
+    .login-left {
+        padding: 30px 25px;
+    }
+}

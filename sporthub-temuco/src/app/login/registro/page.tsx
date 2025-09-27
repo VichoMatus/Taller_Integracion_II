@@ -8,7 +8,7 @@ export default function RegistroPage() {
         <h1 className="header-logo">SportHub</h1>
       </header>
       <div className="login-container">
-        <div className="login-form">
+        <div className="login-form registro-form">
           <div className="login-left">
             <h1>Registro</h1>
             <form>
