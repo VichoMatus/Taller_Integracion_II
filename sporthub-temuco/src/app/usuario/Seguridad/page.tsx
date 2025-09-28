@@ -52,7 +52,7 @@ export default function SeguridadPage() {
   return (
     <UserLayout
       userName="Usuario"
-      sport="futbol"
+      sport={undefined}
       notificationCount={2}
     >
       <div className="seguridad-wrapper">

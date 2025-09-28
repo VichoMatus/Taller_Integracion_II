@@ -67,7 +67,7 @@ export default function ReservaPage() {
   };
 
   return (
-    <UserLayout userName="Usuario" sport="futbol" notificationCount={2}>
+    <UserLayout userName="Usuario" notificationCount={2}>
       <div className="reserva-wrapper">
         <div className="reserva-header">
           <h1 className="reserva-titulo">Mis Reservas</h1>

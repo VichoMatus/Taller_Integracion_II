@@ -60,7 +60,7 @@ export default function MensajeriaPage() {
   const canchaActiva = canchaSeleccionada !== null ? reservas[canchaSeleccionada] : null;
 
   return (
-    <UserLayout userName="Usuario" sport="futbol" notificationCount={2}>
+    <UserLayout userName="Usuario" notificationCount={2}>
       <div className="mensajeria-wrapper">
         {/* Título a la izquierda como en Reservas y Editar Perfil */}
         <div className="mensajeria-header">
