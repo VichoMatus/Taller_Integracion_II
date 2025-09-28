@@ -1,12 +1,14 @@
-/* Variables simples */
+/* Variables de colores */
 :root {
-  --primary-color: #3b82f6;
-  --primary-hover: #2563eb;
-  --background-light: #f8fafc;
-  --text-dark: #1f2937;
-  --text-light: #6b7280;
+  --primary-color: #7c73e6;
+  --primary-light: #9a94ea;
+  --primary-very-light: #f0eeff;
+  --background-color: #fafbfc;
+  --card-background: #ffffff;
+  --text-dark: #4b5563;
+  --text-medium: #6b7280;
+  --text-light: #9ca3af;
   --border-color: #e5e7eb;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 /* Animaciones suaves */
@@ -20,52 +22,41 @@
   to { opacity: 1; transform: translateX(0); }
 }
 
-/* Estructura principal */
+/* Estructura principal igual que Reservas y Editar Perfil */
 .mensajeria-wrapper {
   margin-top: 14px;
   margin-left: 256px;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  padding: 24px;
   min-height: calc(100vh - 14px);
-  background: #f8fafc;
-  padding: 20px;
+  background: var(--background-color);
+  animation: fadeIn 0.5s ease;
 }
 
-.mensajeria-content {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  width: 100%;
-  max-width: 1200px;
-  animation: fadeIn 0.5s ease-out;
-}
-
-/* Header */
+/* Título a la izquierda como en Reservas */
 .mensajeria-header {
-  text-align: center;
-  animation: slideIn 0.6s ease-out;
+  margin-bottom: 32px;
+  animation: slideIn 0.6s ease;
 }
 
 .mensajeria-titulo {
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 600;
   color: var(--text-dark);
-  margin-bottom: 8px;
+  margin: 0 0 8px 0;
 }
 
 .mensajeria-subtitulo {
-  font-size: 1rem;
-  color: var(--text-light);
-  font-weight: 400;
+  font-size: 1.1rem;
+  color: var(--text-medium);
+  margin: 0;
 }
 
 /* Contenedor principal */
 .mensajeria-container {
   display: flex;
-  gap: 20px;
+  gap: 24px;
   min-height: 600px;
-  animation: fadeIn 0.8s ease-out;
+  animation: fadeIn 0.8s ease 0.2s both;
 }
 
 /* Panel izquierdo - Lista de reservas */
@@ -73,9 +64,10 @@
   display: flex;
   flex-direction: column;
   width: 350px;
-  background: white;
+  background: var(--card-background);
   border-radius: 12px;
-  box-shadow: var(--shadow);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border-color);
   overflow: hidden;
 }
 
@@ -114,7 +106,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  background: white;
+  background: var(--card-background);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 16px;
@@ -131,7 +123,7 @@
 
 .reserva-item.active {
   border-color: var(--primary-color);
-  background: var(--background-light);
+  background: var(--primary-very-light);
 }
 
 .reserva-info h3 {
@@ -144,14 +136,14 @@
 .reserva-info p {
   margin: 0 0 8px 0;
   font-size: 0.85rem;
-  color: var(--text-light);
+  color: var(--text-medium);
 }
 
 .reserva-fecha {
   font-size: 0.8rem;
   color: var(--primary-color);
   font-weight: 500;
-  background: rgba(59, 130, 246, 0.1);
+  background: var(--primary-very-light);
   padding: 2px 8px;
   border-radius: 6px;
 }
@@ -173,16 +165,17 @@
 /* Panel derecho - Mensajes */
 .mensajes-panel {
   flex: 1;
-  background: white;
+  background: var(--card-background);
   border-radius: 12px;
-  box-shadow: var(--shadow);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
 .mensajes-header {
-  background: #f8fafc;
+  background: var(--background-color);
   padding: 24px;
   border-bottom: 1px solid var(--border-color);
 }
@@ -196,7 +189,7 @@
 
 .mensajes-header p {
   margin: 0 0 12px 0;
-  color: var(--text-light);
+  color: var(--text-medium);
   font-size: 0.95rem;
 }
 
@@ -204,7 +197,7 @@
   font-size: 0.9rem;
   color: var(--primary-color);
   font-weight: 500;
-  background: rgba(59, 130, 246, 0.1);
+  background: var(--primary-very-light);
   padding: 4px 10px;
   border-radius: 6px;
 }
@@ -232,7 +225,7 @@
 
 .mensajes-info span {
   font-size: 0.9rem;
-  color: var(--text-light);
+  color: var(--text-medium);
 }
 
 .mensajes-lista {
@@ -247,7 +240,7 @@
 
 /* Mensajes */
 .mensaje-card {
-  background: var(--background-light);
+  background: var(--primary-very-light);
   border-radius: 8px;
   padding: 16px;
   border-left: 3px solid var(--primary-color);
@@ -269,7 +262,7 @@
 
 .mensaje-fecha {
   font-size: 0.8rem;
-  color: var(--text-light);
+  color: var(--text-medium);
 }
 
 .mensaje-texto {
@@ -295,9 +288,15 @@
 .sin-mensajes h4, .seleccionar-reserva h3 {
   margin: 16px 0 8px 0;
   color: var(--text-dark);
+  font-weight: 600;
 }
 
-/* Scrollbar simple */
+.seleccionar-reserva p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Scrollbar */
 .mensajes-lista::-webkit-scrollbar {
   width: 4px;
 }
@@ -307,22 +306,22 @@
 }
 
 .mensajes-lista::-webkit-scrollbar-thumb {
-  background: var(--primary-color);
+  background: var(--primary-light);
   border-radius: 2px;
 }
 
 /* Responsive */
 @media (max-width: 1024px) {
+  .mensajeria-wrapper {
+    margin-left: 0;
+    padding: 16px;
+  }
+  
   .mensajeria-container {
     flex-direction: column;
   }
   
   .reservas-lista {
     width: 100%;
-  }
-  
-  .mensajeria-wrapper {
-    margin-left: 0;
-    padding: 16px;
   }
 }

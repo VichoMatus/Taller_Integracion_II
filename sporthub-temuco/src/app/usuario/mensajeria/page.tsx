@@ -51,7 +51,6 @@ export default function MensajeriaPage() {
     setCanchaSeleccionada(index);
   };
 
-  // Seleccionar automáticamente la primera cancha al cargar
   useEffect(() => {
     if (reservas.length > 0 && canchaSeleccionada === null) {
       setCanchaSeleccionada(0);
@@ -61,100 +60,90 @@ export default function MensajeriaPage() {
   const canchaActiva = canchaSeleccionada !== null ? reservas[canchaSeleccionada] : null;
 
   return (
-    <UserLayout
-      userName="Usuario"
-      sport="futbol"
-      notificationCount={2}
-    >
+    <UserLayout userName="Usuario" sport="futbol" notificationCount={2}>
       <div className="mensajeria-wrapper">
-        <div className="mensajeria-content">
-          {/* Header simple */}
-          <div className="mensajeria-header">
-            <h1 className="mensajeria-titulo">Mensajería</h1>
-            <p className="mensajeria-subtitulo">Comunicación con administradores de canchas</p>
+        {/* Título a la izquierda como en Reservas y Editar Perfil */}
+        <div className="mensajeria-header">
+          <h1 className="mensajeria-titulo">Mensajería</h1>
+          <p className="mensajeria-subtitulo">Comunicación con administradores de canchas</p>
+        </div>
+
+        <div className="mensajeria-container">
+          {/* Panel izquierdo - Lista de reservas */}
+          <div className="reservas-lista">
+            <div className="lista-header">
+              <h2>Tus Reservas</h2>
+              <span className="reservas-count">{reservas.length}</span>
+            </div>
+            
+            <div className="reservas-items">
+              {reservas.map((reserva, index) => (
+                <button
+                  key={index}
+                  onClick={() => seleccionarCancha(index)}
+                  className={`reserva-item ${canchaSeleccionada === index ? 'active' : ''}`}
+                >
+                  <div className="reserva-info">
+                    <h3>{reserva.cancha}</h3>
+                    <p>{reserva.direccion}</p>
+                    <span className="reserva-fecha">{reserva.fechaReserva}</span>
+                  </div>
+                  {reserva.mensajes.length > 0 && (
+                    <div className="mensajes-indicador">
+                      {reserva.mensajes.length}
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Contenedor principal */}
-          <div className="mensajeria-container">
-            {/* Panel izquierdo - Lista de reservas */}
-            <div className="reservas-lista">
-              <div className="lista-header">
-                <h2>Tus Reservas</h2>
-                <span className="reservas-count">{reservas.length}</span>
-              </div>
-              
-              <div className="reservas-items">
-                {reservas.map((reserva, index) => (
-                  <button
-                    key={index}
-                    onClick={() => seleccionarCancha(index)}
-                    className={`reserva-item ${canchaSeleccionada === index ? 'active' : ''}`}
-                  >
-                    <div className="reserva-info">
-                      <h3>{reserva.cancha}</h3>
-                      <p>{reserva.direccion}</p>
-                      <span className="reserva-fecha">{reserva.fechaReserva}</span>
-                    </div>
-                    {reserva.mensajes.length > 0 && (
-                      <div className="mensajes-indicador">
-                        {reserva.mensajes.length}
+          {/* Panel derecho - Mensajes */}
+          <div className="mensajes-panel">
+            {canchaActiva ? (
+              <>
+                <div className="mensajes-header">
+                  <div>
+                    <h2>{canchaActiva.cancha}</h2>
+                    <p>{canchaActiva.direccion}</p>
+                    <span className="reserva-status">Reserva: {canchaActiva.fechaReserva}</span>
+                  </div>
+                </div>
+
+                <div className="mensajes-contenedor">
+                  <div className="mensajes-info">
+                    <h3>Mensajes del Administrador</h3>
+                    <span>{canchaActiva.mensajes.length} mensajes</span>
+                  </div>
+                  
+                  <div className="mensajes-lista">
+                    {canchaActiva.mensajes.length > 0 ? (
+                      canchaActiva.mensajes.map((msg, index) => (
+                        <div key={index} className="mensaje-card">
+                          <div className="mensaje-header">
+                            <span className="mensaje-autor">{msg.autor}</span>
+                            <span className="mensaje-fecha">{msg.fecha} • {msg.hora}</span>
+                          </div>
+                          <p className="mensaje-texto">{msg.texto}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="sin-mensajes">
+                        <div className="sin-mensajes-icon">💬</div>
+                        <h4>No hay mensajes</h4>
+                        <p>El administrador aún no ha enviado mensajes para esta reserva.</p>
                       </div>
                     )}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Panel derecho - Mensajes */}
-            <div className="mensajes-panel">
-              {canchaActiva ? (
-                <>
-                  <div className="mensajes-header">
-                    <div>
-                      <h2>{canchaActiva.cancha}</h2>
-                      <p>{canchaActiva.direccion}</p>
-                      <span className="reserva-status">Reserva: {canchaActiva.fechaReserva}</span>
-                    </div>
                   </div>
-
-                  <div className="mensajes-contenedor">
-                    <div className="mensajes-info">
-                      <h3>Mensajes del Administrador</h3>
-                      <span>{canchaActiva.mensajes.length} mensajes</span>
-                    </div>
-                    
-                    <div className="mensajes-lista">
-                      {canchaActiva.mensajes.length > 0 ? (
-                        canchaActiva.mensajes.map((msg, index) => (
-                          <div 
-                            key={index} 
-                            className="mensaje-card"
-                          >
-                            <div className="mensaje-header">
-                              <span className="mensaje-autor">{msg.autor}</span>
-                              <span className="mensaje-fecha">{msg.fecha} • {msg.hora}</span>
-                            </div>
-                            <p className="mensaje-texto">{msg.texto}</p>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="sin-mensajes">
-                          <div className="sin-mensajes-icon">💬</div>
-                          <h4>No hay mensajes</h4>
-                          <p>El administrador aún no ha enviado mensajes para esta reserva.</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </>
-              ) : (
-                <div className="seleccionar-reserva">
-                  <div className="seleccionar-icon">👈</div>
-                  <h3>Selecciona una reserva</h3>
-                  <p>Elige una reserva de la lista para ver los mensajes</p>
                 </div>
-              )}
-            </div>
+              </>
+            ) : (
+              <div className="seleccionar-reserva">
+                <div className="seleccionar-icon">👈</div>
+                <h3>Selecciona una reserva</h3>
+                <p>Elige una reserva de la lista para ver los mensajes</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

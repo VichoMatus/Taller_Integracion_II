@@ -57,9 +57,12 @@ export default function EditarPerfil() {
 
   return (
     <UserLayout userName={formData.name} sport={formData.sport} notificationCount={2}>
-      <div className="page-wrapper">
-        <div className="profile-container">
-          <h2 className="profile-title">Editar Perfil</h2>
+      <div className="editar-perfil-wrapper">
+        {/* Título a la izquierda como en Reservas */}
+        <div className="editar-perfil-header">
+          <h1 className="editar-perfil-titulo">Editar Perfil</h1>
+          <p className="editar-perfil-subtitulo">Actualiza tu información personal</p>
+        </div>
 
           <form onSubmit={handleSubmit} className="profile-grid">
             {/* Columna izquierda - Foto y datos básicos */}
@@ -193,7 +196,6 @@ export default function EditarPerfil() {
             </div>
           </form>
         </div>
-      </div>
     </UserLayout>
   );
 }

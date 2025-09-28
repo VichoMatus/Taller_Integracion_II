@@ -12,9 +12,10 @@ type Reserva = {
   horario: string;
   fecha: string;
   descripcion: string;
-  estado: string;
+  estado: 'Confirmada' | 'Pendiente' | 'Cancelada';
   precio: number;
   imagen: string;
+  deporte: 'basquetbol' | 'futbol' | 'tenis';
 };
 
 const reservasMock: Reserva[] = [
@@ -24,83 +25,156 @@ const reservasMock: Reserva[] = [
     direccion: 'Av. Principal 123',
     horario: '10:00 - 11:00',
     fecha: '08 Junio 2025',
-    descripcion:
-      'Cancha de gran espacio, techada y con opción a utilizar o fregar en un evento como el administrador lo desee, además de contar con gradas en buen estado y con administración excelente al medio.',
-    estado: 'Disponible',
+    descripcion: 'Cancha de gran espacio, techada y con opción a utilizar o fregar en un evento como el administrador lo desee.',
+    estado: 'Confirmada',
     precio: 500,
     imagen: '/usuario/cancha.jpg',
+    deporte: 'basquetbol'
   },
   {
     id: 2,
-    titulo: 'Basquetball 5 - Parque Norte',
+    titulo: 'Fútbol 11 - Parque Norte',
     direccion: 'Calle Secundaria 456',
     horario: '18:00 - 19:00',
     fecha: '10 Junio 2025',
-    descripcion:
-      'Cancha al aire libre con césped sintético, ideal para partidos rápidos y eventos recreativos.',
-    estado: 'Disponible',
+    descripcion: 'Cancha al aire libre con césped sintético, ideal para partidos rápidos.',
+    estado: 'Pendiente',
     precio: 80,
     imagen: 'https://placedog.net/200/200?id=12',
+    deporte: 'futbol'
   },
 ];
 
 export default function ReservaPage() {
-  const [reservaActiva, setReservaActiva] = useState<Reserva | null>(null);
+  const [reservaActiva, setReservaActiva] = useState<Reserva | null>(reservasMock[0]);
+
+  const getEstadoColor = (estado: string) => {
+    switch (estado) {
+      case 'Confirmada': return 'estado-confirmada';
+      case 'Pendiente': return 'estado-pendiente';
+      case 'Cancelada': return 'estado-cancelada';
+      default: return 'estado-confirmada';
+    }
+  };
+
+  const getDeporteIcon = (deporte: string) => {
+    switch (deporte) {
+      case 'basquetbol': return '🏀';
+      case 'futbol': return '⚽';
+      case 'tenis': return '🎾';
+      default: return '🏟️';
+    }
+  };
 
   return (
-    <UserLayout
-      userName="Usuario"
-      sport="futbol"
-      notificationCount={2}
-    >
-      <div className="page-wrapper">
-        <h1 className="titulo-principal">Mis Reservas</h1>
+    <UserLayout userName="Usuario" sport="futbol" notificationCount={2}>
+      <div className="reserva-wrapper">
+        <div className="reserva-header">
+          <h1 className="reserva-titulo">Mis Reservas</h1>
+          <p className="reserva-subtitulo">Gestiona y revisa tus reservas activas</p>
+        </div>
 
         <div className="reserva-layout">
-          {/* Panel izquierdo */}
           <div className="reserva-listado">
-            <div className="reserva-listado-grid">
+            <div className="listado-header">
+              <h2>Todas las Reservas</h2>
+              <span className="reserva-count">{reservasMock.length} reservas</span>
+            </div>
+            
+            <div className="reserva-grid">
               {reservasMock.map((reserva) => (
-                <div key={reserva.id} className="resumen-card">
-                  <h3 className="text-lg font-semibold">{reserva.titulo}</h3>
-                  <p><strong>Dirección:</strong> {reserva.direccion}</p>
-                  <p><strong>Horario:</strong> {reserva.horario}</p>
-                  <p><strong>Fecha:</strong> {reserva.fecha}</p>
+                <div 
+                  key={reserva.id} 
+                  className={`reserva-card ${reservaActiva?.id === reserva.id ? 'active' : ''}`}
+                  onClick={() => setReservaActiva(reserva)}
+                >
+                  <div className="card-header">
+                    <div className="deporte-icon">{getDeporteIcon(reserva.deporte)}</div>
+                    <div className="card-info">
+                      <h3>{reserva.titulo}</h3>
+                      <span className={`estado-badge ${getEstadoColor(reserva.estado)}`}>
+                        {reserva.estado}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="card-details">
+                    <div className="detail-item">
+                      <span className="detail-label">📅 Fecha:</span>
+                      <span>{reserva.fecha}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">⏰ Horario:</span>
+                      <span>{reserva.horario}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">📍 Dirección:</span>
+                      <span>{reserva.direccion}</span>
+                    </div>
+                  </div>
 
-                  <Button
-                    className="btn-ver-info w-full mt-2"
-                    onClick={() => setReservaActiva(reserva)}
-                  >
-                    Ver Información de Reserva
-                  </Button>
+                  <div className="card-footer">
+                    <span className="precio">${reserva.precio}</span>
+                    <Button className="btn-ver-detalles">Ver Detalles</Button>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Panel derecho */}
           <div className="reserva-detalle">
             {reservaActiva ? (
               <div className="detalle-card">
-                <img src={reservaActiva.imagen} alt="Cancha" className="detalle-img" />
-                <h2 className="text-xl font-bold mb-2">{reservaActiva.titulo}</h2>
-                <p><strong>Dirección:</strong> {reservaActiva.direccion}</p>
-                <p><strong>Estado:</strong> <span className="estado-disponible">{reservaActiva.estado}</span></p>
-                <p><strong>Descripción:</strong> {reservaActiva.descripcion}</p>
-                <p><strong>Cancha:</strong> {reservaActiva.titulo}</p>
-                <p><strong>Horario:</strong> {reservaActiva.horario}</p>
-                <p><strong>Fecha:</strong> {reservaActiva.fecha}</p>
-                <p><strong>Jugadores:</strong> 10</p>
-                <p><strong>Precio / h:</strong> ${reservaActiva.precio}</p>
+                <div className="detalle-header">
+                  <div className="deporte-icon-large">{getDeporteIcon(reservaActiva.deporte)}</div>
+                  <div>
+                    <h2>{reservaActiva.titulo}</h2>
+                    <span className={`estado-badge-large ${getEstadoColor(reservaActiva.estado)}`}>
+                      {reservaActiva.estado}
+                    </span>
+                  </div>
+                </div>
 
-                <div className="detalle-actions flex gap-2 mt-2">
-                  <Button className="btn-contactar flex-1">Contactar Administrador</Button>
-                  <Button className="btn-anular flex-1">Anular Reserva</Button>
+                <div className="detalle-imagen">
+                  <img src={reservaActiva.imagen} alt="Cancha" />
+                </div>
+
+                <div className="detalle-info">
+                  <div className="info-grid">
+                    <div className="info-item">
+                      <span className="info-label">📅 Fecha:</span>
+                      <span>{reservaActiva.fecha}</span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">⏰ Horario:</span>
+                      <span>{reservaActiva.horario}</span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">📍 Dirección:</span>
+                      <span>{reservaActiva.direccion}</span>
+                    </div>
+                    <div className="info-item">
+                      <span className="info-label">💰 Precio/h:</span>
+                      <span className="precio-detalle">${reservaActiva.precio}</span>
+                    </div>
+                  </div>
+
+                  <div className="descripcion-section">
+                    <h4>Descripción</h4>
+                    <p>{reservaActiva.descripcion}</p>
+                  </div>
+
+                  <div className="detalle-actions">
+                    <Button className="btn-contactar">📞 Contactar Administrador</Button>
+                    <Button className="btn-anular">❌ Anular Reserva</Button>
+                  </div>
                 </div>
               </div>
             ) : (
               <div className="detalle-placeholder">
-                <p>Selecciona una reserva para ver los detalles.</p>
+                <div className="placeholder-icon">📋</div>
+                <h3>Selecciona una reserva</h3>
+                <p>Elige una reserva de la lista para ver los detalles</p>
               </div>
             )}
           </div>
