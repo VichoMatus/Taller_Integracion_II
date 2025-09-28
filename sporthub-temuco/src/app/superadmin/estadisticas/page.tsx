@@ -2,7 +2,7 @@
 
 import BarChart from '@/components/charts/BarChart';
 import StatsCard from '@/components/charts/StatsCard';
-import './estadisticas.css'; 
+import styles from './estadisticas.module.css';
 
 export default function EstadisticasPage() {
   // Datos para las métricas principales, luego vendrian de la API
@@ -46,12 +46,12 @@ export default function EstadisticasPage() {
   ];
 
   return (
-    <div className="admin-dashboard-container">
+    <div className={styles.estadisticasPage}>
       {/* Header */}
-      <div className="estadisticas-header">
-        <h1 className="text-2xl font-bold text-gray-900">Panel de Reportes y Análisis</h1>
-        <button className="export-button">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className={styles.estadisticasHeader}>
+        <h1 className={styles.estadisticasTitle}>Panel de Reportes y Análisis</h1>
+        <button className={styles.estadisticasExportBtn}>
+          <svg className={styles.estadisticasW4 + ' ' + styles.estadisticasH4} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           Exportar informe
@@ -59,77 +59,77 @@ export default function EstadisticasPage() {
       </div>
 
       {/* Métricas principales */}
-      <div className="stats-grid">
+      <div className={styles.estadisticasStatsGrid}>
         <StatsCard
           title="Ingresos totales"
           value={`$${statsData[0].value.toLocaleString()}`}
           icon={<span className="text-3xl opacity-80">💰</span>}
           color="blue"
-          className="stats-card-override"
+          className={styles.estadisticasCard}
         />
         <StatsCard
           title="Reservas totales"
           value={statsData[1].value.toString()}
           icon={<span className="text-3xl opacity-80">📅</span>}
           color="green"
-          className="stats-card-override"
+          className={styles.estadisticasCard}
         />
         <StatsCard
           title="Ocupación Mensual"
           value={`${statsData[2].value}%`}
           icon={<span className="text-3xl opacity-80">📊</span>}
           color="purple"
-          className="stats-card-override"
+          className={styles.estadisticasCard}
         />
         <StatsCard
           title="Valoración promedio"
           value={`${statsData[3].value}/5`}
           icon={<span className="text-3xl opacity-80">⭐</span>}
           color="blue"
-          className="stats-card-override"
+          className={styles.estadisticasCard}
         />
       </div>
 
       {/* Gráficos */}
-      <div className="charts-grid">
-        <div className="chart-container">
-          <div className="chart-background">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Reservas por día</h3>
+      <div className={styles.estadisticasChartsGrid}>
+        <div className={styles.estadisticasChartContainer}>
+          <div className={styles.estadisticasChartBackground}>
+            <h3 className={styles.estadisticasTextLg + ' ' + styles.estadisticasFontSemibold + ' ' + styles.estadisticasTextGray900 + ' ' + styles.estadisticasMb6}>Reservas por día</h3>
             <BarChart 
               data={reservasPorDia} 
               primaryColor="#9fb5b8"
               animate={true}
               showValues={true}
               maxValue={40}
-              className="px-2"
+              className={styles.estadisticasPx2}
             />
           </div>
         </div>
         
-        <div className="chart-container">
-          <div className="chart-background">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Reservas por deporte</h3>
+        <div className={styles.estadisticasChartContainer}>
+          <div className={styles.estadisticasChartBackground}>
+            <h3 className={styles.estadisticasTextLg + ' ' + styles.estadisticasFontSemibold + ' ' + styles.estadisticasTextGray900 + ' ' + styles.estadisticasMb4}>Reservas por deporte</h3>
             <BarChart 
               data={reservasPorDeporte} 
               primaryColor="#14b8a6"
               animate={true}
               showValues={true}
               maxValue={40}
-              className="px-2"
+              className={styles.estadisticasPx2}
             />
           </div>
         </div>
       </div>
 
       {/* Tablas de datos */}
-      <div className="data-tables-grid">
-        <div className="admin-table-container">
-          <div className="admin-table-header">
-            <h2 className="admin-table-title">Canchas más populares</h2>
+      <div className={styles.estadisticasTablesGrid}>
+        <div className={styles.estadisticasTableContainer}>
+          <div className={styles.estadisticasTableHeader}>
+            <h2 className={styles.estadisticasTableTitle}>Canchas más populares</h2>
           </div>
           
-          <div className="overflow-x-auto">
-            <table className="admin-table">
+          <div className={styles.estadisticasOverflowXAuto}>
+            <table className={styles.estadisticasTable}>
               <thead>
                 <tr>
                   <th>Cancha</th>
@@ -142,31 +142,31 @@ export default function EstadisticasPage() {
                 {canchasPopulares.map((cancha, index) => (  
                   <tr key={index}>
                     <td>
-                      <div className="admin-cell-title">
-                        <div className="admin-avatar bg-emerald-100 text-emerald-800">
+                      <div className={styles.estadisticasCellTitle}>
+                        <div className={styles.estadisticasAvatar + ' ' + styles.estadisticasTextEmerald800} style={{backgroundColor: '#dcfce7'}}>
                           {cancha.nombre.charAt(0)}
                         </div>
                         {cancha.nombre}
                       </div>
                     </td>
                     <td>
-                      <div className="admin-cell-subtitle">{cancha.reservas}</div>
+                      <div className={styles.estadisticasCellSubtitle}>{cancha.reservas}</div>
                     </td>
                     <td>
-                      <span className={`status-badge ${
-                        cancha.ocupacion > 80 ? 'status-activo' :
-                        cancha.ocupacion > 50 ? 'status-por-revisar' :
-                        'status-inactivo'
+                      <span className={`${styles.estadisticasStatusBadge} ${
+                        cancha.ocupacion > 80 ? styles.estadisticasStatusActivo :
+                        cancha.ocupacion > 50 ? styles.estadisticasStatusPorRevisar :
+                        styles.estadisticasStatusInactivo
                       }`}>
                         {cancha.ocupacion}%
                       </span>
                     </td>
                     <td>
-                      <div className="flex items-center space-x-1">
-                        <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className={styles.estadisticasFlex + ' ' + styles.estadisticasItemsCenter + ' ' + styles.estadisticasSpaceX1}>
+                        <svg className={styles.estadisticasW5 + ' ' + styles.estadisticasH5 + ' ' + styles.estadisticasTextEmerald500} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                         </svg>
-                        <span className="text-emerald-500 font-medium">+{index === 0 ? '12' : '8'}%</span>
+                        <span className={styles.estadisticasTextEmerald500 + ' ' + styles.estadisticasFontMedium}>+{index === 0 ? '12' : '8'}%</span>
                       </div>
                     </td>
                   </tr>
@@ -176,13 +176,13 @@ export default function EstadisticasPage() {
           </div>
         </div>
 
-        <div className="admin-table-container">
-          <div className="admin-table-header">
-            <h2 className="admin-table-title">Horarios más solicitados</h2>
+        <div className={styles.estadisticasTableContainer}>
+          <div className={styles.estadisticasTableHeader}>
+            <h2 className={styles.estadisticasTableTitle}>Horarios más solicitados</h2>
           </div>
           
-          <div className="overflow-x-auto">
-            <table className="admin-table">
+          <div className={styles.estadisticasOverflowXAuto}>
+            <table className={styles.estadisticasTable}>
               <thead>
                 <tr>
                   <th>Horarios</th>
@@ -195,27 +195,27 @@ export default function EstadisticasPage() {
                 {horariosPopulares.map((horario, index) => (  
                   <tr key={index}>
                     <td>
-                      <div className="admin-cell-title">
-                        <div className="admin-avatar bg-blue-100 text-blue-800">
+                      <div className={styles.estadisticasCellTitle}>
+                        <div className={styles.estadisticasAvatar} style={{backgroundColor: '#dbeafe', color: '#1e40af'}}>
                           {horario.horario.charAt(0)}
                         </div>
                         {horario.horario}
                       </div>
                     </td>
                     <td>
-                      <div className="admin-cell-subtitle">{horario.reservas}</div>
+                      <div className={styles.estadisticasCellSubtitle}>{horario.reservas}</div>
                     </td>
                     <td>
-                      <div className="admin-cell-text font-medium text-emerald-600">
+                      <div className={styles.estadisticasCellText + ' ' + styles.estadisticasFontMedium + ' ' + styles.estadisticasTextEmerald600}>
                         ${horario.ingresos.toLocaleString('es-CL')}
                       </div>
                     </td>
                     <td>
-                      <div className="flex items-center space-x-1">
-                        <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className={styles.estadisticasFlex + ' ' + styles.estadisticasItemsCenter + ' ' + styles.estadisticasSpaceX1}>
+                        <svg className={styles.estadisticasW5 + ' ' + styles.estadisticasH5 + ' ' + styles.estadisticasTextEmerald500} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                         </svg>
-                        <span className="text-emerald-500 font-medium">+{index === 0 ? '15' : '10'}%</span>
+                        <span className={styles.estadisticasTextEmerald500 + ' ' + styles.estadisticasFontMedium}>+{index === 0 ? '15' : '10'}%</span>
                       </div>
                     </td>
                   </tr>
