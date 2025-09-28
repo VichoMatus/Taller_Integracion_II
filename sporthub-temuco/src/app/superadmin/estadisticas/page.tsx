@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
 import BarChart from '@/components/charts/BarChart';
 import StatsCard from '@/components/charts/StatsCard';
-import './estadisticas.css'; // Importar CSS compartido
+import './estadisticas.css'; 
 
 export default function EstadisticasPage() {
-  // Datos para las métricas principales
+  // Datos para las métricas principales, luego vendrian de la API
   const statsData = [
     { label: 'Ingresos Totales', value: 500 },
     { label: 'Reservas Totales', value: 40 },
