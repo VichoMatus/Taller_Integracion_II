@@ -462,6 +462,13 @@
   margin: 0;
   flex: 1;
   transition: all 0.3s ease;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3; /* Limita a 3 líneas */
+  text-overflow: ellipsis;
+  min-height: 4.8em; /* 3 líneas × 1.6 line-height = 4.8em */
+  max-height: 4.8em; /* Altura fija para mantener consistencia */
 }
 
 .sportCard:hover .sportDescription {
