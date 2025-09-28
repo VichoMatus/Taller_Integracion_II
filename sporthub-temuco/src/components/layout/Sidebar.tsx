@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import './Sidebar.css'; 
 import indexStyles from './StylesSportsSideBar/IndexSideBar.module.css';
 import basquetbolStyles from './StylesSportsSideBar/BasquetbolSideBar.module.css';
-// import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
+import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
 // import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
 
 interface SidebarProps {
@@ -37,8 +37,7 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
       case 'basquetbol':
         return basquetbolStyles;
       case 'futbol':
-        // return futbolStyles;
-        return basquetbolStyles; // temporal
+        return futbolStyles; 
       case 'tenis':
         // return tenisStyles;
         return basquetbolStyles; // temporal
