@@ -83,10 +83,6 @@ export default function SportsPage() {
     }
   };
 
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortBy(e.target.value);
-    // Aquí podrías implementar la lógica de ordenamiento
-  };
 
   const handleSportClick = (sport: typeof sportsData[0]) => {
     if (sport.href) {
@@ -138,12 +134,11 @@ export default function SportsPage() {
                     src={sport.imageUrl} 
                     alt={sport.name}
                     className={styles.sportImage}
-                    width={300}  // Requerido
-                    height={200} // Requerido
+                    width={300}
+                    height={200}
                     placeholder="blur"
                     blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                   />
-                {/* Tag del deporte */}
                 <div 
                   className={styles.sportTag}
                   style={{ backgroundColor: sport.tagColor }}
@@ -152,12 +147,10 @@ export default function SportsPage() {
                 </div>
               </div>
 
-              {/* Contenido de la card */}
               <div className={styles.sportContent}>
                 <h3 className={styles.sportName}>{sport.name}</h3>
                 <p className={styles.sportDescription}>{sport.description}</p>
                 
-                {/* Botón de acción */}
                 <button className={styles.exploreButton}>
                   Explorar
                 </button>
