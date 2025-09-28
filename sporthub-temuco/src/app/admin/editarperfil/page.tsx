@@ -9,64 +9,88 @@ import { useRouter } from 'next/navigation';
 
 export default function EditarPerfilAdministrador() {
   const router = useRouter();
+  const userName = "Administrador";
+
+  const getInitial = (name: string) => {
+    return name.charAt(0).toUpperCase();
+  };
 
   return (
     <Layout userRole="admin" userName="Administrador">
-      <div className="page-wrapper">
-        <div className="profile-card">
+      <div className="edit-profile-container">
+        <div className="edit-profile-card">
           {/* Columna izquierda */}
-          <div className="profile-left">
-            <div className="foto-circle">
-              <img
-                src="https://placedog.net/200/200?id=12"
-                alt="Foto de perfil"
-                className="avatar-img"
-              />
+          <div className="profile-sidebar">
+            <div className="avatar-section">
+              <div className="avatar-edit-container">
+                <div className="avatar-edit">
+                  <span className="avatar-initial">{getInitial(userName)}</span>
+                </div>
+                <div className="online-status"></div>
+              </div>
+
+              <h2 className="profile-name">{userName}</h2>
             </div>
 
-            <Button className="edit-btn" onClick={() => alert('Cambiar Foto')}>
+            <Button className="change-photo-btn" onClick={() => alert('Cambiar Foto')}>
               Cambiar Foto
             </Button>
 
-            <div className="info-box-small">
+            <div className="info-notice">
               <p>
                 Hola Administrador, te recordamos que tus datos son de suma importancia, es por eso que el{' '}
-                <span style={{ color: 'purple', fontWeight: 'bold' }}>
-                  Correo Electrónico
-                </span>{' '}
-                no se puede modificar ya que ese es su dato clave que los vuelve administradores
+                <span className="highlight-text">Correo Electrónico</span>{' '}
+                no se puede modificar ya que ese es su dato clave que los vuelve administradores.
               </p>
             </div>
 
-            <Button className="edit-btn-orange" onClick={() => router.push('http://localhost:3000/admin/perfil')}>
-              Volver al Perfil
+            <Button className="back-profile-btn" onClick={() => router.push('/admin/perfil')}>
+              ← Volver al Perfil
             </Button>
           </div>
 
           {/* Columna derecha */}
-          <div className="profile-right">
-            <div className="form-card">
-              <h1>Editar Perfil Administrador</h1>
-              <Input label="Nombre  " placeholder="Nombre Administrador" name="nombre" />
-              <Input label="Número de Teléfono" placeholder="Número Telefonico" name="telefono" />
-              <Input label="Edad  " placeholder="Ingrese su Edad" name="edad" type="number" />
+          <div className="profile-edit-form">
+            <div className="form-container">
+              <h1 className="form-title">Editar Perfil Administrador</h1>
+              
+              <div className="form-grid">
+                <div className="input-group">
+                  <label className="input-label">Nombre</label>
+                  <Input placeholder="Nombre Administrador" name="nombre" />
+                </div>
+                
+                <div className="input-group">
+                  <label className="input-label">Número de Teléfono</label>
+                  <Input placeholder="Número Telefónico" name="telefono" />
+                </div>
+                
+                <div className="input-group">
+                  <label className="input-label">Edad</label>
+                  <Input placeholder="Ingrese su Edad" name="edad" type="number" />
+                </div>
+                
+                <div className="input-group full-width">
+                  <Button
+                    className="change-password-btn"
+                    onClick={() => router.push('/admin/cambiocontra')}
+                  >
+                    🔒 Cambiar Contraseña
+                  </Button>
+                </div>
 
-              <Button
-                className="btn-red btn-full"
-                onClick={() => router.push('http://localhost:3000/admin/cambiocontra')}
-              >
-                Cambiar Contraseña
-              </Button>
+                <div className="input-group full-width">
+                  <label className="input-label">Correo Electrónico</label>
+                  <Input
+                    value="correoAdministrador241@gmail.com"
+                    disabled
+                  />
+                </div>
+              </div>
 
-              <Input
-                label="Correo Electrónico"
-                value="correoAdministrador241@gmail.com"
-                disabled
-              />
-
-              <div className="action-buttons">
-                <Button className="btn-green" onClick={() => alert('Guardar Cambios')}>
-                  Guardar Cambios
+              <div className="form-actions">
+                <Button className="save-changes-btn" onClick={() => alert('Guardar Cambios')}>
+                  💾 Guardar Cambios
                 </Button>
               </div>
             </div>
