@@ -7,12 +7,13 @@ import { usePathname } from 'next/navigation';
 import './Sidebar.css'; 
 import indexStyles from './StylesSportsSideBar/IndexSideBar.module.css';
 import basquetbolStyles from './StylesSportsSideBar/BasquetbolSideBar.module.css';
+import atletismoStyles from './StylesSportsSideBar/AtletismoSideBar.module.css';
 // import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
 // import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
 
 interface SidebarProps {
   userRole: 'admin' | 'superadmin' | 'usuario';
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'atletismo';
 }
 
 const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
@@ -41,6 +42,8 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
     switch (sport) {
       case 'basquetbol':
         return basquetbolStyles;
+      case 'atletismo':
+        return atletismoStyles;
       case 'futbol':
         // return futbolStyles;
         return basquetbolStyles; // temporal
@@ -187,7 +190,7 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
             <p className={styles ? styles.sidebarSubtitle : 'sidebar-subtitle'}>{userTitle}</p>
           </div>
         </div>
-        {userRole === 'usuario' && styles && <div className={styles.sportIcon}></div>}
+  {/* Removed sport icon box to avoid the extra blue square in the sidebar */}
       </div>
 
       {/* Navigation */}

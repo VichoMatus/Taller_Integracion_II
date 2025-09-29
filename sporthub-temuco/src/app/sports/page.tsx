@@ -62,6 +62,16 @@ const sportsData = [
     tagColor: '#ec4899', // Rosa
     href: '/sports/voley'
   }
+  ,
+  {
+    id: 'atletismo',
+    name: 'Atletismo',
+    imageUrl: '/sports/atletismo/atletismo.png',
+    description: 'Pistas, pruebas y eventos de atletismo.',
+    tag: 'Nuevo',
+    tagColor: '#1E40AF', // Blue/gray palette for Atletismo
+    href: '/sports/atletismo'
+  }
 ];
 
 export default function SportsPage() {
