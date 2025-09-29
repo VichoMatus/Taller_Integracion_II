@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import indexStyles from './stylesSearchBar/IndexSearchBar.module.css';
 import basquetbolStyles from './stylesSearchBar/BasquetbolSearchBar.module.css';
+import tenisStyles from './stylesSearchBar/TenisSearchBar.module.css';
 
 interface SearchBarProps {
   value?: string;
@@ -38,8 +39,7 @@ const SearchBar = ({
         // return futbolStyles; // Cuando lo crees
         return basquetbolStyles; // temporal
       case 'tenis':
-        // return tenisStyles; // Cuando lo crees
-        return indexStyles; // temporal
+        return tenisStyles;
       default:
         return indexStyles; // fallback al index
     }
