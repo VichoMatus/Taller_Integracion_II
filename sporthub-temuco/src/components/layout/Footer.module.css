@@ -1,0 +1,75 @@
+/* Footer con sidebar para rutas de /sports */
+.footerWithSidebar {
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  padding: 7px 24px;
+  margin-left: 250px; /* Espacio para el sidebar */
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+}
+
+/* Footer sin sidebar (por si acaso) */
+.footerWithoutSidebar {
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  padding: 10px 24px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+}
+
+/* Variante minimal */
+.footerMinimal {
+  text-align: center;
+}
+
+/* Variante full */
+.footerFull {
+  text-align: center;
+}
+
+/* Contenido minimal */
+.footerMinimalContent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.footerMinimalText {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* Contenido full */
+.footerFullContent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.footerLinks {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .footerWithSidebar {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .footerWithSidebar,
+  .footerWithoutSidebar {
+    position: relative;
+    margin-left: 0;
+  }
+}
