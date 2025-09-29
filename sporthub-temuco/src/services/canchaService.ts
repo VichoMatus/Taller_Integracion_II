@@ -5,6 +5,7 @@
  */
 
 import { apiBackend } from '../config/backend';
+import { CreateCanchaInput, UpdateCanchaInput } from '../types/cancha';
 
 export const canchaService = {
   /**
@@ -23,6 +24,54 @@ export const canchaService = {
       } else {
         throw new Error('Error inesperado: ' + error.message);
       }
+    }
+  },
+
+  /**
+   * Obtener una cancha por ID
+   */
+  async getCanchaById(id: number) {
+    try {
+      const response = await apiBackend.get(`/api/canchas/${id}`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error('Error al obtener la cancha: ' + (error.response?.data?.message || error.message));
+    }
+  },
+
+  /**
+   * Crear una nueva cancha
+   */
+  async createCancha(input: CreateCanchaInput) {
+    try {
+      const response = await apiBackend.post('/api/canchas', input);
+      return response.data;
+    } catch (error: any) {
+      throw new Error('Error al crear la cancha: ' + (error.response?.data?.message || error.message));
+    }
+  },
+
+  /**
+   * Actualizar una cancha existente
+   */
+  async updateCancha(id: number, input: UpdateCanchaInput) {
+    try {
+      const response = await apiBackend.patch(`/api/canchas/${id}`, input);
+      return response.data;
+    } catch (error: any) {
+      throw new Error('Error al actualizar la cancha: ' + (error.response?.data?.message || error.message));
+    }
+  },
+
+  /**
+   * Eliminar una cancha
+   */
+  async deleteCancha(id: number) {
+    try {
+      const response = await apiBackend.delete(`/api/canchas/${id}`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error('Error al eliminar la cancha: ' + (error.response?.data?.message || error.message));
     }
   }
 };
