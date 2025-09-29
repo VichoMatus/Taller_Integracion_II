@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import indexStyles from './stylesSearchBar/IndexSearchBar.module.css';
 import basquetbolStyles from './stylesSearchBar/BasquetbolSearchBar.module.css';
 import futbolStyles from './stylesSearchBar/FutbolSearchBar.module.css';
+import padelStyles from './stylesSearchBar/PadelSearchBar.module.css';
 
 interface SearchBarProps {
   value?: string;
@@ -41,6 +42,8 @@ const SearchBar = ({
       case 'tenis':
         // return tenisStyles; // Cuando lo crees
         return indexStyles; // temporal
+      case 'padel':
+        return padelStyles;
       default:
         return indexStyles; // fallback al index
     }

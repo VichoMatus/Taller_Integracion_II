@@ -7,7 +7,7 @@ import basquetbolStyles from './stylesCourtCards/BasquetbolCanchasCard.module.cs
 import futbolStyles from './stylesCourtCards/FutbolCanchasCard.module.css';
 // import tenisStyles from './stylesCourtCards/TenisCanchasCard.module.css';
 // import voleibolStyles from './stylesCourtCards/VoleibolCanchasCard.module.css';
-// import padelStyles from './stylesCourtCards/PadelCanchasCard.module.css';
+import padelStyles from './stylesCourtCards/PadelCanchasCard.module.css';
 
 interface CourtCardProps {
   imageUrl: string;
@@ -49,8 +49,8 @@ const CourtCard: React.FC<CourtCardProps> = ({
       //   return tenisStyles;
       // case 'voleibol':
       //   return voleibolStyles;
-      // case 'padel':
-      //   return padelStyles;
+      case 'padel':
+        return padelStyles;
       default:
         console.warn(`Estilo no encontrado para el deporte: ${sport}. Usando basquetbol como fallback.`);
         return basquetbolStyles; // Fallback a basquetbol

@@ -3,6 +3,7 @@ import React from 'react';
 // 🔥 IMPORTAR TODOS LOS ESTILOS DE LOS DEPORTES
 import basquetbolStyles from './stylesLocationMap/BasquetbolLocationMap.module.css';
 import futbolStyles from './stylesLocationMap/FutbolLocationMap.module.css';
+import padelStyles from './stylesLocationMap/PadelLocationMap.module.css';
 
 interface LocationMapProps {
   latitude: number;
@@ -29,8 +30,11 @@ const LocationMap: React.FC<LocationMapProps> = ({
         return basquetbolStyles;
       case 'futbol':
         return futbolStyles;
+      case 'padel':
+        return padelStyles;
       default:
         return basquetbolStyles; // Fallback
+        
     }
   };
 
@@ -44,6 +48,8 @@ const LocationMap: React.FC<LocationMapProps> = ({
         return '🏀';
       case 'futbol':
         return '⚽';
+      case 'padel':
+        return '🎾';
       default:
         return '🏀';
     }

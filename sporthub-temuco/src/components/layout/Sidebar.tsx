@@ -8,6 +8,7 @@ import './Sidebar.css';
 import indexStyles from './StylesSportsSideBar/IndexSideBar.module.css';
 import basquetbolStyles from './StylesSportsSideBar/BasquetbolSideBar.module.css';
 import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
+import padelStyles from './StylesSportsSideBar/PadelSideBar.module.css';
 // import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
 
 interface SidebarProps {
@@ -40,7 +41,8 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
         return futbolStyles; 
       case 'tenis':
         // return tenisStyles;
-        return basquetbolStyles; // temporal
+      case 'padel':
+        return padelStyles;
       default:
         return basquetbolStyles;
     }
