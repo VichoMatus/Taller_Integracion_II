@@ -60,6 +60,43 @@ const sportsData = [
     tag: 'Nuevo',
     tagColor: '#ec4899', // Rosa
     href: '/sports/voley'
+  },
+  // NUEVOS DEPORTES AGREGADOS
+  {
+    id: 'enduro',
+    name: 'Enduro',
+    imageUrl: '/sports/enduro/enduro.png',
+    description: 'Rutas y circuitos para enduro. Terrenos desafiantes y emocionantes.',
+    tag: 'Extremo',
+    tagColor: '#4B5320', // verde militar
+    href: '/sports/enduro'
+  },
+  {
+    id: 'futbol-americano',
+    name: 'Futbol Americano',
+    imageUrl: '/sports/futbol-americano/futbol-americano.png',
+    description: 'Campos profesionales para partidos y entrenamientos de football americano.',
+    tag: 'Contacto',
+    tagColor: '#002147', // azul marino
+    href: '/sports/futbol-americano'
+  },
+  {
+    id: 'rugby',
+    name: 'Rugby',
+    imageUrl: '/sports/rugby/rugby.png',
+    description: 'Campos de rugby con medidas oficiales para partidos y entrenamientos.',
+    tag: 'Intenso',
+    tagColor: '#722F37', // vino titno
+    href: '/sports/rugby'
+  },
+  {
+    id: 'mountain-bike',
+    name: 'Mountain Bike',
+    imageUrl: '/sports/mountain-bike/mountain-bike.png',
+    description: 'Senderos y circuitos para mountain bike. Diferentes niveles de dificultad.',
+    tag: 'Aventura',
+    tagColor: '#4E342E', // Índigo
+    href: '/sports/mountain-bike'
   }
 ];
 
@@ -82,7 +119,6 @@ export default function SportsPage() {
       setFilteredSports(filtered);
     }
   };
-
 
   const handleSportClick = (sport: typeof sportsData[0]) => {
     if (sport.href) {

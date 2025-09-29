@@ -12,7 +12,7 @@ import basquetbolStyles from './StylesSportsSideBar/BasquetbolSideBar.module.css
 
 interface SidebarProps {
   userRole: 'admin' | 'superadmin' | 'usuario';
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | undefined;
 }
 
 const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
