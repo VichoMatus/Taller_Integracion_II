@@ -6,13 +6,14 @@ import indexStyles from './stylesSearchBar/IndexSearchBar.module.css';
 import basquetbolStyles from './stylesSearchBar/BasquetbolSearchBar.module.css';
 import futbolStyles from './stylesSearchBar/FutbolSearchBar.module.css';
 import padelStyles from './stylesSearchBar/PadelSearchBar.module.css';
+import crossfitentrenamientofuncionalStyles from './stylesSearchBar/CrossfitEntrenamientoFuncionalSearchBar.module.css';
 
 interface SearchBarProps {
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSearch: (term: string) => void;
   placeholder?: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional'; 
 }
 
 const SearchBar = ({ 
@@ -44,6 +45,8 @@ const SearchBar = ({
         return indexStyles; // temporal
       case 'padel':
         return padelStyles;
+      case 'crossfitentrenamientofuncional':
+        return crossfitentrenamientofuncionalStyles;
       default:
         return indexStyles; // fallback al index
     }

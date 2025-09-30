@@ -4,6 +4,7 @@ import React from 'react';
 import basquetbolStyles from './stylesLocationMap/BasquetbolLocationMap.module.css';
 import futbolStyles from './stylesLocationMap/FutbolLocationMap.module.css';
 import padelStyles from './stylesLocationMap/PadelLocationMap.module.css';
+import crossfitentrenamientofuncionalStyles from './stylesLocationMap/CrossfitEntrenamientoFuncionalLocationMap.module.css';
 
 interface LocationMapProps {
   latitude: number;
@@ -11,7 +12,7 @@ interface LocationMapProps {
   address?: string;
   zoom?: number;
   height?: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel'; // 🔥 AGREGAR PROP SPORT
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional';
 }
 
 const LocationMap: React.FC<LocationMapProps> = ({
@@ -32,6 +33,9 @@ const LocationMap: React.FC<LocationMapProps> = ({
         return futbolStyles;
       case 'padel':
         return padelStyles;
+      case 'crossfitentrenamientofuncional':
+        return crossfitentrenamientofuncionalStyles;
+      // case 'tenis':
       default:
         return basquetbolStyles; // Fallback
         
@@ -50,6 +54,8 @@ const LocationMap: React.FC<LocationMapProps> = ({
         return '⚽';
       case 'padel':
         return '🎾';
+      case 'crossfitentrenamientofuncional':
+        return '🏋️‍♂️';
       default:
         return '🏀';
     }
@@ -62,6 +68,10 @@ const LocationMap: React.FC<LocationMapProps> = ({
         return 'Basquetbol';
       case 'futbol':
         return 'Fútbol';
+      case 'padel':
+        return 'Pádel';
+      case 'crossfitentrenamientofuncional':
+        return 'Crossfit Entrenamiento Funcional';
       default:
         return 'Basquetbol';
     }

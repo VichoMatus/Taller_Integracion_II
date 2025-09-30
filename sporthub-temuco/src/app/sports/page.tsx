@@ -60,7 +60,16 @@ const sportsData = [
     tag: 'Nuevo',
     tagColor: '#ec4899', // Rosa
     href: '/sports/voley'
-  }
+  },
+  {
+    id: 'entrenamientofuncional',
+    name: 'Crossfit y Entrenamiento Funcional',
+    imageUrl: '/sports/crossfitentrenamientofuncional/crossfitentrenamientofuncional.png',
+    description: 'Explora entrenamiento funcional y rutinas de ejercicio.',
+    tag: 'Nuevo',
+    tagColor: '#272829', // Gris Oscuro
+    href: '/sports/crossfitentrenamientofuncional'
+  },
 ];
 
 export default function SportsPage() {
