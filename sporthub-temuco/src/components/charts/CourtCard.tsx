@@ -1,7 +1,9 @@
 import React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import styles from './stylesCourtCards/BasquetbolCanchasCard.module.css';
+import basquetStyles from './stylesCourtCards/BasquetbolCanchasCard.module.css';
+import atletismoStyles from './stylesCourtCards/AtletismoCanchasCard.module.css';
+import { mountAtletismoLoader, unmountAtletismoLoader } from '@/components/ui/AtletismoNavLoader';
 
 interface CourtCardProps {
   imageUrl: string;
@@ -13,7 +15,7 @@ interface CourtCardProps {
   description: string;
   price: string;
   nextAvailable: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'atletismo';
   onClick?: () => void;
 }
 
@@ -42,9 +44,31 @@ const CourtCard: React.FC<CourtCardProps> = ({
       onClick();
     } else {
       // Navegación automática según el deporte
+      const showAtletismoLoaderAndNavigate = (path: string) => {
+        try {
+          mountAtletismoLoader();
+        } catch (e) {
+          // ignore
+        }
+
+        // Short delay so the overlay is visible before navigation
+        setTimeout(() => {
+          router.push(path);
+        }, 180);
+
+        // Ensure overlay removed after a reasonable time
+        setTimeout(() => {
+          try { unmountAtletismoLoader(); } catch (e) { /* ignore */ }
+        }, 1600);
+      };
+
       switch (sport) {
         case 'basquetbol':
           router.push('/sports/basquetbol/canchas/canchaseleccionada');
+          break;
+        case 'atletismo':
+          // show a transient Atletismo-themed loader and then navigate
+          showAtletismoLoaderAndNavigate('/sports/atletismo/canchas/canchaseleccionada');
           break;
           
         case 'futbol':
@@ -107,8 +131,10 @@ const CourtCard: React.FC<CourtCardProps> = ({
     }
   };
   
+  const styles = sport === 'atletismo' ? atletismoStyles : basquetStyles;
+
   return (
-    <div className={`${styles.courtCard} ${sport ? styles[`courtCard${sport.charAt(0).toUpperCase() + sport.slice(1)}`] : ''}`}>
+    <div className={`${styles.courtCard} ${sport ? (styles[`courtCard${sport.charAt(0).toUpperCase() + sport.slice(1)}`] || '') : ''}`}>
       <Image
         src={imageUrl}
         alt={name}

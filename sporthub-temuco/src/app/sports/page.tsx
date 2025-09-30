@@ -1,5 +1,6 @@
-'use client';
+ 'use client';
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image'
 import Sidebar from '../../components/layout/Sidebar';
 import SearchBar from '../../components/SearchBar';
@@ -61,9 +62,20 @@ const sportsData = [
     tagColor: '#ec4899', // Rosa
     href: '/sports/voley'
   }
+  ,
+  {
+    id: 'atletismo',
+    name: 'Atletismo',
+    imageUrl: '/sports/atletismo/atletismo.png',
+    description: 'Pistas, pruebas y eventos de atletismo.',
+    tag: 'Nuevo',
+    tagColor: '#1E40AF', // Blue/gray palette for Atletismo
+    href: '/sports/atletismo'
+  }
 ];
 
 export default function SportsPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('competitivo');
   const [filteredSports, setFilteredSports] = useState(sportsData);
@@ -105,7 +117,7 @@ export default function SportsPage() {
         <div className={styles.header}>
           <h1 className={styles.pageTitle}>Explora Deportes</h1>
           <div className={styles.headerRight}>
-            <button className={styles.userButton}>
+            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
               <span>👤</span>
               <span>Usuario</span>
             </button>

@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './page.module.css'
 import Sidebar from '../../../components/layout/Sidebar'
+import atletismoCommon from '../atletismo/atletismo.module.css'
 
 export default function ReservaCancha() {
   const router = useRouter()
@@ -47,34 +48,15 @@ export default function ReservaCancha() {
       <Sidebar userRole="usuario" />
       {/* Main Content */}
       <div className={styles.mainContent}>
-        {/* Header */}
-        <div className={styles.header}>
-          <div className={styles.headerContent}>
-            <div className={styles.headerLeft}>
-              <button className={styles.backButton} onClick={handleGoBack}>
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                <span style={{marginLeft: '8px'}}>Volver</span>
-              </button>
-              <div className={styles.headerTitle}>
-                <h1>Reservar • cancha basquetbol</h1>
-                <p>Selecciona fecha, horario y completa tus datos</p>
-              </div>
-            </div>
-            <div className={styles.headerRight}>
-              <div className={styles.clubInfo}>
-                <div className={styles.clubName}>Club Centro</div>
-                <div className={styles.clubAddress}>Dirección: Av. Principal 123</div>
-              </div>
-              <div className={styles.userInfo}>
-                <div className={styles.avatar}></div>
-                <span>Usuario</span>
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{marginLeft: '8px'}}>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
+        {/* Header (usar mismo estilo que atletismo/canchas) */}
+        <div className={atletismoCommon.header}>
+          <div className={atletismoCommon.headerLeft}>
+            <div className={atletismoCommon.headerIcon}>🏃‍♂️</div>
+            <h1 className={atletismoCommon.headerTitle}>Pistas de Atletismo</h1>
+          </div>
+          <div className={atletismoCommon.headerRight}>
+            {/* Mantener búsqueda simple aquí */}
+            <button className={atletismoCommon.userButton} onClick={() => router.push('/usuario/perfil')}>👤 Usuario</button>
           </div>
         </div>
 

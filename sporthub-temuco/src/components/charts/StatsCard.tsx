@@ -16,6 +16,7 @@ interface StatsCardProps {
     isPositive: boolean;
   };
   color?: CardColor;
+  sport?: string;
   onClick?: () => void;
   className?: string;
   loading?: boolean;               // Skeleton loading
@@ -31,6 +32,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
   subtitle,
   trend,
   color = 'blue',
+  sport,
   onClick,
   className = '',
   loading = false,
@@ -64,6 +66,9 @@ const StatsCard: React.FC<StatsCardProps> = ({
   });
 
   // Color variants para iconos
+  // If this card is rendered inside Atletismo pages, avoid yellow icons (use blue instead)
+  const effectiveColor = (sport === 'atletismo' && color === 'yellow') ? 'blue' : color;
+
   const iconColorVariants = {
     blue: styles.iconBlue,
     green: styles.iconGreen,
@@ -136,7 +141,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
           )}
         </div>
         
-        <div className={`${styles.cardIcon} ${iconColorVariants[color]}`}>
+        <div className={`${styles.cardIcon} ${iconColorVariants[effectiveColor]}`}>
           {icon}
         </div>
       </div>

@@ -1,0 +1,225 @@
+/* Shared styles for Atletismo pages - variables and common classes */
+:root {
+  /* Atletismo palette: blue + gray tones (requested) */
+  --atletismo-bg: #F3F6FB; /* very light blue-gray background */
+  --atletismo-accent: #1E40AF; /* deep indigo / primary blue */
+  --atletismo-accent-2: #60A5FA; /* light blue accent */
+  --atletismo-text: #0F172A; /* dark slate text */
+  --card-bg: #ffffff;
+  --atletismo-accent-rgb: 30,64,175;
+}
+
+.pageContainer {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  background: var(--atletismo-bg);
+  font-family: 'Inter', sans-serif;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 20px;
+  margin-left: 256px;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+.header {
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  padding: 20px 30px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(243,246,252,0.9) 100%);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(var(--atletismo-accent-rgb),0.08);
+  box-shadow: 0 4px 20px rgba(var(--atletismo-accent-rgb),0.07);
+  transition: all 0.3s ease;
+}
+
+.headerLeft { display:flex; gap:12px; align-items:center; }
+.headerIcon { font-size:32px; width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:12px; background: linear-gradient(135deg,#dbeafe 0%, #93c5fd 100%); transition: transform 0.3s ease; }
+.headerIcon:hover { transform: scale(1.1); filter: drop-shadow(0 4px 8px rgba(var(--atletismo-accent-rgb),0.12)); }
+.headerRight { display:flex; align-items:center; gap:16px; }
+.headerTitle { font-size:22px; font-weight:700; color:var(--atletismo-text); margin:0; background: linear-gradient(135deg, #2b2b2b 0%, #444 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+.headerTitle::after {
+  content: '';
+  display: block;
+  height: 4px;
+  width: 60px;
+  margin-top: 8px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, rgba(var(--atletismo-accent-rgb),0.18), rgba(var(--atletismo-accent-rgb),0.45));
+  transition: all 0.35s ease;
+}
+
+.userButton { display:inline-flex; align-items:center; gap:8px; background: linear-gradient(135deg,var(--atletismo-accent) 0%, var(--atletismo-accent-2) 100%); color: white; border: none; padding: 12px 20px; border-radius:25px; font-weight:600; cursor:pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(var(--atletismo-accent-rgb),0.22); position: relative; overflow: hidden; }
+.userButton::before { content: ''; position: absolute; top: 50%; left: 50%; width: 0; height: 0; background: rgba(255,255,255,0.15); border-radius: 50%; transform: translate(-50%,-50%); transition: all 0.4s ease; }
+.userButton:hover::before { width: 150px; height: 150px; }
+.userButton:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(var(--atletismo-accent-rgb),0.26); }
+
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:8px 12px; border-radius:8px; border: none; cursor:pointer; }
+.btnPrimary { background: linear-gradient(135deg,var(--atletismo-accent) 0%, var(--atletismo-accent-2) 100%); color: white; }
+.btnGhost { background: transparent; border: 1px solid rgba(0,0,0,0.06); color: var(--atletismo-text); }
+
+.containerCard { background: var(--card-bg); padding:16px; border-radius:12px; box-shadow: 0 1px 6px rgba(2,6,23,0.06); }
+
+/* Migrated from page.module.css and canchas page.module.css */
+.statsContainer { display:grid; grid-template-columns: repeat(4,1fr); gap:20px; margin: 24px 0 30px; }
+.statCard { background: linear-gradient(145deg, rgba(255,255,255,0.98), rgba(243,246,252,0.95)); padding:20px; border-radius:16px; backdrop-filter: blur(8px); box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid rgba(var(--atletismo-accent-rgb),0.06); transition: all 0.3s ease; }
+.statCard:hover { transform: translateY(-6px); box-shadow: 0 10px 30px rgba(var(--atletismo-accent-rgb),0.08); border-color: rgba(var(--atletismo-accent-rgb),0.12); }
+.statNumber { font-size:24px; font-weight:700; color:var(--atletismo-text); transition: all 0.3s ease; }
+.statCard:hover .statNumber { transform: scale(1.08); color: var(--atletismo-accent-2); }
+.statLabel { font-size:12px; color:#6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.quickAccessSection { margin-bottom:20px; }
+.topRatedSection { margin-bottom:30px; }
+.carouselContainer { overflow:hidden; width:100%; position:relative; }
+.courtsGrid { display:flex; gap:20px; transition: transform 0.4s ease; width: fit-content; }
+
+.mapSection { background: linear-gradient(145deg, rgba(255,255,255,0.9), rgba(243,246,252,0.9)); padding:30px; border-radius:16px; margin-bottom:65px; }
+
+/* Court button (hero) */
+.mainCourtButton { display:flex; align-items:center; gap:16px; width:100%; padding:18px; border-radius:12px; border: none; cursor:pointer; background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(243,246,252,0.95)); }
+.courtButtonIcon { font-size:36px; }
+.courtButtonText { flex:1; text-align:left; }
+.courtButtonTitle { display:block; font-weight:700; font-size:18px; }
+.courtButtonSubtitle { display:block; font-size:13px; color:#6b7280; }
+.courtButtonArrow { font-size:20px; }
+
+.sectionHeader { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.sectionTitle { font-size:18px; font-weight:700; color:var(--atletismo-text); display:flex; align-items:center; gap:8px; }
+.sectionIcon { font-size:16px; }
+.carouselControls { display:flex; align-items:center; gap:8px; }
+.slideIndicator { color:#6b7280; }
+
+.filtersContainer { background:white; padding:20px; border-radius:12px; margin-bottom:24px; border:1px solid rgba(0,0,0,0.04); }
+.filtersGrid { display:grid; grid-template-columns: repeat(4,1fr); gap:12px; }
+.filterInput, .filterSelect { width:90%; padding:8px 10px; border-radius:6px; }
+.filtersTitle { font-size:16px; font-weight:700; margin-bottom:8px; color:var(--atletismo-text); }
+.filterField { display:flex; flex-direction:column; gap:6px; }
+.filterLabel { font-size:13px; color:#475569; font-weight:600; }
+.priceSlider { width:90%; }
+.filtersActions { display:flex; justify-content:flex-end; margin-top:12px; }
+
+.carouselButton { background: linear-gradient(135deg, var(--atletismo-accent) 0%, var(--atletismo-accent-2) 100%); color:white; border:none; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:600; box-shadow: 0 2px 10px rgba(var(--atletismo-accent-rgb),0.12); transition: all 0.3s ease; }
+.carouselButton:first-child { margin-right: 8px; }
+.carouselButton:last-child { margin-left: 8px; }
+
+.carouselContainer::before,
+.carouselContainer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 30px;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+}
+.carouselContainer::before { left: 0; background: linear-gradient(90deg, rgba(243,246,252,0.9) 0%, transparent 100%); }
+.carouselContainer::after { right: 0; background: linear-gradient(-90deg, rgba(243,246,252,0.9) 0%, transparent 100%); }
+
+/* Overlay de navegación específico para Atletismo (used by CourtCard) */
+.navLoader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.96);
+  font-family: 'Inter', sans-serif;
+}
+
+.navLoaderInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.navLoaderIcon {
+  font-size: 72px;
+  filter: drop-shadow(0 8px 18px rgba(var(--atletismo-accent-rgb),0.10));
+}
+
+.navLoaderText {
+  font-size: 18px;
+  color: var(--atletismo-text);
+  font-weight: 700;
+}
+.star { font-size: 16px; color: #d1d5db; margin-right: 2px; }
+.starFilled { color: var(--atletismo-accent-2); }
+.carouselButton:hover { transform: scale(1.05); box-shadow: 0 6px 18px rgba(var(--atletismo-accent-rgb),0.22); }
+
+.noResults { padding:20px; background: #fff; border-radius: 8px; }
+
+.cardsContainer { background:#eef6ff; padding:24px; border-radius:16px; margin-bottom:10px; }
+.cardsGrid { display:flex; flex-wrap:wrap; gap:16px; justify-content:center; }
+.availabilityMessage { display:flex; justify-content:center; }
+.availabilityCard { background:white; padding:24px; border-radius:12px; }
+
+/* Cancha detalle */
+.courtInfoCard { background: white; padding:20px; border-radius:12px; margin-bottom:20px; border:1px solid rgba(0,0,0,0.04); }
+.courtHeader { display:flex; justify-content:space-between; align-items:center; }
+.courtDetails { display:flex; gap:20px; margin-top:12px; }
+.detailItem { display:flex; gap:8px; align-items:center; }
+.detailIcon { font-size:18px; }
+.locationImagesContainer { display:flex; gap:20px; }
+.locationSection, .imagesSection { flex:1; }
+.imageCarousel { display:flex; align-items:center; gap:8px; }
+.imageContainer { width:100%; height:250px; display:flex; align-items:center; justify-content:center; background:#eef6ff; border-radius:8px; }
+.courtImage { max-width:100%; max-height:100%; object-fit:cover; }
+
+.breadcrumb { margin-bottom:20px; animation: fadeInUp 0.8s ease-out 0.2s both; }
+
+/* Reservation / buttons used across pages */
+.btnGhost { background: transparent; border:1px dashed rgba(0,0,0,0.08); padding:8px 12px; border-radius:8px; cursor:pointer; }
+
+.reserveButton { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 14px; border-radius:8px; border:none; cursor:pointer; background: linear-gradient(135deg,var(--atletismo-accent) 0%, var(--atletismo-accent-2) 100%); color:white; }
+
+/* Calendar / reservation page helpers (from reservacancha and page.module.css) */
+.container { display:flex; min-height:100vh; }
+.mainContent { flex:1; padding:20px; margin-left:256px; overflow-y:auto; min-height:100vh; }
+.content { padding:20px; }
+.grid { display:grid; grid-template-columns: 1fr 320px; gap:20px; }
+.card { background:white; padding:16px; border-radius:12px; border:1px solid rgba(0,0,0,0.04); }
+.cardTitle { font-weight:700; margin-bottom:12px; }
+.calendarHeader { display:flex; align-items:center; gap:12px; justify-content:space-between; }
+.calendarNav { background:transparent; border:none; cursor:pointer; padding:8px; border-radius:8px; }
+.calendarWeekdays { display:flex; gap:8px; margin-top:12px; }
+.weekday { width:32px; text-align:center; font-weight:600; }
+.calendarDays { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.dayButton { width:40px; height:40px; border-radius:8px; border:none; background:transparent; cursor:pointer; }
+.selected { background: var(--atletismo-accent); color:white; }
+  .inactive { opacity:0.4; }
+  .dateInfo { display:flex; justify-content:space-between; margin-top:12px; }
+  .dateLabel { font-weight:700; }
+  .timeSlots { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .timeSlot { padding:10px 12px; border-radius:8px; border:none; cursor:pointer; }
+  .available { background:#eef6ff; }
+  .occupied { background:#e6f0ff; }
+  .timeValue { font-weight:700; }
+  .timeStatus { font-size:12px; color:#6b7280; }
+  .timeNote { margin-top:12px; color:#6b7280; }
+
+  .formGrid { display:grid; gap:12px; grid-template-columns: 1fr 1fr; }
+  .inputGroup { display:flex; flex-direction:column; gap:8px; }
+  .inputLabel { font-weight:600; }
+  .input { padding:8px 10px; border-radius:8px; border:1px solid rgba(0,0,0,0.04); }
+  .playerCounter { display:flex; gap:8px; align-items:center; }
+  .counterButton { width:32px; height:32px; border-radius:6px; border:none; cursor:pointer; }
+  .counterInput { width:56px; text-align:center; }
+  .paymentMethods { display:flex; gap:8px; }
+  .paymentButton { padding:8px 12px; border-radius:8px; border:1px solid rgba(0,0,0,0.04); cursor:pointer; }
+  .active { background:var(--atletismo-accent); color:white; border-color:transparent; }
+  .textarea { width:100%; min-height:80px; border-radius:8px; padding:8px; border:1px solid rgba(0,0,0,0.04); }
+
+  .sectionTitle { font-size:18px; font-weight:600; color:var(--atletismo-text); }
+
+  .flexCenter { display:flex; align-items:center; justify-content:center; }
+.timeValue { font-weight:700; }
