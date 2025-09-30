@@ -218,7 +218,7 @@ export default function Page() {
         <div className={styles.cardsContainer}>
           <div className={styles.cardsGrid}>
             {filteredRutas.map((ruta, idx) => (
-              <CourtCard key={idx} {...ruta} />
+              <CourtCard key={idx} {...ruta} sport="enduro"/>
             ))}
           </div>
           
