@@ -72,6 +72,16 @@ const sportsData = [
     tagColor: '#1E40AF', // Blue/gray palette for Atletismo
     href: '/sports/atletismo'
   }
+  ,
+  {
+    id: 'skate',
+    name: 'Skate',
+    imageUrl: '/sports/skate/canchas/Skate1.svg',
+    description: 'Skateparks, bowls y zonas street.',
+    tag: 'Nuevo',
+    tagColor: '#6b7280', // neutral gray (no naranja)
+    href: '/sports/skate'
+  }
 ];
 
 export default function SportsPage() {

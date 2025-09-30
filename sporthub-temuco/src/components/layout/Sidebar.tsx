@@ -8,12 +8,13 @@ import './Sidebar.css';
 import indexStyles from './StylesSportsSideBar/IndexSideBar.module.css';
 import basquetbolStyles from './StylesSportsSideBar/BasquetbolSideBar.module.css';
 import atletismoStyles from './StylesSportsSideBar/AtletismoSideBar.module.css';
+// skateStyles removed: skate uses indexStyles now
 // import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
 // import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
 
 interface SidebarProps {
   userRole: 'admin' | 'superadmin' | 'usuario';
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'atletismo';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'atletismo' | 'skate';
 }
 
 const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
@@ -42,6 +43,8 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
     switch (sport) {
       case 'basquetbol':
         return basquetbolStyles;
+      case 'skate':
+        return indexStyles;
       case 'atletismo':
         return atletismoStyles;
       case 'futbol':

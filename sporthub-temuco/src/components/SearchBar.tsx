@@ -5,13 +5,14 @@ import { usePathname } from 'next/navigation';
 import indexStyles from './stylesSearchBar/IndexSearchBar.module.css';
 import basquetbolStyles from './stylesSearchBar/BasquetbolSearchBar.module.css';
 import atletismoSearchStyles from './stylesSearchBar/AtletismoSearchBar.module.css';
+import skateSearchStyles from './stylesSearchBar/SkateSearchBar.module.css';
 
 interface SearchBarProps {
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSearch: (term: string) => void;
   placeholder?: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'atletismo';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'atletismo' | 'skate';
 }
 
 const SearchBar = ({ 
@@ -35,6 +36,8 @@ const SearchBar = ({
     switch (sport) {
       case 'basquetbol':
         return basquetbolStyles;
+      case 'skate':
+        return skateSearchStyles;
       case 'atletismo':
         return atletismoSearchStyles;
       case 'futbol':

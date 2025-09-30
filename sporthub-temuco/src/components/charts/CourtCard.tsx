@@ -3,7 +3,9 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import basquetStyles from './stylesCourtCards/BasquetbolCanchasCard.module.css';
 import atletismoStyles from './stylesCourtCards/AtletismoCanchasCard.module.css';
+import skateStyles from './stylesCourtCards/SkateCanchasCard.module.css';
 import { mountAtletismoLoader, unmountAtletismoLoader } from '@/components/ui/AtletismoNavLoader';
+import { mountSkateLoader, unmountSkateLoader } from '@/components/ui/SkateNavLoader';
 
 interface CourtCardProps {
   imageUrl: string;
@@ -15,7 +17,7 @@ interface CourtCardProps {
   description: string;
   price: string;
   nextAvailable: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'atletismo';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'atletismo' | 'skate';
   onClick?: () => void;
 }
 
@@ -69,6 +71,12 @@ const CourtCard: React.FC<CourtCardProps> = ({
         case 'atletismo':
           // show a transient Atletismo-themed loader and then navigate
           showAtletismoLoaderAndNavigate('/sports/atletismo/canchas/canchaseleccionada');
+          break;
+        case 'skate':
+          // show transient Skate-themed loader and then navigate
+          try { mountSkateLoader(); } catch (e) { /* ignore */ }
+          setTimeout(() => { router.push('/sports/skate/canchas/canchaseleccionada'); }, 180);
+          setTimeout(() => { try { unmountSkateLoader(); } catch (e) { /* ignore */ } }, 1600);
           break;
           
         case 'futbol':
@@ -131,7 +139,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
     }
   };
   
-  const styles = sport === 'atletismo' ? atletismoStyles : basquetStyles;
+  const styles = sport === 'atletismo' ? atletismoStyles : sport === 'skate' ? skateStyles : basquetStyles;
 
   return (
     <div className={`${styles.courtCard} ${sport ? (styles[`courtCard${sport.charAt(0).toUpperCase() + sport.slice(1)}`] || '') : ''}`}>
