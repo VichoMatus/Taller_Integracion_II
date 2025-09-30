@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import styles from './stylesCourtCards/BasquetbolCanchasCard.module.css';
 import enduroStyles from './stylesCourtCards/EnduroRutasCard.module.css';
+import futbolAmericanoStyles from './stylesCourtCards/FutbolAmericanoEstadioCard.module.css';
 
 interface CourtCardProps {
   imageUrl: string;
@@ -34,7 +35,10 @@ const CourtCard: React.FC<CourtCardProps> = ({
   const router = useRouter();
   
   // 🔥 Seleccionar estilos según el deporte
-  const currentStyles = sport === 'enduro' ? enduroStyles : styles;
+  const currentStyles = 
+    sport === 'enduro' ? enduroStyles :
+    sport === 'futbol-americano' ? futbolAmericanoStyles :
+    styles;
   
   // 🔥 Limitar a máximo 4 tags
   const displayTags = tags.slice(0, 4);
@@ -106,6 +110,19 @@ const CourtCard: React.FC<CourtCardProps> = ({
         case 'enduro': // 🔥 Nuevo caso para Enduro
           router.push('/sports/enduro/rutas/rutaseleccionada');
           break;
+
+        case 'futbol-americano':
+          const futbolAmericanoParams = new URLSearchParams({
+            id: Date.now().toString(),
+            name: name,
+            location: address,
+            description: description,
+            rating: rating.toString(),
+            reviews: reviews.toString().replace(' reseñas', ''),
+            priceFrom: (parseInt(price) * 1000).toString(),
+          });
+          router.push(`/sports/futbol-americano/estadios/estadioseleccionado?${futbolAmericanoParams.toString()}`);
+          break;
           
         default:
           console.log('Deporte no configurado:', sport);
@@ -160,7 +177,8 @@ const CourtCard: React.FC<CourtCardProps> = ({
           </div>
           
           <button onClick={handleInternalClick} className={currentStyles.actionButton}>
-            {sport === 'enduro' ? 'Ir a ruta →' : 'Ir a cancha →'}
+            {sport === 'enduro' ? 'Ir a ruta →' : 
+             sport === 'futbol-americano' ? 'Ir a estadio →' : 'Ir a cancha →'}
           </button>
         </div>
       </div>

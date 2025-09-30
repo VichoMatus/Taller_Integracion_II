@@ -9,7 +9,7 @@ import indexStyles from './StylesSportsSideBar/IndexSideBar.module.css';
 import basquetbolStyles from './StylesSportsSideBar/BasquetbolSideBar.module.css';
 import enduroStyles from './StylesSportsSideBar/EnduroSideBar.module.css';
 // import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
-
+import futbolamericanoStyles from './StylesSportsSideBar/FutbolAmericanoSideBar.module.css';
 interface SidebarProps {
   userRole: 'admin' | 'superadmin' | 'usuario';
   sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | undefined;
@@ -44,6 +44,9 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
         return basquetbolStyles; // temporal
       case 'enduro':
         return enduroStyles;
+        case 'futbol-americano':
+          return futbolamericanoStyles;
+
 
       default:
         return basquetbolStyles;
