@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation';
 import './Sidebar.css'; 
 import indexStyles from './StylesSportsSideBar/IndexSideBar.module.css';
 import basquetbolStyles from './StylesSportsSideBar/BasquetbolSideBar.module.css';
-// import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
+import enduroStyles from './StylesSportsSideBar/EnduroSideBar.module.css';
 // import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
 
 interface SidebarProps {
@@ -42,6 +42,9 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
       case 'tenis':
         // return tenisStyles;
         return basquetbolStyles; // temporal
+      case 'enduro':
+        return enduroStyles;
+
       default:
         return basquetbolStyles;
     }
@@ -170,36 +173,36 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
   const userTitle = userRole === 'superadmin' ? 'Superadministrador' : userRole === 'admin' ? 'Administrador' : 'Usuario';
 
   return (
-    <div className={styles ? styles.sidebarContainer : 'sidebar-container'}>
+    <div className={styles ? styles.sidebarContainer : 'sidebarContainer'}>
       {/* Header */}
-      <div className={styles ? styles.sidebarHeader : 'sidebar-header'}>
-        <div className={styles ? styles.sidebarLogoContainer : 'sidebar-logo-container'}>
-          <div className={styles ? styles.sidebarLogoIcon : 'sidebar-logo-icon'}>
+      <div className={styles ? styles.sidebarHeader : 'sidebarHeader'}>
+        <div className={styles ? styles.sidebarLogoContainer : 'sidebarLogoContainer'}>
+          <div className={styles ? styles.sidebarLogoIcon : 'sidebarLogoIcon'}>
             SH
           </div>
           <div>
-            <h1 className={styles ? styles.sidebarTitle : 'sidebar-title'}>SportHub</h1>
-            <p className={styles ? styles.sidebarSubtitle : 'sidebar-subtitle'}>{userTitle}</p>
+            <h1 className={styles ? styles.sidebarTitle : 'sidebarTitle'}>SportHub</h1>
+            <p className={styles ? styles.sidebarSubtitle : 'sidebarSubtitle'}>{userTitle}</p>
           </div>
         </div>
         {userRole === 'usuario' && styles && <div className={styles.sportIcon}></div>}
       </div>
 
       {/* Navigation */}
-      <nav className={styles ? styles.sidebarNav : 'sidebar-nav'}>
-        <ul className={styles ? styles.sidebarMenu : 'sidebar-menu'}>
+      <nav className={styles ? styles.sidebarNav : 'sidebarNav'}>
+        <ul className={styles ? styles.sidebarMenu : 'sidebarMenu'}>
           {menuItems.map((item) => (
-            <li key={item.name} className={styles ? styles.sidebarMenuItem : 'sidebar-menu-item'}>
+            <li key={item.name} className={styles ? styles.sidebarMenuItem : 'sidebarMenuItem'}>
               <Link
                 href={item.href}
-                className={`${styles ? styles.sidebarMenuLink : 'sidebar-menu-link'} ${
+                className={`${styles ? styles.sidebarMenuLink : 'sidebarMenuLink'} ${
                   item.active ? (styles ? styles.active : 'active') : ''
                 }`}
               >
-                <span className={styles ? styles.sidebarMenuIcon : 'sidebar-menu-icon'}>
+                <span className={styles ? styles.sidebarMenuIcon : 'sidebarMenuIcon'}>
                   {item.icon}
                 </span>
-                <span className={styles ? styles.sidebarMenuText : 'sidebar-menu-text'}>
+                <span className={styles ? styles.sidebarMenuText : 'sidebarMenuText'}>
                   {item.name}
                 </span>
               </Link>
@@ -209,9 +212,9 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
       </nav>
 
       {/* Logout Button */}
-      <div className={styles ? styles.sidebarLogout : 'sidebar-logout'}>
-        <button className={styles ? styles.sidebarLogoutButton : 'sidebar-logout-button'}>
-          <span className={styles ? styles.sidebarLogoutIcon : 'sidebar-logout-icon'}>🚪</span>
+      <div className={styles ? styles.sidebarLogout : 'sidebarLogout'}>
+        <button className={styles ? styles.sidebarLogoutButton : 'sidebarLogoutButton'}>
+          <span className={styles ? styles.sidebarLogoutIcon : 'sidebarLogoutIcon'}>🚪</span>
           <span>Cerrar Sesión</span>
         </button>
       </div>

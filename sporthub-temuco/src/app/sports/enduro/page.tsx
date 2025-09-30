@@ -145,7 +145,7 @@ export default function EnduroPage() {
 
   const handleRutaClick = (route: any) => {
     console.log('Navegando a ruta:', route.name);
-    router.push('/sports/enduro/canchas/canchaseleccionada');
+    router.push('/sports/enduro/rutas/rutaseleccionada');
   };
 
   if (!isClient) {
@@ -210,7 +210,7 @@ export default function EnduroPage() {
         <div className={styles.quickAccessSection}>
           <button 
             className={styles.mainCourtButton}
-            onClick={() => window.location.href = '/sports/enduro/canchas'}
+            onClick={() => window.location.href = '/sports/enduro/rutas'}
           >
             <div className={styles.courtButtonIcon}>🏍️</div>
             <div className={styles.courtButtonText}>

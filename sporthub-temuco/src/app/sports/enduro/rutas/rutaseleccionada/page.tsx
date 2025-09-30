@@ -105,7 +105,7 @@ export default function RutaSeleccionadaPage() {
   };
 
   const handleReserve = () => {
-    router.push('/sports/enduro/canchas/canchaseleccionada');
+    router.push('/sports/enduro/rutas/reservar');
   };
 
   const handleCall = () => {
@@ -156,7 +156,7 @@ export default function RutaSeleccionadaPage() {
            <SearchBar
             placeholder="Buscar canchas de enduro..."
             sport="enduro"
-            onSearch={(term) => router.push(`/sports/enduro/canchas?search=${encodeURIComponent(term)}`)}
+            onSearch={(term) => router.push(`/sports/enduro/rutas?search=${encodeURIComponent(term)}`)}
             />
             <button className={styles.userButton}>
               <span>👤</span>
