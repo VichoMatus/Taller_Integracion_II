@@ -4,7 +4,11 @@ import React from 'react';
 import basquetbolStyles from './stylesLocationMap/BasquetbolLocationMap.module.css';
 import futbolStyles from './stylesLocationMap/FutbolLocationMap.module.css';
 import padelStyles from './stylesLocationMap/PadelLocationMap.module.css';
+import tenisStyles from './stylesLocationMap/TenisLocationMap.module.css';
 import crossfitentrenamientofuncionalStyles from './stylesLocationMap/CrossfitEntrenamientoFuncionalLocationMap.module.css';
+import voleiStyles from './stylesLocationMap/VoleibolLocationMap.module.css';
+import natacionStyles from './stylesLocationMap/NatacionLocationMap.module.css';
+import patinajeStyles from './stylesLocationMap/PatinajeLocationMap.module.css';
 
 interface LocationMapProps {
   latitude: number;
@@ -12,7 +16,7 @@ interface LocationMapProps {
   address?: string;
   zoom?: number;
   height?: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje';
 }
 
 const LocationMap: React.FC<LocationMapProps> = ({
@@ -33,12 +37,18 @@ const LocationMap: React.FC<LocationMapProps> = ({
         return futbolStyles;
       case 'padel':
         return padelStyles;
+      case 'tenis':
+        return tenisStyles;
+      case 'voleibol':
+        return voleiStyles;
       case 'crossfitentrenamientofuncional':
         return crossfitentrenamientofuncionalStyles;
-      // case 'tenis':
+      case 'natacion':
+        return natacionStyles;
+      case 'patinaje':
+        return patinajeStyles;
       default:
         return basquetbolStyles; // Fallback
-        
     }
   };
 
@@ -53,9 +63,17 @@ const LocationMap: React.FC<LocationMapProps> = ({
       case 'futbol':
         return '⚽';
       case 'padel':
+        return '🏓';
+      case 'tenis':
         return '🎾';
+      case 'voleibol':
+        return '🏐';
       case 'crossfitentrenamientofuncional':
         return '🏋️‍♂️';
+      case 'natacion':
+        return '🏊‍♂️';
+      case 'patinaje':
+        return '⛸️';
       default:
         return '🏀';
     }
@@ -70,8 +88,16 @@ const LocationMap: React.FC<LocationMapProps> = ({
         return 'Fútbol';
       case 'padel':
         return 'Pádel';
+      case 'tenis':
+        return 'Tenis';
+      case 'voleibol':
+        return 'Voleibol';
       case 'crossfitentrenamientofuncional':
         return 'Crossfit Entrenamiento Funcional';
+      case 'natacion':
+        return 'Natación';
+      case 'patinaje':
+        return 'Patinaje';
       default:
         return 'Basquetbol';
     }
@@ -84,8 +110,20 @@ const LocationMap: React.FC<LocationMapProps> = ({
         return 'Encuentra las mejores canchas de basquetbol cerca de ti';
       case 'futbol':
         return 'Descubre canchas de fútbol en tu zona';
+      case 'tenis':
+        return 'Explora las mejores canchas de tenis en tu área';
+      case 'voleibol':
+        return 'Descubre las mejores canchas de voleibol en tu zona';
+      case 'padel':
+        return 'Encuentra las mejores canchas de pádel cerca de ti';
+      case 'crossfitentrenamientofuncional':
+        return 'Descubre gimnasios de CrossFit y entrenamiento funcional en tu zona';
+      case 'natacion':
+        return 'Encuentra las mejores piscinas y centros de natación cerca de ti';
+      case 'patinaje':
+        return 'Encuentra las mejores pistas de patinaje cerca de ti';
       default:
-        return 'Encuentra las mejores canchas de basquetbol cerca de ti';
+        return 'Encuentra las mejores instalaciones deportivas cerca de ti';
     }
   };
 

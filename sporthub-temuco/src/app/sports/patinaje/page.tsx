@@ -3,82 +3,82 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
-import StatsCard from '../../../components/charts/StatsCard'; // ✅ Importar StatsCard
+import StatsCard from '../../../components/charts/StatsCard';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import styles from './page.module.css';
 
-// Datos de ejemplo para las canchas de tenis mejor calificadas
+// Datos de ejemplo para las pistas de patinaje mejor calificadas
 const topRatedCourts = [
   {
-    imageUrl: "/sports/tenis/canchas/Cancha1.png",
-    name: "Tenis - Centro",
+    imageUrl: "/sports/patinaje/pistas/Pista1.png",
+    name: "Pista de Patinaje - Centro",
     address: "Norte, Centro, Sur",
     rating: 4.8,
     reviews: "320 reseñas",
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Cancha para tenis ubicada en el centro y con implementos deportivos (Balones y raquetas)",
+    tags: ["Pista Cubierta", "Estacionamiento", "Iluminación", "Alquiler Patines"],
+    description: "Pista profesional de patinaje ubicada en el centro con alquiler de equipos y clases",
     price: "25",
     nextAvailable: "20:00-21:00", 
   },
   {
-    imageUrl: "/sports/tenis/canchas/Cancha2.png",
-    name: "Tenis - Norte",
+    imageUrl: "/sports/patinaje/pistas/Pista2.png",
+    name: "Pista - Norte",
     address: "Sector Norte",
     rating: 4.6,
     reviews: "185 reseñas",
-    tags: ["Cancha Cerrada", "Estacionamiento", "Vestuarios"],
-    description: "Cancha para tenis ubicada en el centro y con implementos deportivos (Balones y raquetas)",
+    tags: ["Pista Techada", "Estacionamiento", "Cafetería"],
+    description: "Pista techada ideal para patinaje artístico y recreativo con áreas de descanso",
     price: "22",
     nextAvailable: "14:30-15:30", 
   },
   {
-    imageUrl: "/path/to/tennis-court3.jpg",
-    name: "Tenis - Sur",
+    imageUrl: "/path/to/skating-rink3.jpg",
+    name: "Pista - Sur",
     address: "Sector Sur",
     rating: 4.4,
     reviews: "97 reseñas",
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación"],
-    description: "Cancha para tenis ubicada en el centro y con implementos deportivos (Balones y raquetas)",
+    tags: ["Pista Cubierta", "Estacionamiento", "Clases"],
+    description: "Pista climatizada perfecta para patinaje en todas las estaciones del año",
     price: "28",
     nextAvailable: "Mañana 09:00-10:00",
   },
   {
-    imageUrl: "/path/to/tennis-court4.jpg",
-    name: "Tenis Premium",
+    imageUrl: "/path/to/skating-rink4.jpg",
+    name: "Centro de Patinaje Premium",
     address: "Centro Premium", 
     rating: 4.9,
     reviews: "242 reseñas",
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería", "Vestuarios"],
-    description: "Cancha para tenis ubicada en el centro y con implementos deportivos (Balones y raquetas)",
+    tags: ["Pista Olímpica", "Estacionamiento", "Tienda", "Restaurante", "Vestuarios"],
+    description: "Complejo premium de patinaje con pista olímpica y servicios de primera",
     price: "35",
     nextAvailable: "Disponible ahora",
   },
   {
-    imageUrl: "/path/to/tennis-court5.jpg",
-    name: "Tenis - Elite",
+    imageUrl: "/path/to/skating-rink5.jpg",
+    name: "Pista - Elite",
     address: "Zona Elite", 
     rating: 4.7,
     reviews: "156 reseñas",
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Cancha premium para tenis con todas las comodidades y equipamiento profesional",
+    tags: ["Pista Techada", "Estacionamiento", "Hockey", "Cafetería"],
+    description: "Pista de alta gama especializada en hockey y patinaje artístico",
     price: "32",
     nextAvailable: "18:00-19:00",
   },
   {
-    imageUrl: "/path/to/tennis-court6.jpg",
-    name: "Tenis - Deportivo",
+    imageUrl: "/path/to/skating-rink6.jpg",
+    name: "Complejo Deportivo de Patinaje",
     address: "Centro Deportivo", 
     rating: 4.5,
     reviews: "128 reseñas",
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación"],
-    description: "Cancha de tenis en complejo deportivo con múltiples servicios disponibles",
+    tags: ["Pista Semi-olímpica", "Estacionamiento", "Área infantil"],
+    description: "Complejo deportivo con pistas para diferentes modalidades de patinaje",
     price: "26",
     nextAvailable: "16:30-17:30",
   }
 ];
 
-export default function TenisPage() {
+export default function PatinajePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCourts, setFilteredCourts] = useState(topRatedCourts);
   const router = useRouter();
@@ -88,7 +88,6 @@ export default function TenisPage() {
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
-  // ✅ CORREGIDO: Una sola función handleSearch
   const handleSearch = (searchValue: string) => {
     setSearchTerm(searchValue);
     const filtered = topRatedCourts.filter(court => 
@@ -103,7 +102,6 @@ export default function TenisPage() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setSearchTerm(newValue);
-    // Búsqueda en tiempo real
     handleSearch(newValue);
   };
 
@@ -134,12 +132,12 @@ export default function TenisPage() {
     };
   }, []);
 
-  // Stats específicos para tenis
+  // Stats específicos para patinaje
   const stats = {
-    disponiblesHoy: 12,
+    disponiblesHoy: 7,
     precioPromedio: { min: 22, max: 35 },
     promedioCalificacion: 4.7,
-    cantidadJugadores: 4
+    modalidades: 4
   };
 
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
@@ -156,15 +154,10 @@ export default function TenisPage() {
     console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
   };
 
-  const handleCanchaClick = (court: any) => {
-    console.log('Navegando a cancha de tenis...');
-    router.push('/sports/tenis/canchas/canchaseleccionada');
-  };
-
   if (!isClient) {
     return (
       <div className={styles.pageContainer}>
-        <Sidebar userRole="usuario" sport="tenis" />
+        <Sidebar userRole="usuario" sport="patinaje" />
         <div className={styles.mainContent}>
           <div style={{ height: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <p>Cargando...</p>
@@ -176,21 +169,21 @@ export default function TenisPage() {
 
   return (
     <div className={styles.pageContainer}>
-      <Sidebar userRole="usuario" sport="tenis" />
+      <Sidebar userRole="usuario" sport="patinaje" />
 
       <div className={styles.mainContent}>
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerIcon}>🎾</div>
-            <h1 className={styles.headerTitle}>Tenis</h1>
+            <div className={styles.headerIcon}>⛸️</div>
+            <h1 className={styles.headerTitle}>Patinaje</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre de la cancha..."
-              sport="tenis" 
+              placeholder="Nombre de la pista..."
+              sport="patinaje" 
             />
             <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
               <span>👤</span>
@@ -201,9 +194,9 @@ export default function TenisPage() {
 
         <div className={styles.statsContainer}>
           <StatsCard
-            title="Canchas Disponibles hoy"
+            title="Pistas Disponibles hoy"
             value={stats.disponiblesHoy}
-            icon={<span>🏟️</span>}
+            icon={<span>⛸️</span>}
             color="blue"
           />
           <StatsCard
@@ -220,9 +213,9 @@ export default function TenisPage() {
             icon={<span>⭐</span>}
           />
           <StatsCard
-            title="Jugadores en cancha"
-            value={stats.cantidadJugadores}
-            icon={<span>👥</span>}
+            title="Modalidades disponibles"
+            value={stats.modalidades}
+            icon={<span>🔄</span>}
             color="purple"
           />
         </div>
@@ -230,23 +223,23 @@ export default function TenisPage() {
         <div className={styles.quickAccessSection}>
           <button 
             className={styles.mainCourtButton}
-            onClick={() => window.location.href = '/sports/tenis/canchas'}
+            onClick={() => window.location.href = '/sports/patinaje/pistas'}
           >
-            <div className={styles.courtButtonIcon}>🎾</div>
+            <div className={styles.courtButtonIcon}>⛸️</div>
             <div className={styles.courtButtonText}>
-              <span className={styles.courtButtonTitle}>Explorar Canchas</span>
-              <span className={styles.courtButtonSubtitle}>Ver todas las canchas disponibles</span>
+              <span className={styles.courtButtonTitle}>Explorar Pistas</span>
+              <span className={styles.courtButtonSubtitle}>Ver todas las pistas disponibles</span>
             </div>
             <div className={styles.courtButtonArrow}>→</div>
           </button>
         </div>
 
-        {/* Canchas mejor calificadas con carrusel */}
+        {/* Pistas mejor calificadas con carrusel */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>⭐</span>
-              Canchas mejor calificadas
+              Pistas mejor calificadas
             </h2>
             <div className={styles.carouselControls}>
               <button 
@@ -282,8 +275,8 @@ export default function TenisPage() {
                 <CourtCard 
                   key={index} 
                   {...court} 
-                  sport="tenis"
-                  onClick={() => router.push('/sports/tenis/canchas/canchaseleccionada')}
+                  sport="patinaje"
+                  onClick={() => router.push('/sports/patinaje/pistas/pistaseleccionada')}
                 />
               ))}
             </div>
@@ -292,7 +285,7 @@ export default function TenisPage() {
 
         {/* Ubicación en el mapa */}
         <div className={styles.mapSection}>
-          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las canchas</h2>
+          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las pistas</h2>
           
           <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>
@@ -329,7 +322,7 @@ export default function TenisPage() {
             address="Temuco, Chile"
             zoom={13}
             height="400px"
-            sport="tenis"
+            sport="patinaje"
           />
 
           <div className={styles.mapActions}>

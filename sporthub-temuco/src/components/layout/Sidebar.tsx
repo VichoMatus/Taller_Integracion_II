@@ -7,19 +7,19 @@ import { usePathname } from 'next/navigation';
 import './Sidebar.css'; 
 import indexStyles from './StylesSportsSideBar/IndexSideBar.module.css';
 import basquetbolStyles from './StylesSportsSideBar/BasquetbolSideBar.module.css';
-<<<<<<< HEAD
 import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
 import padelStyles from './StylesSportsSideBar/PadelSideBar.module.css';
 import crossfitentrenamientofuncionalStyles from './StylesSportsSideBar/CrossfitEntrenamientoFuncionalSideBar.module.css';
 // import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
-=======
 // import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
 import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
->>>>>>> FE-feature/correciones-dr
+import voleiStyles from './StylesSportsSideBar/VoleibolSideBar.module.css';
+import natacionStyles from './StylesSportsSideBar/NatacionSideBar.module.css';
+import patinajeStyles from './StylesSportsSideBar/PatinajeSideBar.module.css';
 
 interface SidebarProps {
   userRole: 'admin' | 'superadmin' | 'usuario';
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje';
 }
 
 const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
@@ -51,15 +51,17 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
       case 'futbol':
         return futbolStyles; 
       case 'tenis':
-        // return tenisStyles;
-<<<<<<< HEAD
+       return tenisStyles;
+      case 'voleibol':
+        return voleiStyles;
       case 'padel':
         return padelStyles;
       case 'crossfitentrenamientofuncional':
         return crossfitentrenamientofuncionalStyles;
-=======
-        return tenisStyles; // temporal
->>>>>>> FE-feature/correciones-dr
+      case 'natacion':
+        return natacionStyles;
+      case 'patinaje':
+        return patinajeStyles;
       default:
         return basquetbolStyles;
     }

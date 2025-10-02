@@ -1,0 +1,477 @@
+/* VoleibolSideBar.module.css - Diseño animado con nueva paleta de colores */
+
+@keyframes slideInLeft {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.sidebarContainer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 256px;
+  height: 100vh;
+  background: linear-gradient(
+    145deg, 
+    #FFC29B 0%,
+    #F39F9F 50%,
+    #B95E82 100%
+  );
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    2px 0 8px rgba(0, 0, 0, 0.1),
+    inset -1px 0 0 rgba(255, 255, 255, 0.1);
+  z-index: 40;
+  overflow-y: auto;
+  animation: slideInLeft 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.sidebarContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(255, 194, 155, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(243, 159, 159, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 40% 80%, rgba(185, 94, 130, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+@keyframes logoPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(185, 94, 130, 0);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(185, 94, 130, 0.3);
+  }
+}
+
+@keyframes textGlow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    text-shadow: 
+      0 0 10px rgba(255, 255, 255, 0.8),
+      0 0 20px rgba(185, 94, 130, 0.3);
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header de la sidebar */
+.sidebarHeader {
+  padding: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  backdrop-filter: blur(10px);
+  position: relative;
+  animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+}
+
+.sidebarHeader::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.sidebarHeader:hover::before {
+  transform: translateX(100%);
+}
+
+.sidebarLogoContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+.sidebarLogoIcon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 194, 155, 0.8) 0%,
+    rgba(243, 159, 159, 0.8) 100%
+  );
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: logoPulse 3s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebarLogoIcon::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 70%
+  );
+  transform: rotate(45deg) translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.sidebarLogoIcon:hover::before {
+  transform: rotate(45deg) translateX(100%);
+}
+
+.sidebarLogoIcon:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 
+    0 4px 20px rgba(185, 94, 130, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.sidebarTitle {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.2;
+  animation: textGlow 4s ease-in-out infinite;
+  transition: all 0.3s ease;
+}
+
+.sidebarTitle:hover {
+  transform: scale(1.02);
+  color: #FFECC0;
+}
+
+.sidebarSubtitle {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  margin: 2px 0 0 0;
+  line-height: 1.2;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.sidebarSubtitle:hover {
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 0 8px rgba(185, 94, 130, 0.3);
+}
+
+@keyframes menuSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes iconBounce {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.2) rotate(5deg);
+  }
+}
+
+@keyframes activeGlow {
+  0%, 100% {
+    box-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.1),
+      0 0 0 rgba(185, 94, 130, 0);
+  }
+  50% {
+    box-shadow: 
+      0 4px 20px rgba(0, 0, 0, 0.15),
+      0 0 20px rgba(185, 94, 130, 0.3);
+  }
+}
+
+/* Navegación */
+.sidebarNav {
+  margin-top: 24px;
+  padding: 0 16px;
+  animation: fadeInUp 1s cubic-bezier(0.4, 0, 0.2, 1) 0.4s both;
+}
+
+.sidebarMenu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebarMenuItem {
+  margin: 0;
+  animation: menuSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebarMenuItem:nth-child(1) { animation-delay: 0.1s; }
+.sidebarMenuItem:nth-child(2) { animation-delay: 0.2s; }
+.sidebarMenuItem:nth-child(3) { animation-delay: 0.3s; }
+.sidebarMenuItem:nth-child(4) { animation-delay: 0.4s; }
+.sidebarMenuItem:nth-child(5) { animation-delay: 0.5s; }
+.sidebarMenuItem:nth-child(6) { animation-delay: 0.6s; }
+
+.sidebarMenuLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 14px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.02) 0%,
+    rgba(255, 255, 255, 0.01) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(5px);
+}
+
+.sidebarMenuLink::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 194, 155, 0.1) 50%,
+    transparent 100%
+  );
+  transition: left 0.5s ease;
+}
+
+.sidebarMenuLink:hover::before {
+  left: 100%;
+}
+
+.sidebarMenuLink:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 194, 155, 0.15) 0%,
+    rgba(243, 159, 159, 0.1) 100%
+  );
+  color: white;
+  transform: translateX(5px) scale(1.02);
+  border-color: rgba(255, 194, 155, 0.3);
+  box-shadow: 
+    0 4px 15px rgba(0, 0, 0, 0.1),
+    0 0 20px rgba(255, 194, 155, 0.1);
+}
+
+.sidebarMenuLink:hover .sidebarMenuIcon {
+  animation: iconBounce 0.6s ease;
+  color: #FFC29B;
+}
+
+.sidebarMenuLink.active {
+  background: linear-gradient(
+    135deg,
+    rgba(185, 94, 130, 0.95) 0%,
+    rgba(139, 67, 102, 0.98) 100%
+  ) !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  border-color: rgba(255, 194, 155, 0.2);
+  animation: activeGlow 3s ease-in-out infinite;
+  backdrop-filter: blur(20px);
+}
+
+.sidebarMenuLink.active:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(185, 94, 130, 0.98) 0%,
+    rgba(139, 67, 102, 1) 100%
+  ) !important;
+  color: #ffffff !important;
+  transform: translateX(8px) scale(1.03);
+  box-shadow: 
+    0 6px 25px rgba(0, 0, 0, 0.15),
+    0 0 30px rgba(255, 194, 155, 0.2);
+}
+
+.sidebarMenuLink.active .sidebarMenuIcon {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+.sidebarMenuIcon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.sidebarMenuText {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes logoutPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(220, 38, 38, 0);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 15px rgba(220, 38, 38, 0.2);
+  }
+}
+
+@keyframes logoutShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* Botón de logout */
+.sidebarLogout {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  animation: fadeInUp 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.8s both;
+}
+
+.sidebarLogoutButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(220, 38, 38, 0.1) 0%,
+    rgba(185, 28, 28, 0.05) 100%
+  );
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebarLogoutButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(220, 38, 38, 0.2) 50%,
+    transparent 100%
+  );
+  transition: left 0.5s ease;
+}
+
+.sidebarLogoutButton:hover::before {
+  left: 100%;
+}
+
+.sidebarLogoutButton:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(220, 38, 38, 0.2) 0%,
+    rgba(185, 28, 28, 0.15) 100%
+  );
+  color: #FCA5A5;
+  border-color: rgba(220, 38, 38, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 20px rgba(0, 0, 0, 0.15),
+    0 0 25px rgba(220, 38, 38, 0.1);
+  animation: logoutPulse 2s ease-in-out infinite;
+}
+
+.sidebarLogoutButton:hover .sidebarLogoutIcon {
+  animation: logoutShake 0.5s ease-in-out;
+  color: #EF4444;
+  text-shadow: 0 0 8px rgba(220, 38, 38, 0.3);
+}
+
+.sidebarLogoutButton:active {
+  transform: translateY(0);
+  box-shadow: 
+    0 2px 10px rgba(0, 0, 0, 0.1),
+    0 0 15px rgba(220, 38, 38, 0.2);
+}
+
+.sidebarLogoutIcon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}

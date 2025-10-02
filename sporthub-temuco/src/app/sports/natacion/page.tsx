@@ -3,82 +3,82 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
-import StatsCard from '../../../components/charts/StatsCard'; // ✅ Importar StatsCard
+import StatsCard from '../../../components/charts/StatsCard';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import styles from './page.module.css';
 
-// Datos de ejemplo para las canchas de tenis mejor calificadas
+// Datos de ejemplo para las piscinas de natación mejor calificadas
 const topRatedCourts = [
   {
-    imageUrl: "/sports/tenis/canchas/Cancha1.png",
-    name: "Tenis - Centro",
+    imageUrl: "/sports/natacion/piscinas/Piscina1.png",
+    name: "Piscina Olímpica - Centro",
     address: "Norte, Centro, Sur",
     rating: 4.8,
     reviews: "320 reseñas",
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Cancha para tenis ubicada en el centro y con implementos deportivos (Balones y raquetas)",
-    price: "25",
+    tags: ["Piscina Techada", "Estacionamiento", "Iluminación", "Vestuarios"],
+    description: "Piscina olímpica ubicada en el centro con carriles separados y equipamiento profesional",
+    price: "35",
     nextAvailable: "20:00-21:00", 
   },
   {
-    imageUrl: "/sports/tenis/canchas/Cancha2.png",
-    name: "Tenis - Norte",
+    imageUrl: "/sports/natacion/piscinas/Piscina2.png",
+    name: "Piscina - Norte",
     address: "Sector Norte",
     rating: 4.6,
     reviews: "185 reseñas",
-    tags: ["Cancha Cerrada", "Estacionamiento", "Vestuarios"],
-    description: "Cancha para tenis ubicada en el centro y con implementos deportivos (Balones y raquetas)",
-    price: "22",
+    tags: ["Piscina Semi-olímpica", "Estacionamiento", "Sauna"],
+    description: "Piscina semi-olímpica con áreas de descanso y servicios complementarios",
+    price: "28",
     nextAvailable: "14:30-15:30", 
   },
   {
-    imageUrl: "/path/to/tennis-court3.jpg",
-    name: "Tenis - Sur",
+    imageUrl: "/path/to/swimming-pool3.jpg",
+    name: "Piscina - Sur",
     address: "Sector Sur",
     rating: 4.4,
     reviews: "97 reseñas",
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación"],
-    description: "Cancha para tenis ubicada en el centro y con implementos deportivos (Balones y raquetas)",
-    price: "28",
+    tags: ["Piscina Techada", "Estacionamiento", "Jacuzzi"],
+    description: "Piscina climatizada con áreas recreativas y profesionales",
+    price: "32",
     nextAvailable: "Mañana 09:00-10:00",
   },
   {
-    imageUrl: "/path/to/tennis-court4.jpg",
-    name: "Tenis Premium",
+    imageUrl: "/path/to/swimming-pool4.jpg",
+    name: "Centro Acuático Premium",
     address: "Centro Premium", 
     rating: 4.9,
     reviews: "242 reseñas",
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería", "Vestuarios"],
-    description: "Cancha para tenis ubicada en el centro y con implementos deportivos (Balones y raquetas)",
-    price: "35",
+    tags: ["Piscina Olímpica", "Estacionamiento", "Spa", "Restaurante", "Vestuarios"],
+    description: "Complejo acuático premium con múltiples piscinas y servicios de lujo",
+    price: "45",
     nextAvailable: "Disponible ahora",
   },
   {
-    imageUrl: "/path/to/tennis-court5.jpg",
-    name: "Tenis - Elite",
+    imageUrl: "/path/to/swimming-pool5.jpg",
+    name: "Piscina - Elite",
     address: "Zona Elite", 
     rating: 4.7,
     reviews: "156 reseñas",
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Cancha premium para tenis con todas las comodidades y equipamiento profesional",
-    price: "32",
+    tags: ["Piscina Techada", "Estacionamiento", "Hidromasaje", "Cafetería"],
+    description: "Piscina de alta gama con tecnología de filtración avanzada",
+    price: "38",
     nextAvailable: "18:00-19:00",
   },
   {
-    imageUrl: "/path/to/tennis-court6.jpg",
-    name: "Tenis - Deportivo",
+    imageUrl: "/path/to/swimming-pool6.jpg",
+    name: "Complejo Deportivo Acuático",
     address: "Centro Deportivo", 
     rating: 4.5,
     reviews: "128 reseñas",
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación"],
-    description: "Cancha de tenis en complejo deportivo con múltiples servicios disponibles",
-    price: "26",
+    tags: ["Piscina Semi-olímpica", "Estacionamiento", "Área infantil"],
+    description: "Complejo deportivo con piscinas para diferentes niveles y edades",
+    price: "30",
     nextAvailable: "16:30-17:30",
   }
 ];
 
-export default function TenisPage() {
+export default function NatacionPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCourts, setFilteredCourts] = useState(topRatedCourts);
   const router = useRouter();
@@ -88,7 +88,6 @@ export default function TenisPage() {
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
-  // ✅ CORREGIDO: Una sola función handleSearch
   const handleSearch = (searchValue: string) => {
     setSearchTerm(searchValue);
     const filtered = topRatedCourts.filter(court => 
@@ -103,7 +102,6 @@ export default function TenisPage() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setSearchTerm(newValue);
-    // Búsqueda en tiempo real
     handleSearch(newValue);
   };
 
@@ -134,12 +132,12 @@ export default function TenisPage() {
     };
   }, []);
 
-  // Stats específicos para tenis
+  // Stats específicos para natación
   const stats = {
-    disponiblesHoy: 12,
-    precioPromedio: { min: 22, max: 35 },
+    disponiblesHoy: 6,
+    precioPromedio: { min: 28, max: 45 },
     promedioCalificacion: 4.7,
-    cantidadJugadores: 4
+    carrilesPromedio: 8
   };
 
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
@@ -156,15 +154,10 @@ export default function TenisPage() {
     console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
   };
 
-  const handleCanchaClick = (court: any) => {
-    console.log('Navegando a cancha de tenis...');
-    router.push('/sports/tenis/canchas/canchaseleccionada');
-  };
-
   if (!isClient) {
     return (
       <div className={styles.pageContainer}>
-        <Sidebar userRole="usuario" sport="tenis" />
+        <Sidebar userRole="usuario" sport="natacion" />
         <div className={styles.mainContent}>
           <div style={{ height: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <p>Cargando...</p>
@@ -176,21 +169,21 @@ export default function TenisPage() {
 
   return (
     <div className={styles.pageContainer}>
-      <Sidebar userRole="usuario" sport="tenis" />
+      <Sidebar userRole="usuario" sport="natacion" />
 
       <div className={styles.mainContent}>
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerIcon}>🎾</div>
-            <h1 className={styles.headerTitle}>Tenis</h1>
+            <div className={styles.headerIcon}>🏊‍♂️</div>
+            <h1 className={styles.headerTitle}>Natación</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre de la cancha..."
-              sport="tenis" 
+              placeholder="Nombre de la piscina..."
+              sport="natacion" 
             />
             <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
               <span>👤</span>
@@ -201,9 +194,9 @@ export default function TenisPage() {
 
         <div className={styles.statsContainer}>
           <StatsCard
-            title="Canchas Disponibles hoy"
+            title="Piscinas Disponibles hoy"
             value={stats.disponiblesHoy}
-            icon={<span>🏟️</span>}
+            icon={<span>🏊‍♀️</span>}
             color="blue"
           />
           <StatsCard
@@ -220,9 +213,9 @@ export default function TenisPage() {
             icon={<span>⭐</span>}
           />
           <StatsCard
-            title="Jugadores en cancha"
-            value={stats.cantidadJugadores}
-            icon={<span>👥</span>}
+            title="Carriles promedio"
+            value={stats.carrilesPromedio}
+            icon={<span>➡️</span>}
             color="purple"
           />
         </div>
@@ -230,23 +223,23 @@ export default function TenisPage() {
         <div className={styles.quickAccessSection}>
           <button 
             className={styles.mainCourtButton}
-            onClick={() => window.location.href = '/sports/tenis/canchas'}
+            onClick={() => window.location.href = '/sports/natacion/piscinas'}
           >
-            <div className={styles.courtButtonIcon}>🎾</div>
+            <div className={styles.courtButtonIcon}>🏊‍♂️</div>
             <div className={styles.courtButtonText}>
-              <span className={styles.courtButtonTitle}>Explorar Canchas</span>
-              <span className={styles.courtButtonSubtitle}>Ver todas las canchas disponibles</span>
+              <span className={styles.courtButtonTitle}>Explorar Piscinas</span>
+              <span className={styles.courtButtonSubtitle}>Ver todas las piscinas disponibles</span>
             </div>
             <div className={styles.courtButtonArrow}>→</div>
           </button>
         </div>
 
-        {/* Canchas mejor calificadas con carrusel */}
+        {/* Piscinas mejor calificadas con carrusel */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>⭐</span>
-              Canchas mejor calificadas
+              Piscinas mejor calificadas
             </h2>
             <div className={styles.carouselControls}>
               <button 
@@ -282,8 +275,8 @@ export default function TenisPage() {
                 <CourtCard 
                   key={index} 
                   {...court} 
-                  sport="tenis"
-                  onClick={() => router.push('/sports/tenis/canchas/canchaseleccionada')}
+                  sport="natacion"
+                  onClick={() => router.push('/sports/natacion/piscinas/piscinaseleccionada')}
                 />
               ))}
             </div>
@@ -292,7 +285,7 @@ export default function TenisPage() {
 
         {/* Ubicación en el mapa */}
         <div className={styles.mapSection}>
-          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las canchas</h2>
+          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las piscinas</h2>
           
           <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>
@@ -329,7 +322,7 @@ export default function TenisPage() {
             address="Temuco, Chile"
             zoom={13}
             height="400px"
-            sport="tenis"
+            sport="natacion"
           />
 
           <div className={styles.mapActions}>

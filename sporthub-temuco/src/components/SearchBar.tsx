@@ -4,20 +4,20 @@ import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import indexStyles from './stylesSearchBar/IndexSearchBar.module.css';
 import basquetbolStyles from './stylesSearchBar/BasquetbolSearchBar.module.css';
-<<<<<<< HEAD
 import futbolStyles from './stylesSearchBar/FutbolSearchBar.module.css';
 import padelStyles from './stylesSearchBar/PadelSearchBar.module.css';
 import crossfitentrenamientofuncionalStyles from './stylesSearchBar/CrossfitEntrenamientoFuncionalSearchBar.module.css';
-=======
 import tenisStyles from './stylesSearchBar/TenisSearchBar.module.css';
->>>>>>> FE-feature/correciones-dr
+import voleiStyles from './stylesSearchBar/VoleibolSearchBar.module.css';
+import natacionStyles from './stylesSearchBar/NatacionSearchBar.module.css';
+import patinaje from './stylesSearchBar/PatinajeSearchBar.module.css';
 
 interface SearchBarProps {
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSearch: (term: string) => void;
   placeholder?: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional'; 
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje';
 }
 
 const SearchBar = ({ 
@@ -45,16 +45,17 @@ const SearchBar = ({
         // return futbolStyles; // Cuando lo crees
         return futbolStyles; // temporal
       case 'tenis':
-<<<<<<< HEAD
-        // return tenisStyles; // Cuando lo crees
-        return indexStyles; // temporal
+       return tenisStyles; // Cuando lo crees
+      case 'voleibol':
+        return voleiStyles; 
       case 'padel':
         return padelStyles;
       case 'crossfitentrenamientofuncional':
         return crossfitentrenamientofuncionalStyles;
-=======
-        return tenisStyles;
->>>>>>> FE-feature/correciones-dr
+      case 'natacion':
+        return natacionStyles;
+      case 'patinaje':
+        return patinaje;
       default:
         return indexStyles; // fallback al index
     }
