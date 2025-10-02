@@ -104,7 +104,7 @@ export default function Page() {
             placeholder="Nombre de la cancha"
             sport="basquetbol" 
             />
-            <button className={styles.userButton}>
+            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
               <span>👤</span>
               <span>Usuario</span>
             </button>

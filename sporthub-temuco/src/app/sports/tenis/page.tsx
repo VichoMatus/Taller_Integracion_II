@@ -7,78 +7,77 @@ import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import styles from './page.module.css';
 
-
-// Datos de ejemplo para las canchas mejor calificadas (6 tarjetas)
+// Datos de ejemplo para las canchas de tenis mejor calificadas
 const topRatedCourts = [
   {
-    imageUrl: "/sports/basquetbol/canchas/Cancha1.png",
-    name: "Basquetbol - Centro",
+    imageUrl: "/sports/tenis/canchas/Cancha1.png",
+    name: "Tenis - Centro",
     address: "Norte, Centro, Sur",
-    rating: 4.3,
-    reviews: "130 reseñas",
+    rating: 4.8,
+    reviews: "320 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Cancha para basquetbol ubicada en el centro y con implementos deportivos (Balones y petos)",
-    price: "21",
+    description: "Cancha para tenis ubicada en el centro y con implementos deportivos (Balones y raquetas)",
+    price: "25",
     nextAvailable: "20:00-21:00", 
   },
   {
-    imageUrl: "/sports/basquetbol/canchas/Cancha2.png",
-    name: "Basquetbol - Norte",
+    imageUrl: "/sports/tenis/canchas/Cancha2.png",
+    name: "Tenis - Norte",
     address: "Sector Norte",
-    rating: 4.5,
-    reviews: "85 reseñas",
-    tags: ["Cancha Cerrada", "Estacionamiento"],
-    description: "Cancha para basquetbol ubicada en el centro y con implementos deportivos (Balones y petos)",
-    price: "19",
+    rating: 4.6,
+    reviews: "185 reseñas",
+    tags: ["Cancha Cerrada", "Estacionamiento", "Vestuarios"],
+    description: "Cancha para tenis ubicada en el centro y con implementos deportivos (Balones y raquetas)",
+    price: "22",
     nextAvailable: "14:30-15:30", 
   },
   {
-    imageUrl: "/path/to/basketball-court3.jpg",
-    name: "Basquetbol - Sur",
+    imageUrl: "/path/to/tennis-court3.jpg",
+    name: "Tenis - Sur",
     address: "Sector Sur",
-    rating: 4.1,
-    reviews: "67 reseñas",
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación"],
-    description: "Cancha para basquetbol ubicada en el centro y con implementos deportivos (Balones y petos)",
-    price: "23",
-    nextAvailable: "Mañana 09:00-10:00",
-  },
-  {
-    imageUrl: "/path/to/basketball-court4.jpg",
-    name: "Basquetbol Premium",
-    address: "Centro Premium", 
-    rating: 4.7,
-    reviews: "142 reseñas",
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Cancha para basquetbol ubicada en el centro y con implementos deportivos (Balones y petos)",
-    price: "26",
-    nextAvailable: "Disponible ahora",
-  },
-  {
-    imageUrl: "/path/to/basketball-court5.jpg",
-    name: "Basquetbol - Elite",
-    address: "Zona Elite", 
-    rating: 4.8,
-    reviews: "203 reseñas",
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Cancha premium para basquetbol con todas las comodidades y equipamiento profesional",
-    price: "28",
-    nextAvailable: "18:00-19:00",
-  },
-  {
-    imageUrl: "/path/to/basketball-court6.jpg",
-    name: "Basquetbol - Deportivo",
-    address: "Centro Deportivo", 
     rating: 4.4,
     reviews: "97 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación"],
-    description: "Cancha de basquetbol en complejo deportivo con múltiples servicios disponibles",
-    price: "22",
+    description: "Cancha para tenis ubicada en el centro y con implementos deportivos (Balones y raquetas)",
+    price: "28",
+    nextAvailable: "Mañana 09:00-10:00",
+  },
+  {
+    imageUrl: "/path/to/tennis-court4.jpg",
+    name: "Tenis Premium",
+    address: "Centro Premium", 
+    rating: 4.9,
+    reviews: "242 reseñas",
+    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería", "Vestuarios"],
+    description: "Cancha para tenis ubicada en el centro y con implementos deportivos (Balones y raquetas)",
+    price: "35",
+    nextAvailable: "Disponible ahora",
+  },
+  {
+    imageUrl: "/path/to/tennis-court5.jpg",
+    name: "Tenis - Elite",
+    address: "Zona Elite", 
+    rating: 4.7,
+    reviews: "156 reseñas",
+    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
+    description: "Cancha premium para tenis con todas las comodidades y equipamiento profesional",
+    price: "32",
+    nextAvailable: "18:00-19:00",
+  },
+  {
+    imageUrl: "/path/to/tennis-court6.jpg",
+    name: "Tenis - Deportivo",
+    address: "Centro Deportivo", 
+    rating: 4.5,
+    reviews: "128 reseñas",
+    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación"],
+    description: "Cancha de tenis en complejo deportivo con múltiples servicios disponibles",
+    price: "26",
     nextAvailable: "16:30-17:30",
   }
 ];
 
-export default function BasquetbolPage() {
+export default function TenisPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
@@ -86,7 +85,6 @@ export default function BasquetbolPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
-  // 🔥 Elimina el estado sidebarLoaded
 
   useEffect(() => {
     setIsClient(true);
@@ -110,20 +108,17 @@ export default function BasquetbolPage() {
 
     window.addEventListener('resize', handleResize);
 
-    // 🔥 Elimina el setTimeout del sidebar
-
     return () => {
       window.removeEventListener('resize', handleResize);
-      // 🔥 Elimina el clearTimeout
     };
   }, []);
 
-  // Stats de ejemplo
+  // Stats específicos para tenis
   const stats = {
     disponiblesHoy: 12,
-    precioPromedio: { min: 24, max: 30 },
-    promedioCalificacion: 4.6,
-    cantidadJugadores: 10
+    precioPromedio: { min: 22, max: 35 },
+    promedioCalificacion: 4.7,
+    cantidadJugadores: 4
   };
 
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
@@ -149,15 +144,14 @@ export default function BasquetbolPage() {
   };
 
   const handleCanchaClick = (court: any) => {
-  console.log('Test navigation...');
-  router.push('/sports/basquetbol/canchas/canchaseleccionada');
-};
+    console.log('Navegando a cancha de tenis...');
+    router.push('/sports/tenis/canchas/canchaseleccionada');
+  };
 
-  // 🔥 Elimina el estado de carga inicial
   if (!isClient) {
     return (
       <div className={styles.pageContainer}>
-        <Sidebar userRole="usuario" sport="basquetbol" />
+        <Sidebar userRole="usuario" sport="tenis" />
         <div className={styles.mainContent}>
           <div style={{ height: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <p>Cargando...</p>
@@ -169,32 +163,30 @@ export default function BasquetbolPage() {
 
   return (
     <div className={styles.pageContainer}>
-      {/* 🔥 Siempre mostrar el Sidebar real */}
-      <Sidebar userRole="usuario" sport="basquetbol" />
+      <Sidebar userRole="usuario" sport="tenis" />
 
       <div className={styles.mainContent}>
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerIcon}>🏀</div>
-            <h1 className={styles.headerTitle}>Basquetbol</h1>
+            <div className={styles.headerIcon}>🎾</div>
+            <h1 className={styles.headerTitle}>Tenis</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar
-            value={searchTerm}
-            onChange={handleSearchChange}
-            onSearch={handleSearch}
-            placeholder="Nombre de la cancha..."
-            sport="basquetbol" 
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onSearch={handleSearch}
+              placeholder="Nombre de la cancha..."
+              sport="tenis" 
             />
             <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
               <span>👤</span>
               <span>usuario</span>
             </button>
-            
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards para Tenis */}
         <div className={styles.statsContainer}>
           <div className={styles.statCard}>
             <div className={styles.statNumber}>{stats.disponiblesHoy}</div>
@@ -213,18 +205,19 @@ export default function BasquetbolPage() {
             <div className={styles.statLabel}>Cantidad de jugadores en cancha</div>
           </div>
         </div>
+
         <div className={styles.quickAccessSection}>
-        <button 
+          <button 
             className={styles.mainCourtButton}
-            onClick={() => window.location.href = '/sports/basquetbol/canchas'}
-            >
-            <div className={styles.courtButtonIcon}>🏀</div>
+            onClick={() => window.location.href = '/sports/tenis/canchas'}
+          >
+            <div className={styles.courtButtonIcon}>🎾</div>
             <div className={styles.courtButtonText}>
-            <span className={styles.courtButtonTitle}>Explorar Canchas</span>
-            <span className={styles.courtButtonSubtitle}>Ver todas las canchas disponibles</span>
+              <span className={styles.courtButtonTitle}>Explorar Canchas</span>
+              <span className={styles.courtButtonSubtitle}>Ver todas las canchas disponibles</span>
             </div>
             <div className={styles.courtButtonArrow}>→</div>
-        </button>
+          </button>
         </div>
 
         {/* Canchas mejor calificadas con carrusel */}
@@ -268,8 +261,8 @@ export default function BasquetbolPage() {
                 <CourtCard 
                   key={index} 
                   {...court} 
-                  sport="basquetbol"
-                  onClick={() => router.push('/sports/basquetbol/canchas/canchaseleccionada')}
+                  sport="tenis"
+                  onClick={() => router.push('/sports/tenis/canchas/canchaseleccionada')}
                 />
               ))}
             </div>

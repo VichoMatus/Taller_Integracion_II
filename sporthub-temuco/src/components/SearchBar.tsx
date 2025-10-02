@@ -4,9 +4,13 @@ import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import indexStyles from './stylesSearchBar/IndexSearchBar.module.css';
 import basquetbolStyles from './stylesSearchBar/BasquetbolSearchBar.module.css';
+<<<<<<< HEAD
 import futbolStyles from './stylesSearchBar/FutbolSearchBar.module.css';
 import padelStyles from './stylesSearchBar/PadelSearchBar.module.css';
 import crossfitentrenamientofuncionalStyles from './stylesSearchBar/CrossfitEntrenamientoFuncionalSearchBar.module.css';
+=======
+import tenisStyles from './stylesSearchBar/TenisSearchBar.module.css';
+>>>>>>> FE-feature/correciones-dr
 
 interface SearchBarProps {
   value?: string;
@@ -41,12 +45,16 @@ const SearchBar = ({
         // return futbolStyles; // Cuando lo crees
         return futbolStyles; // temporal
       case 'tenis':
+<<<<<<< HEAD
         // return tenisStyles; // Cuando lo crees
         return indexStyles; // temporal
       case 'padel':
         return padelStyles;
       case 'crossfitentrenamientofuncional':
         return crossfitentrenamientofuncionalStyles;
+=======
+        return tenisStyles;
+>>>>>>> FE-feature/correciones-dr
       default:
         return indexStyles; // fallback al index
     }

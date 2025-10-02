@@ -358,6 +358,21 @@
   border-bottom: none;
 }
 
+/* Backwards-compat: aplicar mismas animaciones a tablas con clase `admin-table` */
+.admin-table {
+  /* reaplicar la animación de entrada de tabla */
+  animation: tableSlideIn 0.8s ease-out 0.5s both;
+}
+
+.admin-table th {
+  animation: headerSlide 0.6s ease-out;
+}
+
+.admin-table td {
+  animation: rowFadeIn 0.6s ease-out;
+}
+
+
 /* Estados */
 .status-badge {
   padding: 6px 12px;
@@ -742,6 +757,13 @@
 .export-button:hover {
   background: #d1d5db;
   transform: translateY(-1px);
+}
+
+/* Aplica la misma animación de entrada del header a los contenedores de tabla admin
+   Esto hace que las listas (p. ej. Gestionar Reseñas) aparezcan con el mismo efecto
+   de desplazamiento/entrada que el header de la página. */
+.admin-table-container {
+  animation: headerSlideDown 0.8s ease-out;
 }
 
 .export-button svg {
