@@ -10,10 +10,14 @@
   flex-direction: column;
   gap: 12px;
   width: 30%;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
 }
 
 .cancha-boton {
-  background-color: #b5e3b5;
+  background-color: #f1a772;
   border-radius: 10px;
   padding: 12px;
   border: none;
@@ -24,22 +28,22 @@
 }
 
 .cancha-boton:hover {
-  background-color: #98d698;
+  background-color: #ad7751;
 }
 
 .panel-derecho {
   flex: 1;
   background: white;
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 1.5rem;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.08);
   overflow-y: auto;
 }
 
 .cancha-titulo {
   font-size: 20px;
   font-weight: bold;
-  color: #2c7a2c;
+  color: #ff9f73;
   margin-bottom: 4px;
 }
 
@@ -81,4 +85,29 @@
 .no-mensajes {
   text-align: center;
   color: #aaa;
+}
+
+.titulo-principal {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #000000;
+  margin-bottom: 10px;
+}
+
+.page-wrapper {
+  margin-top: 14px;  /* espacio para el header fijo */
+  margin-left: 256px; /* espacio para el sidebar fijo */
+  display: flex;
+  justify-content: center; /* centra el contenido horizontalmente */
+  align-items: flex-start; /* que el contenido inicie desde arriba */
+  min-height: calc(100vh - 14px); /* ocupa el alto de la pantalla menos el header */
+}
+
+.page-content {
+  display: flex;
+  flex-direction: column; /* ahora los hijos se colocan uno debajo del otro */
+  gap: 20px; /* espacio entre el título y los paneles */
+  width: 100%;
+  max-width: 1200px; /* opcional, para limitar ancho */
 }

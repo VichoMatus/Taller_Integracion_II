@@ -1,26 +1,131 @@
 import React from 'react';
 
-const LocationMap: React.FC = () => (
-  <div
-    style={{
-      width: '100%',
-      maxWidth: 1080,
-      height: 320,
-      border: '1px solid #cfcfcf',
-      borderRadius: 12,
-      background: '#f5f5f5',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontFamily: 'Inter, sans-serif',
-      fontSize: 16,
-      color: '#666',
-      margin: '0 auto',
-      marginBottom: 32,
-    }}
-  >
-    Mapa (pendiente de implementación)
-  </div>
-);
+// 🔥 IMPORTAR TODOS LOS ESTILOS DE LOS DEPORTES
+import basquetbolStyles from './stylesLocationMap/BasquetbolLocationMap.module.css';
+import futbolStyles from './stylesLocationMap/FutbolLocationMap.module.css';
+import padelStyles from './stylesLocationMap/PadelLocationMap.module.css';
+import crossfitentrenamientofuncionalStyles from './stylesLocationMap/CrossfitEntrenamientoFuncionalLocationMap.module.css';
+
+interface LocationMapProps {
+  latitude: number;
+  longitude: number;
+  address?: string;
+  zoom?: number;
+  height?: string;
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional';
+}
+
+const LocationMap: React.FC<LocationMapProps> = ({
+  latitude,
+  longitude,
+  address,
+  zoom = 15,
+  height = '250px',
+  sport = 'basquetbol', // 🔥 VALOR POR DEFECTO
+}) => {
+  
+  // 🔥 FUNCIÓN PARA SELECCIONAR ESTILOS SEGÚN EL DEPORTE
+  const getSportStyles = () => {
+    switch (sport) {
+      case 'basquetbol':
+        return basquetbolStyles;
+      case 'futbol':
+        return futbolStyles;
+      case 'padel':
+        return padelStyles;
+      case 'crossfitentrenamientofuncional':
+        return crossfitentrenamientofuncionalStyles;
+      // case 'tenis':
+      default:
+        return basquetbolStyles; // Fallback
+        
+    }
+  };
+
+  // 🔥 OBTENER LOS ESTILOS APROPIADOS
+  const styles = getSportStyles();
+
+  // 🔥 FUNCIÓN PARA OBTENER EMOJI DEL DEPORTE
+  const getSportMapEmoji = () => {
+    switch (sport) {
+      case 'basquetbol':
+        return '🏀';
+      case 'futbol':
+        return '⚽';
+      case 'padel':
+        return '🎾';
+      case 'crossfitentrenamientofuncional':
+        return '🏋️‍♂️';
+      default:
+        return '🏀';
+    }
+  };
+
+  // 🔥 FUNCIÓN PARA OBTENER NOMBRE DEL DEPORTE
+  const getSportName = () => {
+    switch (sport) {
+      case 'basquetbol':
+        return 'Basquetbol';
+      case 'futbol':
+        return 'Fútbol';
+      case 'padel':
+        return 'Pádel';
+      case 'crossfitentrenamientofuncional':
+        return 'Crossfit Entrenamiento Funcional';
+      default:
+        return 'Basquetbol';
+    }
+  };
+
+  // 🔥 FUNCIÓN PARA OBTENER MENSAJE ESPECÍFICO DEL DEPORTE
+  const getSportMessage = () => {
+    switch (sport) {
+      case 'basquetbol':
+        return 'Encuentra las mejores canchas de basquetbol cerca de ti';
+      case 'futbol':
+        return 'Descubre canchas de fútbol en tu zona';
+      default:
+        return 'Encuentra las mejores canchas de basquetbol cerca de ti';
+    }
+  };
+
+  const handleImplementClick = () => {
+    console.log(`Implementar mapa interactivo para ${getSportName()}`);
+    console.log(`Coordenadas: ${latitude}, ${longitude}`);
+    console.log(`Deporte: ${sport}`);
+  };
+
+  return (
+    <div className={styles.mapContainer} data-sport={sport}>
+      <div className={styles.mapPlaceholder} style={{ height }}>
+        <div className={styles.mapIcon}>
+          {getSportMapEmoji()} 🗺️
+        </div>
+        <h3 className={styles.mapTitle}>
+          Mapa de Canchas - {getSportName()}
+        </h3>
+        <p className={styles.mapMessage}>
+          {getSportMessage()}
+        </p>
+        {address && (
+          <p className={styles.addressInfo}>
+            📍 {address}
+          </p>
+        )}
+        <div className={styles.coordsInfo}>
+          <span>Lat: {latitude.toFixed(4)}</span>
+          <span>Lng: {longitude.toFixed(4)}</span>
+          <span>Zoom: {zoom}x</span>
+        </div>
+        <button 
+          className={styles.implementButton}
+          onClick={handleImplementClick}
+        >
+          Ver mapa interactivo {getSportMapEmoji()}
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default LocationMap;

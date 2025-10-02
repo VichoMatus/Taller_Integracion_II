@@ -1,0 +1,161 @@
+/* Contenedor principal ocupa el espacio disponible del Layout */
+/* perfiladmin.css */
+
+.admin-layout {
+  display: flex;
+  gap: 2rem;
+  padding: 20px;
+  margin-left: -256px;  /* Mueve todo hacia la izquierda */
+  margin-top: 70px;    /* Baja un poco todo el contenido */
+  box-sizing: border-box;
+}
+
+
+/* Panel izquierdo (perfil administrador) */
+.admin-info {
+  flex: 0 0 300px;
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: auto;
+}
+
+.avatar-img {
+  width: 128px;
+  height: 128px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  object-fit: cover;
+}
+
+.admin-nombre {
+  font-size: 20px;
+  font-weight: bold;
+  margin-top: 8px;
+}
+
+.admin-role {
+  color: gray;
+  font-size: 14px;
+}
+
+.admin-details {
+  width: 100%;
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.admin-detail-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.detail-label {
+  font-weight: 600;
+}
+
+.btn-editar {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #5a6993;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Panel derecho */
+.admin-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Header de la sección */
+.admin-header {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  text-align: center;
+}
+
+.admin-title {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+/* Gráfico */
+.grafico-box {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.grafico-title {
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.grafico-barras {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  height: 140px;
+  margin-top: 15px;
+  border-bottom: 1px solid #ccc;
+}
+
+.barra-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  flex: 1;
+}
+
+.barra {
+  width: 24px;
+  border-radius: 4px 4px 0 0;
+  margin-bottom: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.tooltip {
+  position: absolute;
+  top: -24px;
+  background-color: #333;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.grafico-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.btn-excel {
+  padding: 8px 16px;
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}

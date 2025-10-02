@@ -1,4 +1,14 @@
 import React from 'react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+
+// 🔥 IMPORTAR TODOS LOS ESTILOS DE LOS DEPORTES
+import basquetbolStyles from './stylesCourtCards/BasquetbolCanchasCard.module.css';
+import futbolStyles from './stylesCourtCards/FutbolCanchasCard.module.css';
+// import tenisStyles from './stylesCourtCards/TenisCanchasCard.module.css';
+// import voleibolStyles from './stylesCourtCards/VoleibolCanchasCard.module.css';
+import padelStyles from './stylesCourtCards/PadelCanchasCard.module.css';
+import crossfitentrenamientofuncionalStyles from './stylesCourtCards/CrossfitEntrenamientoFuncionalCanchasCard.module.css';
 
 interface CourtCardProps {
   imageUrl: string;
@@ -9,6 +19,8 @@ interface CourtCardProps {
   tags: string[];
   description: string;
   price: string;
+  nextAvailable: string;
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional'; // Agregado 'crossfit'
   onClick?: () => void;
 }
 
@@ -21,95 +33,188 @@ const CourtCard: React.FC<CourtCardProps> = ({
   tags,
   description,
   price,
+  nextAvailable,
+  sport = 'basquetbol', // Valor por defecto
   onClick,
-}) => (
-  <div
-    className="bg-white shadow-xl border border-gray-200 flex flex-col overflow-hidden font-inter"
-    style={{
-      width: 342,
-      height: 453,
-      borderRadius: 12,
-    }}
-  >
-    {/* Imagen */}
-    <img
-      src={imageUrl}
-      alt={name}
-      className="w-full object-cover"
-      style={{
-        height: 160,
-        borderTopLeftRadius: 12,
-        borderTopRightRadius: 12,
-      }}
-    />
-    <div className="flex flex-col flex-1 px-6 pt-4 pb-3">
-      {/* Título y rating */}
-      <div className="flex items-center justify-between mb-1"
-        style={{
-          marginLeft: 8,
-        }}
-      >
-        <div>
-          <div className="font-bold text-[18px] text-gray-800 leading-tight">{name}</div>
-          <div className="text-gray-500 text-[12px] leading-tight">{address}</div>
-        </div>
-        <div className="flex items-center bg-white border border-orange-300 rounded-full px-7 py-1 ml-2 shadow-md min-w-[120px] justify-center"
-          style={{marginRight: 5}}>
-          <span className="mr-1">
-            {/* Icono estrella */}
-            <svg className="w-5 h-5 text-yellow-400 inline" fill="currentColor" viewBox="0 0 20 20">
+}) => {
+  const router = useRouter();
+  
+  // 🔥 FUNCIÓN PARA SELECCIONAR ESTILOS SEGÚN EL DEPORTE
+  const getSportStyles = () => {
+    switch (sport) {
+      case 'basquetbol':
+        return basquetbolStyles;
+      case 'futbol':
+        return futbolStyles;
+      // case 'tenis':
+      //   return tenisStyles;
+      // case 'voleibol':
+      //   return voleibolStyles;
+      case 'padel':
+        return padelStyles;
+      case 'crossfitentrenamientofuncional':
+        return crossfitentrenamientofuncionalStyles;
+      default:
+        console.warn(`Estilo no encontrado para el deporte: ${sport}. Usando basquetbol como fallback.`);
+        return basquetbolStyles; // Fallback a basquetbol
+    }
+  };
+
+  // 🔥 OBTENER LOS ESTILOS APROPIADOS
+  const styles = getSportStyles();
+  
+  // 🔥 Limitar a máximo 4 tags
+  const displayTags = tags.slice(0, 4);
+  
+  // 🔥 Función para manejar navegación específica por deporte
+  const handleInternalClick = () => {
+    if (onClick) {
+      // Si viene onClick como prop, úsalo (para casos especiales)
+      onClick();
+    } else {
+      // Navegación automática según el deporte
+      switch (sport) {
+        case 'basquetbol':
+          router.push('/sports/basquetbol/canchas/canchaseleccionada');
+          break;
+          
+        case 'futbol':
+          router.push('/sports/futbol/canchas/canchaseleccionada');
+          break;
+          
+        case 'tenis':
+          const tenisParams = new URLSearchParams({
+            id: Date.now().toString(),
+            name: name,
+            location: address,
+            description: description,
+            rating: rating.toString(),
+            reviews: reviews.toString().replace(' reseñas', ''),
+            priceFrom: (parseInt(price) * 1000).toString(),
+          });
+          router.push(`/sports/tenis/canchas/canchaseleccionada?${tenisParams.toString()}`);
+          break;
+          
+        case 'voleibol':
+          const voleibolParams = new URLSearchParams({
+            id: Date.now().toString(),
+            name: name,
+            location: address,
+            description: description,
+            rating: rating.toString(),
+            reviews: reviews.toString().replace(' reseñas', ''),
+            priceFrom: (parseInt(price) * 1000).toString(),
+          });
+          router.push(`/sports/voleibol/canchas/canchaseleccionada?${voleibolParams.toString()}`);
+          break;
+          
+        case 'padel':
+          router.push('/sports/padel/canchas/canchaseleccionada');
+          break;
+        case 'crossfitentrenamientofuncional':
+          router.push('/sports/crossfitentrenamientofuncional/gimnasios/gimnasioseleccionado');
+          break;
+          
+        default:
+          console.log('Deporte no configurado:', sport);
+          // Fallback a basquetbol
+          router.push('/sports/basquetbol/canchas/canchaseleccionada');
+      }
+    }
+  };
+
+  // 🔥 FUNCIÓN PARA OBTENER EMOJI DEL DEPORTE
+  const getSportEmoji = () => {
+    switch (sport) {
+      case 'basquetbol':
+        return '🏀';
+      case 'futbol':
+        return '⚽';
+      case 'tenis':
+        return '🎾';
+      case 'voleibol':
+        return '🏐';
+      case 'padel':
+        return '🏓';
+      default:
+        return '🏀';
+    }
+  };
+
+  // 🔥 FUNCIÓN PARA MANEJAR ERRORES DE IMAGEN
+  const [imageError, setImageError] = React.useState(false);
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
+  
+  return (
+    <div className={styles.courtCard} data-sport={sport}>
+      {/* 🔥 CONTENEDOR DE IMAGEN CON FALLBACK */}
+      <div className={`${styles.imageContainer || ''} ${imageError ? styles.fallback || '' : ''}`}>
+        {!imageError ? (
+          <Image
+            src={imageUrl}
+            alt={name}
+            className={styles.cardImage}
+            width={300}
+            height={200}
+            onError={handleImageError}
+          />
+        ) : (
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            fontSize: '48px',
+            height: '100%'
+          }}>
+            {getSportEmoji()}
+          </div>
+        )}
+      </div>
+      
+      <div className={styles.cardContent}>
+        <div className={styles.cardHeader}>
+          <div className={styles.cardTitleSection}>
+            <h3 className={styles.cardTitle}>{name}</h3>
+            <p className={styles.cardAddress}>{address}</p>
+          </div>
+          
+          <div className={styles.ratingBadge}>
+            <svg className={styles.starIcon} fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.921-.755 1.688-1.54 1.118l-3.38-2.455a1 1 0 00-1.175 0l-3.38 2.455c-.784.57-1.838-.197-1.539-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.049 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.287-3.967z"/>
             </svg>
-          </span>
-          <span className="font-bold text-yellow-700 text-[10px]">{rating}</span>
-          <span className="ml-2 text-xs text-orange-600 font-bold text-[10px]">({reviews} reseñas)</span>
+            <span className={styles.ratingNumber}>{rating}</span>
+            <span className={styles.ratingReviews}>({reviews} reseñas)</span>
+          </div>
         </div>
-      </div>
-      {/* Tags */}
-      <div className="flex flex-wrap gap-x-[17px] gap-y-[10px] my-[17px] justify-start"
-        style={{
-            marginTop: 35,
-            marginLeft: 8,
-            marginRight: 9,
-            maxHeight: 13,
-          }}>
-        {tags.map(tag => (
-          <span
-            key={tag}
-            className="bg-orange-100 text-orange-700 min-w-[95px] px-12 py-5 rounded-[8px] text-xs font-semibold shadow border border-orange-200 text-[12px] text-center"
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
-      {/* Descripción */}
-      <div className="text-gray-600 text-[13px] mb-2 leading-snug"
-        style={{
-            marginTop: 47,
-            marginLeft: 8,
-            marginRight: 9,
-          }}>
-          {description}</div>
-      {/* Precio y botón */}
-      <div className="flex items-end justify-between mt-auto"
-        style={{
-          marginBottom: 26,
-          marginLeft: 8,
-          marginRight: 9,
-        }} > 
-        <div>
-          <span className="text-orange-600 font-bold text-[17px]">$({price})/h</span>
-          <div className="text-xs text-gray-400 mt-1 text-[12px]">Próximo: 20:00-21:00</div>
+
+        <div className={styles.tagsContainer}>
+          {displayTags.map((tag, index) => (
+            <span key={index} className={styles.tag}>
+              {tag}
+            </span>
+          ))}
         </div>
-        <button
-          onClick={onClick}
-          className="bg-orange-400 hover:bg-orange-500 text-white font-semibold px-6 py-2 rounded-[12px] shadow-lg transition text-[12px] w-[103px] h-[31px]"
-        >
-          Ir a cancha &rarr;
-        </button>
+
+        <p className={styles.description}>
+          {description}
+        </p>
+
+        <div className={styles.cardFooter}>
+          <div className={styles.priceSection}>
+            <span className={styles.price}>${price}/h</span>
+            <span className={styles.nextTime}>Próximo: {nextAvailable}</span>
+          </div>
+          
+          <button onClick={handleInternalClick} className={styles.actionButton}>
+            Ir a cancha →
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default CourtCard;

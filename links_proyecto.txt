@@ -1,0 +1,41 @@
+Figma: https://www.figma.com/design/HRUMe6zmyeQ1Y59lv4W3xx/Sport-hub-temuco?node-id=0-1&t=hTamCyoL9WJaCXRb-0
+
+Nube:
+ -Frontend : https://frontend-cdrhos-0246e7-168-232-167-73.traefik.me/sports
+            Hasta ahora lo que se puede hacer es ingresar a Basquetball -> Explorar Canchas -> Basquetball Centro o en rutas seria:
+            /sports - /sports/basquetbol - /sports/basquetbol/canchas - /sports/basquetbol/canchas/canchaseleccionada
+
+            https://frontend-cdrhos-0246e7-168-232-167-73.traefik.me/admin
+            Hasta ahora esta con datos estaticos pero el diseño esta listo
+
+            https://frontend-cdrhos-0246e7-168-232-167-73.traefik.me/superadmin
+            Hasta ahora igual esta con datos estaticos y falta agregar unos apartados y pulir detalles
+
+            https://frontend-cdrhos-0246e7-168-232-167-73.traefik.me/login
+            En el sprint 2 se agrega el login funcional junto con el registro
+
+            https://frontend-cdrhos-0246e7-168-232-167-73.traefik.me/usuario/perfil
+            Aqui falta pulir detalles
+    
+ -Backend  : http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/
+            Hasta ahora los endpoint ya estan configurados para recibir los datos de la api y pasarselos al frontend, esto se puede verificar en los siguientes enlaces
+
+            http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/auth/status
+            http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/admin/status
+            http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/canchas/status
+            http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/bloqueos/status
+            http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/complejos/status
+            http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/reservas/status
+            http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/resenas/status
+            http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/uploads/status
+            http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/usuarios
+            http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/reservas/
+            http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/resenas/
+            http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/notificaciones
+            http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/favoritos
+            http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/canchas/
+            http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/complejos/
+            http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/bloqueos/
+
+ -API (integra 4) :
+            http://api-h1d7oi-6fc869-168-232-167-73.traefik.me/docs#/

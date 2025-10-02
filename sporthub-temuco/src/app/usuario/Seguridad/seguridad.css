@@ -55,8 +55,8 @@
 
 /* ✅ Encabezado con degradado */
 .titulo-seccion {
-  background: linear-gradient(to right, #8e2de2, #4a00e0);
-  color: white;
+  background-color: #f9f9f9;
+  color: #4a00e0;
   font-size: 1.2rem;
   font-weight: 700;
   text-align: center;
@@ -64,6 +64,7 @@
   border-top-left-radius: 1rem;
   border-top-right-radius: 1rem;
 }
+
 
 /* Contenido dentro de las subcards */
 .subcard > form,
@@ -87,11 +88,14 @@
   border-radius: 999px;
   outline: none;
   width: 100%;
+  max-width: 300px; /* limita el ancho */
+  display: block;
+  margin: 0.5rem auto; /* centra horizontalmente */
   font-size: 0.95rem;
   background: #fff;
   transition: 0.2s ease-in-out;
-  margin-bottom: 0.5rem;
 }
+
 
 .input-text:focus {
   border-color: #7b3aed;
@@ -117,8 +121,10 @@
   text-align: center;
   line-height: 1.3rem;
   white-space: pre-line;
-  margin: 0.5rem 0;
+  margin: 0.5rem auto;
+  max-width: 400px;
 }
+
 
 .correo-autorizacion {
   display: flex;
@@ -134,38 +140,52 @@
   transform: scale(1.3);
 }
 
-.btn-rojo {
-  background-color: #d32f2f;
-  color: white;
-  font-weight: 600;
-  border-radius: 999px;
-  padding: 0.6rem 1.5rem;
-  transition: background 0.2s ease-in-out;
-  text-align: center;
+.btn-rojo,
+.btn-azul {
+  border: none; /* elimina bordes duros */
+  border-radius: 12px; /* bordes más suaves y menos extremos */
+  padding: 0.5rem 1.2rem; /* tamaño más compacto */
+  font-weight: 500;
+  font-size: 0.95rem;
+  display: block;
   margin: 0.5rem auto;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* sombra suave */
+}
+
+.btn-rojo {
+  background-color: #e57373;
+  color: white;
 }
 
 .btn-rojo:hover {
-  background-color: #b71c1c;
+  background-color: #ef5350;
 }
 
 .btn-azul {
-  background-color: #1976d2;
+  background-color: #64b5f6;
   color: white;
-  font-weight: 600;
-  border-radius: 999px;
-  padding: 0.6rem 1.5rem;
-  transition: background 0.2s ease-in-out;
-  text-align: center;
-  margin: 0.5rem auto 1rem auto;
 }
 
 .btn-azul:hover {
-  background-color: #0d47a1;
+  background-color: #42a5f5;
 }
+
 
 @media (min-width: 768px) {
   .grid {
     gap: 2rem;
   }
+}
+
+.seguridad-wrapper {
+  margin-top: 14px;   /* espacio para header fijo */
+  margin-left: 256px; /* espacio para sidebar fijo */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* centra contenido horizontalmente */
+  width: calc(100% - 256px);
+  padding: 20px;
 }

@@ -1,34 +1,99 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
+import indexStyles from './stylesSearchBar/IndexSearchBar.module.css';
+import basquetbolStyles from './stylesSearchBar/BasquetbolSearchBar.module.css';
+import futbolStyles from './stylesSearchBar/FutbolSearchBar.module.css';
+import padelStyles from './stylesSearchBar/PadelSearchBar.module.css';
+import crossfitentrenamientofuncionalStyles from './stylesSearchBar/CrossfitEntrenamientoFuncionalSearchBar.module.css';
 
 interface SearchBarProps {
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSearch: () => void;
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSearch: (term: string) => void;
   placeholder?: string;
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional'; 
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({
-  value,
-  onChange,
-  onSearch,
-  placeholder,
-}) => (
-  <div className="relative bg-white rounded-[28px] shadow w-[720px] h-[52px] border border-gray-200 flex items-center">
-    <input
-      type="text"
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      className="w-[680px] h-full outline-none bg-transparent text-gray-700 font-inter text-base rounded-[28px] pl-4 pr-12 border-transparent"
-      onKeyDown={e => { if (e.key === 'Enter') onSearch(); }}
-    />
-    <span className="absolute right-[5px] top-1/2 -translate-y-1/2 flex items-center">
-      <svg className="w-14 h-14 text-black" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-        <circle cx="4" cy="4" r="3" stroke="currentColor" />
-        <line x1="12" y1="12" x2="16.65" y2="16.65" stroke="currentColor" />
-      </svg>
-    </span>
-  </div>
-);
+const SearchBar = ({ 
+  value, 
+  onChange, 
+  onSearch, 
+  placeholder = "Buscar...",
+  sport 
+}: SearchBarProps) => {
+  const pathname = usePathname();
+  const [internalValue, setInternalValue] = useState(value || '');
+
+  // 🔥 Función para obtener los estilos según la ubicación
+  const getSearchStyles = () => {
+    // Si está en el index o página de deportes principal, usar IndexSearchBar
+    if (pathname === '/' || pathname === '/sports' || pathname === '/sports/') {
+      return indexStyles;
+    }
+
+    // Para páginas específicas de deportes, usar los estilos correspondientes
+    switch (sport) {
+      case 'basquetbol':
+        return basquetbolStyles;
+      case 'futbol':
+        // return futbolStyles; // Cuando lo crees
+        return futbolStyles; // temporal
+      case 'tenis':
+        // return tenisStyles; // Cuando lo crees
+        return indexStyles; // temporal
+      case 'padel':
+        return padelStyles;
+      case 'crossfitentrenamientofuncional':
+        return crossfitentrenamientofuncionalStyles;
+      default:
+        return indexStyles; // fallback al index
+    }
+  };
+
+  const styles = getSearchStyles();
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setInternalValue(newValue);
+    if (onChange) {
+      onChange(e);
+    }
+  };
+
+  const handleSearch = () => {
+    onSearch(internalValue);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      onSearch(internalValue);
+    }
+  };
+
+  return (
+    <div className={styles.searchContainer}>
+      <div className={styles.searchIcon}>
+        🔍
+      </div>
+      <input
+        type="text"
+        value={value !== undefined ? value : internalValue}
+        onChange={handleInputChange}
+        onKeyPress={handleKeyPress}
+        placeholder={placeholder}
+        className={styles.searchInput}
+      />
+      <button
+        onClick={handleSearch}
+        className={styles.searchButton}
+        type="button"
+      >
+        Buscar
+      </button>
+    </div>
+  );
+};
 
 export default SearchBar;

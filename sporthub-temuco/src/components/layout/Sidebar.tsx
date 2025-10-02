@@ -3,14 +3,55 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import './Sidebar.css';
+
+import './Sidebar.css'; 
+import indexStyles from './StylesSportsSideBar/IndexSideBar.module.css';
+import basquetbolStyles from './StylesSportsSideBar/BasquetbolSideBar.module.css';
+import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
+import padelStyles from './StylesSportsSideBar/PadelSideBar.module.css';
+import crossfitentrenamientofuncionalStyles from './StylesSportsSideBar/CrossfitEntrenamientoFuncionalSideBar.module.css';
+// import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
 
 interface SidebarProps {
-  userRole: 'admin' | 'superadmin';
+  userRole: 'admin' | 'superadmin' | 'usuario';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional';
 }
 
-const Sidebar = ({ userRole }: SidebarProps) => {
+const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
   const pathname = usePathname();
+
+  // Función para obtener los estilos según el rol Y deporte
+  const getSportStyles = () => {
+    // 🔥 Si es admin o superadmin, devolver null (usará las clases CSS normales)
+    if (userRole === 'admin' || userRole === 'superadmin') {
+      return null; 
+    }
+
+    if (pathname === '/' || pathname === '/sports' || pathname === '/sports/') {
+      return indexStyles;
+    }
+
+    if (pathname === '/' || pathname === '/sports/reservacancha' || pathname === '/sports/reservacancha/') {
+      return indexStyles;
+    }
+ 
+    switch (sport) {
+      case 'basquetbol':
+        return basquetbolStyles;
+      case 'futbol':
+        return futbolStyles; 
+      case 'tenis':
+        // return tenisStyles;
+      case 'padel':
+        return padelStyles;
+      case 'crossfitentrenamientofuncional':
+        return crossfitentrenamientofuncionalStyles;
+      default:
+        return basquetbolStyles;
+    }
+  };
+
+  const styles = getSportStyles();
 
   const adminMenuItems = [
     {
@@ -46,8 +87,8 @@ const Sidebar = ({ userRole }: SidebarProps) => {
     {
       name: 'Perfil',
       icon: '👤',
-      href: '/usuario/perfil',
-      active: pathname === '/usuario/perfil'
+      href: '/admin/perfil',
+      active: pathname === '/admin/perfil'
     }
   ];
 
@@ -90,35 +131,81 @@ const Sidebar = ({ userRole }: SidebarProps) => {
     }
   ];
 
-  const menuItems = userRole === 'superadmin' ? superAdminMenuItems : adminMenuItems;
-  const userTitle = userRole === 'superadmin' ? 'Superadministrador' : 'Administrador';
+  const usuarioMenuItems = [
+    {
+      name: 'Deportes',
+      icon: '🏟️',
+      href: '/sports',
+      active: pathname === '/sports' || pathname === '/sports/' || pathname === '/'
+    },
+    {
+      name: 'Reservas',
+      icon: '📅',
+      href: '/reservas',
+      active: pathname === '/reservas'
+    },
+    {
+      name: 'Mapa',
+      icon: '🗺️',
+      href: '/mapa',
+      active: pathname === '/mapa'
+    },
+    {
+      name: 'Favoritos',
+      icon: '⭐',
+      href: '/favoritos',
+      active: pathname === '/favoritos'
+    },
+    {
+      name: 'Perfil',
+      icon: '👤',
+      href: '/perfil',
+      active: pathname === '/perfil'
+    },
+    {
+      name: 'Mensajería',
+      icon: '💬',
+      href: '/mensajeria',
+      active: pathname === '/mensajeria'
+    }
+  ];
+
+  const menuItems = userRole === 'superadmin' ? superAdminMenuItems : userRole === 'admin' ? adminMenuItems : usuarioMenuItems;
+  const userTitle = userRole === 'superadmin' ? 'Superadministrador' : userRole === 'admin' ? 'Administrador' : 'Usuario';
 
   return (
-    <div className="sidebar-container">
+    <div className={styles ? styles.sidebarContainer : 'sidebar-container'}>
       {/* Header */}
-      <div className="sidebar-header">
-        <div className="sidebar-logo-container">
-          <div className="sidebar-logo-icon">
+      <div className={styles ? styles.sidebarHeader : 'sidebar-header'}>
+        <div className={styles ? styles.sidebarLogoContainer : 'sidebar-logo-container'}>
+          <div className={styles ? styles.sidebarLogoIcon : 'sidebar-logo-icon'}>
             SH
           </div>
           <div>
-            <h1 className="sidebar-title">SportHub</h1>
-            <p className="sidebar-subtitle">{userTitle}</p>
+            <h1 className={styles ? styles.sidebarTitle : 'sidebar-title'}>SportHub</h1>
+            <p className={styles ? styles.sidebarSubtitle : 'sidebar-subtitle'}>{userTitle}</p>
           </div>
         </div>
+        {userRole === 'usuario' && styles && <div className={styles.sportIcon}></div>}
       </div>
 
       {/* Navigation */}
-      <nav className="sidebar-nav">
-        <ul className="sidebar-menu">
+      <nav className={styles ? styles.sidebarNav : 'sidebar-nav'}>
+        <ul className={styles ? styles.sidebarMenu : 'sidebar-menu'}>
           {menuItems.map((item) => (
-            <li key={item.name} className="sidebar-menu-item">
+            <li key={item.name} className={styles ? styles.sidebarMenuItem : 'sidebar-menu-item'}>
               <Link
                 href={item.href}
-                className={`sidebar-menu-link ${item.active ? 'active' : ''}`}
+                className={`${styles ? styles.sidebarMenuLink : 'sidebar-menu-link'} ${
+                  item.active ? (styles ? styles.active : 'active') : ''
+                }`}
               >
-                <span className="sidebar-menu-icon">{item.icon}</span>
-                <span className="sidebar-menu-text">{item.name}</span>
+                <span className={styles ? styles.sidebarMenuIcon : 'sidebar-menu-icon'}>
+                  {item.icon}
+                </span>
+                <span className={styles ? styles.sidebarMenuText : 'sidebar-menu-text'}>
+                  {item.name}
+                </span>
               </Link>
             </li>
           ))}
@@ -126,9 +213,9 @@ const Sidebar = ({ userRole }: SidebarProps) => {
       </nav>
 
       {/* Logout Button */}
-      <div className="sidebar-logout">
-        <button className="sidebar-logout-button">
-          <span className="sidebar-logout-icon">🚪</span>
+      <div className={styles ? styles.sidebarLogout : 'sidebar-logout'}>
+        <button className={styles ? styles.sidebarLogoutButton : 'sidebar-logout-button'}>
+          <span className={styles ? styles.sidebarLogoutIcon : 'sidebar-logout-icon'}>🚪</span>
           <span>Cerrar Sesión</span>
         </button>
       </div>

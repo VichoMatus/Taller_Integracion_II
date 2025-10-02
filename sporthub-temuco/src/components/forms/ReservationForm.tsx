@@ -48,7 +48,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ reservation, onSubmit
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const ok = validate();
     if (!ok) {
@@ -56,7 +56,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ reservation, onSubmit
       const order = ['user','court','date','time','status'] as const;
       for (const field of order) {
         if (errors[field]) {
-          const el = document.getElementById(field) as any;
+          const el = document.getElementById(field) as HTMLInputElement | HTMLSelectElement;
           el && typeof el.focus === 'function' && el.focus();
           break;
         }
@@ -66,9 +66,9 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ reservation, onSubmit
     onSubmit(formData);
   };
 
-  const handleChange = (e: any) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev: any) => {
+    setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       validate(updated);
       return updated;
