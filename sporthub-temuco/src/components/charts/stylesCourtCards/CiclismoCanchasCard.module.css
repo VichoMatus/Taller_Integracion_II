@@ -1,12 +1,12 @@
-/* 🏃‍♂️ COURT CARD - ATLETISMO STYLES */
+/* 🚴‍♂️ COURT CARD - CICLISMO STYLES */
 
 .courtCard {
   width: 320px;
   background: white;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 16px rgba(30, 64, 175, 0.1);
-  border: 1px solid rgba(30, 64, 175, 0.2);
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   position: relative;
@@ -28,8 +28,8 @@
 
 .courtCard:hover {
   transform: translateY(-8px);
-  box-shadow: 0 12px 32px rgba(30, 64, 175, 0.2);
-  border-color: rgba(30, 64, 175, 0.4);
+  box-shadow: 0 12px 32px rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.4);
 }
 
 .courtCard::before {
@@ -39,7 +39,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #1e40af, #3b82f6, #60a5fa);
+  background: linear-gradient(90deg, #22c55e, #16a34a, #15803d);
   z-index: 1;
 }
 
@@ -76,13 +76,13 @@
 .cardTitle {
   font-size: 1.2rem;
   font-weight: 700;
-  color: #1e40af;
+  color: #15803d;
   margin: 0 0 6px 0;
   line-height: 1.3;
 }
 
 .cardAddress {
-  color: #3b82f6;
+  color: #059669;
   font-size: 0.9rem;
   margin: 0;
   display: flex;
@@ -99,11 +99,11 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  background: linear-gradient(135deg, #fef3c7, #fbbf24);
   padding: 6px 10px;
   border-radius: 20px;
   flex-shrink: 0;
-  border: 1px solid rgba(30, 64, 175, 0.3);
+  border: 1px solid rgba(251, 191, 36, 0.3);
 }
 
 .starIcon {
@@ -114,7 +114,7 @@
 
 .ratingNumber {
   font-weight: 700;
-  color: #1e40af;
+  color: #92400e;
   font-size: 0.9rem;
 }
 
@@ -131,13 +131,13 @@
 }
 
 .tag {
-  background: rgba(30, 64, 175, 0.1);
-  color: #1e40af;
+  background: rgba(34, 197, 94, 0.1);
+  color: #15803d;
   padding: 4px 8px;
   border-radius: 12px;
   font-size: 0.75rem;
   font-weight: 600;
-  border: 1px solid rgba(30, 64, 175, 0.2);
+  border: 1px solid rgba(34, 197, 94, 0.2);
   white-space: nowrap;
 }
 
@@ -159,7 +159,7 @@
   align-items: center;
   margin-top: auto;
   padding-top: 12px;
-  border-top: 1px solid rgba(30, 64, 175, 0.1);
+  border-top: 1px solid rgba(34, 197, 94, 0.1);
 }
 
 .priceSection {
@@ -171,7 +171,7 @@
 .price {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #1e40af;
+  color: #15803d;
 }
 
 .nextTime {
@@ -180,7 +180,7 @@
 }
 
 .actionButton {
-  background: linear-gradient(135deg, #1e40af, #3b82f6);
+  background: linear-gradient(135deg, #22c55e, #16a34a);
   color: white;
   border: none;
   padding: 10px 16px;
@@ -192,38 +192,38 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
 }
 
 .actionButton:hover {
-  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  background: linear-gradient(135deg, #16a34a, #15803d);
   transform: translateX(2px);
-  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
 }
 
-/* Variante específica para atletismo */
-.courtCardAtletismo {
-  border-left: 4px solid #1e40af;
+/* Variante específica para ciclismo */
+.courtCardCiclismo {
+  border-left: 4px solid #22c55e;
 }
 
-.courtCardAtletismo .tag {
-  background: rgba(30, 64, 175, 0.15);
-  border-color: rgba(30, 64, 175, 0.3);
+.courtCardCiclismo .tag {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.3);
 }
 
-.courtCardAtletismo .cardTitle::before {
-  content: "🏃‍♂️ ";
+.courtCardCiclismo .cardTitle::before {
+  content: "🚴‍♂️ ";
   font-size: 1rem;
   margin-right: 4px;
 }
 
 /* Estados especiales */
 .courtCard.available {
-  border-color: rgba(30, 64, 175, 0.4);
+  border-color: rgba(34, 197, 94, 0.4);
 }
 
 .courtCard.available::before {
-  background: linear-gradient(90deg, #3b82f6, #1e40af);
+  background: linear-gradient(90deg, #10b981, #059669);
 }
 
 .courtCard.busy {

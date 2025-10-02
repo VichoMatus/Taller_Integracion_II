@@ -1,0 +1,592 @@
+/* 🚴‍♂️ PÁGINA DE DETALLE DE RUTA - ESTILOS */
+
+/* ANIMACIONES */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* CONTENEDOR PRINCIPAL */
+.pageContainer {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%);
+  font-family: 'Inter', sans-serif;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 20px;
+  margin-left: 256px;
+  overflow-y: auto;
+  height: 100vh;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* HEADER */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 20px 0;
+  border-bottom: 2px solid rgba(34, 197, 94, 0.1);
+}
+
+.backButton {
+  padding: 12px 20px;
+  background: rgba(34, 197, 94, 0.1);
+  color: #15803d;
+  border: 2px solid rgba(34, 197, 94, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.backButton:hover {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: #22c55e;
+  transform: translateX(-2px);
+}
+
+.headerActions {
+  display: flex;
+  gap: 12px;
+}
+
+.favoriteButton,
+.shareButton {
+  padding: 12px 16px;
+  background: white;
+  color: #15803d;
+  border: 2px solid rgba(34, 197, 94, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.favoriteButton:hover,
+.shareButton:hover {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: #22c55e;
+  transform: translateY(-2px);
+}
+
+/* CONTENT LAYOUT */
+.content {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 30px;
+  animation: fadeInUp 0.8s ease-out;
+}
+
+/* LEFT SECTION */
+.leftSection {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* IMAGE GALLERY */
+.imageGallery {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.mainImage {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  display: block;
+}
+
+.thumbnails {
+  display: flex;
+  gap: 8px;
+  padding: 16px;
+  background: #f8fafc;
+}
+
+.thumbnail {
+  width: 80px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.thumbnail:hover {
+  border-color: #22c55e;
+  transform: scale(1.05);
+}
+
+/* INFO CARD */
+.infoCard {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.rutaTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #15803d;
+  margin: 0 0 16px 0;
+}
+
+.location {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #059669;
+  font-size: 1.1rem;
+  margin-bottom: 16px;
+}
+
+.locationIcon {
+  font-size: 1.2rem;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stars {
+  display: flex;
+  gap: 2px;
+}
+
+.starFilled {
+  color: #fbbf24;
+}
+
+.starEmpty {
+  color: #d1d5db;
+}
+
+.ratingNumber {
+  font-weight: 700;
+  color: #15803d;
+  font-size: 1.1rem;
+}
+
+.reviewCount {
+  color: #6b7280;
+}
+
+/* QUICK STATS */
+.quickStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: rgba(34, 197, 94, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.stat {
+  text-align: center;
+  padding: 8px;
+}
+
+.statIcon {
+  display: block;
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+}
+
+.statLabel {
+  display: block;
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.statValue {
+  display: block;
+  font-weight: 700;
+  color: #15803d;
+  font-size: 0.9rem;
+}
+
+/* DESCRIPTION, FEATURES, RULES */
+.description,
+.features,
+.rules {
+  margin-bottom: 24px;
+}
+
+.description h3,
+.features h3,
+.rules h3 {
+  color: #15803d;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.description p {
+  color: #4b5563;
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.features ul,
+.rules ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.features li,
+.rules li {
+  padding: 8px 0;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.features li::before {
+  content: "✅";
+  font-size: 1rem;
+}
+
+.rules li::before {
+  content: "⚠️";
+  font-size: 1rem;
+}
+
+/* RIGHT SECTION */
+.rightSection {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  animation: slideInRight 1s ease-out;
+}
+
+/* RESERVATION CARD */
+.reservationCard {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.15);
+  border: 2px solid rgba(34, 197, 94, 0.2);
+  position: sticky;
+  top: 20px;
+}
+
+.priceHeader {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.price {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #15803d;
+}
+
+.priceUnit {
+  display: block;
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+/* FORM */
+.reservationForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.formGroup label {
+  font-weight: 600;
+  color: #15803d;
+  font-size: 0.9rem;
+}
+
+.input,
+.select {
+  padding: 12px;
+  border: 2px solid rgba(34, 197, 94, 0.3);
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+/* PRICE BREAKDOWN */
+.priceBreakdown {
+  margin: 16px 0;
+  padding: 16px;
+  background: rgba(34, 197, 94, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.breakdownRow {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: #4b5563;
+}
+
+.breakdownTotal {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  color: #15803d;
+  font-size: 1.1rem;
+  border-top: 1px solid rgba(34, 197, 94, 0.3);
+  padding-top: 8px;
+}
+
+/* RESERVE BUTTON */
+.reserveButton {
+  padding: 16px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+}
+
+.reserveButton:hover {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+}
+
+/* CONTACT */
+.contact {
+  text-align: center;
+  margin-top: 16px;
+}
+
+.contact p {
+  color: #6b7280;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.contactButton {
+  padding: 8px 16px;
+  background: rgba(34, 197, 94, 0.1);
+  color: #15803d;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 auto;
+}
+
+.contactButton:hover {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: #22c55e;
+}
+
+/* MAP CARD */
+.mapCard {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.mapCard h3 {
+  color: #15803d;
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.mapPlaceholder {
+  text-align: center;
+  padding: 40px 20px;
+  background: rgba(34, 197, 94, 0.05);
+  border-radius: 8px;
+  border: 1px dashed rgba(34, 197, 94, 0.3);
+}
+
+.mapIcon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.mapPlaceholder p {
+  color: #6b7280;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: 0;
+    padding: 16px;
+  }
+  
+  .content {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  
+  .reservationCard {
+    position: static;
+  }
+  
+  .quickStats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  
+  .headerActions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .rutaTitle {
+    font-size: 1.5rem;
+  }
+  
+  .mainImage {
+    height: 200px;
+  }
+  
+  .quickStats {
+    grid-template-columns: 1fr;
+  }
+  
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .infoCard {
+    padding: 20px;
+  }
+  
+  .reservationCard {
+    padding: 16px;
+  }
+  
+  .thumbnails {
+    flex-wrap: wrap;
+  }
+  
+  .thumbnail {
+    width: 60px;
+    height: 45px;
+  }
+}
+
+/* SCROLL STYLING */
+.mainContent::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mainContent::-webkit-scrollbar-track {
+  background: rgba(34, 197, 94, 0.1);
+  border-radius: 4px;
+}
+
+.mainContent::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #22c55e, #16a34a);
+  border-radius: 4px;
+}
+
+.mainContent::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #16a34a, #15803d);
+}

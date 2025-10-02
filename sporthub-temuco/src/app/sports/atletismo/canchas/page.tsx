@@ -76,7 +76,7 @@ export default function Page() {
           <div className={atletismoCommon.filtersActions}><button className={atletismoCommon.searchButton}>🔍 Buscar</button></div>
         </div>
 
-  {filteredCanchas.length === 0 && searchTerm && <div className={atletismoCommon.noResults}><h3>No se encontraron resultados para "{searchTerm}"</h3></div>}
+  {filteredCanchas.length === 0 && searchTerm && <div className={atletismoCommon.noResults}><h3>No se encontraron resultados para &quot;{searchTerm}&quot;</h3></div>}
 
         <div className={atletismoCommon.cardsContainer}>
           <div className={atletismoCommon.cardsGrid}>{filteredCanchas.map((cancha, idx) => (<CourtCard key={idx} {...cancha} sport="atletismo" />))}</div>

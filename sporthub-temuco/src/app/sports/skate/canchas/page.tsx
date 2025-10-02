@@ -65,7 +65,7 @@ export default function Page() {
           <div className={skateCommon.filtersActions}><button className={skateCommon.searchButton}>🔍 Buscar</button></div>
         </div>
 
-  {filteredCanchas.length === 0 && searchTerm && <div className={skateCommon.noResults}><h3>No se encontraron resultados para "{searchTerm}"</h3></div>}
+  {filteredCanchas.length === 0 && searchTerm && <div className={skateCommon.noResults}><h3>No se encontraron resultados para &quot;{searchTerm}&quot;</h3></div>}
 
         <div className={skateCommon.cardsContainer}>
           <div className={skateCommon.cardsGrid}>{filteredCanchas.map((cancha, idx) => (<CourtCard key={idx} {...cancha} sport="skate" />))}</div>

@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import basquetStyles from './stylesCourtCards/BasquetbolCanchasCard.module.css';
 import atletismoStyles from './stylesCourtCards/AtletismoCanchasCard.module.css';
 import skateStyles from './stylesCourtCards/SkateCanchasCard.module.css';
+import ciclismoStyles from './stylesCourtCards/CiclismoCanchasCard.module.css';
+import kartingStyles from './stylesCourtCards/KartingCanchasCard.module.css';
 import { mountAtletismoLoader, unmountAtletismoLoader } from '@/components/ui/AtletismoNavLoader';
 import { mountSkateLoader, unmountSkateLoader } from '@/components/ui/SkateNavLoader';
 
@@ -17,7 +19,7 @@ interface CourtCardProps {
   description: string;
   price: string;
   nextAvailable: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'atletismo' | 'skate';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
   onClick?: () => void;
 }
 
@@ -77,6 +79,12 @@ const CourtCard: React.FC<CourtCardProps> = ({
           try { mountSkateLoader(); } catch (e) { /* ignore */ }
           setTimeout(() => { router.push('/sports/skate/canchas/canchaseleccionada'); }, 180);
           setTimeout(() => { try { unmountSkateLoader(); } catch (e) { /* ignore */ } }, 1600);
+          break;
+        case 'ciclismo':
+          router.push('/sports/ciclismo/canchas/canchaseleccionada');
+          break;
+        case 'karting':
+          router.push('/sports/karting/canchas/canchaseleccionada');
           break;
           
         case 'futbol':
@@ -139,7 +147,11 @@ const CourtCard: React.FC<CourtCardProps> = ({
     }
   };
   
-  const styles = sport === 'atletismo' ? atletismoStyles : sport === 'skate' ? skateStyles : basquetStyles;
+  const styles = sport === 'atletismo' ? atletismoStyles : 
+                 sport === 'skate' ? skateStyles : 
+                 sport === 'ciclismo' ? ciclismoStyles :
+                 sport === 'karting' ? kartingStyles :
+                 basquetStyles;
 
   return (
     <div className={`${styles.courtCard} ${sport ? (styles[`courtCard${sport.charAt(0).toUpperCase() + sport.slice(1)}`] || '') : ''}`}>

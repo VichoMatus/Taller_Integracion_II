@@ -95,9 +95,10 @@ export default function AtletismoPage() {
     );
   }
 
-    return (
+  return (
     <div className={atletismoCommon.pageContainer}>
       <Sidebar userRole="usuario" sport="atletismo" />
+
       <div className={atletismoCommon.mainContent}>
         <div className={atletismoCommon.header}>
           <div className={atletismoCommon.headerLeft}>

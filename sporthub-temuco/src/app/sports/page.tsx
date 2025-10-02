@@ -61,26 +61,42 @@ const sportsData = [
     tag: 'Nuevo',
     tagColor: '#ec4899', // Rosa
     href: '/sports/voley'
-  }
-  ,
+  },
   {
     id: 'atletismo',
     name: 'Atletismo',
     imageUrl: '/sports/atletismo/atletismo.png',
-    description: 'Pistas, pruebas y eventos de atletismo.',
+    description: 'Pistas de atletismo, eventos de carreras y competencias deportivas.',
     tag: 'Nuevo',
     tagColor: '#1E40AF', // Blue/gray palette for Atletismo
     href: '/sports/atletismo'
-  }
-  ,
+  },
   {
     id: 'skate',
     name: 'Skate',
-    imageUrl: '/sports/skate/canchas/Skate1.svg',
-    description: 'Skateparks, bowls y zonas street.',
+    imageUrl: '/sports/skate/skate.png',
+    description: 'Skateparks, rampas, bowls y zonas de street skating.',
     tag: 'Nuevo',
     tagColor: '#6b7280', // neutral gray (no naranja)
     href: '/sports/skate'
+  },
+  {
+    id: 'ciclismo',
+    name: 'Ciclismo',
+    imageUrl: '/sports/ciclismo/ciclismo.png',
+    description: 'Ciclovías urbanas, rutas de montaña y pistas de ciclismo.',
+    tag: 'Nuevo',
+    tagColor: '#22c55e', // Verde para ciclismo
+    href: '/sports/ciclismo'
+  },
+  {
+    id: 'karting',
+    name: 'Karting',
+    imageUrl: '/sports/karting/karting.png',
+    description: 'Kartódromos profesionales, pistas techadas y competencias de velocidad.',
+    tag: 'Nuevo',
+    tagColor: '#ef4444', // Rojo para karting
+    href: '/sports/karting'
   }
 ];
 

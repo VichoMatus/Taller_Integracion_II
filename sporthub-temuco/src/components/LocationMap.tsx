@@ -2,6 +2,7 @@ import React from 'react';
 import basquetStyles from './stylesLocationMap/BasquetbolLocationMap.module.css';
 import atletismoStyles from './stylesLocationMap/AtletismoLocationMap.module.css';
 import skateStyles from './stylesLocationMap/SkateLocationMap.module.css';
+import ciclismoStyles from './stylesLocationMap/CiclismoLocationMap.module.css';
 
 interface LocationMapProps {
   latitude: number;
@@ -9,7 +10,7 @@ interface LocationMapProps {
   address?: string;
   zoom?: number;
   height?: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'atletismo' | 'skate';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
 }
 
 const LocationMap: React.FC<LocationMapProps> = ({
@@ -20,7 +21,10 @@ const LocationMap: React.FC<LocationMapProps> = ({
   height = '250px',
   sport = 'basquetbol'
 }) => {
-  const styles = sport === 'atletismo' ? atletismoStyles : sport === 'skate' ? skateStyles : basquetStyles;
+  const styles = sport === 'atletismo' ? atletismoStyles : 
+                 sport === 'skate' ? skateStyles : 
+                 sport === 'ciclismo' ? ciclismoStyles : 
+                 basquetStyles;
   const handleImplementClick = () => {
     console.log('Implementar mapa interactivo');
     // Aquí puedes agregar la lógica para implementar el mapa real
