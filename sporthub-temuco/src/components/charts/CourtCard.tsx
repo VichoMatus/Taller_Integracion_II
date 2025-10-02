@@ -9,6 +9,7 @@ import futbolStyles from './stylesCourtCards/FutbolCanchasCard.module.css';
 // import voleibolStyles from './stylesCourtCards/VoleibolCanchasCard.module.css';
 import padelStyles from './stylesCourtCards/PadelCanchasCard.module.css';
 import crossfitentrenamientofuncionalStyles from './stylesCourtCards/CrossfitEntrenamientoFuncionalCanchasCard.module.css';
+import escaladaStyles from './stylesCourtCards/EscaladaCanchasCard.module.css';
 
 interface CourtCardProps {
   imageUrl: string;
@@ -20,7 +21,7 @@ interface CourtCardProps {
   description: string;
   price: string;
   nextAvailable: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional'; // Agregado 'crossfit'
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'escalada'; 
   onClick?: () => void;
 }
 
@@ -54,6 +55,8 @@ const CourtCard: React.FC<CourtCardProps> = ({
         return padelStyles;
       case 'crossfitentrenamientofuncional':
         return crossfitentrenamientofuncionalStyles;
+      case 'escalada':
+        return escaladaStyles;
       default:
         console.warn(`Estilo no encontrado para el deporte: ${sport}. Usando basquetbol como fallback.`);
         return basquetbolStyles; // Fallback a basquetbol
@@ -113,6 +116,9 @@ const CourtCard: React.FC<CourtCardProps> = ({
           break;
         case 'crossfitentrenamientofuncional':
           router.push('/sports/crossfitentrenamientofuncional/gimnasios/gimnasioseleccionado');
+          break;
+        case 'escalada':
+          router.push('/sports/escalada/centros/centroseleccionado');
           break;
           
         default:
@@ -209,7 +215,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
           </div>
           
           <button onClick={handleInternalClick} className={styles.actionButton}>
-            Ir a cancha →
+            Ir a  →
           </button>
         </div>
       </div>

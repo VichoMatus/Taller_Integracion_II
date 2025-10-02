@@ -70,6 +70,15 @@ const sportsData = [
     tagColor: '#272829', // Gris Oscuro
     href: '/sports/crossfitentrenamientofuncional'
   },
+  {
+    id: 'escalada',
+    name: 'Escalada',
+    imageUrl: '/sports/escalada/escalada.png',
+    description: 'Explora centros de escalada y rutas.',
+    tag: 'Nuevo',
+    tagColor: '#A67B5B', // Marrón
+    href: '/sports/escalada'
+  },
 ];
 
 export default function SportsPage() {

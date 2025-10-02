@@ -108,10 +108,8 @@ export default function Page() {
 
   return (
     <div className={styles.pageContainer}>
-      {/* 🔥 Sidebar específico para fútbol */}
       <Sidebar userRole="usuario" sport="futbol" />
 
-      {/* Contenido principal */}
       <div className={styles.mainContent}>
         {/* Header */}
         <div className={styles.header}>
@@ -134,7 +132,7 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Breadcrumb con navegación */}
+        {/* Breadcrumb */}
         <div className={styles.breadcrumb}>
           <button 
             className={styles.breadcrumbButton}
@@ -145,7 +143,7 @@ export default function Page() {
           </button>
         </div>
 
-        {/* Filtros específicos para fútbol */}
+        {/* Filtros */}
         <div className={styles.filtersContainer}>
           <h3 className={styles.filtersTitle}>Filtrar canchas de fútbol</h3>
           <div className={styles.filtersGrid}>
@@ -204,7 +202,7 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Mostrar mensaje si no hay resultados */}
+        {/* Mensaje de no resultados */}
         {filteredCanchas.length === 0 && searchTerm && (
           <div className={styles.noResults}>
             <h3>No se encontraron canchas de fútbol para &quot;{searchTerm}&quot;</h3>
@@ -222,19 +220,12 @@ export default function Page() {
               <CourtCard 
                 key={idx} 
                 {...cancha} 
-                sport="futbol" // 🔥 ESPECIFICAR DEPORTE
+                sport="futbol"
               />
             ))}
           </div>
           
-          {/* Mensaje de disponibilidad */}
-          <div className={styles.availabilityMessage}>
-            <div className={styles.availabilityCard}>
-              <span className={styles.availabilityText}>
-                Canchas de Fútbol Disponibles ahora: <span className={styles.availabilityNumber}> {availableNow}</span>
-              </span>
-            </div>
-          </div>
+          
         </div>
       </div>
     </div>

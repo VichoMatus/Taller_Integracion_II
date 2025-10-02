@@ -10,11 +10,12 @@ import basquetbolStyles from './StylesSportsSideBar/BasquetbolSideBar.module.css
 import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
 import padelStyles from './StylesSportsSideBar/PadelSideBar.module.css';
 import crossfitentrenamientofuncionalStyles from './StylesSportsSideBar/CrossfitEntrenamientoFuncionalSideBar.module.css';
+import escaladaStyles from './StylesSportsSideBar/EscaladaSideBar.module.css';
 // import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
 
 interface SidebarProps {
   userRole: 'admin' | 'superadmin' | 'usuario';
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'escalada';
 }
 
 const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
@@ -46,6 +47,8 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
         return padelStyles;
       case 'crossfitentrenamientofuncional':
         return crossfitentrenamientofuncionalStyles;
+      case 'escalada':
+        return escaladaStyles;
       default:
         return basquetbolStyles;
     }
