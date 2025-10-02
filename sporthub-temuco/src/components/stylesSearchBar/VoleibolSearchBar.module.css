@@ -1,10 +1,10 @@
 /* 🔥 ANIMACIONES PARA VOLEIBOL SEARCHBAR - NUEVA PALETA DE COLORES */
 @keyframes searchPulse {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(185, 94, 130, 0.4);
+    box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.4);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(185, 94, 130, 0);
+    box-shadow: 0 0 0 8px rgba(66, 133, 244, 0);
   }
 }
 
@@ -51,13 +51,13 @@
     rgba(255, 255, 255, 0.85) 100%
   );
   backdrop-filter: blur(20px);
-  border: 2px solid rgba(185, 94, 130, 0.2);
+  border: 2px solid rgba(66, 133, 244, 0.2);
   border-radius: 16px;
   padding: 4px;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   box-shadow: 
-    0 8px 32px rgba(185, 94, 130, 0.1),
+    0 8px 32px rgba(66, 133, 244, 0.1),
     0 0 0 1px rgba(255, 255, 255, 0.3);
 }
 
@@ -71,7 +71,7 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(185, 94, 130, 0.1) 50%,
+    rgba(66, 133, 244, 0.1) 50%,
     transparent 100%
   );
   transition: left 0.6s ease;
@@ -82,18 +82,18 @@
 }
 
 .searchContainer:hover {
-  border-color: rgba(185, 94, 130, 0.4);
+  border-color: rgba(66, 133, 244, 0.4);
   box-shadow: 
-    0 12px 40px rgba(185, 94, 130, 0.15),
-    0 0 0 1px rgba(185, 94, 130, 0.2);
+    0 12px 40px rgba(66, 133, 244, 0.15),
+    0 0 0 1px rgba(66, 133, 244, 0.2);
   transform: translateY(-2px);
 }
 
 .searchContainer:focus-within {
-  border-color: #B95E82;
+  border-color: #42A5F5;
   box-shadow: 
-    0 0 0 4px rgba(185, 94, 130, 0.2),
-    0 12px 40px rgba(185, 94, 130, 0.2);
+    0 0 0 4px rgba(66, 133, 244, 0.2),
+    0 12px 40px rgba(66, 133, 244, 0.2);
   animation: searchPulse 2s infinite;
 }
 
@@ -124,7 +124,7 @@
 
 .searchInput:focus {
   color: #374151;
-  background: rgba(185, 94, 130, 0.02);
+  background: rgba(66, 133, 244, 0.02);
 }
 
 /* 🔥 SEARCH ICON */
@@ -138,21 +138,21 @@
   border-radius: 8px;
   background: linear-gradient(
     135deg,
-    rgba(185, 94, 130, 0.1) 0%,
-    rgba(139, 67, 102, 0.05) 100%
+    rgba(66, 133, 244, 0.1) 0%,
+    rgba(25, 118, 210, 0.05) 100%
   );
   animation: iconFloat 3s ease-in-out infinite;
 }
 
 .searchIcon:hover {
-  color: #B95E82;
+  color: #42A5F5;
   background: linear-gradient(
     135deg,
-    rgba(185, 94, 130, 0.2) 0%,
-    rgba(139, 67, 102, 0.1) 100%
+    rgba(66, 133, 244, 0.2) 0%,
+    rgba(25, 118, 210, 0.1) 100%
   );
   transform: scale(1.1) rotate(10deg);
-  box-shadow: 0 4px 15px rgba(185, 94, 130, 0.3);
+  box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
 }
 
 /* 🔥 SEARCH BUTTON - TEMA VOLEIBOL */
@@ -160,8 +160,8 @@
   padding: 12px 20px;
   background: linear-gradient(
     135deg,
-    #B95E82 0%,
-    #8B4366 100%
+    #42A5F5 0%,
+    #1976D2 100%
   );
   background-size: 200% 200%;
   color: white;
@@ -175,7 +175,7 @@
   overflow: hidden;
   min-width: 100px;
   box-shadow: 
-    0 4px 15px rgba(185, 94, 130, 0.3),
+    0 4px 15px rgba(66, 133, 244, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.2);
   animation: gradientShift 3s ease infinite;
 }
@@ -201,19 +201,19 @@
 .searchButton:hover {
   background: linear-gradient(
     135deg,
-    #8B4366 0%,
-    #6A3250 100%
+    #1976D2 0%,
+    #1565C0 100%
   );
   transform: translateY(-2px) scale(1.05);
   box-shadow: 
-    0 8px 25px rgba(185, 94, 130, 0.4),
+    0 8px 25px rgba(66, 133, 244, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.3);
 }
 
 .searchButton:active {
   transform: translateY(0) scale(1);
   box-shadow: 
-    0 4px 15px rgba(185, 94, 130, 0.3),
+    0 4px 15px rgba(66, 133, 244, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.2);
 }
 

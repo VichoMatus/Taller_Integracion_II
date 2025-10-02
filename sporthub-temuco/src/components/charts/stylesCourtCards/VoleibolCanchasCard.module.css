@@ -1,12 +1,12 @@
 /* VoleibolCanchasCard.module.css - Estilos específicos para tarjetas de Voleibol con nueva paleta de colores */
 
 .courtCard {
-  background: white;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFF9E6 100%);
   width: 342px;
   height: 453px;
   border-radius: 12px;
   box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.55);
-  border: 1px solid #e5e7eb;
+  border: 2px solid #FFE082;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -18,10 +18,10 @@
 .courtCard:hover {
   transform: translateY(-8px);
   box-shadow: 
-    0 12px 30px rgba(185, 94, 130, 0.15),
-    0 4px 8px rgba(185, 94, 130, 0.1);
-  border-color: #F39F9F;
-  background: linear-gradient(135deg, #ffffff 0%, #FFECC0 100%);
+    0 12px 30px rgba(255, 193, 7, 0.15),
+    0 4px 8px rgba(255, 193, 7, 0.1);
+  border-color: #FFD54F;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFF8E1 100%);
 }
 
 .courtCard:hover .cardImage {
@@ -30,26 +30,26 @@
 }
 
 .courtCard:hover .cardTitle {
-  color: #B95E82;
+  color: #FF8F00;
 }
 
 .courtCard:hover .ratingBadge {
   transform: scale(1.05);
-  border-color: #B95E82;
-  background: #FFECC0;
+  border-color: #FFB300;
+  background: #FFF8E1;
 }
 
 .courtCard:hover .tag {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  background: #FFC29B;
-  border-color: #F39F9F;
+  background: #FFB300;
+  border-color: #FF8F00;
 }
 
 .courtCard:hover .actionButton {
   transform: scale(1.05);
-  box-shadow: 0 6px 12px rgba(185, 94, 130, 0.4);
-  background: #B95E82;
+  box-shadow: 0 6px 12px rgba(255, 160, 0, 0.4);
+  background: #FF8F00;
 }
 
 .courtCard:active {
@@ -102,12 +102,12 @@
 .ratingBadge {
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, #ffffff 0%, #FFECC0 100%);
-  border: 2px solid #F39F9F;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFF8E1 100%);
+  border: 2px solid #FFD54F;
   border-radius: 25px;
   padding: 8px 14px;
   box-shadow: 
-    0 4px 12px rgba(185, 94, 130, 0.15),
+    0 4px 12px rgba(255, 193, 7, 0.15),
     0 2px 4px rgba(0, 0, 0, 0.05);
   margin-left: 12px;
   min-width: 120px;
@@ -125,15 +125,15 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(185, 94, 130, 0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 193, 7, 0.2), transparent);
   transition: left 0.6s ease;
 }
 
 .courtCard:hover .ratingBadge {
   transform: scale(1.05) rotate(1deg);
-  border-color: #B95E82;
-  background: linear-gradient(135deg, #FFECC0 0%, #FFC29B 100%);
-  box-shadow: 0 8px 20px rgba(185, 94, 130, 0.25);
+  border-color: #FFB300;
+  background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
+  box-shadow: 0 8px 20px rgba(255, 193, 7, 0.25);
 }
 
 .courtCard:hover .ratingBadge::before {
@@ -143,20 +143,20 @@
 .starIcon {
   width: 16px;
   height: 16px;
-  color: #fbbf24;
+  color: #FFB300;
   margin-right: 4px;
 }
 
 .ratingNumber {
   font-size: 11px;
   font-weight: 700;
-  color: #B95E82;
+  color: #FF8F00;
 }
 
 .ratingReviews {
   font-size: 10px;
   font-weight: 600;
-  color: #B95E82;
+  color: #FF8F00;
   margin-left: 6px;
 }
 
@@ -169,13 +169,13 @@
 }
 
 .tag {
-  background: #FFC29B;
-  color: #8B4513;
+  background: #FFB300;
+  color: #5D4037;
   padding: 4px 12px;
   border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
-  border: 1px solid #F39F9F;
+  border: 1px solid #FF8F00;
   text-align: center;
   min-width: 80px;
   box-shadow: 0 3px 5px rgba(0, 0, 0, 0.25);
@@ -203,7 +203,7 @@
 }
 
 .price {
-  color: #B95E82;
+  color: #FF8F00;
   font-size: 16px;
   font-weight: 700;
 }
@@ -215,8 +215,8 @@
 }
 
 .actionButton {
-  background: linear-gradient(135deg, #B95E82 0%, #8B4366 100%);
-  color: white;
+  background: linear-gradient(135deg, #FFB300 0%, #FF8F00 100%);
+  color: #5D4037;
   font-weight: 700;
   font-size: 12px;
   padding: 10px 10px;
@@ -224,7 +224,7 @@
   border: 2px solid transparent;
   cursor: pointer;
   box-shadow: 
-    0 6px 20px rgba(185, 94, 130, 0.3),
+    0 6px 20px rgba(255, 160, 0, 0.3),
     0 3px 8px rgba(0, 0, 0, 0.1);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   min-width: 120px;
@@ -254,18 +254,19 @@
 
 .actionButton:hover {
   transform: translateY(-3px) scale(1.05);
-  background: linear-gradient(135deg, #8B4366 0%, #6A3250 100%);
+  background: linear-gradient(135deg, #FF8F00 0%, #FF6F00 100%);
   box-shadow: 
-    0 10px 30px rgba(185, 94, 130, 0.4),
-    0 6px 16px rgba(139, 67, 102, 0.3);
-  border-color: #F39F9F;
+    0 10px 30px rgba(255, 160, 0, 0.4),
+    0 6px 16px rgba(255, 143, 0, 0.3);
+  border-color: #FFD54F;
+  color: white;
 }
 
 .actionButton:active {
   transform: translateY(-1px) scale(1.02);
   transition: transform 0.1s ease;
   box-shadow: 
-    0 6px 20px rgba(185, 94, 130, 0.3),
+    0 6px 20px rgba(255, 160, 0, 0.3),
     0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -277,12 +278,12 @@
 @keyframes buttonPulse {
   0%, 100% {
     box-shadow: 
-      0 6px 20px rgba(185, 94, 130, 0.3),
+      0 6px 20px rgba(255, 160, 0, 0.3),
       0 3px 8px rgba(0, 0, 0, 0.1);
   }
   50% {
     box-shadow: 
-      0 6px 20px rgba(185, 94, 130, 0.6),
+      0 6px 20px rgba(255, 160, 0, 0.6),
       0 3px 8px rgba(0, 0, 0, 0.2);
   }
 }
