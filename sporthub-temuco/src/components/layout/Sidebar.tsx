@@ -11,6 +11,7 @@ import enduroStyles from './StylesSportsSideBar/EnduroSideBar.module.css';
 // import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
 import futbolamericanoStyles from './StylesSportsSideBar/FutbolAmericanoSideBar.module.css';
 import rugbyStyles from './StylesSportsSideBar/RugbySideBar.module.css';
+import mountainbikeStyles from './StylesSportsSideBar/MountainBikeSideBar.module.css';
 
 interface SidebarProps {
   userRole: 'admin' | 'superadmin' | 'usuario';
@@ -50,6 +51,8 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
         return futbolamericanoStyles;
       case 'rugby':
         return rugbyStyles;
+      case 'mountain-bike':
+        return mountainbikeStyles;
 
 
       default:

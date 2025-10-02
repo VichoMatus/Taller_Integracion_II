@@ -4,7 +4,8 @@ import { useRouter } from 'next/navigation';
 import styles from './stylesCourtCards/BasquetbolCanchasCard.module.css';
 import enduroStyles from './stylesCourtCards/EnduroRutasCard.module.css';
 import futbolAmericanoStyles from './stylesCourtCards/FutbolAmericanoEstadioCard.module.css';
-import rugbyStyles from './stylesCourtCards/RugbyCanchasCard.module.css'; // 🔥 Nueva importación
+import rugbyStyles from './stylesCourtCards/RugbyCanchasCard.module.css';
+import mountainBikeStyles from './stylesCourtCards/MountainBikeRutasCard.module.css';
 
 interface CourtCardProps {
   imageUrl: string;
@@ -35,11 +36,11 @@ const CourtCard: React.FC<CourtCardProps> = ({
 }) => {
   const router = useRouter();
   
-  // 🔥 Seleccionar estilos según el deporte
   const currentStyles = 
     sport === 'enduro' ? enduroStyles :
     sport === 'futbol-americano' ? futbolAmericanoStyles :
-    sport === 'rugby' ? rugbyStyles : // 🔥 Nuevo caso para rugby
+    sport === 'rugby' ? rugbyStyles :
+    sport === 'mountain-bike' ? mountainBikeStyles :
     styles;
   
   // 🔥 Limitar a máximo 4 tags
@@ -109,11 +110,11 @@ const CourtCard: React.FC<CourtCardProps> = ({
           router.push(`/sports/padel/canchas/canchaseleccionada?${padelParams.toString()}`);
           break;
           
-        case 'enduro': // 🔥 Caso para Enduro
+        case 'enduro':
           router.push('/sports/enduro/rutas/rutaseleccionada');
           break;
 
-        case 'futbol-americano': // 🔥 Caso para Fútbol Americano
+        case 'futbol-americano':
           const futbolAmericanoParams = new URLSearchParams({
             id: Date.now().toString(),
             name: name,
@@ -126,7 +127,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
           router.push(`/sports/futbol-americano/estadios/estadioseleccionado?${futbolAmericanoParams.toString()}`);
           break;
 
-        case 'rugby': // 🔥 NUEVO CASO PARA RUGBY
+        case 'rugby':
           const rugbyParams = new URLSearchParams({
             id: Date.now().toString(),
             name: name,
@@ -137,6 +138,19 @@ const CourtCard: React.FC<CourtCardProps> = ({
             priceFrom: (parseInt(price) * 1000).toString(),
           });
           router.push(`/sports/rugby/canchas/canchaseleccionada?${rugbyParams.toString()}`);
+          break;
+
+        case 'mountain-bike': // 🔥 NUEVO CASO PARA MOUNTAIN BIKE
+          const mountainBikeParams = new URLSearchParams({
+            id: Date.now().toString(),
+            name: name,
+            location: address,
+            description: description,
+            rating: rating.toString(),
+            reviews: reviews.toString().replace(' reseñas', ''),
+            priceFrom: (parseInt(price) * 1000).toString(),
+          });
+          router.push(`/sports/mountain-bike/rutas/rutaseleccionada?${mountainBikeParams.toString()}`);
           break;
           
         default:
@@ -194,7 +208,8 @@ const CourtCard: React.FC<CourtCardProps> = ({
           <button onClick={handleInternalClick} className={currentStyles.actionButton}>
             {sport === 'enduro' ? 'Ir a ruta →' : 
              sport === 'futbol-americano' ? 'Ir a estadio →' : 
-             sport === 'rugby' ? 'Ir a campo →' : 'Ir a cancha →'}
+             sport === 'rugby' ? 'Ir a campo →' : 
+             sport === 'mountain-bike' ? 'Ir a ruta →' : 'Ir a cancha →'}
           </button>
         </div>
       </div>
