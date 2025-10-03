@@ -1,7 +1,7 @@
 import { Conversation, Message } from '../types/message';
 
 // Mock data
-let conversations: Conversation[] = [
+const conversations: Conversation[] = [
   {
     id: 'c1',
     title: 'Amigos - Futbol',
@@ -20,7 +20,7 @@ let conversations: Conversation[] = [
   }
 ];
 
-let messages: Message[] = [
+const messages: Message[] = [
   { id: 'm1', conversationId: 'c1', senderId: 'u2', text: 'Hola! Listo para hoy?', createdAt: new Date(Date.now()-1000*60*60).toISOString(), status: 'sent' },
   { id: 'm2', conversationId: 'c1', senderId: 'u1', text: 'Sí, a las 18', createdAt: new Date(Date.now()-1000*60*55).toISOString(), status: 'sent' },
   { id: 'm3', conversationId: 'c2', senderId: 'u3', text: 'Gran día para entrenar', createdAt: new Date(Date.now()-1000*60*30).toISOString(), status: 'sent' }

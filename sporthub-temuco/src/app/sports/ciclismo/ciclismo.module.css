@@ -1,0 +1,510 @@
+/* 🚴‍♂️ ANIMACIONES BÁSICAS PARA CICLISMO */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes cycleGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+  }
+}
+
+/* 🌿 CONTENEDOR PRINCIPAL - Tema Verde Naturaleza */
+.pageContainer {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 50%, #bbf7d0 100%);
+  background-size: 200% 200%;
+  font-family: 'Inter', sans-serif;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 20px;
+  margin-left: 256px;
+  overflow-y: auto;
+  height: 100vh;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* 🚴‍♂️ HEADER SECTION */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 20px 0;
+  border-bottom: 2px solid rgba(34, 197, 94, 0.1);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.headerIcon {
+  font-size: 48px;
+  animation: cycleGlow 3s ease-in-out infinite;
+  padding: 10px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  box-shadow: 0 8px 16px rgba(34, 197, 94, 0.3);
+}
+
+.headerTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #15803d;
+  margin: 0;
+  text-shadow: 2px 2px 4px rgba(21, 128, 61, 0.1);
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.userButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.userButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+  background: linear-gradient(135deg, #16a34a, #15803d);
+}
+
+/* 📊 STATS CONTAINER */
+.statsContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.statCard {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  transition: all 0.3s ease;
+  animation: slideInRight 0.8s ease-out;
+}
+
+.statCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+/* 🚀 QUICK ACCESS SECTION */
+.quickAccessSection {
+  margin-bottom: 40px;
+}
+
+.mainCourtButton {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 24px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3);
+}
+
+.mainCourtButton:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(34, 197, 94, 0.4);
+  background: linear-gradient(135deg, #16a34a, #15803d);
+}
+
+.containerCard {
+  background: white;
+  border: 2px solid #22c55e;
+  color: #15803d;
+}
+
+.containerCard:hover {
+  background: #f0fdf4;
+  border-color: #16a34a;
+}
+
+.courtButtonIcon {
+  font-size: 2.5rem;
+  margin-right: 20px;
+}
+
+.courtButtonText {
+  flex: 1;
+  text-align: left;
+}
+
+.courtButtonTitle {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.courtButtonSubtitle {
+  display: block;
+  font-size: 1rem;
+  opacity: 0.8;
+  font-weight: 400;
+}
+
+.courtButtonArrow {
+  font-size: 1.5rem;
+  font-weight: bold;
+  transition: transform 0.3s ease;
+}
+
+.mainCourtButton:hover .courtButtonArrow {
+  transform: translateX(8px);
+}
+
+/* ⭐ TOP RATED SECTION */
+.topRatedSection {
+  margin-bottom: 40px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #15803d;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.sectionIcon {
+  font-size: 1.5rem;
+}
+
+.carouselControls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.carouselButton {
+  background: #22c55e;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+}
+
+.carouselButton:hover:not(:disabled) {
+  background: #16a34a;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+
+.carouselButton:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.slideIndicator {
+  font-weight: 600;
+  color: #15803d;
+  padding: 8px 16px;
+  background: rgba(34, 197, 94, 0.1);
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.carouselContainer {
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.courtsGrid {
+  display: flex;
+  gap: 20px;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 4px;
+}
+
+/* 🗺️ MAP SECTION */
+.mapSection {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.locationSearch {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.locationInputContainer {
+  position: relative;
+  flex: 1;
+  min-width: 300px;
+}
+
+.locationIcon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #22c55e;
+}
+
+.locationInput {
+  width: 100%;
+  padding: 14px 16px 14px 50px;
+  border: 2px solid rgba(34, 197, 94, 0.3);
+  border-radius: 12px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: #f8fafc;
+}
+
+.locationInput:focus {
+  outline: none;
+  border-color: #22c55e;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+.radiusContainer {
+  position: relative;
+  min-width: 140px;
+}
+
+.radiusIcon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #22c55e;
+  z-index: 1;
+}
+
+.radiusSelect {
+  width: 100%;
+  padding: 14px 16px 14px 50px;
+  border: 2px solid rgba(34, 197, 94, 0.3);
+  border-radius: 12px;
+  font-size: 16px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.radiusSelect:focus {
+  outline: none;
+  border-color: #22c55e;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+.searchButton {
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  min-width: 120px;
+}
+
+.searchButton:hover {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+}
+
+.mapActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.helpButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: rgba(34, 197, 94, 0.1);
+  color: #15803d;
+  border: 2px solid rgba(34, 197, 94, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.helpButton:hover {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: #22c55e;
+  transform: translateY(-1px);
+}
+
+/* 📱 RESPONSIVE DESIGN */
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: 0;
+    padding: 16px;
+  }
+  
+  .header {
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  
+  .headerRight {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .statsContainer {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+  }
+  
+  .locationSearch {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .locationInputContainer {
+    min-width: 100%;
+  }
+  
+  .radiusContainer {
+    min-width: 100%;
+  }
+  
+  .searchButton {
+    min-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .headerTitle {
+    font-size: 2rem;
+  }
+  
+  .headerIcon {
+    font-size: 36px;
+  }
+  
+  .statsContainer {
+    grid-template-columns: 1fr;
+  }
+  
+  .carouselControls {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}
+
+/* 🎨 SCROLL STYLING */
+.mainContent::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mainContent::-webkit-scrollbar-track {
+  background: rgba(34, 197, 94, 0.1);
+  border-radius: 4px;
+}
+
+.mainContent::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #22c55e, #16a34a);
+  border-radius: 4px;
+}
+
+.mainContent::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #16a34a, #15803d);
+}

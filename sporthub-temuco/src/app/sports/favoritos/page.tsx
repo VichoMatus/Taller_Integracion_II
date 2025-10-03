@@ -35,7 +35,14 @@ export default function FavoritosPage() {
   };
 
   const handleView = (courtId: string) => {
-    router.push(`/sports/basquetbol/canchas/canchaseleccionada`);
+    // Buscar en los favoritos cuál es el deporte de la cancha clickeada
+    const fav = items.find((i) => i.courtId === courtId || i.id === courtId);
+    if (fav && fav.sport) {
+      router.push(`/sports/${fav.sport}/canchas/canchaseleccionada`);
+    } else {
+      // Si no se encuentra, llevar a la lista general de deportes como fallback
+      router.push('/sports');
+    }
   };
 
   return (

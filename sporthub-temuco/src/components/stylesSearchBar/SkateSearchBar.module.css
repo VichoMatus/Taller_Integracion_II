@@ -1,0 +1,26 @@
+/* Skate searchbar styles - 'Underground' gray palette */
+.searchContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 500px;
+  background: linear-gradient(135deg,#ffffff,#f7f8fa);
+  backdrop-filter: blur(6px);
+  border: 2px solid rgba(var(--skate-accent-rgb, 107,114,128),0.06);
+  border-radius: 12px;
+  padding: 6px;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  color: var(--skate-text, #0f172a);
+  outline: none;
+}
+
+.searchIcon { padding: 8px; margin-right: 8px; color: #6b7280; }
+.searchButton { padding: 10px 14px; background: linear-gradient(135deg,var(--sport-accent, #6b7280), var(--sport-accent-2, #d1d5db)); color: white; border:none; border-radius:10px; }

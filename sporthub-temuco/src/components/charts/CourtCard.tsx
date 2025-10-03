@@ -6,6 +6,13 @@ import enduroStyles from './stylesCourtCards/EnduroRutasCard.module.css';
 import futbolAmericanoStyles from './stylesCourtCards/FutbolAmericanoEstadioCard.module.css';
 import rugbyStyles from './stylesCourtCards/RugbyCanchasCard.module.css';
 import mountainBikeStyles from './stylesCourtCards/MountainBikeRutasCard.module.css';
+import basquetStyles from './stylesCourtCards/BasquetbolCanchasCard.module.css';
+import atletismoStyles from './stylesCourtCards/AtletismoCanchasCard.module.css';
+import skateStyles from './stylesCourtCards/SkateCanchasCard.module.css';
+import ciclismoStyles from './stylesCourtCards/CiclismoCanchasCard.module.css';
+import kartingStyles from './stylesCourtCards/KartingCanchasCard.module.css';
+import { mountAtletismoLoader, unmountAtletismoLoader } from '@/components/ui/AtletismoNavLoader';
+import { mountSkateLoader, unmountSkateLoader } from '@/components/ui/SkateNavLoader';
 
 // 🔥 IMPORTAR TODOS LOS ESTILOS DE LOS DEPORTES
 import basquetbolStyles from './stylesCourtCards/BasquetbolCanchasCard.module.css';
@@ -28,7 +35,9 @@ interface CourtCardProps {
   description: string;
   price: string;
   nextAvailable: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje' | 'escalada';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje' | 'escalada' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
+
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
   onClick?: () => void;
 }
 
@@ -92,9 +101,44 @@ const CourtCard: React.FC<CourtCardProps> = ({
     if (onClick) {
       onClick();
     } else {
+      // Navegación automática según el deporte
+      const showAtletismoLoaderAndNavigate = (path: string) => {
+        try {
+          mountAtletismoLoader();
+        } catch (e) {
+          // ignore
+        }
+
+        // Short delay so the overlay is visible before navigation
+        setTimeout(() => {
+          router.push(path);
+        }, 180);
+
+        // Ensure overlay removed after a reasonable time
+        setTimeout(() => {
+          try { unmountAtletismoLoader(); } catch (e) { /* ignore */ }
+        }, 1600);
+      };
+
       switch (sport) {
         case 'basquetbol':
           router.push('/sports/basquetbol/canchas/canchaseleccionada');
+          break;
+        case 'atletismo':
+          // show a transient Atletismo-themed loader and then navigate
+          showAtletismoLoaderAndNavigate('/sports/atletismo/canchas/canchaseleccionada');
+          break;
+        case 'skate':
+          // show transient Skate-themed loader and then navigate
+          try { mountSkateLoader(); } catch (e) { /* ignore */ }
+          setTimeout(() => { router.push('/sports/skate/canchas/canchaseleccionada'); }, 180);
+          setTimeout(() => { try { unmountSkateLoader(); } catch (e) { /* ignore */ } }, 1600);
+          break;
+        case 'ciclismo':
+          router.push('/sports/ciclismo/canchas/canchaseleccionada');
+          break;
+        case 'karting':
+          router.push('/sports/karting/canchas/canchaseleccionada');
           break;
           
         case 'futbol':
@@ -223,8 +267,14 @@ const CourtCard: React.FC<CourtCardProps> = ({
     setImageError(true);
   };
   
+  const styles = sport === 'atletismo' ? atletismoStyles : 
+                 sport === 'skate' ? skateStyles : 
+                 sport === 'ciclismo' ? ciclismoStyles :
+                 sport === 'karting' ? kartingStyles :
+                 basquetStyles;
+
   return (
-    <div className={currentStyles.courtCard}>
+    <div className={`${styles.courtCard} ${sport ? (styles[`courtCard${sport.charAt(0).toUpperCase() + sport.slice(1)}`] || '') : ''}`}>
       <Image
         src={imageUrl}
         alt={name}

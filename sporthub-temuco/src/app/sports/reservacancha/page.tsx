@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import styles from './page.module.css'
 import Sidebar from '../../../components/layout/Sidebar'
+import atletismoCommon from '../atletismo/atletismo.module.css'
 
 export default function ReservaCancha() {
   const router = useRouter()

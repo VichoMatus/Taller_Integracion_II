@@ -1,0 +1,292 @@
+/* 🚴‍♂️ COURT CARD - CICLISMO STYLES */
+
+.courtCard {
+  width: 320px;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.courtCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 32px rgba(34, 197, 94, 0.2);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.courtCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #22c55e, #16a34a, #15803d);
+  z-index: 1;
+}
+
+.cardImage {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.courtCard:hover .cardImage {
+  transform: scale(1.05);
+}
+
+.cardContent {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.cardTitleSection {
+  flex: 1;
+}
+
+.cardTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #15803d;
+  margin: 0 0 6px 0;
+  line-height: 1.3;
+}
+
+.cardAddress {
+  color: #059669;
+  font-size: 0.9rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cardAddress::before {
+  content: "📍";
+  font-size: 0.8rem;
+}
+
+.ratingBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #fef3c7, #fbbf24);
+  padding: 6px 10px;
+  border-radius: 20px;
+  flex-shrink: 0;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.starIcon {
+  width: 14px;
+  height: 14px;
+  color: #f59e0b;
+}
+
+.ratingNumber {
+  font-weight: 700;
+  color: #92400e;
+  font-size: 0.9rem;
+}
+
+.ratingReviews {
+  color: #78716c;
+  font-size: 0.7rem;
+  display: none;
+}
+
+.tagsContainer {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  background: rgba(34, 197, 94, 0.1);
+  color: #15803d;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  white-space: nowrap;
+}
+
+.description {
+  color: #4b5563;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(34, 197, 94, 0.1);
+}
+
+.priceSection {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #15803d;
+}
+
+.nextTime {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.actionButton {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+}
+
+.actionButton:hover {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  transform: translateX(2px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+
+/* Variante específica para ciclismo */
+.courtCardCiclismo {
+  border-left: 4px solid #22c55e;
+}
+
+.courtCardCiclismo .tag {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.courtCardCiclismo .cardTitle::before {
+  content: "🚴‍♂️ ";
+  font-size: 1rem;
+  margin-right: 4px;
+}
+
+/* Estados especiales */
+.courtCard.available {
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.courtCard.available::before {
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+.courtCard.busy {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.courtCard.busy::before {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .courtCard {
+    width: 100%;
+    max-width: 320px;
+  }
+  
+  .cardContent {
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .cardTitle {
+    font-size: 1.1rem;
+  }
+  
+  .cardImage {
+    height: 160px;
+  }
+  
+  .ratingReviews {
+    display: block;
+  }
+  
+  .tagsContainer {
+    gap: 4px;
+  }
+  
+  .tag {
+    font-size: 0.7rem;
+    padding: 3px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .ratingBadge {
+    align-self: flex-start;
+  }
+  
+  .cardFooter {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .actionButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
