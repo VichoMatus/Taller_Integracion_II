@@ -25,8 +25,16 @@
 }
 
 .mapPlaceholder {
-  text-align: center;
-  padding: 20px;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important; /* 🔥 CENTRAR VERTICALMENTE */
+  padding: 40px 30px !important; /* 🔥 PADDING UNIFORME */
+  text-align: center !important;
+  min-height: 300px !important; /* 🔥 ALTURA MÍNIMA */
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box; /* 🔥 INCLUIR PADDING EN ALTURA */
 }
 
 .mapTitle {

@@ -1,0 +1,632 @@
+/* page.module.css para Patinaje - Tema turquesa/blanco */
+
+/* 🔥 ANIMACIONES BÁSICAS */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 🔥 CONTENEDOR PRINCIPAL */
+.pageContainer {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  background: #f0fdfa;
+  background-size: 200% 200%;
+  font-family: 'Inter', sans-serif;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 20px;
+  margin-left: 256px;
+  overflow-y: auto;
+  height: 100vh;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Scrollbar personalizado con colores de patinaje */
+.mainContent::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mainContent::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.mainContent::-webkit-scrollbar-thumb {
+  background: linear-gradient(45deg, rgba(6, 182, 212, 0.6), rgba(13, 148, 136, 0.6));
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.mainContent::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(45deg, rgba(6, 182, 212, 0.8), rgba(13, 148, 136, 0.8));
+}
+
+/* 🔥 HEADER MEJORADO - Tema Patinaje */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(240, 253, 250, 0.8) 100%
+  );
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  padding: 20px 30px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.1);
+  animation: slideInRight 0.8s ease-out;
+  transition: all 0.3s ease;
+}
+
+.header:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(6, 182, 212, 0.15);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+}
+
+.headerIcon {
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #99f6e4 0%, #5eead4 100%);
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+}
+
+.headerIcon:hover {
+  transform: scale(1.1);
+}
+
+.headerTitle {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #0d9488 0%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.userButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #06b6d4 0%, #0d9488 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+}
+
+.userButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+}
+
+/* ✅ CORREGIDO: Contenedor para StatsCard - solo layout, sin estilos de tarjeta */
+.statsContainer {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+/* 🔥 CONTROLES DEL CARRUSEL - TEMA PATINAJE */
+.carouselControls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.carouselButton {
+  background: linear-gradient(135deg, #06b6d4 0%, #0d9488 100%);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(6, 182, 212, 0.3);
+}
+
+.carouselButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+  transform: scale(1.05);
+  box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+}
+
+.carouselButton:disabled {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+  box-shadow: none;
+}
+
+.slideIndicator {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 600;
+  min-width: 60px;
+  text-align: center;
+  padding: 8px 12px;
+  background: rgba(6, 182, 212, 0.1);
+  border-radius: 8px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+}
+
+/* 🔥 SECCIÓN DE PISTAS MEJOR CALIFICADAS - MEJORADA */
+.topRatedSection {
+  margin-bottom: 30px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.sectionIcon {
+  font-size: 20px;
+  color: #06b6d4;
+}
+
+/* 🔥 CARRUSEL CONTAINER MEJORADO */
+.carouselContainer {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.carouselContainer::before,
+.carouselContainer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 30px;
+  height: 100%;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.carouselContainer::before {
+  left: 0;
+  background: linear-gradient(90deg, rgba(240, 253, 250, 0.8) 0%, transparent 100%);
+}
+
+.carouselContainer::after {
+  right: 0;
+  background: linear-gradient(-90deg, rgba(240, 253, 250, 0.8) 0%, transparent 100%);
+}
+
+.courtsGrid {
+  display: flex;
+  gap: 20px;
+  transition: transform 0.4s ease;
+  width: fit-content;
+  padding-bottom: 10px;
+  padding-top: 10px;
+}
+
+/* 🔥 TAMAÑO DE TARJETAS AJUSTADO */
+.courtsGrid > * {
+  flex: 0 0 342px;
+  width: 342px;
+  height: 453px;
+  transition: transform 0.3s ease;
+}
+
+.courtsGrid > *:hover {
+  transform: translateY(-5px);
+}
+
+/* 🔥 BOTÓN PRINCIPAL DE PISTA - Tema Patinaje */
+.quickAccessSection {
+  margin: 30px 0;
+  display: flex;
+  justify-content: center;
+  animation: fadeInUp 1s ease-out 0.4s both;
+}
+
+.mainCourtButton {
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+  border: 2px solid #06b6d4;
+  border-radius: 16px;
+  padding: 24px 32px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 550px;
+  box-shadow: 
+    0 4px 20px rgba(6, 182, 212, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.mainCourtButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg, 
+    transparent 0%, 
+    rgba(6, 182, 212, 0.1) 50%, 
+    transparent 100%
+  );
+  transition: left 0.6s ease;
+  z-index: 1;
+}
+
+.mainCourtButton:hover::before {
+  left: 100%;
+}
+
+.mainCourtButton:hover {
+  background: linear-gradient(135deg, #06b6d4 0%, #0d9488 100%);
+  color: white;
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 
+    0 12px 40px rgba(6, 182, 212, 0.3),
+    0 0 0 2px rgba(6, 182, 212, 0.2);
+  border-color: #0d9488;
+}
+
+.mainCourtButton:active {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+}
+
+.courtButtonIcon {
+  font-size: 36px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
+}
+
+.mainCourtButton:hover .courtButtonIcon {
+  transform: scale(1.3) rotate(15deg);
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.courtButtonText {
+  flex: 1;
+  text-align: left;
+  z-index: 2;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.courtButtonTitle {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  color: #1f2937;
+  transition: all 0.3s ease;
+  line-height: 1.2;
+}
+
+.courtButtonSubtitle {
+  display: block;
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  transition: all 0.3s ease;
+  line-height: 1.3;
+}
+
+.mainCourtButton:hover .courtButtonTitle,
+.mainCourtButton:hover .courtButtonSubtitle {
+  color: white;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.courtButtonArrow {
+  font-size: 28px;
+  font-weight: 700;
+  color: #06b6d4;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+}
+
+.mainCourtButton:hover .courtButtonArrow {
+  color: white;
+  transform: translateX(8px) scale(1.1);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* 🔥 SECCIÓN DEL MAPA - Tema Patinaje */
+.mapSection {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(240, 253, 250, 0.8) 100%
+  );
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  padding: 25px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(6, 182, 212, 0.1);
+  animation: fadeInUp 0.8s ease-out 0.8s both;
+}
+
+.locationSearch {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.locationInputContainer {
+  flex: 1;
+  min-width: 250px;
+  position: relative;
+}
+
+.locationIcon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #64748b;
+}
+
+.locationInput {
+  width: 100%;
+  padding: 12px 15px 12px 45px;
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: 12px;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+}
+
+.locationInput:focus {
+  outline: none;
+  border-color: #06b6d4;
+  box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+}
+
+.radiusContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: 12px;
+  padding: 0 15px;
+}
+
+.radiusIcon {
+  font-size: 16px;
+  color: #64748b;
+}
+
+.radiusSelect {
+  border: none;
+  background: transparent;
+  padding: 12px 0;
+  font-size: 14px;
+  color: #334155;
+  cursor: pointer;
+}
+
+.radiusSelect:focus {
+  outline: none;
+}
+
+.searchLocationButton {
+  background: linear-gradient(135deg, #06b6d4 0%, #0d9488 100%);
+  color: white;
+  border: none;
+  padding: 12px 25px;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(6, 182, 212, 0.3);
+}
+
+.searchLocationButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+}
+
+.mapActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 15px;
+}
+
+.helpButton {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  color: #0d9488;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.helpButton:hover {
+  background: rgba(6, 182, 212, 0.1);
+  border-color: rgba(6, 182, 212, 0.5);
+}
+
+/* 🔥 RESPONSIVE */
+@media (max-width: 1200px) {
+  .statsContainer {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: 0;
+    padding: 15px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+
+  .headerRight {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .statsContainer {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .locationSearch {
+    flex-direction: column;
+  }
+
+  .locationInputContainer,
+  .radiusContainer {
+    min-width: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .statsContainer {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .carouselControls {
+    align-self: flex-end;
+  }
+
+  .mainCourtButton {
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+  }
+
+  .courtButtonText {
+    text-align: center;
+  }
+
+  .courtsGrid > * {
+    flex: 0 0 300px;
+    width: 300px;
+    height: 420px;
+  }
+}
+
+@media (max-width: 480px) {
+  .headerTitle {
+    font-size: 24px;
+  }
+
+  .sectionTitle {
+    font-size: 20px;
+  }
+
+  .courtsGrid > * {
+    flex: 0 0 280px;
+    width: 280px;
+    height: 400px;
+  }
+}

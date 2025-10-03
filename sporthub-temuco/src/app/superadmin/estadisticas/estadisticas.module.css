@@ -1,0 +1,448 @@
+/* estadisticas.module.css - Clases únicas para evitar conflictos */
+
+.estadisticasPage {
+  background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+  background-attachment: fixed;
+  padding: 24px;
+  padding-top: 100px; /* ESPACIO PARA EL HEADER FIJO */
+  min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Header específico para estadísticas */
+.estadisticasHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  animation: estadisticasHeaderSlideDown 0.8s ease-out;
+  position: relative;
+}
+
+@keyframes estadisticasHeaderSlideDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.estadisticasTitle {
+  background: linear-gradient(135deg, #1f2937, #374151);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.estadisticasExportBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #d1d5db6a;
+  color: black;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.estadisticasExportBtn:hover {
+  background-color: #d1d5db77;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+/* Grid de estadísticas específico */
+.estadisticasStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  animation: estadisticasFadeInUp 0.6s ease-out 0.2s both;
+}
+
+@keyframes estadisticasFadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tarjetas de estadísticas específicas - SIN ANIMACIONES NO DESEADAS */
+.estadisticasCard {
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  background-color: white;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 1px solid #f1f5f9;
+}
+
+/* ELIMINAR la línea azul y transformaciones no deseadas */
+.estadisticasCard::before {
+  display: none; /* Elimina completamente la línea azul */
+}
+
+.estadisticasCard:hover {
+  transform: none; /* Elimina el movimiento al hover */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Mantiene la sombra original */
+}
+
+/* Grid de gráficos específico */
+.estadisticasChartsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  animation: estadisticasFadeInUp 0.6s ease-out 0.4s both;
+}
+
+.estadisticasChartContainer {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f1f5f9;
+  transition: all 0.3s ease;
+  overflow: hidden;
+  min-height: 300px;
+}
+
+.estadisticasChartContainer:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.estadisticasChartBackground {
+  padding: 1.5rem;
+  background: white;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Grid de tablas de datos específico */
+.estadisticasTablesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  animation: estadisticasFadeInUp 0.6s ease-out 0.6s both;
+}
+
+/* Contenedores de tablas específicos */
+.estadisticasTableContainer {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #f1f5f9;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  max-height: 250px;
+  display: flex;
+  flex-direction: column;
+}
+
+.estadisticasTableContainer:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.estadisticasTableHeader {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.estadisticasTableTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #334155;
+  margin: 0;
+}
+
+/* Estilos de tabla específicos */
+.estadisticasTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  flex: 1;
+}
+
+.estadisticasTable th {
+  background-color: #f8fafc;
+  padding: 12px 16px;
+  text-align: left;
+  font-weight: 600;
+  color: #475569;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.estadisticasTable td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.estadisticasTable tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.estadisticasTable tbody tr:hover {
+  background-color: #f8fafc;
+}
+
+.estadisticasTable tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Elementos de celda específicos */
+.estadisticasCellTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.estadisticasCellSubtitle {
+  font-weight: 500;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.estadisticasCellText {
+  color: #334155;
+  font-size: 14px;
+}
+
+.estadisticasAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* Status badges específicos */
+.estadisticasStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.estadisticasStatusActivo {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.estadisticasStatusPorRevisar {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.estadisticasStatusInactivo {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* Utilidades específicas */
+.estadisticasFlex {
+  display: flex;
+}
+
+.estadisticasItemsCenter {
+  align-items: center;
+}
+
+.estadisticasSpaceX1 > * + * {
+  margin-left: 0.25rem;
+}
+
+.estadisticasW5 {
+  width: 1.25rem;
+}
+
+.estadisticasH5 {
+  height: 1.25rem;
+}
+
+.estadisticasW4 {
+  width: 1rem;
+}
+
+.estadisticasH4 {
+  height: 1rem;
+}
+
+.estadisticasTextEmerald500 {
+  color: #10b981;
+}
+
+.estadisticasTextEmerald600 {
+  color: #059669;
+}
+
+.estadisticasFontMedium {
+  font-weight: 500;
+}
+
+.estadisticasTextLg {
+  font-size: 1.125rem;
+}
+
+.estadisticasText2xl {
+  font-size: 1.5rem;
+}
+
+.estadisticasFontBold {
+  font-weight: 700;
+}
+
+.estadisticasFontSemibold {
+  font-weight: 600;
+}
+
+.estadisticasTextGray900 {
+  color: #111827;
+}
+
+.estadisticasMb4 {
+  margin-bottom: 1rem;
+}
+
+.estadisticasMb6 {
+  margin-bottom: 1.5rem;
+}
+
+.estadisticasPx2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.estadisticasOverflowXAuto {
+  overflow-x: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Responsive específico para estadísticas */
+@media (max-width: 1200px) {
+  .estadisticasStatsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 1024px) {
+  .estadisticasChartsGrid,
+  .estadisticasTablesGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .estadisticasHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .estadisticasExportBtn {
+    align-self: flex-end;
+  }
+  
+  .estadisticasChartContainer {
+    min-height: 280px;
+  }
+  
+  .estadisticasTableContainer {
+    max-height: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .estadisticasStatsGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .estadisticasChartContainer {
+    min-height: 250px;
+  }
+  
+  .estadisticasTableContainer {
+    max-height: 200px;
+  }
+  
+  .estadisticasTableHeader {
+    padding: 10px 12px;
+  }
+  
+  .estadisticasTable th,
+  .estadisticasTable td {
+    padding: 10px 12px;
+  }
+  
+  .estadisticasCellTitle {
+    gap: 8px;
+  }
+  
+  .estadisticasAvatar {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .estadisticasPage {
+    padding-top: 120px; /* Más espacio en móviles por si el header es más grande */
+  }
+  
+  .estadisticasTitle {
+    font-size: 1.25rem;
+  }
+  
+  .estadisticasExportBtn {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+  
+  .estadisticasTable {
+    font-size: 13px;
+  }
+  
+  .estadisticasTable th {
+    font-size: 12px;
+  }
+  
+  .estadisticasTableContainer {
+    max-height: 180px;
+  }
+}

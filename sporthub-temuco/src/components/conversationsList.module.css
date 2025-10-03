@@ -1,0 +1,7 @@
+.listContainer { padding:12px; }
+.item { padding:10px; border-radius:8px; cursor:pointer; border:1px solid rgba(0,0,0,0.04); margin-bottom:8px; }
+.item:hover { background:#f8fafc }
+.title { font-weight:600 }
+.last { font-size:13px; color:#6b7280 }
+.badge { background:#ef4444; color:white; padding:4px 8px; border-radius:99px; font-size:12px; float:right }
+.active { background: linear-gradient(135deg,#e6f0ff,#f8fbff); border-color:rgba(59,130,246,0.2) }

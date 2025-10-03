@@ -1,52 +1,60 @@
-/* Footer Component Styles */
-
-/* Footer general */
-.footer {
-  background: white;
-  border-top: 1px solid #e5e7eb;
-  padding: 16px 24px;
-  margin-left: 256px; /* Espacio para el sidebar */
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 30;
+/* Footer.css - Mejorado */
+/* Footer para páginas con sidebar */
+.footer-sidebar {
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 16px 24px;
+    margin-left: 256px; /* Espacio para el sidebar */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    text-align: center;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); /* Sombra sutil para definir mejor los límites */
 }
 
-.footer-content {
-  text-align: center;
-}
-
-.footer-text {
-  color: #6b7280;
-  font-size: 14px;
+/* Footer para login (sin sidebar) */
+.footer-login {
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 16px 24px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    text-align: center;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .footer-minimal {
-  background: white;
-  border-top: 1px solid #e5e7eb;
-  padding: 8px 16px;
-  margin-left: 256px; /* Espacio para el sidebar */
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  z-index: 30;
-  text-align: center;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 8px 16px;
+    text-align: center;
 }
 
 .footer-minimal-text {
-  color: #6b7280;
-  font-size: 12px;
+    color: #6b7280;
+    font-size: 12px;
 }
 
 /* Responsive design */
 @media (max-width: 1024px) {
-  .footer {
-    margin-left: 0;
-  }
-  
-  .footer-minimal {
-    margin-left: 0;
-  }
+    .footer-sidebar {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .footer-login,
+    .footer-sidebar {
+        position: relative;
+        margin-left: 0;
+    }
+    
+    .login-container {
+        padding-bottom: 20px; /* Reduce el padding en móviles */
+    }
 }

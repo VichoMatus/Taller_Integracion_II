@@ -1,0 +1,324 @@
+/* VoleibolCanchasCard.module.css - Estilos específicos para tarjetas de Voleibol con nueva paleta de colores */
+
+.courtCard {
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFF9E6 100%);
+  width: 342px;
+  height: 453px;
+  border-radius: 12px;
+  box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.55);
+  border: 2px solid #FFE082;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.courtCard:hover {
+  transform: translateY(-8px);
+  box-shadow: 
+    0 12px 30px rgba(255, 193, 7, 0.15),
+    0 4px 8px rgba(255, 193, 7, 0.1);
+  border-color: #FFD54F;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFF8E1 100%);
+}
+
+.courtCard:hover .cardImage {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+.courtCard:hover .cardTitle {
+  color: #FF8F00;
+}
+
+.courtCard:hover .ratingBadge {
+  transform: scale(1.05);
+  border-color: #FFB300;
+  background: #FFF8E1;
+}
+
+.courtCard:hover .tag {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  background: #FFB300;
+  border-color: #FF8F00;
+}
+
+.courtCard:hover .actionButton {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(255, 160, 0, 0.4);
+  background: #FF8F00;
+}
+
+.courtCard:active {
+  transform: translateY(-4px) scale(0.98);
+}
+
+.cardImage {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 16px;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.cardTitleSection {
+  flex: 1;
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1.2;
+  margin: 0 0 4px 0;
+  transition: color 0.3s ease;
+}
+
+.cardAddress {
+  font-size: 12px;
+  color: #333333;
+  line-height: 1.2;
+  margin-top: 10px;
+}
+
+.ratingBadge {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFF8E1 100%);
+  border: 2px solid #FFD54F;
+  border-radius: 25px;
+  padding: 8px 14px;
+  box-shadow: 
+    0 4px 12px rgba(255, 193, 7, 0.15),
+    0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-left: 12px;
+  min-width: 120px;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.ratingBadge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 193, 7, 0.2), transparent);
+  transition: left 0.6s ease;
+}
+
+.courtCard:hover .ratingBadge {
+  transform: scale(1.05) rotate(1deg);
+  border-color: #FFB300;
+  background: linear-gradient(135deg, #FFF8E1 0%, #FFECB3 100%);
+  box-shadow: 0 8px 20px rgba(255, 193, 7, 0.25);
+}
+
+.courtCard:hover .ratingBadge::before {
+  left: 100%;
+}
+
+.starIcon {
+  width: 16px;
+  height: 16px;
+  color: #FFB300;
+  margin-right: 4px;
+}
+
+.ratingNumber {
+  font-size: 11px;
+  font-weight: 700;
+  color: #FF8F00;
+}
+
+.ratingReviews {
+  font-size: 10px;
+  font-weight: 600;
+  color: #FF8F00;
+  margin-left: 6px;
+}
+
+.tagsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+  margin-top: 2px;
+}
+
+.tag {
+  background: #FFB300;
+  color: #5D4037;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #FF8F00;
+  text-align: center;
+  min-width: 80px;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s ease;
+}
+
+.description {
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: auto;
+}
+
+.priceSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.price {
+  color: #FF8F00;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.nextTime {
+  color: #9ca3af;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.actionButton {
+  background: linear-gradient(135deg, #FFB300 0%, #FF8F00 100%);
+  color: #5D4037;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  box-shadow: 
+    0 6px 20px rgba(255, 160, 0, 0.3),
+    0 3px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  min-width: 120px;
+  height: 35px;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'Inter', sans-serif;
+}
+
+.actionButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+  z-index: 1;
+}
+
+.actionButton:hover::before {
+  left: 100%;
+}
+
+.actionButton:hover {
+  transform: translateY(-3px) scale(1.05);
+  background: linear-gradient(135deg, #FF8F00 0%, #FF6F00 100%);
+  box-shadow: 
+    0 10px 30px rgba(255, 160, 0, 0.4),
+    0 6px 16px rgba(255, 143, 0, 0.3);
+  border-color: #FFD54F;
+  color: white;
+}
+
+.actionButton:active {
+  transform: translateY(-1px) scale(1.02);
+  transition: transform 0.1s ease;
+  box-shadow: 
+    0 6px 20px rgba(255, 160, 0, 0.3),
+    0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.actionButton:focus {
+  outline: none;
+  animation: buttonPulse 0.6s ease-in-out;
+}
+
+@keyframes buttonPulse {
+  0%, 100% {
+    box-shadow: 
+      0 6px 20px rgba(255, 160, 0, 0.3),
+      0 3px 8px rgba(0, 0, 0, 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 6px 20px rgba(255, 160, 0, 0.6),
+      0 3px 8px rgba(0, 0, 0, 0.2);
+  }
+}
+
+@media (max-width: 768px) {
+  .courtCard {
+    width: 300px;
+    height: 420px;
+  }
+  
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .ratingBadge {
+    align-self: flex-start;
+  }
+  
+  .cardFooter {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .actionButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .courtCard {
+    width: 280px;
+    height: 400px;
+  }
+}

@@ -1,7 +1,16 @@
 import React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import styles from './stylesCourtCards/BasquetbolCanchasCard.module.css';
+
+// 🔥 IMPORTAR TODOS LOS ESTILOS DE LOS DEPORTES
+import basquetbolStyles from './stylesCourtCards/BasquetbolCanchasCard.module.css';
+import futbolStyles from './stylesCourtCards/FutbolCanchasCard.module.css';
+import tenisStyles from './stylesCourtCards/TenisCanchasCard.module.css';
+import voleibolStyles from './stylesCourtCards/VoleibolCanchasCard.module.css';
+import padelStyles from './stylesCourtCards/PadelCanchasCard.module.css';
+import crossfitentrenamientofuncionalStyles from './stylesCourtCards/CrossfitEntrenamientoFuncionalCanchasCard.module.css';
+import natacionStyles from './stylesCourtCards/NatacionCanchasCard.module.css';
+import patinajeStyles from './stylesCourtCards/PatinajeCanchasCard.module.css';
 
 interface CourtCardProps {
   imageUrl: string;
@@ -13,7 +22,7 @@ interface CourtCardProps {
   description: string;
   price: string;
   nextAvailable: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje';
   onClick?: () => void;
 }
 
@@ -27,10 +36,38 @@ const CourtCard: React.FC<CourtCardProps> = ({
   description,
   price,
   nextAvailable,
-  sport = 'basquetbol', // Valor por defecto
+  sport = 'basquetbol',
   onClick,
 }) => {
   const router = useRouter();
+  
+  // 🔥 FUNCIÓN PARA SELECCIONAR ESTILOS SEGÚN EL DEPORTE
+  const getSportStyles = () => {
+    switch (sport) {
+      case 'basquetbol':
+        return basquetbolStyles;
+      case 'futbol':
+        return futbolStyles;
+      case 'tenis':
+        return tenisStyles;
+      case 'voleibol':
+        return voleibolStyles;
+      case 'padel':
+        return padelStyles;
+      case 'crossfitentrenamientofuncional':
+        return crossfitentrenamientofuncionalStyles;
+      case 'natacion':
+        return natacionStyles;
+      case 'patinaje':
+        return patinajeStyles;
+      default:
+        console.warn(`Estilo no encontrado para el deporte: ${sport}. Usando basquetbol como fallback.`);
+        return basquetbolStyles; // Fallback a basquetbol
+    }
+  };
+
+  // 🔥 OBTENER LOS ESTILOS APROPIADOS
+  const styles = getSportStyles();
   
   // 🔥 Limitar a máximo 4 tags
   const displayTags = tags.slice(0, 4);
@@ -38,26 +75,15 @@ const CourtCard: React.FC<CourtCardProps> = ({
   // 🔥 Función para manejar navegación específica por deporte
   const handleInternalClick = () => {
     if (onClick) {
-      // Si viene onClick como prop, úsalo (para casos especiales)
       onClick();
     } else {
-      // Navegación automática según el deporte
       switch (sport) {
         case 'basquetbol':
           router.push('/sports/basquetbol/canchas/canchaseleccionada');
           break;
           
         case 'futbol':
-          const futbolParams = new URLSearchParams({
-            id: Date.now().toString(),
-            name: name,
-            location: address,
-            description: description,
-            rating: rating.toString(),
-            reviews: reviews.toString().replace(' reseñas', ''),
-            priceFrom: (parseInt(price) * 1000).toString(),
-          });
-          router.push(`/sports/futbol/canchas/canchaseleccionada?${futbolParams.toString()}`);
+          router.push('/sports/futbol/canchas/canchaseleccionada');
           break;
           
         case 'tenis':
@@ -87,35 +113,78 @@ const CourtCard: React.FC<CourtCardProps> = ({
           break;
           
         case 'padel':
-          const padelParams = new URLSearchParams({
-            id: Date.now().toString(),
-            name: name,
-            location: address,
-            description: description,
-            rating: rating.toString(),
-            reviews: reviews.toString().replace(' reseñas', ''),
-            priceFrom: (parseInt(price) * 1000).toString(),
-          });
-          router.push(`/sports/padel/canchas/canchaseleccionada?${padelParams.toString()}`);
+          router.push('/sports/padel/canchas/canchaseleccionada');
           break;
-          
+        case 'crossfitentrenamientofuncional':
+          router.push('/sports/crossfitentrenamientofuncional/gimnasios/gimnasioseleccionado');
+          break;
+        case 'natacion':
+          router.push('/sports/natacion/piletas/piletaseleccionada');
+          break;
+        case 'patinaje':
+          router.push('/sports/patinaje/pistas/pistaseleccionada');
+          break;
         default:
           console.log('Deporte no configurado:', sport);
-          // Fallback a basquetbol
           router.push('/sports/basquetbol/canchas/canchaseleccionada');
       }
     }
   };
+
+  // 🔥 FUNCIÓN PARA OBTENER EMOJI DEL DEPORTE
+  const getSportEmoji = () => {
+    switch (sport) {
+      case 'basquetbol':
+        return '🏀';
+      case 'futbol':
+        return '⚽';
+      case 'tenis':
+        return '🎾';
+      case 'voleibol':
+        return '🏐';
+      case 'padel':
+        return '🏓';
+      case 'natacion':
+        return '🏊‍♂️';
+      case 'patinaje':
+        return '⛸️';
+      default:
+        return '🏀';
+    }
+  };
+
+  // 🔥 FUNCIÓN PARA MANEJAR ERRORES DE IMAGEN
+  const [imageError, setImageError] = React.useState(false);
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
   
   return (
-    <div className={`${styles.courtCard} ${sport ? styles[`courtCard${sport.charAt(0).toUpperCase() + sport.slice(1)}`] : ''}`}>
-      <Image
-        src={imageUrl}
-        alt={name}
-        className={styles.cardImage}
-        width={300}
-        height={200}
-      />
+    <div className={styles.courtCard} data-sport={sport}>
+      {/* 🔥 CONTENEDOR DE IMAGEN CON FALLBACK */}
+      <div className={`${styles.imageContainer} ${imageError ? styles.fallback : ''}`}>
+        {!imageError ? (
+          <Image
+            src={imageUrl}
+            alt={name}
+            className={styles.cardImage}
+            width={300}
+            height={200}
+            onError={handleImageError}
+          />
+        ) : (
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            fontSize: '48px',
+            height: '100%'
+          }}>
+            {getSportEmoji()}
+          </div>
+        )}
+      </div>
       
       <div className={styles.cardContent}>
         <div className={styles.cardHeader}>

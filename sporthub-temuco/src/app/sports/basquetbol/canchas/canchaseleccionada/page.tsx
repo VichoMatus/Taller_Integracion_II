@@ -149,12 +149,12 @@ export default function CanchaSeleccionadaPage() {
             <h1 className={styles.headerTitle}>Basquetbol - {cancha.name}</h1>
           </div>
           <div className={styles.headerRight}>
-           <SearchBar
+            <SearchBar
             placeholder="Buscar canchas de basquetbol..."
             sport="basquetbol"
             onSearch={(term) => router.push(`/sports/basquetbol/canchas?search=${encodeURIComponent(term)}`)}
             />
-            <button className={styles.userButton}>
+            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
               <span>👤</span>
               <span>Usuario</span>
             </button>

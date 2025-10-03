@@ -7,12 +7,19 @@ import { usePathname } from 'next/navigation';
 import './Sidebar.css'; 
 import indexStyles from './StylesSportsSideBar/IndexSideBar.module.css';
 import basquetbolStyles from './StylesSportsSideBar/BasquetbolSideBar.module.css';
-// import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
+import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
+import padelStyles from './StylesSportsSideBar/PadelSideBar.module.css';
+import crossfitentrenamientofuncionalStyles from './StylesSportsSideBar/CrossfitEntrenamientoFuncionalSideBar.module.css';
 // import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
+// import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
+import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
+import voleiStyles from './StylesSportsSideBar/VoleibolSideBar.module.css';
+import natacionStyles from './StylesSportsSideBar/NatacionSideBar.module.css';
+import patinajeStyles from './StylesSportsSideBar/PatinajeSideBar.module.css';
 
 interface SidebarProps {
   userRole: 'admin' | 'superadmin' | 'usuario';
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje';
 }
 
 const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
@@ -32,16 +39,29 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
     if (pathname === '/' || pathname === '/sports/reservacancha' || pathname === '/sports/reservacancha/') {
       return indexStyles;
     }
+    
+    // Ensure Favoritos and Mensajería use the generic Sports styles (not the sport-specific ones)
+    if (pathname && (pathname.startsWith('/sports/favoritos') || pathname.startsWith('/sports/mensajeria'))) {
+      return indexStyles;
+    }
  
     switch (sport) {
       case 'basquetbol':
         return basquetbolStyles;
       case 'futbol':
-        // return futbolStyles;
-        return basquetbolStyles; // temporal
+        return futbolStyles; 
       case 'tenis':
-        // return tenisStyles;
-        return basquetbolStyles; // temporal
+       return tenisStyles;
+      case 'voleibol':
+        return voleiStyles;
+      case 'padel':
+        return padelStyles;
+      case 'crossfitentrenamientofuncional':
+        return crossfitentrenamientofuncionalStyles;
+      case 'natacion':
+        return natacionStyles;
+      case 'patinaje':
+        return patinajeStyles;
       default:
         return basquetbolStyles;
     }
@@ -149,20 +169,20 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
     {
       name: 'Favoritos',
       icon: '⭐',
-      href: '/favoritos',
-      active: pathname === '/favoritos'
+      href: '/sports/favoritos',
+      active: pathname === '/sports/favoritos'
     },
     {
       name: 'Perfil',
       icon: '👤',
-      href: '/perfil',
-      active: pathname === '/perfil'
+      href: '/usuario/perfil',
+      active: pathname === '/usuario/perfil'
     },
     {
       name: 'Mensajería',
       icon: '💬',
-      href: '/mensajeria',
-      active: pathname === '/mensajeria'
+      href: '/sports/mensajeria',
+      active: pathname && pathname.startsWith('/sports/mensajeria')
     }
   ];
 

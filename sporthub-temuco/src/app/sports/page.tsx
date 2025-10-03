@@ -1,5 +1,6 @@
-'use client';
+ 'use client';
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image'
 import Sidebar from '../../components/layout/Sidebar';
 import SearchBar from '../../components/SearchBar';
@@ -53,17 +54,36 @@ const sportsData = [
     href: '/sports/natacion'
   },
   {
-    id: 'voley',
-    name: 'Voley',
+    id: 'voleibol',
+    name: 'Voleibol',
     imageUrl: '/sports/voley/voley.png',
     description: 'Explora voleibol y competencias.',
     tag: 'Nuevo',
     tagColor: '#ec4899', // Rosa
-    href: '/sports/voley'
-  }
+    href: '/sports/voleibol'
+  },
+  {
+    id: 'entrenamientofuncional',
+    name: 'Crossfit y Entrenamiento Funcional',
+    imageUrl: '/sports/crossfitentrenamientofuncional/crossfitentrenamientofuncional.png',
+    description: 'Explora entrenamiento funcional y rutinas de ejercicio.',
+    tag: 'Nuevo',
+    tagColor: '#272829', // Gris Oscuro
+    href: '/sports/crossfitentrenamientofuncional'
+  },
+  {
+    id: 'patinaje',
+    name: 'Patinaje',
+    imageUrl: '/sports/patinaje/patinaje.png',
+    description: 'Explora patinaje y competencias.',
+    tag: 'Nuevo',
+    tagColor: '#55f2edff', // Rosa
+    href: '/sports/patinaje'
+  },
 ];
 
 export default function SportsPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('competitivo');
   const [filteredSports, setFilteredSports] = useState(sportsData);
@@ -105,7 +125,7 @@ export default function SportsPage() {
         <div className={styles.header}>
           <h1 className={styles.pageTitle}>Explora Deportes</h1>
           <div className={styles.headerRight}>
-            <button className={styles.userButton}>
+            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
               <span>👤</span>
               <span>Usuario</span>
             </button>
