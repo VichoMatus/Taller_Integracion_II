@@ -79,6 +79,7 @@
 
 import { Router } from 'express';
 import { AuthController } from '../interfaces/controllers/authController';
+import { validateLoginData } from '../middlewares/validationMiddleware';
 
 // Crear router de Express y instancia del controlador
 const router = Router();
@@ -97,7 +98,12 @@ router.post('/register', controller.register);
 // POST /api/auth/login - Iniciar sesión
 // Body: { email, password }
 // Response: TokenResponse con access_token y user data
-router.post('/login', controller.login);
+router.post('/login', validateLoginData, controller.login);
+
+// GET /api/auth/me - Obtener perfil de usuario autenticado
+// Header: Authorization: Bearer <token>
+// Response: UserPublic con datos del usuario
+router.get('/me', controller.getProfile);
 
 // POST /api/auth/logout - Cerrar sesión
 // Body: { refresh_token? }
