@@ -11,13 +11,14 @@ import tenisStyles from './stylesSearchBar/TenisSearchBar.module.css';
 import voleiStyles from './stylesSearchBar/VoleibolSearchBar.module.css';
 import natacionStyles from './stylesSearchBar/NatacionSearchBar.module.css';
 import patinaje from './stylesSearchBar/PatinajeSearchBar.module.css';
+import escaladaStyles from './stylesSearchBar/EscaladaSearchBar.module.css';
 
 interface SearchBarProps {
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSearch: (term: string) => void;
   placeholder?: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje'| 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' ;
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje'| 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' |'escalada';
 }
 
 const SearchBar = ({ 
@@ -56,6 +57,8 @@ const SearchBar = ({
         return natacionStyles;
       case 'patinaje':
         return patinaje;
+      case 'escalada':
+        return escaladaStyles;
       default:
         return indexStyles; // fallback al index
     }

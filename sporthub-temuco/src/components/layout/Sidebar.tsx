@@ -10,6 +10,7 @@ import basquetbolStyles from './StylesSportsSideBar/BasquetbolSideBar.module.css
 import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
 import padelStyles from './StylesSportsSideBar/PadelSideBar.module.css';
 import crossfitentrenamientofuncionalStyles from './StylesSportsSideBar/CrossfitEntrenamientoFuncionalSideBar.module.css';
+import escaladaStyles from './StylesSportsSideBar/EscaladaSideBar.module.css';
 // import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
 // import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
 import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
@@ -24,7 +25,7 @@ import mountainbikeStyles from './StylesSportsSideBar/MountainBikeSideBar.module
 
 interface SidebarProps {
   userRole: 'admin' | 'superadmin' | 'usuario';
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje'| 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' |;
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje'| 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | 'escalada';
 }
 
 const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado a undefined por defecto
@@ -86,6 +87,8 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
         return mountainbikeStyles;
 
 
+      case 'escalada':
+        return escaladaStyles;
       default:
         return indexStyles; // Cambiado a indexStyles para casos no manejados
     }

@@ -9,6 +9,7 @@ import crossfitentrenamientofuncionalStyles from './stylesLocationMap/CrossfitEn
 import voleiStyles from './stylesLocationMap/VoleibolLocationMap.module.css';
 import natacionStyles from './stylesLocationMap/NatacionLocationMap.module.css';
 import patinajeStyles from './stylesLocationMap/PatinajeLocationMap.module.css';
+import escaladaStyles from './stylesLocationMap/EscaladaLocationMap.module.css';
 
 interface LocationMapProps {
   latitude: number;
@@ -16,7 +17,7 @@ interface LocationMapProps {
   address?: string;
   zoom?: number;
   height?: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje' | 'escalada';
 }
 
 const LocationMap: React.FC<LocationMapProps> = ({
@@ -47,6 +48,9 @@ const LocationMap: React.FC<LocationMapProps> = ({
         return natacionStyles;
       case 'patinaje':
         return patinajeStyles;
+      case 'escalada':
+        return escaladaStyles;
+      // case 'tenis':
       default:
         return basquetbolStyles; // Fallback
     }
@@ -74,6 +78,8 @@ const LocationMap: React.FC<LocationMapProps> = ({
         return '🏊‍♂️';
       case 'patinaje':
         return '⛸️';
+      case 'escalada':
+        return '🧗‍♂️';
       default:
         return '🏀';
     }

@@ -5,13 +5,13 @@ import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
+import StatsCard from '../../../components/charts/StatsCard';
 import styles from './page.module.css';
-
 
 // Datos de ejemplo para los gimnasios mejor calificados (6 tarjetas)
 const topRatedGyms = [
   {
-    imageUrl: "/sports/crossfit/gimnasios/Gimnasio1.png",
+    imageUrl: "/sports/crossfitentrenamientofuncional/gimnasios/Gimnasio1.png",
     name: "CrossFit Iron Box",
     address: "Centro, Temuco",
     rating: 4.8,
@@ -22,7 +22,7 @@ const topRatedGyms = [
     nextAvailable: "06:00-07:00", 
   },
   {
-    imageUrl: "/sports/crossfit/gimnasios/Gimnasio2.png",
+    imageUrl: "/sports/crossfitentrenamientofuncional/gimnasios/Gimnasio2.png",
     name: "Functional Fitness Center",
     address: "Sector Norte",
     rating: 4.6,
@@ -78,6 +78,38 @@ const topRatedGyms = [
   }
 ];
 
+// 🔥 DATOS PARA LAS ESTADÍSTICAS DE CROSSFIT Y ENTRENAMIENTO FUNCIONAL
+const crossfitStats = [
+  {
+    title: "Boxes Disponibles Hoy",
+    value: "8",
+    icon: "🏋️‍♂️",
+    subtitle: "Listos para entrenar",
+    trend: { value: 2, isPositive: true }
+  },
+  {
+    title: "Rango de Precios",
+    value: "$12-25",
+    icon: "💰",
+    subtitle: "Por clase",
+    trend: { value: 6, isPositive: true }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.6⭐",
+    icon: "🏆",
+    subtitle: "De nuestros boxes",
+    trend: { value: 0.3, isPositive: true }
+  },
+  {
+    title: "Atletas Entrenando",
+    value: "45",
+    icon: "💪",
+    subtitle: "Ahora mismo",
+    trend: { value: 12, isPositive: true }
+  }
+];
+
 export default function CrossfitPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
@@ -113,14 +145,6 @@ export default function CrossfitPage() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  // Stats de ejemplo para CrossFit y Entrenamiento Funcional
-  const stats = {
-    disponiblesHoy: 8,
-    precioPromedio: { min: 12, max: 25 },
-    promedioCalificacion: 4.6,
-    capacidadMaxima: 20
-  };
 
   const totalSlides = Math.max(1, topRatedGyms.length - cardsToShow + 1);
 
@@ -191,23 +215,30 @@ export default function CrossfitPage() {
           </div>
         </div>
 
-        {/* Stats Cards para CrossFit */}
-        <div className={styles.statsContainer}>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.disponiblesHoy}</div>
-            <div className={styles.statLabel}>Boxes disponibles hoy</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>${stats.precioPromedio.min}-{stats.precioPromedio.max}</div>
-            <div className={styles.statLabel}>Rango de precios por clase</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.promedioCalificacion} ⭐</div>
-            <div className={styles.statLabel}>Promedio de calificación</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.capacidadMaxima}</div>
-            <div className={styles.statLabel}>Capacidad máxima por clase</div>
+        {/* 🔥 STATS CARDS MEJORADAS CON STATSCARD */}
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas de CrossFit en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {crossfitStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Navegación específica para CrossFit
+                  if (stat.title.includes("Boxes")) {
+                    router.push('/sports/crossfitentrenamientofuncional/gimnasios');
+                  }
+                }}
+              />
+            ))}
           </div>
         </div>
 
@@ -267,7 +298,7 @@ export default function CrossfitPage() {
                   key={index} 
                   {...gym} 
                   sport="crossfitentrenamientofuncional"
-                  onClick={() => router.push('/sports/crossfitentrenamientofuncional/gimnasios/gimseleccionado')}
+                  onClick={() => router.push('/sports/crossfitentrenamientofuncional/gimnasios/gimnasioseleccionado')}
                 />
               ))}
             </div>

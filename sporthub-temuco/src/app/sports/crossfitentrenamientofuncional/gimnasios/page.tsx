@@ -8,7 +8,7 @@ import styles from './page.module.css';
 
 const gimnasios = [
   {
-    imageUrl: "/sports/crossfit/gimnasios/Gym1.png",
+    imageUrl: "/sports/crossfitentrenamientofuncional/gimnasios/Gimnasio1.png",
     name: "CrossFit Iron Box",
     address: "Centro, Temuco",
     rating: 4.8,
@@ -19,7 +19,7 @@ const gimnasios = [
     nextAvailable: "06:00-07:00", 
   },
   {
-    imageUrl: "/sports/crossfit/gimnasios/Gym2.png",
+    imageUrl: "/sports/crossfitentrenamientofuncional/gimnasios/Gimnasio2.png",
     name: "Functional Fitness Center",
     address: "Sector Norte",
     rating: 4.6,

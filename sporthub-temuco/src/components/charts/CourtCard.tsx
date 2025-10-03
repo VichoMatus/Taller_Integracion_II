@@ -16,6 +16,7 @@ import padelStyles from './stylesCourtCards/PadelCanchasCard.module.css';
 import crossfitentrenamientofuncionalStyles from './stylesCourtCards/CrossfitEntrenamientoFuncionalCanchasCard.module.css';
 import natacionStyles from './stylesCourtCards/NatacionCanchasCard.module.css';
 import patinajeStyles from './stylesCourtCards/PatinajeCanchasCard.module.css';
+import escaladaStyles from './stylesCourtCards/EscaladaCanchasCard.module.css';
 
 interface CourtCardProps {
   imageUrl: string;
@@ -27,9 +28,7 @@ interface CourtCardProps {
   description: string;
   price: string;
   nextAvailable: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje';
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | undefined;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje' | 'escalada';
   onClick?: () => void;
 }
 
@@ -74,6 +73,8 @@ const CourtCard: React.FC<CourtCardProps> = ({
         return natacionStyles;
       case 'patinaje':
         return patinajeStyles;
+      case 'escalada':
+        return escaladaStyles;
       default:
         console.warn(`Estilo no encontrado para el deporte: ${sport}. Usando basquetbol como fallback.`);
         return basquetbolStyles; // Fallback a basquetbol
@@ -182,6 +183,10 @@ const CourtCard: React.FC<CourtCardProps> = ({
         case 'patinaje':
           router.push('/sports/patinaje/pistas/pistaseleccionada');
           break;
+        case 'escalada':
+          router.push('/sports/escalada/centros/centroseleccionado');
+          break;
+          
         default:
           console.log('Deporte no configurado:', sport);
           router.push('/sports/basquetbol/canchas/canchaseleccionada');

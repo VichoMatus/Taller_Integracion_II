@@ -119,6 +119,15 @@ const sportsData = [
     tagColor: '#55f2edff', // Rosa
     href: '/sports/patinaje'
   },
+  {
+    id: 'escalada',
+    name: 'Escalada',
+    imageUrl: '/sports/escalada/escalada.png',
+    description: 'Explora centros de escalada y rutas.',
+    tag: 'Nuevo',
+    tagColor: '#A67B5B', // Marrón
+    href: '/sports/escalada'
+  },
 ];
 
 export default function SportsPage() {

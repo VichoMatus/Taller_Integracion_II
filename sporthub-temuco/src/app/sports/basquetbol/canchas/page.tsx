@@ -201,14 +201,7 @@ export default function Page() {
             ))}
           </div>
           
-          {/* Mensaje de disponibilidad */}
-          <div className={styles.availabilityMessage}>
-            <div className={styles.availabilityCard}>
-              <span className={styles.availabilityText}>
-                Canchas Disponibles ahora: <span className={styles.availabilityNumber}> {availableNow}</span>
-              </span>
-            </div>
-          </div>
+        
         </div>
       </div>
     </div>

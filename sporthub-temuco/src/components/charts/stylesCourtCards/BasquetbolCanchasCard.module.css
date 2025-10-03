@@ -79,11 +79,17 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
+  min-height: 50px;
+  max-height: 50px;
 }
 
 .cardTitleSection {
   flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .cardTitle {
@@ -91,8 +97,14 @@
   font-weight: 700;
   color: #000000;
   line-height: 1.2;
-  margin: 0 0 4px 0;
+  margin: 0;
   transition: color 0.3s ease; 
+  max-height: 38px; /* Aproximadamente 2 líneas */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Máximo 2 líneas */
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
 }
 
 .cardAddress {
