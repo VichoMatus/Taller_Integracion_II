@@ -1,4 +1,4 @@
-/* Sidebar Component - Diseño animado con efectos glassmorphism */
+/* Sidebar Component - Diseño animado con efectos glassmorphism - Tema Rugby */
 
 @keyframes slideInLeft {
   0% {
@@ -11,7 +11,7 @@
   }
 }
 
-.sidebar-container {
+.sidebarContainer {
   position: fixed;
   left: 0;
   top: 0;
@@ -19,20 +19,20 @@
   height: 100vh;
   background: linear-gradient(
     145deg, 
-    rgba(107, 114, 128, 0.95) 0%,
-    rgba(75, 85, 99, 0.98) 50%,
-    rgba(55, 65, 81, 0.95) 100%
+    #8a4a52 0%,
+    #722F37 50%,
+    #5a252b 100%
   );
   backdrop-filter: blur(10px);
   box-shadow: 
     2px 0 8px rgba(0, 0, 0, 0.1),
     inset -1px 0 0 rgba(255, 255, 255, 0.1);
-  z-index: 100; /* ← AUMENTADO de 40 a 100 */
+  z-index: 40;
   overflow-y: auto;
   animation: slideInLeft 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
-.sidebar-container::before {
+.sidebarContainer::before {
   content: '';
   position: absolute;
   top: 0;
@@ -40,20 +40,20 @@
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 20% 30%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(147, 51, 234, 0.06) 0%, transparent 50%),
-    radial-gradient(circle at 40% 80%, rgba(236, 72, 153, 0.03) 0%, transparent 50%);
+    radial-gradient(circle at 20% 30%, rgba(114, 47, 55, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(90, 37, 43, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 40% 80%, rgba(138, 74, 82, 0.03) 0%, transparent 50%);
   pointer-events: none;
 }
 
 @keyframes logoPulse {
   0%, 100% {
     transform: scale(1);
-    box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+    box-shadow: 0 0 0 rgba(114, 47, 55, 0);
   }
   50% {
     transform: scale(1.05);
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 0 20px rgba(114, 47, 55, 0.3);
   }
 }
 
@@ -64,7 +64,7 @@
   50% {
     text-shadow: 
       0 0 10px rgba(255, 255, 255, 0.8),
-      0 0 20px rgba(59, 130, 246, 0.3);
+      0 0 20px rgba(114, 47, 55, 0.3);
   }
 }
 
@@ -80,7 +80,7 @@
 }
 
 /* Header de la sidebar */
-.sidebar-header {
+.sidebarHeader {
   padding: 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   background: linear-gradient(
@@ -93,7 +93,7 @@
   animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
 }
 
-.sidebar-header::before {
+.sidebarHeader::before {
   content: '';
   position: absolute;
   top: 0;
@@ -110,24 +110,24 @@
   transition: transform 0.6s ease;
 }
 
-.sidebar-header:hover::before {
+.sidebarHeader:hover::before {
   transform: translateY(0%);
 }
 
-.sidebar-logo-container {
+.sidebarLogoContainer {
   display: flex;
   align-items: center;
   gap: 12px;
   position: relative;
 }
 
-.sidebar-logo-icon {
+.sidebarLogoIcon {
   width: 32px;
   height: 32px;
   background: linear-gradient(
     135deg,
-    rgba(59, 130, 246, 0.8) 0%,
-    rgba(147, 51, 234, 0.8) 100%
+    rgba(138, 74, 82, 0.8) 0%,
+    rgba(114, 47, 55, 0.8) 100%
   );
   border-radius: 8px;
   display: flex;
@@ -143,7 +143,7 @@
   overflow: hidden;
 }
 
-.sidebar-logo-icon::before {
+.sidebarLogoIcon::before {
   content: '';
   position: absolute;
   top: -50%;
@@ -160,18 +160,18 @@
   transition: transform 0.6s ease;
 }
 
-.sidebar-logo-icon:hover::before {
+.sidebarLogoIcon:hover::before {
   transform: rotate(45deg) translateX(100%);
 }
 
-.sidebar-logo-icon:hover {
+.sidebarLogoIcon:hover {
   transform: scale(1.1) rotate(5deg);
   box-shadow: 
-    0 4px 20px rgba(59, 130, 246, 0.4),
+    0 4px 20px rgba(114, 47, 55, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
-.sidebar-title {
+.sidebarTitle {
   color: white;
   font-size: 18px;
   font-weight: 600;
@@ -181,12 +181,12 @@
   transition: all 0.3s ease;
 }
 
-.sidebar-title:hover {
+.sidebarTitle:hover {
   transform: scale(1.02);
-  color: #60A5FA;
+  color: #f8d7da;
 }
 
-.sidebar-subtitle {
+.sidebarSubtitle {
   color: rgba(255, 255, 255, 0.8);
   font-size: 14px;
   margin: 2px 0 0 0;
@@ -195,9 +195,9 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.sidebar-subtitle:hover {
+.sidebarSubtitle:hover {
   color: rgba(255, 255, 255, 0.95);
-  text-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+  text-shadow: 0 0 8px rgba(114, 47, 55, 0.3);
 }
 
 @keyframes menuSlideIn {
@@ -224,23 +224,23 @@
   0%, 100% {
     box-shadow: 
       0 2px 8px rgba(0, 0, 0, 0.1),
-      0 0 0 rgba(59, 130, 246, 0);
+      0 0 0 rgba(114, 47, 55, 0);
   }
   50% {
     box-shadow: 
       0 4px 20px rgba(0, 0, 0, 0.15),
-      0 0 20px rgba(59, 130, 246, 0.3);
+      0 0 20px rgba(114, 47, 55, 0.3);
   }
 }
 
 /* Navegación */
-.sidebar-nav {
+.sidebarNav {
   margin-top: 24px;
   padding: 0 16px;
   animation: fadeInUp 1s cubic-bezier(0.4, 0, 0.2, 1) 0.4s both;
 }
 
-.sidebar-menu {
+.sidebarMenu {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -249,19 +249,19 @@
   gap: 6px;
 }
 
-.sidebar-menu-item {
+.sidebarMenuItem {
   margin: 0;
   animation: menuSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.sidebar-menu-item:nth-child(1) { animation-delay: 0.1s; }
-.sidebar-menu-item:nth-child(2) { animation-delay: 0.2s; }
-.sidebar-menu-item:nth-child(3) { animation-delay: 0.3s; }
-.sidebar-menu-item:nth-child(4) { animation-delay: 0.4s; }
-.sidebar-menu-item:nth-child(5) { animation-delay: 0.5s; }
-.sidebar-menu-item:nth-child(6) { animation-delay: 0.6s; }
+.sidebarMenuItem:nth-child(1) { animation-delay: 0.1s; }
+.sidebarMenuItem:nth-child(2) { animation-delay: 0.2s; }
+.sidebarMenuItem:nth-child(3) { animation-delay: 0.3s; }
+.sidebarMenuItem:nth-child(4) { animation-delay: 0.4s; }
+.sidebarMenuItem:nth-child(5) { animation-delay: 0.5s; }
+.sidebarMenuItem:nth-child(6) { animation-delay: 0.6s; }
 
-.sidebar-menu-link {
+.sidebarMenuLink {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -283,7 +283,7 @@
   backdrop-filter: blur(5px);
 }
 
-.sidebar-menu-link::before {
+.sidebarMenuLink::before {
   content: '';
   position: absolute;
   top: 0;
@@ -293,67 +293,67 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(59, 130, 246, 0.1) 50%,
+    rgba(138, 74, 82, 0.1) 50%,
     transparent 100%
   );
   transition: left 0.5s ease;
 }
 
-.sidebar-menu-link:hover::before {
+.sidebarMenuLink:hover::before {
   left: 100%;
 }
 
-.sidebar-menu-link:hover {
+.sidebarMenuLink:hover {
   background: linear-gradient(
     135deg,
-    rgba(59, 130, 246, 0.15) 0%,
-    rgba(147, 51, 234, 0.1) 100%
+    rgb(138, 74, 82) 0%,
+    rgb(114, 47, 55) 100%
   );
   color: white;
   transform: translateX(5px) scale(1.02);
-  border-color: rgba(59, 130, 246, 0.3);
+  border-color: rgba(138, 74, 82, 0.3);
   box-shadow: 
     0 4px 15px rgba(0, 0, 0, 0.1),
-    0 0 20px rgba(59, 130, 246, 0.1);
+    0 0 20px rgba(138, 74, 82, 0.1);
 }
 
-.sidebar-menu-link:hover .sidebar-menu-icon {
+.sidebarMenuLink:hover .sidebarMenuIcon {
   animation: iconBounce 0.6s ease;
-  color: #60A5FA;
+  color: #d4a5a5;
 }
 
-.sidebar-menu-link.active {
+.sidebarMenuLink.active {
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(255, 255, 255, 0.98) 100%
+    rgba(90, 37, 43, 0.95) 0%,
+    rgba(114, 47, 55, 0.98) 100%
   ) !important;
-  color: #1F2937 !important;
+  color: #ffffff !important;
   font-weight: 600;
-  border-color: rgba(59, 130, 246, 0.2);
+  border-color: rgba(138, 74, 82, 0.2);
   animation: activeGlow 3s ease-in-out infinite;
   backdrop-filter: blur(20px);
 }
 
-.sidebar-menu-link.active:hover {
+.sidebarMenuLink.active:hover {
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.98) 0%,
-    rgba(255, 255, 255, 1) 100%
+    rgba(90, 37, 43, 0.98) 0%,
+    rgba(114, 47, 55, 1) 100%
   ) !important;
-  color: #1F2937 !important;
+  color: #ffffff !important;
   transform: translateX(8px) scale(1.03);
   box-shadow: 
     0 6px 25px rgba(0, 0, 0, 0.15),
-    0 0 30px rgba(59, 130, 246, 0.2);
+    0 0 30px rgba(138, 74, 82, 0.2);
 }
 
-.sidebar-menu-link.active .sidebar-menu-icon {
-  color: #3B82F6;
-  text-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+.sidebarMenuLink.active .sidebarMenuIcon {
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
 }
 
-.sidebar-menu-icon {
+.sidebarMenuIcon {
   font-size: 18px;
   width: 24px;
   text-align: center;
@@ -362,7 +362,7 @@
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
 }
 
-.sidebar-menu-text {
+.sidebarMenuText {
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
@@ -389,7 +389,7 @@
 }
 
 /* Botón de logout */
-.sidebar-logout {
+.sidebarLogout {
   position: absolute;
   bottom: 16px;
   left: 16px;
@@ -397,7 +397,7 @@
   animation: fadeInUp 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.8s both;
 }
 
-.sidebar-logout-button {
+.sidebarLogoutButton {
   width: 100%;
   display: flex;
   align-items: center;
@@ -420,7 +420,7 @@
   overflow: hidden;
 }
 
-.sidebar-logout-button::before {
+.sidebarLogoutButton::before {
   content: '';
   position: absolute;
   top: 0;
@@ -436,11 +436,11 @@
   transition: left 0.5s ease;
 }
 
-.sidebar-logout-button:hover::before {
+.sidebarLogoutButton:hover::before {
   left: 100%;
 }
 
-.sidebar-logout-button:hover {
+.sidebarLogoutButton:hover {
   background: linear-gradient(
     135deg,
     rgba(220, 38, 38, 0.2) 0%,
@@ -455,20 +455,20 @@
   animation: logoutPulse 2s ease-in-out infinite;
 }
 
-.sidebar-logout-button:hover .sidebar-logout-icon {
+.sidebarLogoutButton:hover .sidebarLogoutIcon {
   animation: logoutShake 0.5s ease-in-out;
   color: #EF4444;
   text-shadow: 0 0 8px rgba(220, 38, 38, 0.3);
 }
 
-.sidebar-logout-button:active {
+.sidebarLogoutButton:active {
   transform: translateY(0);
   box-shadow: 
     0 2px 10px rgba(0, 0, 0, 0.1),
     0 0 15px rgba(220, 38, 38, 0.2);
 }
 
-.sidebar-logout-icon {
+.sidebarLogoutIcon {
   font-size: 18px;
   width: 24px;
   text-align: center;

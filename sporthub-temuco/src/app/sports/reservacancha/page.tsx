@@ -22,6 +22,9 @@ export default function ReservaCancha() {
     router.back()
   }
 
+  const handleUserProfile = () => {
+    router.push('/usuario/perfil/')
+  }
   const timeSlots = [
     { time: '08:00', status: 'Libre' },
     { time: '09:00', status: 'Libre' },
@@ -49,32 +52,16 @@ export default function ReservaCancha() {
       <div className={styles.mainContent}>
         {/* Header */}
         <div className={styles.header}>
-          <div className={styles.headerContent}>
-            <div className={styles.headerLeft}>
-              <button className={styles.backButton} onClick={handleGoBack}>
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                <span style={{marginLeft: '8px'}}>Volver</span>
-              </button>
-              <div className={styles.headerTitle}>
-                <h1>Reservar • cancha basquetbol</h1>
-                <p>Selecciona fecha, horario y completa tus datos</p>
-              </div>
-            </div>
-            <div className={styles.headerRight}>
-              <div className={styles.clubInfo}>
-                <div className={styles.clubName}>Club Centro</div>
-                <div className={styles.clubAddress}>Dirección: Av. Principal 123</div>
-              </div>
-              <div className={styles.userInfo} onClick={() => router.push('/usuario/perfil')} style={{cursor: 'pointer'}}>
-                <div className={styles.avatar}></div>
-                <span>Usuario</span>
-                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{marginLeft: '8px'}}>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
-            </div>
+          <div className={styles.headerLeft}>
+            <div className={styles.headerIcon}>📆</div>
+            <h1 className={styles.headerTitle}>Cancha Basquetbol • Club Centro, Av. Principal 123</h1>
+          </div>
+          <div className={styles.headerRight}>
+            <button className={styles.userButton}
+            onClick={handleUserProfile}>
+              <span>👤</span>
+              <span>Usuario</span>
+            </button>
           </div>
         </div>
 
@@ -123,18 +110,7 @@ export default function ReservaCancha() {
                   </div>
                 </div>
 
-                {/* Date and Time Info */}
-                <div className={styles.dateInfo}>
-                  <div className={styles.dateDetails}>
-                    <div>Fecha: <span className={styles.dateLabel}>08 Jun 2025</span></div>
-                    <div>Día: <span className={styles.dateLabel}>Domingo</span></div>
-                    <div className={styles.timeLabel}>Selecciona un horario</div>
-                  </div>
-                  <div className={styles.durationInfo}>
-                    <div className={styles.durationLabel}>Duración estimada</div>
-                    <div className={styles.durationValue}>1 hora</div>
-                  </div>
-                </div>
+                
 
                 {/* Time Slots */}
                 <div className={styles.timeSlots}>

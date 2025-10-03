@@ -17,7 +17,7 @@ interface SearchBarProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSearch: (term: string) => void;
   placeholder?: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje'| 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' ;
 }
 
 const SearchBar = ({ 

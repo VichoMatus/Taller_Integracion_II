@@ -16,10 +16,15 @@ import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
 import voleiStyles from './StylesSportsSideBar/VoleibolSideBar.module.css';
 import natacionStyles from './StylesSportsSideBar/NatacionSideBar.module.css';
 import patinajeStyles from './StylesSportsSideBar/PatinajeSideBar.module.css';
+import enduroStyles from './StylesSportsSideBar/EnduroSideBar.module.css';
+// import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
+import futbolamericanoStyles from './StylesSportsSideBar/FutbolAmericanoSideBar.module.css';
+import rugbyStyles from './StylesSportsSideBar/RugbySideBar.module.css';
+import mountainbikeStyles from './StylesSportsSideBar/MountainBikeSideBar.module.css';
 
 interface SidebarProps {
   userRole: 'admin' | 'superadmin' | 'usuario';
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje'| 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' |;
 }
 
 const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado a undefined por defecto
@@ -71,6 +76,16 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
         return basquetbolStyles; // temporal
       case 'voleibol':
       case 'padel':
+      case 'enduro':
+        return enduroStyles;
+      case 'futbol-americano':
+        return futbolamericanoStyles;
+      case 'rugby':
+        return rugbyStyles;
+      case 'mountain-bike':
+        return mountainbikeStyles;
+
+
       default:
         return indexStyles; // Cambiado a indexStyles para casos no manejados
     }
@@ -199,36 +214,36 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
   const userTitle = userRole === 'superadmin' ? 'Superadministrador' : userRole === 'admin' ? 'Administrador' : 'Usuario';
 
   return (
-    <div className={styles ? styles.sidebarContainer : 'sidebar-container'}>
+    <div className={styles ? styles.sidebarContainer : 'sidebarContainer'}>
       {/* Header */}
-      <div className={styles ? styles.sidebarHeader : 'sidebar-header'}>
-        <div className={styles ? styles.sidebarLogoContainer : 'sidebar-logo-container'}>
-          <div className={styles ? styles.sidebarLogoIcon : 'sidebar-logo-icon'}>
+      <div className={styles ? styles.sidebarHeader : 'sidebarHeader'}>
+        <div className={styles ? styles.sidebarLogoContainer : 'sidebarLogoContainer'}>
+          <div className={styles ? styles.sidebarLogoIcon : 'sidebarLogoIcon'}>
             SH
           </div>
           <div>
-            <h1 className={styles ? styles.sidebarTitle : 'sidebar-title'}>SportHub</h1>
-            <p className={styles ? styles.sidebarSubtitle : 'sidebar-subtitle'}>{userTitle}</p>
+            <h1 className={styles ? styles.sidebarTitle : 'sidebarTitle'}>SportHub</h1>
+            <p className={styles ? styles.sidebarSubtitle : 'sidebarSubtitle'}>{userTitle}</p>
           </div>
         </div>
         {userRole === 'usuario' && sport && styles && <div className={styles.sportIcon}></div>}
       </div>
 
       {/* Navigation */}
-      <nav className={styles ? styles.sidebarNav : 'sidebar-nav'}>
-        <ul className={styles ? styles.sidebarMenu : 'sidebar-menu'}>
+      <nav className={styles ? styles.sidebarNav : 'sidebarNav'}>
+        <ul className={styles ? styles.sidebarMenu : 'sidebarMenu'}>
           {menuItems.map((item) => (
-            <li key={item.name} className={styles ? styles.sidebarMenuItem : 'sidebar-menu-item'}>
+            <li key={item.name} className={styles ? styles.sidebarMenuItem : 'sidebarMenuItem'}>
               <Link
                 href={item.href}
-                className={`${styles ? styles.sidebarMenuLink : 'sidebar-menu-link'} ${
+                className={`${styles ? styles.sidebarMenuLink : 'sidebarMenuLink'} ${
                   item.active ? (styles ? styles.active : 'active') : ''
                 }`}
               >
-                <span className={styles ? styles.sidebarMenuIcon : 'sidebar-menu-icon'}>
+                <span className={styles ? styles.sidebarMenuIcon : 'sidebarMenuIcon'}>
                   {item.icon}
                 </span>
-                <span className={styles ? styles.sidebarMenuText : 'sidebar-menu-text'}>
+                <span className={styles ? styles.sidebarMenuText : 'sidebarMenuText'}>
                   {item.name}
                 </span>
               </Link>
@@ -238,9 +253,9 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
       </nav>
 
       {/* Logout Button */}
-      <div className={styles ? styles.sidebarLogout : 'sidebar-logout'}>
-        <button className={styles ? styles.sidebarLogoutButton : 'sidebar-logout-button'}>
-          <span className={styles ? styles.sidebarLogoutIcon : 'sidebar-logout-icon'}>🚪</span>
+      <div className={styles ? styles.sidebarLogout : 'sidebarLogout'}>
+        <button className={styles ? styles.sidebarLogoutButton : 'sidebarLogoutButton'}>
+          <span className={styles ? styles.sidebarLogoutIcon : 'sidebarLogoutIcon'}>🚪</span>
           <span>Cerrar Sesión</span>
         </button>
       </div>

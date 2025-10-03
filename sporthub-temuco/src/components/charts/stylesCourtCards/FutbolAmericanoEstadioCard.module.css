@@ -1,0 +1,292 @@
+.courtCard {
+  background: white;
+  width: 342px;
+  height: 453px;
+  border-radius: 12px;
+  box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.55);
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer; 
+  transition: all 0.3s ease; 
+}
+
+.courtCard:hover {
+  transform: translateY(-8px); 
+  box-shadow: 
+    0 12px 30px rgba(0, 33, 71, 0.15),
+    0 4px 8px rgba(0, 33, 71, 0.1); 
+  border-color: #4a90e2;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%); 
+}
+
+.courtCard:hover .cardImage {
+  transform: scale(1.05); 
+  filter: brightness(1.1); 
+}
+
+.courtCard:hover .cardTitle {
+  color: #002147; 
+}
+
+.courtCard:hover .ratingBadge {
+  transform: scale(1.05);
+  border-color: #002147;
+  background: #f0f7ff;
+}
+
+.courtCard:hover .tag {
+  transform: translateY(-2px); 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); 
+  background: #4a90e2;
+  border-color: #002147;
+  color: white;
+}
+
+/* 🔥 Efecto en el botón al hacer hover de la tarjeta */
+.courtCard:hover .actionButton {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 33, 71, 0.4);
+  background: #001a36;
+}
+
+/* 🔥 Efecto de pulso al hacer clic */
+.courtCard:active {
+  transform: translateY(-4px) scale(0.98);
+}
+
+.cardImage {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 16px;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.cardTitleSection {
+  flex: 1;
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1.2;
+  margin: 0 0 4px 0;
+  transition: color 0.3s ease; 
+}
+
+.cardAddress {
+  font-size: 12px;
+  color: #333333;
+  line-height: 1.2;
+  margin-top: 10px;
+}
+
+.ratingBadge {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f7ff 100%);
+  border: 2px solid #4a90e2;
+  border-radius: 25px;
+  padding: 8px 14px;
+  box-shadow: 
+    0 4px 12px rgba(0, 33, 71, 0.15),
+    0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-left: 12px;
+  min-width: 120px;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* Efecto shimmer en rating */
+.ratingBadge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 33, 71, 0.2), transparent);
+  transition: left 0.6s ease;
+}
+
+.courtCard:hover .ratingBadge {
+  transform: scale(1.05) rotate(1deg);
+  border-color: #002147;
+  background: linear-gradient(135deg, #e6f0ff 0%, #c2d9ff 100%);
+  box-shadow: 0 8px 20px rgba(0, 33, 71, 0.25);
+}
+
+.courtCard:hover .ratingBadge::before {
+  left: 100%;
+}
+
+.starIcon {
+  width: 16px;
+  height: 16px;
+  color: #fbbf24;
+  margin-right: 4px;
+}
+
+.ratingNumber {
+  font-size: 11px;
+  font-weight: 700;
+  color: #002147;
+}
+
+.ratingReviews {
+  font-size: 10px;
+  font-weight: 600;
+  color: #002147;
+  margin-left: 6px;
+}
+
+.tagsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+  margin-top: 2px;
+}
+
+.tag {
+  background: #4a90e2;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #002147;
+  text-align: center;
+  min-width: 80px;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s ease;
+}
+
+.description {
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: auto;
+}
+
+.priceSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.price {
+  color: #002147;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.nextTime {
+  color: #6b7280;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.actionButton {
+  background: linear-gradient(135deg, #002147 0%, #001a36 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  box-shadow: 
+    0 6px 20px rgba(0, 33, 71, 0.3),
+    0 3px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  min-width: 120px;
+  height: 35px;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Efecto de brillo que recorre el botón */
+.actionButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+  z-index: 1;
+}
+
+.actionButton:hover::before {
+  left: 100%;
+}
+
+/* Estados del botón */
+.actionButton:hover {
+  transform: translateY(-3px) scale(1.05);
+  background: linear-gradient(135deg, #001a36 0%, #001122 100%);
+  box-shadow: 
+    0 10px 30px rgba(0, 33, 71, 0.4),
+    0 6px 16px rgba(0, 26, 54, 0.3);
+  border-color: #4a90e2;
+}
+
+.actionButton:active {
+  transform: translateY(-1px) scale(1.02);
+  transition: transform 0.1s ease;
+  box-shadow: 
+    0 6px 20px rgba(0, 33, 71, 0.3),
+    0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Efecto de pulso cuando está en focus */
+.actionButton:focus {
+  outline: none;
+  animation: buttonPulse 0.6s ease-in-out;
+}
+
+@keyframes buttonPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 33, 71, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(0, 33, 71, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 33, 71, 0);
+  }
+}

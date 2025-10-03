@@ -1,6 +1,11 @@
 import React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import styles from './stylesCourtCards/BasquetbolCanchasCard.module.css';
+import enduroStyles from './stylesCourtCards/EnduroRutasCard.module.css';
+import futbolAmericanoStyles from './stylesCourtCards/FutbolAmericanoEstadioCard.module.css';
+import rugbyStyles from './stylesCourtCards/RugbyCanchasCard.module.css';
+import mountainBikeStyles from './stylesCourtCards/MountainBikeRutasCard.module.css';
 
 // 🔥 IMPORTAR TODOS LOS ESTILOS DE LOS DEPORTES
 import basquetbolStyles from './stylesCourtCards/BasquetbolCanchasCard.module.css';
@@ -22,6 +27,8 @@ interface CourtCardProps {
   description: string;
   price: string;
   nextAvailable: string;
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | undefined;
   sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje';
   onClick?: () => void;
 }
@@ -40,6 +47,13 @@ const CourtCard: React.FC<CourtCardProps> = ({
   onClick,
 }) => {
   const router = useRouter();
+  
+  const currentStyles = 
+    sport === 'enduro' ? enduroStyles :
+    sport === 'futbol-americano' ? futbolAmericanoStyles :
+    sport === 'rugby' ? rugbyStyles :
+    sport === 'mountain-bike' ? mountainBikeStyles :
+    styles;
   
   // 🔥 FUNCIÓN PARA SELECCIONAR ESTILOS SEGÚN EL DEPORTE
   const getSportStyles = () => {
@@ -115,6 +129,50 @@ const CourtCard: React.FC<CourtCardProps> = ({
         case 'padel':
           router.push('/sports/padel/canchas/canchaseleccionada');
           break;
+          
+        case 'enduro':
+          router.push('/sports/enduro/rutas/rutaseleccionada');
+          break;
+
+        case 'futbol-americano':
+          const futbolAmericanoParams = new URLSearchParams({
+            id: Date.now().toString(),
+            name: name,
+            location: address,
+            description: description,
+            rating: rating.toString(),
+            reviews: reviews.toString().replace(' reseñas', ''),
+            priceFrom: (parseInt(price) * 1000).toString(),
+          });
+          router.push(`/sports/futbol-americano/estadios/estadioseleccionado?${futbolAmericanoParams.toString()}`);
+          break;
+
+        case 'rugby':
+          const rugbyParams = new URLSearchParams({
+            id: Date.now().toString(),
+            name: name,
+            location: address,
+            description: description,
+            rating: rating.toString(),
+            reviews: reviews.toString().replace(' reseñas', ''),
+            priceFrom: (parseInt(price) * 1000).toString(),
+          });
+          router.push(`/sports/rugby/canchas/canchaseleccionada?${rugbyParams.toString()}`);
+          break;
+
+        case 'mountain-bike': // 🔥 NUEVO CASO PARA MOUNTAIN BIKE
+          const mountainBikeParams = new URLSearchParams({
+            id: Date.now().toString(),
+            name: name,
+            location: address,
+            description: description,
+            rating: rating.toString(),
+            reviews: reviews.toString().replace(' reseñas', ''),
+            priceFrom: (parseInt(price) * 1000).toString(),
+          });
+          router.push(`/sports/mountain-bike/rutas/rutaseleccionada?${mountainBikeParams.toString()}`);
+          break;
+          
         case 'crossfitentrenamientofuncional':
           router.push('/sports/crossfitentrenamientofuncional/gimnasios/gimnasioseleccionado');
           break;
@@ -161,6 +219,14 @@ const CourtCard: React.FC<CourtCardProps> = ({
   };
   
   return (
+    <div className={currentStyles.courtCard}>
+      <Image
+        src={imageUrl}
+        alt={name}
+        className={currentStyles.cardImage}
+        width={300}
+        height={200}
+      />
     <div className={styles.courtCard} data-sport={sport}>
       {/* 🔥 CONTENEDOR DE IMAGEN CON FALLBACK */}
       <div className={`${styles.imageContainer} ${imageError ? styles.fallback : ''}`}>
@@ -186,42 +252,45 @@ const CourtCard: React.FC<CourtCardProps> = ({
         )}
       </div>
       
-      <div className={styles.cardContent}>
-        <div className={styles.cardHeader}>
-          <div className={styles.cardTitleSection}>
-            <h3 className={styles.cardTitle}>{name}</h3>
-            <p className={styles.cardAddress}>{address}</p>
+      <div className={currentStyles.cardContent}>
+        <div className={currentStyles.cardHeader}>
+          <div className={currentStyles.cardTitleSection}>
+            <h3 className={currentStyles.cardTitle}>{name}</h3>
+            <p className={currentStyles.cardAddress}>{address}</p>
           </div>
           
-          <div className={styles.ratingBadge}>
-            <svg className={styles.starIcon} fill="currentColor" viewBox="0 0 20 20">
+          <div className={currentStyles.ratingBadge}>
+            <svg className={currentStyles.starIcon} fill="currentColor" viewBox="0 0 20 20">
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.921-.755 1.688-1.54 1.118l-3.38-2.455a1 1 0 00-1.175 0l-3.38 2.455c-.784.57-1.838-.197-1.539-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.049 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.287-3.967z"/>
             </svg>
-            <span className={styles.ratingNumber}>{rating}</span>
-            <span className={styles.ratingReviews}>({reviews} reseñas)</span>
+            <span className={currentStyles.ratingNumber}>{rating}</span>
+            <span className={currentStyles.ratingReviews}>({reviews} reseñas)</span>
           </div>
         </div>
 
-        <div className={styles.tagsContainer}>
+        <div className={currentStyles.tagsContainer}>
           {displayTags.map((tag, index) => (
-            <span key={index} className={styles.tag}>
+            <span key={index} className={currentStyles.tag}>
               {tag}
             </span>
           ))}
         </div>
 
-        <p className={styles.description}>
+        <p className={currentStyles.description}>
           {description}
         </p>
 
-        <div className={styles.cardFooter}>
-          <div className={styles.priceSection}>
-            <span className={styles.price}>${price}/h</span>
-            <span className={styles.nextTime}>Próximo: {nextAvailable}</span>
+        <div className={currentStyles.cardFooter}>
+          <div className={currentStyles.priceSection}>
+            <span className={currentStyles.price}>${price}/h</span>
+            <span className={currentStyles.nextTime}>Próximo: {nextAvailable}</span>
           </div>
           
-          <button onClick={handleInternalClick} className={styles.actionButton}>
-            Ir a cancha →
+          <button onClick={handleInternalClick} className={currentStyles.actionButton}>
+            {sport === 'enduro' ? 'Ir a ruta →' : 
+             sport === 'futbol-americano' ? 'Ir a estadio →' : 
+             sport === 'rugby' ? 'Ir a campo →' : 
+             sport === 'mountain-bike' ? 'Ir a ruta →' : 'Ir a cancha →'}
           </button>
         </div>
       </div>

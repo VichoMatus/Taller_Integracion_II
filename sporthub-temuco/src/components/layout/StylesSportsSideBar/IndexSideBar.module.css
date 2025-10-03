@@ -111,7 +111,7 @@
 }
 
 .sidebarHeader:hover::before {
-  transform: translateX(100%);
+  transform: translateY(0%);
 }
 
 .sidebarLogoContainer {

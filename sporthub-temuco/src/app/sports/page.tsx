@@ -60,6 +60,45 @@ const sportsData = [
     description: 'Explora voleibol y competencias.',
     tag: 'Nuevo',
     tagColor: '#ec4899', // Rosa
+    href: '/sports/voley'
+  },
+  // NUEVOS DEPORTES AGREGADOS
+  {
+    id: 'enduro',
+    name: 'Enduro',
+    imageUrl: '/sports/enduro/enduro.png',
+    description: 'Rutas y circuitos para enduro. Terrenos desafiantes y emocionantes.',
+    tag: 'Extremo',
+    tagColor: '#4B5320', // verde militar
+    href: '/sports/enduro'
+  },
+  {
+    id: 'futbol-americano',
+    name: 'Futbol Americano',
+    imageUrl: '/sports/futbol-americano/futbol-americano.png',
+    description: 'Campos profesionales para partidos y entrenamientos de football americano.',
+    tag: 'Contacto',
+    tagColor: '#002147', // azul marino
+    href: '/sports/futbol-americano'
+  },
+  {
+    id: 'rugby',
+    name: 'Rugby',
+    imageUrl: '/sports/rugby/rugby.png',
+    description: 'Campos de rugby con medidas oficiales para partidos y entrenamientos.',
+    tag: 'Intenso',
+    tagColor: '#722F37', // vino titno
+    href: '/sports/rugby'
+  },
+  {
+    id: 'mountain-bike',
+    name: 'Mountain Bike',
+    imageUrl: '/sports/mountain-bike/mountain-bike.png',
+    description: 'Senderos y circuitos para mountain bike. Diferentes niveles de dificultad.',
+    tag: 'Aventura',
+    tagColor: '#4E342E', // Índigo
+    href: '/sports/mountain-bike'
+  }
     href: '/sports/voleibol'
   },
   {
@@ -101,11 +140,6 @@ export default function SportsPage() {
       );
       setFilteredSports(filtered);
     }
-  };
-
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortBy(e.target.value);
-    // Aquí podrías implementar la lógica de ordenamiento
   };
 
   const handleSportClick = (sport: typeof sportsData[0]) => {
@@ -158,12 +192,11 @@ export default function SportsPage() {
                     src={sport.imageUrl} 
                     alt={sport.name}
                     className={styles.sportImage}
-                    width={300}  // Requerido
-                    height={200} // Requerido
+                    width={300}
+                    height={200}
                     placeholder="blur"
                     blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                   />
-                {/* Tag del deporte */}
                 <div 
                   className={styles.sportTag}
                   style={{ backgroundColor: sport.tagColor }}
@@ -172,12 +205,10 @@ export default function SportsPage() {
                 </div>
               </div>
 
-              {/* Contenido de la card */}
               <div className={styles.sportContent}>
                 <h3 className={styles.sportName}>{sport.name}</h3>
                 <p className={styles.sportDescription}>{sport.description}</p>
                 
-                {/* Botón de acción */}
                 <button className={styles.exploreButton}>
                   Explorar
                 </button>
