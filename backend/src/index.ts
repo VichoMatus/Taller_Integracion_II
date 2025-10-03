@@ -23,8 +23,6 @@ import path from 'path';
 import authRoutes from './auth/routes/authRoutes';
 import superAdminRoutes from './superAdmin/routes/superAdminRoutes';
 import usuarioRoutes from './usuario/routes/usuarioRoutes';
-import reservaRoutes from './reserva/routes/reservaRoute';
-import resenaRoutes from './resena/routes/resenaRouters';
 import notificacionesRoutes from './notificaciones/routes/notificacionesRoutes';
 import favoritosRoutes from './favoritos/routes/favoritosRoute';
 import adminRoutes from './admin/presentation/routes/admin.routes';
@@ -143,12 +141,6 @@ app.get('/api/usuarios/test', (req, res) => {
 // Rutas de usuarios
 console.log('Montando rutas de usuarios...');
 app.use('/api/usuarios', usuarioRoutes);
-
-// Rutas de reservas
-app.use('/api/reservas', reservaRoutes);
-
-// Rutas de reseñas
-app.use('/api/resenas', resenaRoutes);
 
 // Rutas de notificaciones
 app.use('/api/notificaciones', notificacionesRoutes);
