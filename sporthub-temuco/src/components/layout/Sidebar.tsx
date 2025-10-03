@@ -22,7 +22,7 @@ interface SidebarProps {
   sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje';
 }
 
-const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
+const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado a undefined por defecto
   const pathname = usePathname();
 
   // Función para obtener los estilos según el rol Y deporte
@@ -30,6 +30,11 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
     // 🔥 Si es admin o superadmin, devolver null (usará las clases CSS normales)
     if (userRole === 'admin' || userRole === 'superadmin') {
       return null; 
+    }
+
+    // 🔥 PRIMERO: Si no hay deporte seleccionado, usar indexStyles (color base)
+    if (!sport) {
+      return indexStyles;
     }
 
     if (pathname === '/' || pathname === '/sports' || pathname === '/sports/') {
@@ -62,8 +67,12 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
         return natacionStyles;
       case 'patinaje':
         return patinajeStyles;
+        // return tenisStyles;
+        return basquetbolStyles; // temporal
+      case 'voleibol':
+      case 'padel':
       default:
-        return basquetbolStyles;
+        return indexStyles; // Cambiado a indexStyles para casos no manejados
     }
   };
 
@@ -202,7 +211,7 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
             <p className={styles ? styles.sidebarSubtitle : 'sidebar-subtitle'}>{userTitle}</p>
           </div>
         </div>
-        {userRole === 'usuario' && styles && <div className={styles.sportIcon}></div>}
+        {userRole === 'usuario' && sport && styles && <div className={styles.sportIcon}></div>}
       </div>
 
       {/* Navigation */}
