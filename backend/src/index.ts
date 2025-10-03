@@ -177,7 +177,9 @@ app.get('/api', (req, res) => {
 // === Endpoint Global de Status ===
 app.get("/status", async (req, res) => {
   const modules = [
+    { name: "auth", url: "/auth/status" },
     { name: "admin", url: "/admin/status" },
+    { name: "usuarios", url: "/usuarios/status" },
     { name: "canchas", url: "/canchas/status" },
     { name: "complejos", url: "/complejos/status" },
     { name: "reservas", url: "/reservas/status" },
