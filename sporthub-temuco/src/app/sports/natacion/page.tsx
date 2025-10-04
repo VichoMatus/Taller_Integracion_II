@@ -153,6 +153,10 @@ export default function NatacionPage() {
   const handleLocationSearch = () => {
     console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
   };
+  const handleCanchaClick = (court: any) => {
+    console.log('Navegando a piscinas de natación...');
+    router.push('/sports/natacion/piletas/piletaseleccionada');
+  };
 
   if (!isClient) {
     return (
@@ -223,7 +227,7 @@ export default function NatacionPage() {
         <div className={styles.quickAccessSection}>
           <button 
             className={styles.mainCourtButton}
-            onClick={() => window.location.href = '/sports/natacion/piscinas'}
+            onClick={() => window.location.href = '/sports/natacion/piletas'}
           >
             <div className={styles.courtButtonIcon}>🏊‍♂️</div>
             <div className={styles.courtButtonText}>
@@ -276,7 +280,7 @@ export default function NatacionPage() {
                   key={index} 
                   {...court} 
                   sport="natacion"
-                  onClick={() => router.push('/sports/natacion/piscinas/piscinaseleccionada')}
+                  onClick={() => router.push('/sports/natacion/piletas/piletaseleccionada')}
                 />
               ))}
             </div>

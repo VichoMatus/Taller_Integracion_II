@@ -31,6 +31,19 @@ export interface UserRegister {
   apellido?: string;        // Apellido del usuario (opcional)
   email: string;            // Email único del usuario (requerido)
   password: string;         // Contraseña (min 6 caracteres)
+  confirmPassword?: string; // Confirmación de contraseña (validación frontend/backend)
+  telefono?: string;        // Número de teléfono (opcional)
+}
+
+/**
+ * Datos para enviar a la API FastAPI (sin confirmPassword)
+ * La API externa no necesita la confirmación, solo la validamos en el BFF
+ */
+export interface UserRegisterAPI {
+  nombre?: string;          // Nombre del usuario (opcional)
+  apellido?: string;        // Apellido del usuario (opcional)
+  email: string;            // Email único del usuario (requerido)
+  password: string;         // Contraseña (min 6 caracteres)
   telefono?: string;        // Número de teléfono (opcional)
 }
 
