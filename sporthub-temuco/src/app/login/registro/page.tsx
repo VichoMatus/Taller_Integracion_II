@@ -1,7 +1,12 @@
+'use client';
 import Link from 'next/link';
 import '../../Login.css';
+import { useRegistro } from '../../../hooks/useRegistro';
+import { MessageDisplay } from '../../../components/ui/MessageDisplay';
 
 export default function RegistroPage() {
+  // Usar nuestro custom hook que contiene toda la lógica
+  const { state, handleSubmit } = useRegistro();
   return (
     <div>
       <header style={{ backgroundColor: '#4F46E5', color: 'white', padding: '1rem', textAlign: 'center' }}>
@@ -11,22 +16,83 @@ export default function RegistroPage() {
         <div className="login-form registro-form">
           <div className="login-left">
             <h1>Registro</h1>
-            <form>
+            
+            {/* Mostrar mensajes de error/éxito */}
+            <MessageDisplay 
+              error={state.error}
+              success={state.success}
+            />
+            
+            <form onSubmit={handleSubmit}>
               <label htmlFor="nombre">Nombre</label>
-              <input type="text" id="nombre" />
+              <input 
+                type="text" 
+                id="nombre" 
+                name="nombre" 
+                required 
+                disabled={state.isLoading}
+              />
+              
               <label htmlFor="apellido">Apellido</label>
-              <input type="text" id="apellido" />
+              <input 
+                type="text" 
+                id="apellido" 
+                name="apellido" 
+                required 
+                disabled={state.isLoading}
+              />
+              
               <label htmlFor="email">Email</label>
-              <input type="email" id="email" />
+              <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                required 
+                disabled={state.isLoading}
+              />
+
+              <label htmlFor="telefono">Teléfono (opcional)</label>
+              <input 
+                type="tel" 
+                id="telefono" 
+                name="telefono" 
+                placeholder="Ej: +56912345678" 
+                disabled={state.isLoading}
+              />
+              
               <label htmlFor="password">Contraseña</label>
               <div className="password-container">
-                <input type="password" id="password" />
+                <input 
+                  type="password" 
+                  id="password" 
+                  name="password" 
+                  minLength={6} 
+                  required 
+                  disabled={state.isLoading}
+                />
               </div>
+              
               <label htmlFor="confirm-password">Confirmar contraseña</label>
               <div className="password-container">
-                <input type="password" id="confirm-password" />
+                <input 
+                  type="password" 
+                  id="confirm-password" 
+                  name="confirmPassword" 
+                  required 
+                  disabled={state.isLoading}
+                />
               </div>
-              <button type="submit">Crear cuenta</button>
+              
+              <button 
+                type="submit" 
+                disabled={state.isLoading}
+                style={{
+                  backgroundColor: state.isLoading ? '#9ca3af' : '#4F46E5',
+                  cursor: state.isLoading ? 'not-allowed' : 'pointer'
+                }}
+              >
+                {state.isLoading ? 'Creando cuenta...' : 'Crear cuenta'}
+              </button>
             </form>
             <div className="or">o</div>
             <button className="google-btn">

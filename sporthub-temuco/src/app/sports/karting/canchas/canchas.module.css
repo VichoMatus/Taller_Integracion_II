@@ -1,0 +1,264 @@
+/* Karting Canchas Page - Tema Rojo/Naranja */
+
+/* Variables de color para Karting */
+:root {
+  --karting-primary: #ef4444;
+  --karting-secondary: #f97316;
+  --karting-dark: #dc2626;
+  --karting-light: #fee2e2;
+  --karting-accent: #ea580c;
+  --karting-bg: #fef2f2;
+}
+
+.pageContainer {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(
+    135deg,
+    var(--karting-bg) 0%,
+    #ffffff 50%,
+    var(--karting-light) 100%
+  );
+}
+
+.mainContent {
+  flex: 1;
+  margin-left: 256px;
+  padding: 0;
+}
+
+/* Header Section */
+.headerSection {
+  background: linear-gradient(
+    135deg,
+    var(--karting-primary) 0%,
+    var(--karting-secondary) 50%,
+    var(--karting-accent) 100%
+  );
+  color: white;
+  padding: 60px 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.headerSection::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 70% 80%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.headerContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.pageTitle {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  animation: slideInUp 0.8s ease-out;
+}
+
+.pageSubtitle {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  margin: 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  animation: slideInUp 0.8s ease-out 0.2s both;
+}
+
+/* Filters Section */
+.filtersSection {
+  background: white;
+  padding: 30px 40px;
+  border-bottom: 1px solid #f3f4f6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.filtersContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.searchContainer {
+  width: 100%;
+}
+
+.filterGroup {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: end;
+}
+
+.filterItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 150px;
+}
+
+.filterLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--karting-dark);
+  margin-bottom: 4px;
+}
+
+.filterSelect {
+  padding: 10px 16px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  color: #374151;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--karting-primary);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.filterSelect:hover {
+  border-color: var(--karting-secondary);
+}
+
+/* Results Section */
+.resultsSection {
+  padding: 40px;
+  min-height: 60vh;
+}
+
+.resultsHeader {
+  max-width: 1200px;
+  margin: 0 auto 30px auto;
+}
+
+.resultsTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--karting-dark);
+  margin: 0;
+  text-align: center;
+}
+
+.tracksGrid {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 30px;
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* No Results */
+.noResults {
+  text-align: center;
+  padding: 60px 20px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.noResultsIcon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+  opacity: 0.6;
+}
+
+.noResultsTitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--karting-dark);
+  margin-bottom: 12px;
+}
+
+.noResultsText {
+  color: #6b7280;
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Animations */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: 0;
+  }
+  
+  .tracksGrid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .headerSection {
+    padding: 40px 20px;
+  }
+  
+  .filtersSection {
+    padding: 20px;
+  }
+  
+  .resultsSection {
+    padding: 30px 20px;
+  }
+  
+  .pageTitle {
+    font-size: 2rem;
+  }
+  
+  .filterGroup {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .filterItem {
+    min-width: 100%;
+  }
+  
+  .tracksGrid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}

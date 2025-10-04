@@ -28,9 +28,9 @@ export default function GimnasioSeleccionadoPage() {
     reviews: 187,
     priceFrom: 18000,
     images: [
-      "/sports/crossfit/gimnasios/Gym1.png",
-      "/sports/crossfit/gimnasios/Gym2.png",
-      "/sports/crossfit/crossfit.png"
+    "/sports/crossfitentrenamientofuncional/gimnasios/Gimnasio1.png",
+    "/sports/crossfitentrenamientofuncional/gimnasios/Gimnasio2.png",
+    "/sports/crossfitentrenamientofuncional/crossfitentrenamientofuncional.png"
     ],
     amenities: ["Rigs Profesionales", "Barras Olímpicas", "Kettlebells Certificadas", "Coaching Level 2", "Zona de Movilidad", "Vestidores Premium"],
     reviewsList: [

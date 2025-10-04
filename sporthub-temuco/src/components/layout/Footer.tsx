@@ -1,6 +1,10 @@
+"use client";
+
 // Footer.tsx - Actualizado
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import './Footer.css';
+import styles from './Footer.module.css';
 
 interface FooterProps {
     variant?: 'minimal' | 'full';

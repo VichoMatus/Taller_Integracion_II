@@ -1,0 +1,600 @@
+/* Karting Cancha Seleccionada - Tema Rojo/Naranja */
+
+/* Variables de color para Karting */
+:root {
+  --karting-primary: #ef4444;
+  --karting-secondary: #f97316;
+  --karting-dark: #dc2626;
+  --karting-light: #fee2e2;
+  --karting-accent: #ea580c;
+  --karting-bg: #fef2f2;
+}
+
+.pageContainer {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(
+    135deg,
+    var(--karting-bg) 0%,
+    #ffffff 50%,
+    var(--karting-light) 100%
+  );
+}
+
+.mainContent {
+  flex: 1;
+  margin-left: 256px;
+  padding: 0;
+}
+
+/* Header Section */
+.headerSection {
+  background: linear-gradient(
+    135deg,
+    var(--karting-primary) 0%,
+    var(--karting-secondary) 100%
+  );
+  color: white;
+  padding: 40px;
+  position: relative;
+}
+
+.backButton {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.backButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateX(-2px);
+}
+
+.trackTitle {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 16px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.trackMeta {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stars {
+  font-size: 18px;
+}
+
+.starFilled {
+  color: #fbbf24;
+}
+
+.starEmpty {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.ratingValue {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.reviewCount {
+  opacity: 0.8;
+  font-size: 14px;
+}
+
+.location {
+  font-size: 16px;
+  opacity: 0.9;
+}
+
+/* Content Grid */
+.contentGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 40px;
+  padding: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.rightColumn {
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+
+/* Image Section */
+.imageSection {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.imageGallery {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.mainImage {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.trackImage {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+}
+
+.imageNav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.imageNav:hover {
+  background: rgba(0, 0, 0, 0.7);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.prevButton {
+  left: 10px;
+}
+
+.nextButton {
+  right: 10px;
+}
+
+.imageThumbnails {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 8px 0;
+}
+
+.thumbnail {
+  flex-shrink: 0;
+  width: 80px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail:hover {
+  border-color: var(--karting-secondary);
+}
+
+.activeThumbnail {
+  border-color: var(--karting-primary);
+}
+
+/* Content Sections */
+.descriptionSection,
+.specsSection,
+.featuresSection {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.sectionTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--karting-dark);
+  margin-bottom: 20px;
+  border-bottom: 2px solid var(--karting-light);
+  padding-bottom: 10px;
+}
+
+.description {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #4b5563;
+  margin: 0;
+}
+
+.specsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.specItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--karting-bg);
+  border-radius: 8px;
+  border-left: 4px solid var(--karting-primary);
+}
+
+.specLabel {
+  font-weight: 600;
+  color: var(--karting-dark);
+}
+
+.specValue {
+  font-weight: 500;
+  color: var(--karting-accent);
+}
+
+.featuresList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.featureTag {
+  background: linear-gradient(135deg, var(--karting-primary), var(--karting-secondary));
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+/* Booking Card */
+.bookingCard {
+  background: white;
+  border-radius: 16px;
+  padding: 30px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border: 2px solid var(--karting-light);
+}
+
+.priceSection {
+  text-align: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.price {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.priceAmount {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--karting-primary);
+}
+
+.priceUnit {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.bookingForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formLabel {
+  font-weight: 600;
+  color: var(--karting-dark);
+  font-size: 14px;
+}
+
+.formInput {
+  padding: 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: var(--karting-primary);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.timeSlots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.timeSlot {
+  padding: 10px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.timeSlot.available:hover {
+  border-color: var(--karting-secondary);
+  background: var(--karting-bg);
+}
+
+.timeSlot.selected {
+  background: var(--karting-primary);
+  color: white;
+  border-color: var(--karting-primary);
+}
+
+.timeSlot.unavailable {
+  background: #f9fafb;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.participantSelector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.participantButton {
+  width: 40px;
+  height: 40px;
+  border: 2px solid var(--karting-primary);
+  background: white;
+  color: var(--karting-primary);
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.participantButton:hover {
+  background: var(--karting-primary);
+  color: white;
+}
+
+.participantCount {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--karting-dark);
+  min-width: 30px;
+  text-align: center;
+}
+
+.totalSection {
+  border-top: 1px solid #f3f4f6;
+  padding-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.totalAmount {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--karting-primary);
+}
+
+.bookingButton {
+  background: linear-gradient(135deg, var(--karting-primary), var(--karting-secondary));
+  color: white;
+  border: none;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.bookingButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.bookingButton:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Contact and Schedule Info */
+.contactInfo,
+.scheduleInfo {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.contactTitle,
+.scheduleTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--karting-dark);
+  margin-bottom: 12px;
+}
+
+.contactItem,
+.scheduleItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.contactIcon {
+  width: 16px;
+  text-align: center;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modalContent {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.modalTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--karting-primary);
+  margin-bottom: 20px;
+}
+
+.confirmationDetails {
+  text-align: left;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: var(--karting-bg);
+  border-radius: 8px;
+}
+
+.confirmationDetails p {
+  margin: 8px 0;
+  color: #4b5563;
+}
+
+.modalButtons {
+  display: flex;
+  justify-content: center;
+}
+
+.modalButton {
+  background: var(--karting-primary);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modalButton:hover {
+  background: var(--karting-dark);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: 0;
+  }
+  
+  .contentGrid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding: 30px 20px;
+  }
+  
+  .rightColumn {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .headerSection {
+    padding: 30px 20px;
+  }
+  
+  .trackTitle {
+    font-size: 2rem;
+  }
+  
+  .trackMeta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .timeSlots {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .specsGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .trackImage {
+    height: 250px;
+  }
+}

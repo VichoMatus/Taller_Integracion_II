@@ -23,8 +23,6 @@ import path from 'path';
 import authRoutes from './auth/routes/authRoutes';
 import superAdminRoutes from './superAdmin/routes/superAdminRoutes';
 import usuarioRoutes from './usuario/routes/usuarioRoutes';
-import reservaRoutes from './reserva/routes/reservaRoute';
-import resenaRoutes from './resena/routes/resenaRouters';
 import notificacionesRoutes from './notificaciones/routes/notificacionesRoutes';
 import favoritosRoutes from './favoritos/routes/favoritosRoute';
 import adminRoutes from './admin/presentation/routes/admin.routes';
@@ -144,12 +142,6 @@ app.get('/api/usuarios/test', (req, res) => {
 console.log('Montando rutas de usuarios...');
 app.use('/api/usuarios', usuarioRoutes);
 
-// Rutas de reservas
-app.use('/api/reservas', reservaRoutes);
-
-// Rutas de reseñas
-app.use('/api/resenas', resenaRoutes);
-
 // Rutas de notificaciones
 app.use('/api/notificaciones', notificacionesRoutes);
 
@@ -185,7 +177,9 @@ app.get('/api', (req, res) => {
 // === Endpoint Global de Status ===
 app.get("/status", async (req, res) => {
   const modules = [
+    { name: "auth", url: "/auth/status" },
     { name: "admin", url: "/admin/status" },
+    { name: "usuarios", url: "/usuarios/status" },
     { name: "canchas", url: "/canchas/status" },
     { name: "complejos", url: "/complejos/status" },
     { name: "reservas", url: "/reservas/status" },

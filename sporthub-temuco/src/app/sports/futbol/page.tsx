@@ -5,8 +5,8 @@ import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
+import StatsCard from '../../../components/charts/StatsCard';
 import styles from './page.module.css';
-
 
 // Datos de ejemplo para las canchas mejor calificadas (6 tarjetas)
 const topRatedCourts = [
@@ -78,6 +78,38 @@ const topRatedCourts = [
   }
 ];
 
+// 🔥 DATOS PARA LAS ESTADÍSTICAS DE FÚTBOL
+const footballStats = [
+  {
+    title: "Canchas Disponibles Hoy",
+    value: "15",
+    icon: "⚽",
+    subtitle: "Listas para reservar",
+    trend: { value: 2, isPositive: true }
+  },
+  {
+    title: "Rango de Precios",
+    value: "$20-40",
+    icon: "💰",
+    subtitle: "Por hora",
+    trend: { value: 7, isPositive: true }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.5⭐",
+    icon: "🏆",
+    subtitle: "De nuestras canchas",
+    trend: { value: 0.2, isPositive: true }
+  },
+  {
+    title: "Jugadores en Cancha",
+    value: "22",
+    icon: "👥",
+    subtitle: "Ahora mismo",
+    trend: { value: 8, isPositive: true }
+  }
+];
+
 export default function FutbolPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
@@ -86,7 +118,6 @@ export default function FutbolPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
-  // 🔥 Elimina el estado sidebarLoaded
 
   useEffect(() => {
     setIsClient(true);
@@ -110,21 +141,10 @@ export default function FutbolPage() {
 
     window.addEventListener('resize', handleResize);
 
-    // 🔥 Elimina el setTimeout del sidebar
-
     return () => {
       window.removeEventListener('resize', handleResize);
-      // 🔥 Elimina el clearTimeout
     };
   }, []);
-
-  // Stats de ejemplo
-  const stats = {
-    disponiblesHoy: 15,
-    precioPromedio: { min: 20, max: 40 },
-    promedioCalificacion: 4.5,
-    cantidadJugadores: 22
-  };
 
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
@@ -149,11 +169,10 @@ export default function FutbolPage() {
   };
 
   const handleCanchaClick = (court: any) => {
-  console.log('Test navigation...');
-  router.push('/sports/futbol/canchas/canchaseleccionada');
-};
+    console.log('Test navigation...');
+    router.push('/sports/futbol/canchas/canchaseleccionada');
+  };
 
-  // 🔥 Elimina el estado de carga inicial
   if (!isClient) {
     return (
       <div className={styles.pageContainer}>
@@ -169,7 +188,6 @@ export default function FutbolPage() {
 
   return (
     <div className={styles.pageContainer}>
-      {/* 🔥 Siempre mostrar el Sidebar real */}
       <Sidebar userRole="usuario" sport="futbol" />
 
       <div className={styles.mainContent}>
@@ -180,51 +198,58 @@ export default function FutbolPage() {
           </div>
           <div className={styles.headerRight}>
             <SearchBar
-            value={searchTerm}
-            onChange={handleSearchChange}
-            onSearch={handleSearch}
-            placeholder="Nombre de la cancha..."
-            sport="futbol" 
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onSearch={handleSearch}
+              placeholder="Nombre de la cancha..."
+              sport="futbol" 
             />
             <button className={styles.userButton}>
               <span>👤</span>
               <span>usuario</span>
             </button>
-            
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className={styles.statsContainer}>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.disponiblesHoy}</div>
-            <div className={styles.statLabel}>Canchas Disponibles hoy</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>${stats.precioPromedio.min}-{stats.precioPromedio.max}</div>
-            <div className={styles.statLabel}>Rango de precios por hora</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.promedioCalificacion} ⭐</div>
-            <div className={styles.statLabel}>Promedio de calificacion</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.cantidadJugadores}</div>
-            <div className={styles.statLabel}>Cantidad de jugadores en cancha</div>
+        {/* 🔥 STATS CARDS MEJORADAS CON STATSCARD */}
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas del Fútbol en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {footballStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Agregar navegación específica si es necesario
+                  if (stat.title.includes("Canchas")) {
+                    router.push('/sports/futbol/canchas');
+                  }
+                }}
+              />
+            ))}
           </div>
         </div>
+
         <div className={styles.quickAccessSection}>
-        <button 
+          <button 
             className={styles.mainCourtButton}
             onClick={() => window.location.href = '/sports/futbol/canchas/'}
-            >
+          >
             <div className={styles.courtButtonIcon}>⚽</div>
             <div className={styles.courtButtonText}>
-            <span className={styles.courtButtonTitle}>Explorar Canchas</span>
-            <span className={styles.courtButtonSubtitle}>Ver todas las canchas disponibles</span>
+              <span className={styles.courtButtonTitle}>Explorar Canchas</span>
+              <span className={styles.courtButtonSubtitle}>Ver todas las canchas disponibles</span>
             </div>
             <div className={styles.courtButtonArrow}>→</div>
-        </button>
+          </button>
         </div>
 
         {/* Canchas mejor calificadas con carrusel */}

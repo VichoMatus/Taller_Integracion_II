@@ -6,6 +6,7 @@ import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import styles from './page.module.css';
+import StatsCard from '../../../components/charts/StatsCard';
 
 // Datos de ejemplo para las canchas mejor calificadas de padel (6 tarjetas)
 const topRatedCourts = [
@@ -74,6 +75,36 @@ const topRatedCourts = [
     description: "Cancha de padel en club deportivo con torneos regulares y ambiente competitivo",
     price: "35",
     nextAvailable: "16:00-17:30",
+  }
+];
+const footballStats = [
+  {
+    title: "Canchas Disponibles Hoy",
+    value: "15",
+    icon: "⚽",
+    subtitle: "Listas para reservar",
+    trend: { value: 3, isPositive: true }
+  },
+  {
+    title: "Rango de Precios",
+    value: "$20-40",
+    icon: "💰",
+    subtitle: "Por hora",
+    trend: { value: 2, isPositive: true }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.5⭐",
+    icon: "🏆",
+    subtitle: "De nuestras canchas",
+    trend: { value: 0.2, isPositive: true }
+  },
+  {
+    title: "Jugadores en Cancha",
+    value: "4",
+    icon: "👥",
+    subtitle: "Ahora mismo",
+    trend: { value: 8, isPositive: true }
   }
 ];
 
@@ -186,23 +217,29 @@ export default function PadelPage() {
           </div>
         </div>
 
-        {/* Stats Cards específicas para padel */}
-        <div className={styles.statsContainer}>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.disponiblesHoy}</div>
-            <div className={styles.statLabel}>Canchas Padel Disponibles hoy</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>${stats.precioPromedio.min}-{stats.precioPromedio.max}</div>
-            <div className={styles.statLabel}>Rango de precios por hora</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.promedioCalificacion} ⭐</div>
-            <div className={styles.statLabel}>Promedio de calificación</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.cantidadJugadores}</div>
-            <div className={styles.statLabel}>Jugadores por cancha (2vs2)</div>
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas del Padel en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {footballStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Agregar navegación específica si es necesario
+                  if (stat.title.includes("Canchas")) {
+                    router.push('/sports/padel/canchas');
+                  }
+                }}
+              />
+            ))}
           </div>
         </div>
 

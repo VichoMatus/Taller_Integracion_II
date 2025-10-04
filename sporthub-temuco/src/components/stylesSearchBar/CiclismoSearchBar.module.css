@@ -1,0 +1,172 @@
+/* 🚴‍♂️ SEARCH BAR - CICLISMO STYLES */
+
+.searchContainer {
+  display: flex;
+  align-items: center;
+  background: white;
+  border: 2px solid rgba(34, 197, 94, 0.3);
+  border-radius: 12px;
+  padding: 2px;
+  min-width: 300px;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.1);
+  transition: all 0.3s ease;
+}
+
+.searchContainer:focus-within {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+  transform: translateY(-1px);
+}
+
+.searchIcon {
+  padding: 12px;
+  color: #22c55e;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(34, 197, 94, 0.1);
+  border-radius: 8px;
+  margin-right: 2px;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  outline: none;
+  font-size: 1rem;
+  color: #15803d;
+  background: transparent;
+  font-weight: 500;
+}
+
+.searchInput::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+.searchButton {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+}
+
+.searchButton:hover {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+}
+
+.searchButton::before {
+  content: "🚴‍♂️";
+  font-size: 1rem;
+}
+
+/* Estados especiales */
+.searchContainer.searching {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.searchContainer.searching .searchIcon {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .searchContainer {
+    min-width: 250px;
+  }
+  
+  .searchIcon {
+    padding: 10px;
+    font-size: 1rem;
+  }
+  
+  .searchInput {
+    padding: 10px 12px;
+    font-size: 0.95rem;
+  }
+  
+  .searchButton {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .searchContainer {
+    min-width: 200px;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 8px;
+  }
+  
+  .searchIcon {
+    padding: 8px;
+    margin-right: 0;
+    margin-bottom: 4px;
+    border-radius: 6px;
+  }
+  
+  .searchInput {
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+    border-radius: 6px;
+    background: rgba(34, 197, 94, 0.05);
+  }
+  
+  .searchButton {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    justify-content: center;
+  }
+}
+
+/* Variantes de tema */
+.searchContainer.theme-nature {
+  background: linear-gradient(135deg, rgba(240, 253, 244, 0.8), rgba(220, 252, 231, 0.8));
+  backdrop-filter: blur(8px);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.searchContainer.theme-mountain {
+  background: linear-gradient(135deg, rgba(243, 244, 246, 0.9), rgba(229, 231, 235, 0.9));
+  border-color: rgba(75, 85, 99, 0.3);
+}
+
+.searchContainer.theme-mountain .searchIcon {
+  background: rgba(75, 85, 99, 0.1);
+  color: #4b5563;
+}
+
+.searchContainer.theme-mountain .searchButton {
+  background: linear-gradient(135deg, #4b5563, #374151);
+}
+
+.searchContainer.theme-mountain .searchButton:hover {
+  background: linear-gradient(135deg, #374151, #1f2937);
+}
