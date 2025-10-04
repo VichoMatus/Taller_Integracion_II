@@ -113,18 +113,19 @@ export default function CiclismoPage() {
         <div className={ciclismoCommon.header}>
           <div className={ciclismoCommon.headerLeft}>
             <div className={ciclismoCommon.headerIcon}>🚴‍♂️</div>
-            <h1 className={ciclismoCommon.headerTitle}>Rutas de Ciclismo</h1>
+            <h1 className={ciclismoCommon.headerTitle}>Ciclismo</h1>
           </div>
           <div className={ciclismoCommon.headerRight}>
             <SearchBar
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre de la ruta"
+              placeholder="Nombre de la ruta o ubicación..."
               sport="ciclismo"
             />
             <button className={ciclismoCommon.userButton} onClick={() => router.push('/usuario/perfil')}>
-              👤 Usuario
+              <span>👤</span>
+              <span>usuario</span>
             </button>
           </div>
         </div>

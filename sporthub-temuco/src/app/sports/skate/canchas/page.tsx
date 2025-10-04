@@ -42,16 +42,21 @@ export default function Page() {
         <div className={skateCommon.header}>
           <div className={skateCommon.headerLeft}>
             <div className={skateCommon.headerIcon}>🛹</div>
-            <h1 className={skateCommon.headerTitle}>Skateparks</h1>
+            <h1 className={skateCommon.headerTitle}>Skate</h1>
           </div>
           <div className={skateCommon.headerRight}>
-            <SearchBar value={searchTerm} onChange={handleSearchChange} onSearch={handleSearch} placeholder="Nombre del skatepark" sport="skate" />
-            <button className={skateCommon.userButton} onClick={() => router.push('/usuario/perfil')}>👤 Usuario</button>
+            <SearchBar
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onSearch={handleSearch}
+              placeholder="Nombre del skatepark o ubicación..."
+              sport="skate"
+            />
+            <button className={skateCommon.userButton} onClick={() => router.push('/usuario/perfil')}>
+              <span>👤</span>
+              <span>usuario</span>
+            </button>
           </div>
-        </div>
-
-        <div className={skateCommon.breadcrumb}>
-          <button className={skateCommon.breadcrumbButton} onClick={handleBackToSkate}>← Skate</button>
         </div>
 
         <div className={skateCommon.filtersContainer}>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '../../../../../components/layout/Sidebar';
+import SearchBar from '../../../../../components/SearchBar';
 import styles from './canchaseleccionada.module.css';
 
 // Datos mock de la pista específica
@@ -37,7 +38,33 @@ const trackData = {
     phone: "+56 9 8765 4321",
     email: "speedway@karting.cl",
     website: "www.speedwaytemuco.cl"
-  }
+  },
+  reviewsList: [
+    {
+      name: "Carlos R.",
+      rating: 5,
+      date: "hace 1 día",
+      comment: "¡Increíble experiencia! Los karts son súper rápidos y la pista está en perfectas condiciones. El personal es muy profesional."
+    },
+    {
+      name: "María G.",
+      rating: 5,
+      date: "hace 3 días",
+      comment: "Vine con amigos y nos divertimos mucho. La pista techada es genial porque no importa el clima. Recomiendo 100%."
+    },
+    {
+      name: "Pedro M.",
+      rating: 4,
+      date: "hace 1 semana",
+      comment: "Buena instalación y karts en buen estado. El cronometraje digital es una gran adición para competir seriamente."
+    },
+    {
+      name: "Ana L.",
+      rating: 5,
+      date: "hace 2 semanas",
+      comment: "Excelente lugar para cumpleaños. Los niños se divirtieron mucho y los precios son razonables."
+    }
+  ]
 };
 
 // Horarios disponibles mock
@@ -83,37 +110,55 @@ export default function CanchaSeleccionadaPage() {
     return basePrice * participants;
   };
 
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <span
+        key={i}
+        className={`${styles.star} ${i < Math.floor(rating) ? styles.starFilled : ''}`}
+      >
+        ⭐
+      </span>
+    ));
+  };
+
+  const handleWriteReview = () => {
+    alert('Función de escribir reseña próximamente...');
+  };
+
   return (
     <div className={styles.pageContainer}>
       <Sidebar sport="karting" userRole="usuario" />
       
-      <main className={styles.mainContent}>
-        {/* Header with Back Button */}
-        <section className={styles.headerSection}>
-          <button 
-            onClick={() => router.back()}
-            className={styles.backButton}
-          >
-            ← Volver a las pistas
-          </button>
-          <h1 className={styles.trackTitle}>{trackData.name}</h1>
-          <div className={styles.trackMeta}>
-            <div className={styles.rating}>
-              <span className={styles.stars}>
-                {Array.from({ length: 5 }, (_, i) => (
-                  <span key={i} className={i < Math.floor(trackData.rating) ? styles.starFilled : styles.starEmpty}>
-                    ★
-                  </span>
-                ))}
-              </span>
-              <span className={styles.ratingValue}>{trackData.rating}</span>
-              <span className={styles.reviewCount}>({trackData.reviews} reseñas)</span>
-            </div>
-            <div className={styles.location}>
-              📍 {trackData.location}
-            </div>
+      <div className={styles.mainContent}>
+        {/* Header */}
+        <div className={styles.header}>
+          <div className={styles.headerLeft}>
+            <div className={styles.headerIcon}>🏎️</div>
+            <h1 className={styles.headerTitle}>Karting</h1>
           </div>
-        </section>
+          <div className={styles.headerRight}>
+           <SearchBar
+            placeholder="Buscar pistas de karting..."
+            sport="karting"
+            onSearch={(term: string) => router.push(`/sports/karting/canchas?search=${encodeURIComponent(term)}`)}
+            />
+            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
+              <span>👤</span>
+              <span>usuario</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Breadcrumb */}
+        <div className={styles.breadcrumb}>
+          <button 
+            className={styles.breadcrumbButton}
+            onClick={() => router.push('/sports/karting/canchas')}
+          >
+            <span>←</span>
+            <span>Volver a pistas</span>
+          </button>
+        </div>
 
         <div className={styles.contentGrid}>
           {/* Left Column - Images and Details */}
@@ -199,6 +244,41 @@ export default function CanchaSeleccionadaPage() {
                   <span key={index} className={styles.featureTag}>
                     ✓ {feature}
                   </span>
+                ))}
+              </div>
+            </section>
+
+            {/* Reviews Section */}
+            <section className={styles.reviewsSection}>
+              <div className={styles.reviewsHeader}>
+                <div className={styles.reviewsTitle}>
+                  <span className={styles.reviewsIcon}>⭐</span>
+                  <span>{trackData.rating} • {trackData.reviews} reseñas</span>
+                </div>
+                <button className={styles.writeReviewButton} onClick={handleWriteReview}>
+                  ✏️ Escribir reseña
+                </button>
+              </div>
+
+              <div className={styles.reviewsList}>
+                {trackData.reviewsList.map((review, index) => (
+                  <div key={index} className={styles.reviewCard}>
+                    <div className={styles.reviewHeader}>
+                      <div className={styles.reviewUser}>
+                        <div className={styles.userAvatar}>
+                          {review.name.charAt(0)}
+                        </div>
+                        <div className={styles.userInfo}>
+                          <span className={styles.userName}>{review.name}</span>
+                          <div className={styles.reviewStars}>
+                            {renderStars(review.rating)}
+                          </div>
+                        </div>
+                      </div>
+                      <span className={styles.reviewDate}>{review.date}</span>
+                    </div>
+                    <p className={styles.reviewComment}>{review.comment}</p>
+                  </div>
                 ))}
               </div>
             </section>
@@ -337,7 +417,7 @@ export default function CanchaSeleccionadaPage() {
             </div>
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

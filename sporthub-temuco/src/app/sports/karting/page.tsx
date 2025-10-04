@@ -124,18 +124,19 @@ export default function KartingPage() {
         <div className={kartingCommon.header}>
           <div className={kartingCommon.headerLeft}>
             <div className={kartingCommon.headerIcon}>🏎️</div>
-            <h1 className={kartingCommon.headerTitle}>Pistas de Karting</h1>
+            <h1 className={kartingCommon.headerTitle}>Karting</h1>
           </div>
           <div className={kartingCommon.headerRight}>
             <SearchBar
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre de la pista"
+              placeholder="Nombre de la pista o ubicación..."
               sport="karting"
             />
             <button className={kartingCommon.userButton} onClick={() => router.push('/usuario/perfil')}>
-              👤 Usuario
+              <span>👤</span>
+              <span>usuario</span>
             </button>
           </div>
         </div>

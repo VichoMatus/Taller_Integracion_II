@@ -114,18 +114,19 @@ export default function AtletismoPage() {
         <div className={atletismoCommon.header}>
           <div className={atletismoCommon.headerLeft}>
             <div className={atletismoCommon.headerIcon}>🏃‍♂️</div>
-            <h1 className={atletismoCommon.headerTitle}>{/* page title */}Pistas de Atletismo</h1>
+            <h1 className={atletismoCommon.headerTitle}>Atletismo</h1>
           </div>
           <div className={atletismoCommon.headerRight}>
             <SearchBar
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre de la pista"
+              placeholder="Nombre de la pista o ubicación..."
               sport="atletismo"
             />
             <button className={atletismoCommon.userButton} onClick={() => router.push('/usuario/perfil')}>
-              👤 Usuario
+              <span>👤</span>
+              <span>usuario</span>
             </button>
           </div>
         </div>

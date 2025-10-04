@@ -90,18 +90,19 @@ export default function SkatePage() {
         <div className={skateCommon.header}>
           <div className={skateCommon.headerLeft}>
             <div className={skateCommon.headerIcon}>🛹</div>
-            <h1 className={skateCommon.headerTitle}>Skateparks</h1>
+            <h1 className={skateCommon.headerTitle}>Skate</h1>
           </div>
           <div className={skateCommon.headerRight}>
             <SearchBar
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre del skatepark"
+              placeholder="Nombre del skatepark o ubicación..."
               sport="skate"
             />
             <button className={skateCommon.userButton} onClick={() => router.push('/usuario/perfil')}>
-              👤 Usuario
+              <span>👤</span>
+              <span>usuario</span>
             </button>
           </div>
         </div>

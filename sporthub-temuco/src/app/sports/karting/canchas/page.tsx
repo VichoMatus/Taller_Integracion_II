@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
 import Sidebar from '../../../../components/layout/Sidebar';
@@ -95,6 +96,7 @@ const allTracks = [
 ];
 
 export default function KartingCanchasPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
@@ -133,20 +135,25 @@ export default function KartingCanchasPage() {
   return (
     <div className={styles.pageContainer}>
       <Sidebar sport="karting" userRole="usuario" />
-      
-      <main className={styles.mainContent}>
-        {/* Header */}
-        <section className={styles.headerSection}>
-          <div className={styles.headerContent}>
-            <h1 className={styles.pageTitle}>
-              🏎️ Pistas de Karting en Temuco
-            </h1>
-            <p className={styles.pageSubtitle}>
-              Descubre las mejores pistas de karting de la región. 
-              {sortedTracks.length} pistas disponibles
-            </p>
+
+      <div className={styles.mainContent}>
+        <div className={styles.header}>
+          <div className={styles.headerLeft}>
+            <span className={styles.headerIcon}>🏎️</span>
+            <h1 className={styles.headerTitle}>Karting</h1>
           </div>
-        </section>
+          <div className={styles.headerRight}>
+           <SearchBar
+            placeholder="Buscar pistas de karting..."
+            sport="karting"
+            onSearch={(term: string) => console.log('Buscando:', term)}
+            />
+            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
+              <span>👤</span>
+              <span>usuario</span>
+            </button>
+          </div>
+        </div>
 
         {/* Search and Filters */}
         <section className={styles.filtersSection}>
@@ -241,7 +248,7 @@ export default function KartingCanchasPage() {
             </div>
           )}
         </section>
-      </main>
+      </div>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '../../../../../components/layout/Sidebar';
+import SearchBar from '../../../../../components/SearchBar';
 import styles from './page.module.css';
 
 export default function CanchaSeleccionadaPage() {
@@ -43,7 +44,33 @@ export default function CanchaSeleccionadaPage() {
     difficulty: "Media",
     distance: "15 km",
     estimatedTime: "2-3 horas",
-    terrain: "Sendero natural"
+    terrain: "Sendero natural",
+    reviewsList: [
+      {
+        name: "Miguel T.",
+        rating: 5,
+        date: "hace 2 días",
+        comment: "¡Increíble ruta! Las vistas son espectaculares y el sendero está muy bien mantenido. Perfecto para una salida de fin de semana."
+      },
+      {
+        name: "Carolina S.",
+        rating: 5,
+        date: "hace 4 días",
+        comment: "Ruta desafiante pero hermosa. Los guías son muy profesionales y se preocupan por la seguridad. Recomiendo totalmente."
+      },
+      {
+        name: "Diego P.",
+        rating: 4,
+        date: "hace 1 semana",
+        comment: "Buena experiencia general. El terreno es variado y las vistas compensan el esfuerzo. Solo sugiero llevar más agua de la necesaria."
+      },
+      {
+        name: "Valentina R.",
+        rating: 5,
+        date: "hace 2 semanas",
+        comment: "Una de las mejores rutas de ciclismo que he hecho. La naturaleza es impresionante y el nivel de dificultad está bien balanceado."
+      }
+    ]
   };
 
   const availableTimes = [
@@ -72,26 +99,54 @@ export default function CanchaSeleccionadaPage() {
 
   const totalPrice = rutaData.price * parseInt(duration) * parseInt(cyclists);
 
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <span
+        key={i}
+        className={`${styles.star} ${i < Math.floor(rating) ? styles.starFilled : ''}`}
+      >
+        ⭐
+      </span>
+    ));
+  };
+
+  const handleWriteReview = () => {
+    alert('Función de escribir reseña próximamente...');
+  };
+
   return (
     <div className={styles.pageContainer}>
       <Sidebar userRole="usuario" sport="ciclismo" />
       
       <div className={styles.mainContent}>
+        {/* Header */}
         <div className={styles.header}>
-          <button 
-            className={styles.backButton}
-            onClick={() => router.push('/sports/ciclismo/canchas')}
-          >
-            ← Volver a rutas
-          </button>
-          <div className={styles.headerActions}>
-            <button className={styles.favoriteButton}>
-              ⭐ Agregar a favoritos
-            </button>
-            <button className={styles.shareButton}>
-              📤 Compartir
+          <div className={styles.headerLeft}>
+            <div className={styles.headerIcon}>🚴</div>
+            <h1 className={styles.headerTitle}>Ciclismo</h1>
+          </div>
+          <div className={styles.headerRight}>
+           <SearchBar
+            placeholder="Buscar rutas de ciclismo..."
+            sport="ciclismo"
+            onSearch={(term: string) => router.push(`/sports/ciclismo/canchas?search=${encodeURIComponent(term)}`)}
+            />
+            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
+              <span>👤</span>
+              <span>usuario</span>
             </button>
           </div>
+        </div>
+
+        {/* Breadcrumb */}
+        <div className={styles.breadcrumb}>
+          <button 
+            className={styles.breadcrumbButton}
+            onClick={() => router.push('/sports/ciclismo/canchas')}
+          >
+            <span>←</span>
+            <span>Volver a rutas</span>
+          </button>
         </div>
 
         <div className={styles.content}>
@@ -177,6 +232,41 @@ export default function CanchaSeleccionadaPage() {
                     <li key={index}>{rule}</li>
                   ))}
                 </ul>
+              </div>
+            </div>
+
+            {/* Reviews Section */}
+            <div className={styles.reviewsSection}>
+              <div className={styles.reviewsHeader}>
+                <div className={styles.reviewsTitle}>
+                  <span className={styles.reviewsIcon}>⭐</span>
+                  <span>{rutaData.rating} • {rutaData.reviews} reseñas</span>
+                </div>
+                <button className={styles.writeReviewButton} onClick={handleWriteReview}>
+                  ✏️ Escribir reseña
+                </button>
+              </div>
+
+              <div className={styles.reviewsList}>
+                {rutaData.reviewsList.map((review, index) => (
+                  <div key={index} className={styles.reviewCard}>
+                    <div className={styles.reviewHeader}>
+                      <div className={styles.reviewUser}>
+                        <div className={styles.userAvatar}>
+                          {review.name.charAt(0)}
+                        </div>
+                        <div className={styles.userInfo}>
+                          <span className={styles.userName}>{review.name}</span>
+                          <div className={styles.reviewStars}>
+                            {renderStars(review.rating)}
+                          </div>
+                        </div>
+                      </div>
+                      <span className={styles.reviewDate}>{review.date}</span>
+                    </div>
+                    <p className={styles.reviewComment}>{review.comment}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

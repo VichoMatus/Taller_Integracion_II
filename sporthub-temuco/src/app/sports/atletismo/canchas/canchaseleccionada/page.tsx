@@ -1,11 +1,11 @@
-"use client";
+'use client';
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Sidebar from '../../../../../components/layout/Sidebar';
 import SearchBar from '../../../../../components/SearchBar';
 import LocationMap from '../../../../../components/LocationMap';
-import atletismoCommon from '../../atletismo.module.css';
+import styles from './page.module.css';
 
 export default function CanchaSeleccionadaPage() {
   const router = useRouter();
@@ -13,104 +13,363 @@ export default function CanchaSeleccionadaPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
 
+  // 🔥 DATOS ESTÁTICOS PARA ATLETISMO
   const cancha = {
     id: 1,
-    name: "Pista Central",
-    location: "Av. Alemania 1234, Temuco, Chile",
+    name: "Pista Atlética Central Temuco",
+    location: "Complejo Deportivo Municipal, Temuco, Chile",
     coordinates: { lat: -38.7359, lng: -72.5904 },
     phone: "(45) 555-1234",
-    instagram: "@pistacentral",
-    description: "Pista de atletismo con 8 carriles y áreas de salto/lanzamiento.",
-    schedule: "Lunes a Domingo • 08:00 a 21:00",
-    capacity: "20 atletas",
-    rating: 4.5,
-    reviews: 64,
-    priceFrom: 15000,
+    instagram: "@pistacentraltemuco",
+    description: "Pista atlética profesional de 8 carriles con áreas completas de salto en largo, triple salto, salto en alto y lanzamiento de jabalina, disco y martillo. Instalaciones de primer nivel con cronometraje electrónico y graderías para espectadores.",
+    schedule: "Lunes a Domingo • 06:00 a 22:00",
+    capacity: "Hasta 50 atletas simultáneos",
+    rating: 4.7,
+    reviews: 89,
+    priceFrom: 18000,
     images: [
       "/sports/atletismo/canchas/Cancha1.png",
       "/sports/atletismo/canchas/Cancha2.png"
     ],
-    amenities: ["Cronometraje", "Zona de salto", "Zona de lanzamiento"],
+    amenities: ["Pista de 8 Carriles", "Área de Saltos", "Zona Lanzamientos", "Cronometraje Electrónico", "Graderías", "Vestuarios", "Iluminación LED"],
+    difficulty: "Todos los niveles",
+    surface: "Sintética profesional",
+    features: "Entrenadores certificados • Competiciones • Área de calentamiento",
     reviewsList: [
-      { name: "María P.", rating: 5, date: "hace 2 días", comment: "Pista en excelente estado." }
+      {
+        name: "Carlos M.",
+        rating: 5,
+        date: "hace 2 días",
+        comment: "Excelente pista! La superficie es perfecta y el cronometraje muy preciso. Ideal para entrenamientos serios."
+      },
+      {
+        name: "Ana T.",
+        rating: 4,
+        date: "hace 1 semana",
+        comment: "Instalaciones de primer nivel. Las áreas de salto están muy bien equipadas y el personal es profesional."
+      },
+      {
+        name: "Diego R.",
+        rating: 5,
+        date: "hace 2 semanas",
+        comment: "La mejor pista de la región. Siempre limpia, bien mantenida y con excelente iluminación nocturna."
+      }
     ]
   };
 
-  useEffect(() => { const timer = setTimeout(() => setIsLoading(false), 800); return () => clearTimeout(timer); }, []);
+  useEffect(() => {
+    // Simular carga
+    const timer = setTimeout(() => setIsLoading(false), 1200);
+    return () => clearTimeout(timer);
+  }, []);
 
-  const handleBackToCanchas = () => router.push('/sports/atletismo/canchas');
-  const nextImage = () => setCurrentImageIndex((prev) => prev === cancha.images.length - 1 ? 0 : prev + 1);
-  const prevImage = () => setCurrentImageIndex((prev) => prev === 0 ? cancha.images.length - 1 : prev - 1);
-  const renderStars = (rating: number) => Array.from({ length: 5 }, (_, i) => (<span key={i} className={`${atletismoCommon.star} ${i < Math.floor(rating) ? atletismoCommon.starFilled : ''}`}>⭐</span>));
-  const formatPrice = (price: number) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', minimumFractionDigits: 0 }).format(price);
-  const handleReserve = () => router.push('/sports/reservacancha');
-  const handleCall = () => window.open(`tel:${cancha.phone}`, '_self');
-  const handleInstagram = () => window.open(`https://instagram.com/${cancha.instagram.replace('@','')}`, '_blank');
-  const handleDirections = () => { const query = encodeURIComponent(cancha.location); window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank'); };
-  const handleHelp = () => alert('¿Necesitas ayuda?');
+  const handleBackToCanchas = () => {
+    router.push('/sports/atletismo/canchas');
+  };
 
-  if (isLoading) return (
-    <div className={atletismoCommon.pageContainer}>
-      <Sidebar userRole="usuario" sport="atletismo" />
-      <div className={atletismoCommon.navLoader}>
-        <div className={atletismoCommon.navLoaderInner}>
-          <div className={atletismoCommon.navLoaderIcon}>🏃‍♂️</div>
-          <p className={atletismoCommon.navLoaderText}>Cargando información...</p>
+  const nextImage = () => {
+    if (cancha && cancha.images.length > 0) {
+      setCurrentImageIndex((prev) =>
+        prev === cancha.images.length - 1 ? 0 : prev + 1
+      );
+    }
+  };
+
+  const prevImage = () => {
+    if (cancha && cancha.images.length > 0) {
+      setCurrentImageIndex((prev) =>
+        prev === 0 ? cancha.images.length - 1 : prev - 1
+      );
+    }
+  };
+
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <span
+        key={i}
+        className={`${styles.star} ${i < Math.floor(rating) ? styles.starFilled : ''}`}
+      >
+        ⭐
+      </span>
+    ));
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0,
+    }).format(price);
+  };
+
+  const handleReserve = () => {
+    router.push('/sports/reservacancha');
+  };
+
+  const handleCall = () => {
+    window.open(`tel:${cancha.phone}`, '_self');
+  };
+
+  const handleInstagram = () => {
+    window.open(`https://instagram.com/${cancha.instagram.replace('@', '')}`, '_blank');
+  };
+
+  const handleDirections = () => {
+    const query = encodeURIComponent(cancha.location);
+    window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
+  };
+
+  const handleHelp = () => {
+    alert('¿Necesitas ayuda? Contáctanos al (45) 555-0000 o envía un email a ayuda@sporthub.cl');
+  };
+
+  const handleWriteReview = () => {
+    alert('Función de escribir reseña próximamente...');
+  };
+
+  if (isLoading) {
+    return (
+      <div className={styles.pageContainer}>
+        <Sidebar userRole="usuario" sport="atletismo" />
+        <div className={styles.loading}>
+          <div className={styles.loadingSpinner}>🏃‍♂️</div>
+          <p>Cargando información de la pista atlética...</p>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   return (
-    <div className={atletismoCommon.pageContainer}>
+    <div className={styles.pageContainer}>
       <Sidebar userRole="usuario" sport="atletismo" />
-      <div className={atletismoCommon.mainContent}>
-        <div className={atletismoCommon.header}>
-          <div className={atletismoCommon.headerLeft}>
-            <span className={atletismoCommon.headerIcon}>🏃‍♂️</span>
-            <h1 className={atletismoCommon.headerTitle}>Atletismo - {cancha.name}</h1>
+
+      <div className={styles.mainContent}>
+        {/* Header */}
+        <div className={styles.header}>
+          <div className={styles.headerLeft}>
+            <div className={styles.headerIcon}>🏃‍♂️</div>
+            <h1 className={styles.headerTitle}>Atletismo</h1>
           </div>
-          <div className={atletismoCommon.headerRight}>
-            <SearchBar placeholder="Buscar pistas..." sport="atletismo" onSearch={(term) => router.push(`/sports/atletismo/canchas?search=${encodeURIComponent(term)}`)} />
-            <button className={atletismoCommon.userButton} onClick={() => router.push('/usuario/perfil')}>👤 Usuario</button>
+          <div className={styles.headerRight}>
+           <SearchBar
+            placeholder="Nombre de la pista o ubicación..."
+            sport="atletismo"
+            onSearch={(term) => router.push(`/sports/atletismo/canchas?search=${encodeURIComponent(term)}`)}
+            />
+            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
+              <span>👤</span>
+              <span>usuario</span>
+            </button>
           </div>
         </div>
 
-        <div className={atletismoCommon.breadcrumb}><button className={atletismoCommon.breadcrumbButton} onClick={handleBackToCanchas}>← Volver a pistas</button></div>
+        {/* Breadcrumb */}
+        <div className={styles.breadcrumb}>
+          <button
+            className={styles.breadcrumbButton}
+            onClick={handleBackToCanchas}
+          >
+            <span>←</span>
+            <span>Volver a pistas</span>
+          </button>
+        </div>
 
-        <div className={atletismoCommon.courtInfoCard}>
-          <div className={atletismoCommon.courtHeader}>
-            <h2 className={atletismoCommon.sectionTitle}>{cancha.name} - Pista Atletismo</h2>
-            <button className={atletismoCommon.reserveButton} onClick={handleReserve}>📅 Reservar</button>
+        {/* Court Info Card */}
+        <div className={styles.courtInfoCard}>
+          <div className={styles.courtHeader}>
+            <h2 className={styles.courtTitle}>{cancha.name}</h2>
+            <button className={styles.reserveButton} onClick={handleReserve}>
+              📅 Reservar Pista
+            </button>
           </div>
-          <div className={atletismoCommon.courtDetails}>
-            <div className={atletismoCommon.detailItem}><span className={atletismoCommon.detailIcon}>📍</span><span>{cancha.location}</span></div>
-            <div className={atletismoCommon.detailItem}><span className={atletismoCommon.detailIcon}>💰</span><span>Desde {formatPrice(cancha.priceFrom)}/h</span></div>
+
+          <div className={styles.courtDetails}>
+            <div className={styles.detailItem}>
+              <span className={styles.detailIcon}>📍</span>
+              <span>{cancha.location}</span>
+            </div>
+            <div className={styles.detailItem}>
+              <span className={styles.detailIcon}>💰</span>
+              <span>Desde {formatPrice(cancha.priceFrom)}/hora</span>
+            </div>
+            <div className={styles.detailItem}>
+              <span className={styles.detailIcon}>🎯</span>
+              <span>Dificultad: {cancha.difficulty}</span>
+            </div>
+          </div>
+
+          <div className={styles.courtTabs}>
+            {cancha.amenities.map((amenity, index) => (
+              <button
+                key={index}
+                className={`${styles.tab} ${activeTab === index ? styles.tabActive : ''}`}
+                onClick={() => setActiveTab(index)}
+              >
+                {amenity}
+              </button>
+            ))}
+          </div>
+
+          {/* Description Section */}
+          <div className={styles.descriptionSection}>
+            <h3 className={styles.sectionTitle}>Descripción</h3>
+            <div className={styles.descriptionCard}>
+              <span className={styles.descriptionIcon}>✅</span>
+              <p className={styles.descriptionText}>{cancha.description}</p>
+            </div>
+          </div>
+
+          {/* Availability Section */}
+          <div className={styles.availabilitySection}>
+            <h3 className={styles.sectionTitle}>Información de la Pista</h3>
+            <div className={styles.availabilityCard}>
+              <div className={styles.availabilityItem}>
+                <span className={styles.availabilityIcon}>🕒</span>
+                <span className={styles.availabilityText}>{cancha.schedule}</span>
+              </div>
+              <div className={styles.availabilityItem}>
+                <span className={styles.availabilityIcon}>👥</span>
+                <span className={styles.availabilityText}>{cancha.capacity}</span>
+              </div>
+              <div className={styles.availabilityItem}>
+                <span className={styles.availabilityIcon}>🏗️</span>
+                <span className={styles.availabilityText}>Superficie: {cancha.surface}</span>
+              </div>
+              <div className={styles.availabilityItem}>
+                <span className={styles.availabilityIcon}>🎵</span>
+                <span className={styles.availabilityText}>{cancha.features}</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div className={atletismoCommon.locationImagesContainer}>
-          <div className={atletismoCommon.locationSection}>
-            <h3 className={atletismoCommon.sectionTitle}>Ubicación</h3>
-            <div className={atletismoCommon.mapContainer}>
-              <LocationMap sport="atletismo" latitude={cancha.coordinates.lat} longitude={cancha.coordinates.lng} address={cancha.location} zoom={15} height="250px" />
-              <div className={atletismoCommon.locationInfo}>
-                <p className={atletismoCommon.locationAddress}>{cancha.location}</p>
-                <button className={atletismoCommon.btnGhost} onClick={handleDirections}>🧭 Cómo llegar</button>
+        {/* Location and Images Container */}
+        <div className={styles.locationImagesContainer}>
+          {/* Location Section */}
+          <div className={styles.locationSection}>
+            <h3 className={styles.sectionTitle}>Ubicación</h3>
+            <div className={styles.mapContainer}>
+              <LocationMap
+                latitude={cancha.coordinates.lat}
+                longitude={cancha.coordinates.lng}
+                address={cancha.location}
+                zoom={15}
+                height="250px"
+              />
+              <div className={styles.locationInfo}>
+                <p className={styles.locationAddress}>{cancha.location}</p>
+                <button className={styles.directionsButton} onClick={handleDirections}>
+                  🧭 Cómo llegar
+                </button>
               </div>
             </div>
           </div>
 
-          <div className={atletismoCommon.imagesSection}>
-            <h3 className={atletismoCommon.sectionTitle}>Imágenes</h3>
-            <div className={atletismoCommon.imageCarousel}>
-              <button className={atletismoCommon.carouselButton} onClick={prevImage}>←</button>
-              <div className={atletismoCommon.imageContainer}>
-                <Image src={cancha.images[currentImageIndex] || "/sports/atletismo/canchas/Cancha1.png"} alt={`${cancha.name} - Imagen`} className={atletismoCommon.courtImage} width={600} height={400} />
+          {/* Images Section */}
+          <div className={styles.imagesSection}>
+            <h3 className={styles.sectionTitle}>Imágenes de la pista</h3>
+            <div className={styles.imageCarousel}>
+              <button className={styles.carouselButton} onClick={prevImage}>
+                ←
+              </button>
+              <div className={styles.imageContainer}>
+                <Image
+                  src={cancha.images[currentImageIndex] || "/sports/atletismo/canchas/Cancha1.png"}
+                  alt={`${cancha.name} - Imagen ${currentImageIndex + 1}`}
+                  className={styles.courtImage}
+                  width={600}
+                  height={400}
+                  onError={(e: any) => {
+                    e.target.src = "/sports/atletismo/canchas/Cancha1.png";
+                  }}
+                />
+                <div className={styles.imageOverlay}>
+                  <span className={styles.imageCounter}>
+                    {currentImageIndex + 1} / {cancha.images.length}
+                  </span>
+                </div>
               </div>
-              <button className={atletismoCommon.carouselButton} onClick={nextImage}>→</button>
+              <button className={styles.carouselButton} onClick={nextImage}>
+                →
+              </button>
+            </div>
+            <div className={styles.imageIndicators}>
+              {cancha.images.map((_, index) => (
+                <button
+                  key={index}
+                  className={`${styles.imageIndicator} ${index === currentImageIndex ? styles.imageIndicatorActive : ''}`}
+                  onClick={() => setCurrentImageIndex(index)}
+                />
+              ))}
             </div>
           </div>
+        </div>
+
+        {/* Contact Section */}
+        <div className={styles.contactSection}>
+          <h3 className={styles.sectionTitle}>Contacto</h3>
+          <div className={styles.contactCard}>
+            <div className={styles.contactInfo}>
+              <div className={styles.contactItem}>
+                <span className={styles.contactLabel}>Teléfono:</span>
+                <span className={styles.contactValue}>{cancha.phone}</span>
+              </div>
+              <div className={styles.contactItem}>
+                <span className={styles.contactLabel}>Instagram:</span>
+                <span className={styles.contactValue}>{cancha.instagram}</span>
+              </div>
+            </div>
+            <div className={styles.contactButtons}>
+              <button className={styles.contactButton} onClick={handleCall}>
+                📞 Llamar
+              </button>
+              <button className={styles.contactButton} onClick={handleInstagram}>
+                💬 Abrir
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className={styles.reviewsSection}>
+          <div className={styles.reviewsHeader}>
+            <div className={styles.reviewsTitle}>
+              <span className={styles.reviewsIcon}>⭐</span>
+              <span>{cancha.rating} • {cancha.reviews} reseñas</span>
+            </div>
+            <button className={styles.writeReviewButton} onClick={handleWriteReview}>
+              ✏️ Escribir reseña
+            </button>
+          </div>
+
+          <div className={styles.reviewsList}>
+            {cancha.reviewsList.map((review, index) => (
+              <div key={index} className={styles.reviewCard}>
+                <div className={styles.reviewHeader}>
+                  <div className={styles.reviewUser}>
+                    <div className={styles.userAvatar}>
+                      {review.name.charAt(0)}
+                    </div>
+                    <div className={styles.userInfo}>
+                      <span className={styles.userName}>{review.name}</span>
+                      <div className={styles.reviewStars}>
+                        {renderStars(review.rating)}
+                      </div>
+                    </div>
+                  </div>
+                  <span className={styles.reviewDate}>{review.date}</span>
+                </div>
+                <p className={styles.reviewComment}>{review.comment}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Help Button */}
+        <div className={styles.helpSection}>
+          <button className={styles.helpButton} onClick={handleHelp}>
+            ❓ ¿Necesitas ayuda?
+          </button>
         </div>
       </div>
     </div>

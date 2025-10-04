@@ -177,25 +177,20 @@ export default function CiclismoCanchasPage() {
       <div className={styles.mainContent}>
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <button 
-              className={styles.backButton}
-              onClick={() => router.push('/sports/ciclismo')}
-            >
-              ← Volver
-            </button>
             <div className={styles.headerIcon}>🚴‍♂️</div>
-            <h1 className={styles.headerTitle}>Rutas de Ciclismo</h1>
+            <h1 className={styles.headerTitle}>Ciclismo</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Buscar rutas..."
+              placeholder="Nombre de la ruta o ubicación..."
               sport="ciclismo"
             />
             <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
-              👤 Usuario
+              <span>👤</span>
+              <span>usuario</span>
             </button>
           </div>
         </div>
