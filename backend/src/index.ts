@@ -29,6 +29,8 @@ import adminRoutes from './admin/presentation/routes/admin.routes';
 import bloqueoRoutes from './bloqueos/presentation/routes/bloqueos.routes';
 import reservasRoutes from './reservas/presentation/routes/reservas.routes.new';
 import disponibilidadRoutes from './disponibilidad/presentation/routes/disponibilidad.routes';
+import pricingRoutes from './pricing/presentation/routes/pricing.routes';
+import pagosRoutes from './pagos/presentation/routes/pagos.routes';
 import resenasRoutes from './resenas/presentation/routes/resenas.routes';
 import uploadsRoutes from './uploads/presentation/routes/uploads.routes';
 import canchasRoutes from './canchas/routes/canchas.routes';
@@ -112,6 +114,12 @@ app.use('/api/bloqueos', bloqueoRoutes);
 
 // Rutas de disponibilidad
 app.use('/api/disponibilidad', disponibilidadRoutes);
+
+// Rutas de pricing
+app.use('/api/pricing', pricingRoutes);
+
+// Rutas de pagos
+app.use('/api/pagos', pagosRoutes);
 
 // Rutas de reservas
 app.use('/api/reservas', reservasRoutes);
