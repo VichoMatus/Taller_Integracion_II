@@ -4,13 +4,24 @@ import React, { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import indexStyles from './stylesSearchBar/IndexSearchBar.module.css';
 import basquetbolStyles from './stylesSearchBar/BasquetbolSearchBar.module.css';
+import futbolStyles from './stylesSearchBar/FutbolSearchBar.module.css';
+import padelStyles from './stylesSearchBar/PadelSearchBar.module.css';
+import crossfitentrenamientofuncionalStyles from './stylesSearchBar/CrossfitEntrenamientoFuncionalSearchBar.module.css';
+import tenisStyles from './stylesSearchBar/TenisSearchBar.module.css';
+import voleiStyles from './stylesSearchBar/VoleibolSearchBar.module.css';
+import natacionStyles from './stylesSearchBar/NatacionSearchBar.module.css';
+import patinaje from './stylesSearchBar/PatinajeSearchBar.module.css';
+import escaladaStyles from './stylesSearchBar/EscaladaSearchBar.module.css';
+import atletismoSearchStyles from './stylesSearchBar/AtletismoSearchBar.module.css';
+import skateSearchStyles from './stylesSearchBar/SkateSearchBar.module.css';
+import ciclismoSearchStyles from './stylesSearchBar/CiclismoSearchBar.module.css';
 
 interface SearchBarProps {
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onSearch: (term: string) => void;
   placeholder?: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje'| 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' |'escalada' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
 }
 
 const SearchBar = ({ 
@@ -34,12 +45,29 @@ const SearchBar = ({
     switch (sport) {
       case 'basquetbol':
         return basquetbolStyles;
+      case 'skate':
+        return skateSearchStyles;
+      case 'atletismo':
+        return atletismoSearchStyles;
+      case 'ciclismo':
+        return ciclismoSearchStyles;
       case 'futbol':
         // return futbolStyles; // Cuando lo crees
-        return basquetbolStyles; // temporal
+        return futbolStyles; // temporal
       case 'tenis':
-        // return tenisStyles; // Cuando lo crees
-        return indexStyles; // temporal
+       return tenisStyles; // Cuando lo crees
+      case 'voleibol':
+        return voleiStyles; 
+      case 'padel':
+        return padelStyles;
+      case 'crossfitentrenamientofuncional':
+        return crossfitentrenamientofuncionalStyles;
+      case 'natacion':
+        return natacionStyles;
+      case 'patinaje':
+        return patinaje;
+      case 'escalada':
+        return escaladaStyles;
       default:
         return indexStyles; // fallback al index
     }

@@ -1,0 +1,262 @@
+/* 🔥 ANIMACIONES PARA CROSSFIT SEARCHBAR */
+@keyframes searchPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(97, 103, 122, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(97, 103, 122, 0);
+  }
+}
+
+@keyframes shimmerSearch {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes iconFloat {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(5deg);
+  }
+}
+
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* 🔥 CONTENEDOR PRINCIPAL - TEMA CROSSFIT */
+.searchContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 500px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.85) 100%
+  );
+  backdrop-filter: blur(20px);
+  border: 2px solid rgba(97, 103, 122, 0.2);
+  border-radius: 16px;
+  padding: 4px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  box-shadow: 
+    0 8px 32px rgba(97, 103, 122, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.searchContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(97, 103, 122, 0.1) 50%,
+    transparent 100%
+  );
+  transition: left 0.6s ease;
+}
+
+.searchContainer:hover::before {
+  left: 100%;
+}
+
+.searchContainer:hover {
+  border-color: rgba(97, 103, 122, 0.4);
+  box-shadow: 
+    0 12px 40px rgba(97, 103, 122, 0.15),
+    0 0 0 1px rgba(97, 103, 122, 0.2);
+  transform: translateY(-2px);
+}
+
+.searchContainer:focus-within {
+  border-color: #61677A;
+  box-shadow: 
+    0 0 0 4px rgba(97, 103, 122, 0.2),
+    0 12px 40px rgba(97, 103, 122, 0.2);
+  animation: searchPulse 2s infinite;
+}
+
+/* 🔥 INPUT FIELD */
+.searchInput {
+  flex: 1;
+  padding: 14px 20px;
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  font-weight: 500;
+  color: #1f2937;
+  outline: none;
+  transition: all 0.3s ease;
+  border-radius: 12px;
+}
+
+.searchInput::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+  transition: all 0.3s ease;
+}
+
+.searchInput:focus::placeholder {
+  color: #d1d5db;
+  transform: translateX(5px);
+}
+
+.searchInput:focus {
+  color: #374151;
+  background: rgba(97, 103, 122, 0.02);
+}
+
+/* 🔥 SEARCH ICON */
+.searchIcon {
+  padding: 12px;
+  margin-right: 8px;
+  color: #6b7280;
+  font-size: 18px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border-radius: 8px;
+  background: linear-gradient(
+    135deg,
+    rgba(97, 103, 122, 0.1) 0%,
+    rgba(39, 40, 41, 0.05) 100%
+  );
+  animation: iconFloat 3s ease-in-out infinite;
+}
+
+.searchIcon:hover {
+  color: #61677A;
+  background: linear-gradient(
+    135deg,
+    rgba(97, 103, 122, 0.2) 0%,
+    rgba(39, 40, 41, 0.1) 100%
+  );
+  transform: scale(1.1) rotate(10deg);
+  box-shadow: 0 4px 15px rgba(97, 103, 122, 0.3);
+}
+
+/* 🔥 SEARCH BUTTON - TEMA GRIS */
+.searchButton {
+  padding: 12px 20px;
+  background: linear-gradient(
+    135deg,
+    #61677A 0%,
+    #272829 100%
+  );
+  background-size: 200% 200%;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  min-width: 100px;
+  box-shadow: 
+    0 4px 15px rgba(97, 103, 122, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+  animation: gradientShift 3s ease infinite;
+}
+
+.searchButton::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
+  transition: all 0.6s ease;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+}
+
+.searchButton:hover::before {
+  width: 200px;
+  height: 200px;
+}
+
+.searchButton:hover {
+  background: linear-gradient(
+    135deg,
+    #272829 0%,
+    #1a1b1c 100%
+  );
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 
+    0 8px 25px rgba(97, 103, 122, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.searchButton:active {
+  transform: translateY(0) scale(1);
+  box-shadow: 
+    0 4px 15px rgba(97, 103, 122, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+/* 🔥 LOADING STATE */
+.searchButton.loading {
+  background: linear-gradient(
+    135deg,
+    #6b7280 0%,
+    #9ca3af 100%
+  );
+  cursor: not-allowed;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* 🔥 RESPONSIVE */
+@media (max-width: 768px) {
+  .searchContainer {
+    max-width: 100%;
+    padding: 3px;
+  }
+  
+  .searchInput {
+    padding: 12px 16px;
+    font-size: 14px;
+  }
+  
+  .searchButton {
+    padding: 10px 16px;
+    font-size: 13px;
+    min-width: 80px;
+  }
+  
+  .searchIcon {
+    padding: 10px;
+    font-size: 16px;
+  }
+}

@@ -104,7 +104,7 @@ export default function Page() {
             placeholder="Nombre de la cancha"
             sport="basquetbol" 
             />
-            <button className={styles.userButton}>
+            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
               <span>👤</span>
               <span>Usuario</span>
             </button>
@@ -176,7 +176,7 @@ export default function Page() {
           <div className={styles.filtersActions}>
             <button className={styles.searchButton}>
               <span>🔍</span>
-              <span>Buscar</span>
+              <span>Buscar canchas</span>
             </button>
           </div>
         </div>
@@ -201,14 +201,7 @@ export default function Page() {
             ))}
           </div>
           
-          {/* Mensaje de disponibilidad */}
-          <div className={styles.availabilityMessage}>
-            <div className={styles.availabilityCard}>
-              <span className={styles.availabilityText}>
-                Canchas Disponibles ahora: <span className={styles.availabilityNumber}> {availableNow}</span>
-              </span>
-            </div>
-          </div>
+        
         </div>
       </div>
     </div>

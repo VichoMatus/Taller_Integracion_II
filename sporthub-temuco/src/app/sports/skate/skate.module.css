@@ -1,0 +1,183 @@
+/* Skate - theme 'Underground' (oscuros, grises y acento óxido) */
+:root {
+  /* Skate light / neutral palette: grays que tiran a blanco */
+  --skate-bg: #e6e9ec; /* light gray background */
+  --skate-surface: #f7f8fa; /* soft surface panels */
+  --skate-accent: #6b7280; /* slate gray for accents and buttons */
+  --skate-accent-2: #d1d5db; /* lighter concrete gray */
+  --sport-accent-2: var(--skate-accent-2);
+  --skate-text: #0f172a; /* dark slate text */
+  --card-bg: #f8fafb; /* card background - subtle off-white */
+  /* make sport-accent available for shared components */
+  --sport-accent: var(--skate-accent);
+  --skate-accent-rgb: 107,114,128;
+}
+
+.pageContainer {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+  margin: 0 !important;
+  padding-left: 0 !important;
+  background: linear-gradient(180deg, var(--skate-bg), var(--skate-surface));
+  font-family: 'Inter', sans-serif;
+}
+
+.mainContent {
+  flex: 1;
+  padding: 20px;
+  margin-left: 256px;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+.header {
+  display:flex;
+  justify-content: space-between;
+  align-items:center;
+  padding: 20px 30px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(247,248,250,0.98), rgba(247,248,250,0.96));
+  border: 1px solid rgba(var(--skate-accent-rgb),0.06);
+}
+
+.headerLeft { display:flex; gap:12px; align-items:center; }
+.headerIcon { font-size:32px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; border-radius:10px; background: linear-gradient(135deg,#eef2f7 0%, #f7f8fa 100%); color: var(--skate-accent); border: 1px solid rgba(0,0,0,0.04); }
+.headerRight { display:flex; align-items:center; gap:16px; }
+.headerTitle { font-size:22px; font-weight:700; color:var(--skate-text); margin:0; }
+
+.userButton { display:inline-flex; align-items:center; gap:8px; background: linear-gradient(135deg, #ffffff 0%, #f3f6f8 100%); color: var(--skate-text); border: 1px solid rgba(0,0,0,0.06); padding: 8px 14px; border-radius:14px; font-weight:600; cursor:pointer; }
+
+.containerCard { background: var(--card-bg); padding:16px; border-radius:10px; border:1px solid rgba(0,0,0,0.04); }
+
+.statsContainer { display:grid; grid-template-columns: repeat(4,1fr); gap:20px; margin: 24px 0 30px; }
+.statCard { background: var(--card-bg); padding:18px; border-radius:10px; border: 1px solid rgba(0,0,0,0.04); }
+
+.quickAccessSection { margin-bottom:20px; display:flex; align-items:center; justify-content:center; animation:fadeInUp 1s ease-out 0.4s both; }
+.topRatedSection {
+  margin-bottom: 40px;
+}
+.carouselContainer {
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.courtsGrid {
+  display: flex;
+  gap: 20px;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 4px;
+}
+
+.mapSection { background: var(--card-bg); padding:22px; border-radius:10px; margin-bottom:40px; }
+
+.mainCourtButton { background:linear-gradient(135deg,#ffffff 0%,#f9fafb 100%); border:2px solid #6b7280; border-radius:16px; padding:24px 32px; cursor:pointer; transition:all 0.4s cubic-bezier(0.4,0,0.2,1); display:flex; align-items:center; gap:24px; width:100%; max-width:550px; box-shadow:0 4px 20px rgba(107,114,128,0.15),0 0 0 1px rgba(255,255,255,0.2); position:relative; overflow:hidden; backdrop-filter:blur(10px); }
+.mainCourtButton::before { content:''; position:absolute; top:0; left:-100%; width:100%; height:100%; background:linear-gradient(90deg,transparent 0%,rgba(107,114,128,0.1) 50%,transparent 100%); transition:left 0.6s ease; z-index:1; }
+.mainCourtButton:hover::before { left:100%; }
+.mainCourtButton:hover { background:linear-gradient(135deg,#6b7280 0%,#4b5563 100%); color:white; transform:translateY(-5px) scale(1.02); box-shadow:0 12px 40px rgba(107,114,128,0.3),0 0 0 2px rgba(107,114,128,0.2); border-color:#4b5563; }
+.mainCourtButton:active { transform:translateY(-2px) scale(1.01); box-shadow:0 6px 20px rgba(107,114,128,0.4); }
+.courtButtonIcon { font-size:36px; transition:all 0.4s cubic-bezier(0.4,0,0.2,1); z-index:2; position:relative; display:flex; align-items:center; justify-content:center; min-width:50px; }
+.mainCourtButton:hover .courtButtonIcon { transform:scale(1.3) rotate(15deg); filter:drop-shadow(0 2px 8px rgba(0,0,0,0.3)); }
+.courtButtonText { flex:1; text-align:left; z-index:2; position:relative; display:flex; flex-direction:column; gap:4px; }
+.courtButtonTitle { display:block; font-size:20px; font-weight:700; margin:0; color:#1f2937; transition:all 0.3s ease; line-height:1.2; }
+.courtButtonSubtitle { display:block; font-size:14px; color:#6b7280; margin:0; transition:all 0.3s ease; line-height:1.3; }
+.mainCourtButton:hover .courtButtonTitle, .mainCourtButton:hover .courtButtonSubtitle { color:white; text-shadow:0 1px 3px rgba(0,0,0,0.2); }
+.courtButtonArrow { font-size:28px; font-weight:700; color:#6b7280; transition:all 0.4s cubic-bezier(0.4,0,0.2,1); z-index:2; position:relative; display:flex; align-items:center; justify-content:center; min-width:40px; }
+.mainCourtButton:hover .courtButtonArrow { color:white; transform:translateX(8px) scale(1.1); filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2)); }
+.mainCourtButton::after { content:''; position:absolute; top:0; left:0; right:0; bottom:0; background:linear-gradient(45deg,transparent 0%,rgba(255,255,255,0.1) 50%,transparent 100%); opacity:0; transition:opacity 0.3s ease; z-index:1; }
+.mainCourtButton:hover::after { opacity:1; }
+.mainCourtButton:focus { outline:none; box-shadow:0 4px 20px rgba(107,114,128,0.25),0 0 0 3px rgba(107,114,128,0.3); }
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.sectionTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+.sectionIcon {
+  font-size: 1.5rem;
+}
+
+.carouselControls {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.slideIndicator {
+  font-weight: 600;
+  color: #374151;
+  padding: 8px 16px;
+  background: rgba(107, 114, 128, 0.1);
+  border-radius: 20px;
+  font-size: 14px;
+}
+
+.filtersContainer { background: transparent; padding:14px; border-radius:10px; margin-bottom:18px; border:1px solid rgba(255,255,255,0.02); }
+.filtersGrid { display:grid; grid-template-columns: repeat(4,1fr); gap:12px; }
+.filterInput, .filterSelect { width:90%; padding:8px 10px; border-radius:6px; background: var(--skate-surface); color: var(--skate-text); border:1px solid rgba(0,0,0,0.06); }
+.filtersTitle { font-size:16px; font-weight:700; margin-bottom:8px; color:var(--skate-text); }
+
+.carouselButton {
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3);
+}
+
+.carouselButton:hover:not(:disabled) {
+  background: #4b5563;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.4);
+}
+
+.carouselButton:disabled {
+  background: #d1d5db;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.navLoader { position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: rgba(247,248,250,0.96); font-family: 'Inter', sans-serif; }
+.navLoaderInner { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.navLoaderIcon { font-size: 72px; color: var(--skate-accent); filter: drop-shadow(0 8px 18px rgba(var(--skate-accent-rgb),0.08)); }
+.navLoaderText { font-size: 18px; color: var(--skate-text); font-weight: 700; }
+
+.cardsContainer { background: transparent; padding:18px; border-radius:10px; margin-bottom:8px; }
+.cardsGrid { display:flex; flex-wrap:wrap; gap:16px; justify-content:center; }
+
+.courtInfoCard { background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00)); padding:16px; border-radius:10px; margin-bottom:16px; border:1px solid rgba(255,255,255,0.02); }
+.courtHeader { display:flex; justify-content:space-between; align-items:center; }
+.courtDetails { display:flex; gap:20px; margin-top:12px; }
+.detailItem { display:flex; gap:8px; align-items:center; }
+.detailIcon { font-size:18px; color: var(--skate-accent); }
+
+.breadcrumb { margin-bottom:20px; }
+.breadcrumbButton { background: transparent; border: none; color: var(--skate-accent); cursor: pointer; }
+
+.imageCarousel { display:flex; align-items:center; gap:8px; }
+.imageContainer { width:100%; height:250px; display:flex; align-items:center; justify-content:center; background: var(--skate-bg); border-radius:8px; border:1px solid rgba(0,0,0,0.04); }
+.courtImage { max-width:100%; max-height:100%; object-fit:cover; }
+
+.reserveButton { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:10px 14px; border-radius:8px; border:none; cursor:pointer; background: var(--skate-accent); color:white; }
