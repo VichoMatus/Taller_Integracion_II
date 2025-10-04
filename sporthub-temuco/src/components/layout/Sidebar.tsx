@@ -230,16 +230,16 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
   const userTitle = userRole === 'superadmin' ? 'Superadministrador' : userRole === 'admin' ? 'Administrador' : 'Usuario';
 
   return (
-    <div className={styles ? styles.sidebarContainer : 'sidebarContainer'}>
+    <div className={styles ? styles.sidebarContainer : 'sidebar-container'}>
       {/* Header */}
-      <div className={styles ? styles.sidebarHeader : 'sidebarHeader'}>
-        <div className={styles ? styles.sidebarLogoContainer : 'sidebarLogoContainer'}>
-          <div className={styles ? styles.sidebarLogoIcon : 'sidebarLogoIcon'}>
+      <div className={styles ? styles.sidebarHeader : 'sidebar-header'}>
+        <div className={styles ? styles.sidebarLogoContainer : 'sidebar-logo-container'}>
+          <div className={styles ? styles.sidebarLogoIcon : 'sidebar-logo-icon'}>
             SH
           </div>
           <div>
-            <h1 className={styles ? styles.sidebarTitle : 'sidebarTitle'}>SportHub</h1>
-            <p className={styles ? styles.sidebarSubtitle : 'sidebarSubtitle'}>{userTitle}</p>
+            <h1 className={styles ? styles.sidebarTitle : 'sidebar-title'}>SportHub</h1>
+            <p className={styles ? styles.sidebarSubtitle : 'sidebar-subtitle'}>{userTitle}</p>
           </div>
         </div>
         {userRole === 'usuario' && sport && styles && <div className={styles.sportIcon}></div>}
@@ -247,20 +247,20 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
       </div>
 
       {/* Navigation */}
-      <nav className={styles ? styles.sidebarNav : 'sidebarNav'}>
-        <ul className={styles ? styles.sidebarMenu : 'sidebarMenu'}>
+      <nav className={styles ? styles.sidebarNav : 'sidebar-nav'}>
+        <ul className={styles ? styles.sidebarMenu : 'sidebar-menu'}>
           {menuItems.map((item) => (
-            <li key={item.name} className={styles ? styles.sidebarMenuItem : 'sidebarMenuItem'}>
+            <li key={item.name} className={styles ? styles.sidebarMenuItem : 'sidebar-menu-item'}>
               <Link
                 href={item.href}
-                className={`${styles ? styles.sidebarMenuLink : 'sidebarMenuLink'} ${
+                className={`${styles ? styles.sidebarMenuLink : 'sidebar-menu-link'} ${
                   item.active ? (styles ? styles.active : 'active') : ''
                 }`}
               >
-                <span className={styles ? styles.sidebarMenuIcon : 'sidebarMenuIcon'}>
+                <span className={styles ? styles.sidebarMenuIcon : 'sidebar-menu-icon'}>
                   {item.icon}
                 </span>
-                <span className={styles ? styles.sidebarMenuText : 'sidebarMenuText'}>
+                <span className={styles ? styles.sidebarMenuText : 'sidebar-menu-text'}>
                   {item.name}
                 </span>
               </Link>
@@ -270,9 +270,9 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
       </nav>
 
       {/* Logout Button */}
-      <div className={styles ? styles.sidebarLogout : 'sidebarLogout'}>
-        <button className={styles ? styles.sidebarLogoutButton : 'sidebarLogoutButton'}>
-          <span className={styles ? styles.sidebarLogoutIcon : 'sidebarLogoutIcon'}>🚪</span>
+      <div className={styles ? styles.sidebarLogout : 'sidebar-logout'}>
+        <button className={styles ? styles.sidebarLogoutButton : 'sidebar-logout-button'}>
+          <span className={styles ? styles.sidebarLogoutIcon : 'sidebar-logout-icon'}>🚪</span>
           <span>Cerrar Sesión</span>
         </button>
       </div>

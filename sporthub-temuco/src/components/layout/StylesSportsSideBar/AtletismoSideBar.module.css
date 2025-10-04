@@ -95,15 +95,3 @@
 .sidebarLogoutButton:active{transform:translateY(0);box-shadow:0 2px 10px rgba(0,0,0,0.1),0 0 15px rgba(59,130,246,0.06)}
 .sidebarLogoutIcon{font-size:18px;width:24px;text-align:center;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);filter:drop-shadow(0 1px 2px rgba(0,0,0,0.1))}
 
-.sportIcon { width: 48px; height: 48px; border-radius: 8px; background: linear-gradient(135deg, #60A5FA 0%, #1E40AF 100%); box-shadow: 0 8px 28px rgba(96,165,250,0.12); }
-
-.sidebarMenuItem { margin-bottom: 6px; }
-
-.sidebarMenuLink { display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px; color:#FFFFFF; text-decoration:none; }
-
-.sidebarMenuText { font-size:14px; color:#FFFFFF; }
-
-.active { background: linear-gradient(90deg, rgba(59,130,246,0.12), rgba(37,99,235,0.12)); box-shadow: 0 6px 18px rgba(30,64,175,0.06); }
-
-.sidebarLogoutButton { background: linear-gradient(90deg, #60A5FA 0%, #1E40AF 100%); color: #fff; }
-

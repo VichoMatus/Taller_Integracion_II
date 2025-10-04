@@ -32,11 +32,6 @@ const LocationMap: React.FC<LocationMapProps> = ({
   height = '250px',
   sport = 'basquetbol'
 }) => {
-  const styles = sport === 'atletismo' ? atletismoStyles : 
-                 sport === 'skate' ? skateStyles : 
-                 sport === 'ciclismo' ? ciclismoStyles : 
-                 basquetStyles;
-  
   // 🔥 FUNCIÓN PARA SELECCIONAR ESTILOS SEGÚN EL DEPORTE
   const getSportStyles = () => {
     switch (sport) {

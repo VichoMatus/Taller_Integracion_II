@@ -156,7 +156,7 @@
 .cardFooter {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid rgba(30, 64, 175, 0.1);
@@ -182,23 +182,77 @@
 .actionButton {
   background: linear-gradient(135deg, #1e40af, #3b82f6);
   color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 2px solid transparent;
   cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  box-shadow: 0 2px 8px rgba(30, 64, 175, 0.3);
+  box-shadow: 
+    0 6px 20px rgba(30, 64, 175, 0.3),
+    0 3px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  min-width: 120px;
+  height: 35px;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'Inter', sans-serif;
 }
 
+/* Efecto de brillo que recorre el botón */
+.actionButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+  z-index: 1;
+}
+
+.actionButton:hover::before {
+  left: 100%;
+}
+
+/* Estados del botón */
 .actionButton:hover {
+  transform: translateY(-3px) scale(1.05);
   background: linear-gradient(135deg, #1d4ed8, #2563eb);
-  transform: translateX(2px);
-  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
+  box-shadow: 
+    0 10px 30px rgba(30, 64, 175, 0.4),
+    0 6px 16px rgba(29, 78, 216, 0.3);
+  border-color: #2563eb;
+}
+
+.actionButton:active {
+  transform: translateY(-1px) scale(1.02);
+  transition: transform 0.1s ease;
+  box-shadow: 
+    0 6px 20px rgba(30, 64, 175, 0.3),
+    0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Efecto de pulso cuando está en focus */
+.actionButton:focus {
+  outline: none;
+  animation: buttonPulse 0.6s ease-in-out;
+}
+
+/* Animación de pulso para el botón */
+@keyframes buttonPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(30, 64, 175, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(30, 64, 175, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(30, 64, 175, 0);
+  }
 }
 
 /* Variante específica para atletismo */

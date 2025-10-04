@@ -9,7 +9,7 @@ import atletismoCommon from './atletismo.module.css';
 import StatsCard from '../../../components/charts/StatsCard';
 
 
-// Datos de ejemplo para las canchas mejor calificadas (6 tarjetas)
+// Datos de ejemplo para las canchas mejor calificadas (3 tarjetas)
 const topRatedCourts = [
   {
     imageUrl: "/sports/atletismo/canchas/Cancha1.png",
@@ -32,6 +32,17 @@ const topRatedCourts = [
     description: "Pista de atletismo con cronometraje y carriles reglamentarios",
     price: "19",
     nextAvailable: "14:30-15:30", 
+  },
+  {
+    imageUrl: "/sports/atletismo/canchas/Cancha1.png",
+    name: "Atletismo - Sur",
+    address: "Sector Sur",
+    rating: 4.8,
+    reviews: "203 reseñas",
+    tags: ["Pista techada", "Vestuarios", "Entrenadores", "Áreas de salto"],
+    description: "Pista de atletismo con instalaciones completas y zona de entrenamiento",
+    price: "23",
+    nextAvailable: "10:30-11:30", 
   }
 ];
 

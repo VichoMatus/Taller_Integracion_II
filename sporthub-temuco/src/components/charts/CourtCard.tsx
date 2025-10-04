@@ -37,7 +37,6 @@ interface CourtCardProps {
   nextAvailable: string;
   sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje' | 'escalada' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
 
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
   onClick?: () => void;
 }
 
@@ -55,13 +54,6 @@ const CourtCard: React.FC<CourtCardProps> = ({
   onClick,
 }) => {
   const router = useRouter();
-  
-  const currentStyles = 
-    sport === 'enduro' ? enduroStyles :
-    sport === 'futbol-americano' ? futbolAmericanoStyles :
-    sport === 'rugby' ? rugbyStyles :
-    sport === 'mountain-bike' ? mountainBikeStyles :
-    styles;
   
   // 🔥 FUNCIÓN PARA SELECCIONAR ESTILOS SEGÚN EL DEPORTE
   const getSportStyles = () => {
@@ -84,6 +76,14 @@ const CourtCard: React.FC<CourtCardProps> = ({
         return patinajeStyles;
       case 'escalada':
         return escaladaStyles;
+      case 'atletismo':
+        return atletismoStyles;
+      case 'skate':
+        return skateStyles;
+      case 'ciclismo':
+        return ciclismoStyles;
+      case 'karting':
+        return kartingStyles;
       default:
         console.warn(`Estilo no encontrado para el deporte: ${sport}. Usando basquetbol como fallback.`);
         return basquetbolStyles; // Fallback a basquetbol
@@ -92,6 +92,13 @@ const CourtCard: React.FC<CourtCardProps> = ({
 
   // 🔥 OBTENER LOS ESTILOS APROPIADOS
   const styles = getSportStyles();
+  
+  const currentStyles = 
+    sport === 'enduro' ? enduroStyles :
+    sport === 'futbol-americano' ? futbolAmericanoStyles :
+    sport === 'rugby' ? rugbyStyles :
+    sport === 'mountain-bike' ? mountainBikeStyles :
+    styles;
   
   // 🔥 Limitar a máximo 4 tags
   const displayTags = tags.slice(0, 4);
@@ -255,6 +262,14 @@ const CourtCard: React.FC<CourtCardProps> = ({
         return '🏊‍♂️';
       case 'patinaje':
         return '⛸️';
+      case 'atletismo':
+        return '🏃‍♂️';
+      case 'skate':
+        return '🛹';
+      case 'ciclismo':
+        return '🚴‍♂️';
+      case 'karting':
+        return '🏎️';
       default:
         return '🏀';
     }
@@ -267,21 +282,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
     setImageError(true);
   };
   
-  const styles = sport === 'atletismo' ? atletismoStyles : 
-                 sport === 'skate' ? skateStyles : 
-                 sport === 'ciclismo' ? ciclismoStyles :
-                 sport === 'karting' ? kartingStyles :
-                 basquetStyles;
-
   return (
-    <div className={`${styles.courtCard} ${sport ? (styles[`courtCard${sport.charAt(0).toUpperCase() + sport.slice(1)}`] || '') : ''}`}>
-      <Image
-        src={imageUrl}
-        alt={name}
-        className={currentStyles.cardImage}
-        width={300}
-        height={200}
-      />
     <div className={styles.courtCard} data-sport={sport}>
       {/* 🔥 CONTENEDOR DE IMAGEN CON FALLBACK */}
       <div className={`${styles.imageContainer} ${imageError ? styles.fallback : ''}`}>

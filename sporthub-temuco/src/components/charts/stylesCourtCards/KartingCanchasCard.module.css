@@ -156,7 +156,7 @@
 .cardFooter {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid rgba(239, 68, 68, 0.1);

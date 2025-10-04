@@ -1,3 +1,5 @@
+"use client";
+
 // Footer.tsx - Actualizado
 import React from 'react';
 import { usePathname } from 'next/navigation';
