@@ -50,28 +50,6 @@ const rutas = [
     description: "Perfecta para principiantes. Incluye equipo completo y instructor especializado.",
     price: "40",
     nextAvailable: "Mañana 10:00-13:00",
-  },
-  {
-    imageUrl: "/path/to/enduro-route5.jpg",
-    name: "Descenso Extremo",
-    address: "Cerro del Diablo", 
-    rating: 4.9,
-    reviews: "120 reseñas",
-    tags: ["Dificultad Extrema", "Descenso", "Experto", "Seguro Incluido"],
-    description: "Para riders experimentados. Descenso técnico con pendientes pronunciadas y obstáculos naturales.",
-    price: "45",
-    nextAvailable: "Fin de semana",
-  },
-  {
-    imageUrl: "/path/to/enduro-route6.jpg",
-    name: "Ruta Familiar",
-    address: "Valle Tranquilo", 
-    rating: 4.4,
-    reviews: "78 reseñas",
-    tags: ["Dificultad Baja", "Familiar", "Paisajes", "Picnic"],
-    description: "Ruta suave ideal para familias y paseos tranquilos con áreas de descanso y picnic.",
-    price: "25",
-    nextAvailable: "Todos los días",
   }
 ];
 
@@ -111,7 +89,6 @@ export default function Page() {
       <Sidebar userRole="usuario" sport="enduro" />
 
       <div className={styles.mainContent}>
-        {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>🏍️</div>
@@ -122,12 +99,12 @@ export default function Page() {
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre de la ruta o ubicación"
+              placeholder="Nombre de la ruta o ubicación..."
               sport="enduro" 
             />
             <button className={styles.userButton}>
               <span>👤</span>
-              <span>Usuario</span>
+              <span>usuario</span>
             </button>
           </div>
         </div>
@@ -139,7 +116,7 @@ export default function Page() {
             onClick={handleBackToEnduro}
           >
             <span>←</span>
-            <span>Enduro</span>
+            <span>Volver a Enduro</span>
           </button>
         </div>
 

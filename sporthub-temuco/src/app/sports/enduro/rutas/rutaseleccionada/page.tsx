@@ -28,9 +28,9 @@ export default function RutaSeleccionadaPage() {
     reviews: 95,
     priceFrom: 35000,
     images: [
-      "/sports/enduro/rutas/ruta1.png",
-      "/sports/enduro/rutas/ruta2.png",
-      "/sports/enduro/enduro.png"
+      "/sports/enduro/rutas/rutaseleccionada/rutaSelec1.png",
+      "/sports/enduro/rutas/rutaseleccionada/rutaSelec2.png",
+      "/sports/enduro/rutas/rutaseleccionada/rutaSelec3.png"
     ],
     amenities: ["Guía Certificado", "Equipo Seguridad", "Terreno Rocoso", "Vistas Panorámicas"],
     difficulty: "Alta",

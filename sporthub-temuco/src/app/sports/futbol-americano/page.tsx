@@ -5,6 +5,7 @@ import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
+import StatsCard from '../../../components/charts/StatsCard';
 import styles from './page.module.css';
 
 const topRatedCourts = [
@@ -141,24 +142,46 @@ export default function FutbolAmericanoPage() {
           </div>
         </div>
 
-        {/* Stats Cards para Fútbol Americano */}
+        {/* 🔥 Stats Cards para Fútbol Americano - USANDO EL COMPONENTE StatsCard */}
         <div className={styles.statsContainer}>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.disponiblesHoy}</div>
-            <div className={styles.statLabel}>Estadios Disponibles hoy</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>${stats.precioPromedio.min}-{stats.precioPromedio.max}</div>
-            <div className={styles.statLabel}>Rango de precios por hora</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.promedioCalificacion} ⭐</div>
-            <div className={styles.statLabel}>Promedio de calificación</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.capacidadPromedio}</div>
-            <div className={styles.statLabel}>Capacidad por equipo</div>
-          </div>
+          <StatsCard
+            title="Estadios Disponibles Hoy"
+            value={stats.disponiblesHoy}
+            icon="🏈"
+            color="blue"
+            sport="futbol-americano"
+            ariaLabel={`${stats.disponiblesHoy} estadios disponibles hoy`}
+          />
+          
+          <StatsCard
+            title="Rango de Precios"
+            value={`$${stats.precioPromedio.min}-${stats.precioPromedio.max}`}
+            icon="💰"
+            subtitle="Por hora"
+            color="purple"
+            sport="futbol-americano"
+            ariaLabel={`Precios desde $${stats.precioPromedio.min} hasta $${stats.precioPromedio.max} por hora`}
+          />
+          
+          <StatsCard
+            title="Calificación Promedio"
+            value={stats.promedioCalificacion}
+            icon="⭐"
+            subtitle="Basado en reseñas"
+            color="yellow"
+            sport="futbol-americano"
+            ariaLabel={`Calificación promedio de ${stats.promedioCalificacion} estrellas`}
+          />
+          
+          <StatsCard
+            title="Capacidad por Equipo"
+            value={stats.capacidadPromedio}
+            icon="👥"
+            subtitle="Jugadores por equipo"
+            color="green"
+            sport="futbol-americano"
+            ariaLabel={`Capacidad promedio de ${stats.capacidadPromedio} jugadores por equipo`}
+          />
         </div>
 
         <div className={styles.quickAccessSection}>

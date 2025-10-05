@@ -5,9 +5,9 @@ import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
+import StatsCard from '../../../components/charts/StatsCard';
 import styles from './page.module.css';
 
-// Datos de ejemplo para las rutas de Enduro mejor calificadas (6 tarjetas)
 const topRatedRoutes = [
   {
     imageUrl: "/sports/enduro/rutas/ruta1.png",
@@ -53,28 +53,7 @@ const topRatedRoutes = [
     price: "40",
     nextAvailable: "Mañana 10:00-13:00",
   },
-  {
-    imageUrl: "/path/to/enduro-route5.jpg",
-    name: "Descenso Extremo",
-    address: "Cerro del Diablo", 
-    rating: 4.9,
-    reviews: "120 reseñas",
-    tags: ["Dificultad Extrema", "Descenso", "Experto", "Seguro Incluido"],
-    description: "Para riders experimentados. Descenso técnico con pendientes pronunciadas y obstáculos naturales.",
-    price: "45",
-    nextAvailable: "Fin de semana",
-  },
-  {
-    imageUrl: "/path/to/enduro-route6.jpg",
-    name: "Ruta Familiar",
-    address: "Valle Tranquilo", 
-    rating: 4.4,
-    reviews: "78 reseñas",
-    tags: ["Dificultad Baja", "Familiar", "Paisajes", "Picnic"],
-    description: "Ruta suave ideal para familias y paseos tranquilos con áreas de descanso y picnic.",
-    price: "25",
-    nextAvailable: "Todos los días",
-  }
+
 ];
 
 export default function EnduroPage() {
@@ -177,7 +156,7 @@ export default function EnduroPage() {
               onChange={handleSearchChange}
               onSearch={handleSearch}
               placeholder="Nombre de la ruta o ubicación..."
-              sport = "enduro" 
+              sport="enduro" 
             />
             <button className={styles.userButton}>
               <span>👤</span>
@@ -186,27 +165,48 @@ export default function EnduroPage() {
           </div>
         </div>
 
-        {/* Stats Cards para Enduro */}
+        {/* Stats Cards para Enduro - USANDO EL COMPONENTE StatsCard */}
         <div className={styles.statsContainer}>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.rutasDisponibles}</div>
-            <div className={styles.statLabel}>Rutas Disponibles</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>${stats.precioPromedio.min}-{stats.precioPromedio.max}</div>
-            <div className={styles.statLabel}>Rango de precios por ruta</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.promedioCalificacion} ⭐</div>
-            <div className={styles.statLabel}>Promedio de calificación</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.kilometrosTotales}km</div>
-            <div className={styles.statLabel}>Kilómetros totales de rutas</div>
-          </div>
+          <StatsCard
+            title="Rutas Disponibles"
+            value={stats.rutasDisponibles}
+            icon="🏍️"
+            color="blue"
+            sport="enduro"
+            ariaLabel={`${stats.rutasDisponibles} rutas de enduro disponibles`}
+          />
+          
+          <StatsCard
+            title="Rango de Precios"
+            value={`$${stats.precioPromedio.min}-${stats.precioPromedio.max}`}
+            icon="💰"
+            subtitle="Por ruta"
+            color="green"
+            sport="enduro"
+            ariaLabel={`Precios desde $${stats.precioPromedio.min} hasta $${stats.precioPromedio.max}`}
+          />
+          
+          <StatsCard
+            title="Calificación Promedio"
+            value={stats.promedioCalificacion}
+            icon="⭐"
+            subtitle="Basado en reseñas"
+            color="yellow"
+            sport="enduro"
+            ariaLabel={`Calificación promedio de ${stats.promedioCalificacion} estrellas`}
+          />
+          
+          <StatsCard
+            title="Kilómetros Totales"
+            value={stats.kilometrosTotales}
+            icon="📏"
+            subtitle="De rutas disponibles"
+            color="purple"
+            sport="enduro"
+            ariaLabel={`${stats.kilometrosTotales} kilómetros totales de rutas`}
+          />
         </div>
 
-        {/* Botón de acceso rápido */}
         <div className={styles.quickAccessSection}>
           <button 
             className={styles.mainCourtButton}

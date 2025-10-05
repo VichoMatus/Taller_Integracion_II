@@ -68,7 +68,7 @@ export default function Page() {
 
       {/* Contenido principal */}
       <div className={styles.mainContent}>
-        {/* Header */}
+        {/* Header - IDÉNTICO al de la página anterior */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>🏈</div>
@@ -79,12 +79,12 @@ export default function Page() {
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre del estadio"
+              placeholder="Nombre del estadio..."
               sport="futbol-americano" 
             />
             <button className={styles.userButton}>
               <span>👤</span>
-              <span>Usuario</span>
+              <span>usuario</span>
             </button>
           </div>
         </div>

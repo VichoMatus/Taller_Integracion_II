@@ -264,6 +264,16 @@ const CourtCard: React.FC<CourtCardProps> = ({
         return '⛸️';
       case 'atletismo':
         return '🏃‍♂️';
+      case 'enduro':
+        return '🏍️';
+      case 'rugby':
+        return '🏉';
+      case 'futbol-americano':
+        return '🏈';
+      case 'mountain-bike':
+        return '🚵‍♂️';
+      case 'crossfitentrenamientofuncional':
+        return '💪';
       case 'skate':
         return '🛹';
       case 'ciclismo':
