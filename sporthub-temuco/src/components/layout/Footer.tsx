@@ -10,7 +10,7 @@ interface FooterProps {
     variant?: 'minimal' | 'full';
     layout?: 'with-sidebar' | 'without-sidebar';
     className?: string;
-    useModuleCSS?: boolean; // 🔥 SOLO AGREGAMOS ESTA PROP
+    useModuleCSS?: boolean; 
 }
 
 const Footer: React.FC<FooterProps> = ({ 
@@ -29,13 +29,9 @@ const Footer: React.FC<FooterProps> = ({
     
     // 🔥 USA MODULE.CSS SI VIENE DE SPORTS O SI SE ESPECIFICA MANUALMENTE
     const shouldUseModuleCSS = useModuleCSS ?? isFromSportsPage;
-    
-    // 🔥 DETECTAR LAYOUT AUTOMÁTICAMENTE
-    // Por defecto: with-sidebar
-    // Login/Registro: without-sidebar
-    // Sports: with-sidebar (porque tienen sidebar)
-    const finalLayout = layout ?? (isLoginPage ? 'without-sidebar' : 'with-sidebar');
-    
+
+    const finalLayout = isLoginPage ? 'without-sidebar' : (layout ?? 'without-sidebar');
+
     // 🔥 LÓGICA CONDICIONAL SIMPLE PARA CLASES
     const footerLayoutClass = shouldUseModuleCSS 
         ? (finalLayout === 'with-sidebar' ? styles.footerWithSidebar : styles.footerWithoutSidebar)
