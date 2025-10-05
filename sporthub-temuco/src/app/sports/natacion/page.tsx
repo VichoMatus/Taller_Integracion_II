@@ -78,6 +78,37 @@ const topRatedCourts = [
   }
 ];
 
+const swimmingStats = [
+  {
+    title: "Piscinas Disponibles Hoy",
+    value: "6",
+    icon: "🏊‍♀️",
+    subtitle: "Listas para reservar",
+    trend: { value: 2, isPositive: true }
+  },
+  {
+    title: "Rango de Precios",
+    value: "$28-45",
+    icon: "💰",
+    subtitle: "Por hora",
+    trend: { value: 8, isPositive: true }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.7⭐",
+    icon: "🏆",
+    subtitle: "De nuestras piscinas",
+    trend: { value: 0.3, isPositive: true }
+  },
+  {
+    title: "Carriles Promedio",
+    value: "8",
+    icon: "➡️",
+    subtitle: "Por piscina",
+    trend: { value: 1, isPositive: true }
+  }
+];
+
 export default function NatacionPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCourts, setFilteredCourts] = useState(topRatedCourts);
@@ -132,14 +163,6 @@ export default function NatacionPage() {
     };
   }, []);
 
-  // Stats específicos para natación
-  const stats = {
-    disponiblesHoy: 6,
-    precioPromedio: { min: 28, max: 45 },
-    promedioCalificacion: 4.7,
-    carrilesPromedio: 8
-  };
-
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -153,6 +176,7 @@ export default function NatacionPage() {
   const handleLocationSearch = () => {
     console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
   };
+
   const handleCanchaClick = (court: any) => {
     console.log('Navegando a piscinas de natación...');
     router.push('/sports/natacion/piletas/piletaseleccionada');
@@ -196,32 +220,32 @@ export default function NatacionPage() {
           </div>
         </div>
 
-        <div className={styles.statsContainer}>
-          <StatsCard
-            title="Piscinas Disponibles hoy"
-            value={stats.disponiblesHoy}
-            icon={<span>🏊‍♀️</span>}
-            color="blue"
-          />
-          <StatsCard
-            title="Rango de precios por hora"
-            value={`$${stats.precioPromedio.min}-${stats.precioPromedio.max}`}
-            icon={<span>💰</span>}
-            color="green"
-          />
-          <StatsCard
-            title="Promedio de calificación"
-            value={stats.promedioCalificacion}
-            subtitle="⭐"
-            color="yellow"
-            icon={<span>⭐</span>}
-          />
-          <StatsCard
-            title="Carriles promedio"
-            value={stats.carrilesPromedio}
-            icon={<span>➡️</span>}
-            color="purple"
-          />
+        {/* 🔥 STATS CARDS MEJORADAS CON STATSCARD (nueva estructura) */}
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas de Natación en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {swimmingStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                sport="natacion"
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Agregar navegación específica si es necesario
+                  if (stat.title.includes("Piscinas")) {
+                    router.push('/sports/natacion/piletas');
+                  }
+                }}
+              />
+            ))}
+          </div>
         </div>
 
         <div className={styles.quickAccessSection}>

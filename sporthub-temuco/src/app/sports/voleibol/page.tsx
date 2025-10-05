@@ -78,6 +78,37 @@ const topRatedCourts = [
   }
 ];
 
+const volleyballStats = [
+  {
+    title: "Canchas Disponibles Hoy",
+    value: "8",
+    icon: "🏐",
+    subtitle: "Listas para reservar",
+    trend: { value: 3, isPositive: true }
+  },
+  {
+    title: "Rango de Precios",
+    value: "$22-35",
+    icon: "💰",
+    subtitle: "Por hora",
+    trend: { value: 5, isPositive: true }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.6⭐",
+    icon: "🏆",
+    subtitle: "De nuestras canchas",
+    trend: { value: 0.3, isPositive: true }
+  },
+  {
+    title: "Jugadores en Cancha",
+    value: "12",
+    icon: "👥",
+    subtitle: "Ahora mismo",
+    trend: { value: 4, isPositive: true }
+  }
+];
+
 export default function VoleibolPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCourts, setFilteredCourts] = useState(topRatedCourts);
@@ -132,14 +163,6 @@ export default function VoleibolPage() {
     };
   }, []);
 
-  // Stats específicos para voleibol
-  const stats = {
-    disponiblesHoy: 8,
-    precioPromedio: { min: 22, max: 35 },
-    promedioCalificacion: 4.6,
-    cantidadJugadores: 12
-  };
-
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -192,32 +215,32 @@ export default function VoleibolPage() {
           </div>
         </div>
 
-        <div className={styles.statsContainer}>
-          <StatsCard
-            title="Canchas Disponibles hoy"
-            value={stats.disponiblesHoy}
-            icon={<span>🏟️</span>}
-            color="purple"
-          />
-          <StatsCard
-            title="Rango de precios por hora"
-            value={`$${stats.precioPromedio.min}-${stats.precioPromedio.max}`}
-            icon={<span>💰</span>}
-            color="red"
-          />
-          <StatsCard
-            title="Promedio de calificación"
-            value={stats.promedioCalificacion}
-            subtitle="⭐"
-            color="yellow"
-            icon={<span>⭐</span>}
-          />
-          <StatsCard
-            title="Jugadores en cancha"
-            value={stats.cantidadJugadores}
-            icon={<span>👥</span>}
-            color="blue"
-          />
+        {/* 🔥 STATS CARDS MEJORADAS CON STATSCARD (nueva estructura) */}
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas del Voleibol en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {volleyballStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                sport="voleibol"
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Agregar navegación específica si es necesario
+                  if (stat.title.includes("Canchas")) {
+                    router.push('/sports/voleibol/canchas');
+                  }
+                }}
+              />
+            ))}
+          </div>
         </div>
 
         <div className={styles.quickAccessSection}>

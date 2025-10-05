@@ -7,6 +7,10 @@ import styles from './StatsCard.module.css';
 import atletismoStyles from './stylesStatsCard/AtletismoStatsCard.module.css';
 import futbolStyles from './stylesStatsCard/FutbolStatsCard.module.css';
 import skateStyles from './stylesStatsCard/SkateStatsCard.module.css';
+import voleibolStyles from './stylesStatsCard/VoleibolStatsCard.module.css';
+import tenisStyles from './stylesStatsCard/TenisStatsCard.module.css';
+import natacionStyles from './stylesStatsCard/NatacionStatsCard.module.css';
+import patinajeStyles from './stylesStatsCard/PatinajeStatsCard.module.css';
 
 // Definición del tipo para colores
 export type CardColor = 'blue' | 'green' | 'red' | 'purple' | 'yellow';
@@ -57,6 +61,14 @@ const StatsCard: React.FC<StatsCardProps> = ({
         return futbolStyles;
       case 'skate':
         return skateStyles;
+      case 'voleibol':
+        return voleibolStyles;
+      case 'tenis':
+        return tenisStyles;
+      case 'natacion':
+        return natacionStyles;
+      case 'patinaje':
+        return patinajeStyles;
       default:
         return styles;
     }

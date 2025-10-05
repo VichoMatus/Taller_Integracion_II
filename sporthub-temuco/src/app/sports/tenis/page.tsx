@@ -78,6 +78,37 @@ const topRatedCourts = [
   }
 ];
 
+const tennisStats = [
+  {
+    title: "Canchas Disponibles Hoy",
+    value: "12",
+    icon: "🎾",
+    subtitle: "Listas para reservar",
+    trend: { value: 4, isPositive: true }
+  },
+  {
+    title: "Rango de Precios",
+    value: "$22-35",
+    icon: "💰",
+    subtitle: "Por hora",
+    trend: { value: 6, isPositive: true }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.7⭐",
+    icon: "🏆",
+    subtitle: "De nuestras canchas",
+    trend: { value: 0.4, isPositive: true }
+  },
+  {
+    title: "Jugadores en Cancha",
+    value: "4",
+    icon: "👥",
+    subtitle: "Ahora mismo",
+    trend: { value: 2, isPositive: true }
+  }
+];
+
 export default function TenisPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCourts, setFilteredCourts] = useState(topRatedCourts);
@@ -88,7 +119,6 @@ export default function TenisPage() {
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
-  // ✅ CORREGIDO: Una sola función handleSearch
   const handleSearch = (searchValue: string) => {
     setSearchTerm(searchValue);
     const filtered = topRatedCourts.filter(court => 
@@ -103,7 +133,6 @@ export default function TenisPage() {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setSearchTerm(newValue);
-    // Búsqueda en tiempo real
     handleSearch(newValue);
   };
 
@@ -133,14 +162,6 @@ export default function TenisPage() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  // Stats específicos para tenis
-  const stats = {
-    disponiblesHoy: 12,
-    precioPromedio: { min: 22, max: 35 },
-    promedioCalificacion: 4.7,
-    cantidadJugadores: 4
-  };
 
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
@@ -199,32 +220,32 @@ export default function TenisPage() {
           </div>
         </div>
 
-        <div className={styles.statsContainer}>
-          <StatsCard
-            title="Canchas Disponibles hoy"
-            value={stats.disponiblesHoy}
-            icon={<span>🏟️</span>}
-            color="blue"
-          />
-          <StatsCard
-            title="Rango de precios por hora"
-            value={`$${stats.precioPromedio.min}-${stats.precioPromedio.max}`}
-            icon={<span>💰</span>}
-            color="green"
-          />
-          <StatsCard
-            title="Promedio de calificación"
-            value={stats.promedioCalificacion}
-            subtitle="⭐"
-            color="yellow"
-            icon={<span>⭐</span>}
-          />
-          <StatsCard
-            title="Jugadores en cancha"
-            value={stats.cantidadJugadores}
-            icon={<span>👥</span>}
-            color="purple"
-          />
+        {/* 🔥 STATS CARDS MEJORADAS CON STATSCARD (nueva estructura) */}
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas del Tenis en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {tennisStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                sport="tenis"
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Agregar navegación específica si es necesario
+                  if (stat.title.includes("Canchas")) {
+                    router.push('/sports/tenis/canchas');
+                  }
+                }}
+              />
+            ))}
+          </div>
         </div>
 
         <div className={styles.quickAccessSection}>
