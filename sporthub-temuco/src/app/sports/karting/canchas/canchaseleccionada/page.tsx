@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '../../../../../components/layout/Sidebar';
-import SearchBar from '../../../../../components/SearchBar';
 import styles from './canchaseleccionada.module.css';
 
 // Datos mock de la pista específica
@@ -137,11 +136,6 @@ export default function CanchaSeleccionadaPage() {
             <h1 className={styles.headerTitle}>Karting</h1>
           </div>
           <div className={styles.headerRight}>
-           <SearchBar
-            placeholder="Buscar pistas de karting..."
-            sport="karting"
-            onSearch={(term: string) => router.push(`/sports/karting/canchas?search=${encodeURIComponent(term)}`)}
-            />
             <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
               <span>👤</span>
               <span>usuario</span>

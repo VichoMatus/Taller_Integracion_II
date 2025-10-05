@@ -5,7 +5,7 @@ import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
-import skateCommon from './skate.module.css';
+import styles from './page.module.css';
 import StatsCard from '../../../components/charts/StatsCard';
 
 
@@ -72,9 +72,9 @@ export default function SkatePage() {
 
   if (!isClient) {
     return (
-      <div className={skateCommon.pageContainer}>
+      <div className={styles.pageContainer}>
         <Sidebar userRole="usuario" sport="skate" />
-        <div className={skateCommon.mainContent}>
+        <div className={styles.mainContent}>
           <div style={{ height: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <p>Cargando...</p>
           </div>
@@ -84,15 +84,15 @@ export default function SkatePage() {
   }
 
     return (
-    <div className={skateCommon.pageContainer}>
+    <div className={styles.pageContainer}>
       <Sidebar userRole="usuario" sport="skate" />
-      <div className={skateCommon.mainContent}>
-        <div className={skateCommon.header}>
-          <div className={skateCommon.headerLeft}>
-            <div className={skateCommon.headerIcon}>🛹</div>
-            <h1 className={skateCommon.headerTitle}>Skate</h1>
+      <div className={styles.mainContent}>
+        <div className={styles.header}>
+          <div className={styles.headerLeft}>
+            <div className={styles.headerIcon}>🛹</div>
+            <h1 className={styles.headerTitle}>Skate</h1>
           </div>
-          <div className={skateCommon.headerRight}>
+          <div className={styles.headerRight}>
             <SearchBar
               value={searchTerm}
               onChange={handleSearchChange}
@@ -100,21 +100,21 @@ export default function SkatePage() {
               placeholder="Nombre del skatepark o ubicación..."
               sport="skate"
             />
-            <button className={skateCommon.userButton} onClick={() => router.push('/usuario/perfil')}>
+            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
               <span>👤</span>
               <span>usuario</span>
             </button>
           </div>
         </div>
 
-        <div className={skateCommon.statsContainer}>
+        <div className={styles.statsContainer}>
           <StatsCard
             title="Skateparks disponibles hoy"
             value={stats.disponiblesHoy}
             icon={<span style={{fontSize: 20}}>📅</span>}
             subtitle="Disponible ahora"
             color="green"
-            className={skateCommon.statCard}
+            className={styles.statCard}
             ariaLabel="Skateparks disponibles hoy"
             sport="skate"
           />
@@ -125,7 +125,7 @@ export default function SkatePage() {
             icon={<span style={{fontSize: 20}}>💲</span>}
             subtitle="Precio promedio"
             color="blue"
-            className={skateCommon.statCard}
+            className={styles.statCard}
             ariaLabel="Rango de precios por hora"
             sport="skate"
           />
@@ -136,7 +136,7 @@ export default function SkatePage() {
             icon={<span style={{fontSize: 20}}>⭐</span>}
             subtitle="Reseñas acumuladas"
             color="yellow"
-            className={skateCommon.statCard}
+            className={styles.statCard}
             ariaLabel="Promedio de calificación"
             sport="skate"
           />
@@ -147,41 +147,41 @@ export default function SkatePage() {
             icon={<span style={{fontSize: 20}}>🛹</span>}
             subtitle="Asistentes activos"
             color="purple"
-            className={skateCommon.statCard}
+            className={styles.statCard}
             ariaLabel="Skaters en park"
             sport="skate"
           />
         </div>
 
-        <div className={skateCommon.quickAccessSection}>
+        <div className={styles.quickAccessSection}>
           <button 
-            className={`${skateCommon.mainCourtButton} ${skateCommon.containerCard}`}
+            className={`${styles.mainCourtButton} ${styles.containerCard}`}
             onClick={() => router.push('/sports/skate/canchas')}
           >
-            <div className={skateCommon.courtButtonIcon}>🛹</div>
-            <div className={skateCommon.courtButtonText}>
-              <span className={skateCommon.courtButtonTitle}>Explorar Skateparks</span>
-              <span className={skateCommon.courtButtonSubtitle}>Ver todos los skateparks disponibles</span>
+            <div className={styles.courtButtonIcon}>🛹</div>
+            <div className={styles.courtButtonText}>
+              <span className={styles.courtButtonTitle}>Explorar Skateparks</span>
+              <span className={styles.courtButtonSubtitle}>Ver todos los skateparks disponibles</span>
             </div>
-            <div className={skateCommon.courtButtonArrow}>→</div>
+            <div className={styles.courtButtonArrow}>→</div>
           </button>
         </div>
 
-        <div className={skateCommon.topRatedSection}>
-          <div className={skateCommon.sectionHeader}>
-            <h2 className={skateCommon.sectionTitle}>
-              <span className={skateCommon.sectionIcon}>⭐</span>
+        <div className={styles.topRatedSection}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>
+              <span className={styles.sectionIcon}>⭐</span>
               Skateparks mejor valorados
             </h2>
-            <div className={skateCommon.carouselControls}>
-              <button onClick={prevSlide} className={skateCommon.carouselButton} disabled={currentSlide === 0}>←</button>
-              <span className={skateCommon.slideIndicator}>{currentSlide + 1} / {totalSlides}</span>
-              <button onClick={nextSlide} className={skateCommon.carouselButton} disabled={currentSlide === totalSlides - 1}>→</button>
+            <div className={styles.carouselControls}>
+              <button onClick={prevSlide} className={styles.carouselButton} disabled={currentSlide === 0}>←</button>
+              <span className={styles.slideIndicator}>{currentSlide + 1} / {totalSlides}</span>
+              <button onClick={nextSlide} className={styles.carouselButton} disabled={currentSlide === totalSlides - 1}>→</button>
             </div>
           </div>
 
-          <div className={skateCommon.carouselContainer}>
-            <div className={skateCommon.courtsGrid} style={{ transform: `translateX(-${currentSlide * (320 + 20)}px)` }}>
+          <div className={styles.carouselContainer}>
+            <div className={styles.courtsGrid} style={{ transform: `translateX(-${currentSlide * (320 + 20)}px)` }}>
               {topRatedCourts.map((court, index) => (
                 <CourtCard key={index} {...court} sport="skate" onClick={() => router.push('/sports/skate/canchas/canchaseleccionada')} />
               ))}
@@ -189,29 +189,30 @@ export default function SkatePage() {
           </div>
         </div>
 
-        <div className={skateCommon.mapSection}>
-          <h2 className={skateCommon.sectionTitle}>Ubicación en el mapa de los skateparks</h2>
-            <div className={skateCommon.locationSearch}>
-            <div className={skateCommon.locationInputContainer}>
-              <span className={skateCommon.locationIcon}>📍</span>
-              <input type="text" placeholder="Dirección, barrio o ciudad" value={locationSearch} onChange={(e) => setLocationSearch(e.target.value)} className={skateCommon.locationInput} />
+        <div className={styles.mapSection}>
+          <h2 className={styles.sectionTitle}>Ubicación en el mapa de los skateparks</h2>
+            <div className={styles.locationSearch}>
+            <div className={styles.locationInputContainer}>
+              <span className={styles.locationIcon}>📍</span>
+              <input type="text" placeholder="Dirección, barrio o ciudad" value={locationSearch} onChange={(e) => setLocationSearch(e.target.value)} className={styles.locationInput} />
             </div>
-            <div className={skateCommon.radiusContainer}>
-              <span className={skateCommon.radiusIcon}>📏</span>
-              <select value={radiusKm} onChange={(e) => setRadiusKm(e.target.value)} className={skateCommon.radiusSelect}>
+            <div className={styles.radiusContainer}>
+              <span className={styles.radiusIcon}>📏</span>
+              <select value={radiusKm} onChange={(e) => setRadiusKm(e.target.value)} className={styles.radiusSelect}>
                 <option value="1">Radio 1km</option>
                 <option value="3">Radio 3km</option>
                 <option value="5">Radio 5km</option>
                 <option value="10">Radio 10km</option>
               </select>
             </div>
-            <button onClick={handleLocationSearch} className={skateCommon.searchButton}>Buscar</button>
+            <button onClick={handleLocationSearch} className={styles.searchButton}>Buscar</button>
           </div>
 
           <LocationMap sport="skate" latitude={-38.7359} longitude={-72.5904} address="Temuco, Chile" zoom={13} height="400px" />
-          <div className={skateCommon.mapActions}><button className={skateCommon.helpButton}>❓ Ayuda</button></div>
+          <div className={styles.mapActions}><button className={styles.helpButton}>❓ Ayuda</button></div>
         </div>
       </div>
     </div>
   );
 }
+

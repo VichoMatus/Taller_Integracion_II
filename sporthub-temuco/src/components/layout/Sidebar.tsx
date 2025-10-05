@@ -67,6 +67,7 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
       case 'skate':
         return indexStyles;
       case 'atletismo':
+        console.log('🏃 Using atletismoStyles for Atletismo');
         return atletismoStyles;
       case 'ciclismo':
         return ciclismoStyles;

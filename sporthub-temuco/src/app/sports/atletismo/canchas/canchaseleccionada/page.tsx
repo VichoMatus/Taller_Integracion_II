@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import Sidebar from '../../../../../components/layout/Sidebar';
-import SearchBar from '../../../../../components/SearchBar';
-import LocationMap from '../../../../../components/LocationMap';
+import Sidebar from '../../../../../components/layout/Sidebar'; 
+import SearchBar from '../../../../../components/SearchBar'; 
+import LocationMap from '../../../../../components/LocationMap'; 
 import styles from './page.module.css';
 
 export default function CanchaSeleccionadaPage() {
@@ -12,7 +12,7 @@ export default function CanchaSeleccionadaPage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
-
+  
   // 🔥 DATOS ESTÁTICOS PARA ATLETISMO
   const cancha = {
     id: 1,
@@ -49,14 +49,14 @@ export default function CanchaSeleccionadaPage() {
         comment: "Instalaciones de primer nivel. Las áreas de salto están muy bien equipadas y el personal es profesional."
       },
       {
-        name: "Diego R.",
+        name: "Roberto L.",
         rating: 5,
         date: "hace 2 semanas",
-        comment: "La mejor pista de la región. Siempre limpia, bien mantenida y con excelente iluminación nocturna."
+        comment: "La iluminación es perfecta para partidos nocturnos. Césped en excelente condición."
       }
     ]
   };
-
+  
   useEffect(() => {
     // Simular carga
     const timer = setTimeout(() => setIsLoading(false), 1200);
@@ -69,7 +69,7 @@ export default function CanchaSeleccionadaPage() {
 
   const nextImage = () => {
     if (cancha && cancha.images.length > 0) {
-      setCurrentImageIndex((prev) =>
+      setCurrentImageIndex((prev) => 
         prev === cancha.images.length - 1 ? 0 : prev + 1
       );
     }
@@ -77,7 +77,7 @@ export default function CanchaSeleccionadaPage() {
 
   const prevImage = () => {
     if (cancha && cancha.images.length > 0) {
-      setCurrentImageIndex((prev) =>
+      setCurrentImageIndex((prev) => 
         prev === 0 ? cancha.images.length - 1 : prev - 1
       );
     }
@@ -85,8 +85,8 @@ export default function CanchaSeleccionadaPage() {
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
-      <span
-        key={i}
+      <span 
+        key={i} 
         className={`${styles.star} ${i < Math.floor(rating) ? styles.starFilled : ''}`}
       >
         ⭐
@@ -142,30 +142,30 @@ export default function CanchaSeleccionadaPage() {
   return (
     <div className={styles.pageContainer}>
       <Sidebar userRole="usuario" sport="atletismo" />
-
+      
       <div className={styles.mainContent}>
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerIcon}>🏃‍♂️</div>
+            <span className={styles.headerIcon}>🏃‍♂️</span>
             <h1 className={styles.headerTitle}>Atletismo</h1>
           </div>
           <div className={styles.headerRight}>
            <SearchBar
-            placeholder="Nombre de la pista o ubicación..."
+            placeholder="Buscar pistas de atletismo..."
             sport="atletismo"
             onSearch={(term) => router.push(`/sports/atletismo/canchas?search=${encodeURIComponent(term)}`)}
             />
-            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
+            <button className={styles.userButton}>
               <span>👤</span>
-              <span>usuario</span>
+              <span>Usuario</span>
             </button>
           </div>
         </div>
 
         {/* Breadcrumb */}
         <div className={styles.breadcrumb}>
-          <button
+          <button 
             className={styles.breadcrumbButton}
             onClick={handleBackToCanchas}
           >
@@ -177,12 +177,12 @@ export default function CanchaSeleccionadaPage() {
         {/* Court Info Card */}
         <div className={styles.courtInfoCard}>
           <div className={styles.courtHeader}>
-            <h2 className={styles.courtTitle}>{cancha.name}</h2>
+            <h2 className={styles.courtTitle}>{cancha.name} - Pista Atlética</h2>
             <button className={styles.reserveButton} onClick={handleReserve}>
-              📅 Reservar Pista
+              📅 Reservar
             </button>
           </div>
-
+          
           <div className={styles.courtDetails}>
             <div className={styles.detailItem}>
               <span className={styles.detailIcon}>📍</span>
@@ -190,17 +190,13 @@ export default function CanchaSeleccionadaPage() {
             </div>
             <div className={styles.detailItem}>
               <span className={styles.detailIcon}>💰</span>
-              <span>Desde {formatPrice(cancha.priceFrom)}/hora</span>
-            </div>
-            <div className={styles.detailItem}>
-              <span className={styles.detailIcon}>🎯</span>
-              <span>Dificultad: {cancha.difficulty}</span>
+              <span>Desde {formatPrice(cancha.priceFrom)}/h</span>
             </div>
           </div>
 
           <div className={styles.courtTabs}>
             {cancha.amenities.map((amenity, index) => (
-              <button
+              <button 
                 key={index}
                 className={`${styles.tab} ${activeTab === index ? styles.tabActive : ''}`}
                 onClick={() => setActiveTab(index)}
@@ -221,7 +217,7 @@ export default function CanchaSeleccionadaPage() {
 
           {/* Availability Section */}
           <div className={styles.availabilitySection}>
-            <h3 className={styles.sectionTitle}>Información de la Pista</h3>
+            <h3 className={styles.sectionTitle}>Disponibilidad</h3>
             <div className={styles.availabilityCard}>
               <div className={styles.availabilityItem}>
                 <span className={styles.availabilityIcon}>🕒</span>
@@ -230,14 +226,6 @@ export default function CanchaSeleccionadaPage() {
               <div className={styles.availabilityItem}>
                 <span className={styles.availabilityIcon}>👥</span>
                 <span className={styles.availabilityText}>{cancha.capacity}</span>
-              </div>
-              <div className={styles.availabilityItem}>
-                <span className={styles.availabilityIcon}>🏗️</span>
-                <span className={styles.availabilityText}>Superficie: {cancha.surface}</span>
-              </div>
-              <div className={styles.availabilityItem}>
-                <span className={styles.availabilityIcon}>🎵</span>
-                <span className={styles.availabilityText}>{cancha.features}</span>
               </div>
             </div>
           </div>
@@ -249,12 +237,13 @@ export default function CanchaSeleccionadaPage() {
           <div className={styles.locationSection}>
             <h3 className={styles.sectionTitle}>Ubicación</h3>
             <div className={styles.mapContainer}>
-              <LocationMap
-                latitude={cancha.coordinates.lat}
+              <LocationMap 
+                latitude={cancha.coordinates.lat} 
                 longitude={cancha.coordinates.lng}
                 address={cancha.location}
                 zoom={15}
                 height="250px"
+                sport="atletismo"
               />
               <div className={styles.locationInfo}>
                 <p className={styles.locationAddress}>{cancha.location}</p>
@@ -267,20 +256,20 @@ export default function CanchaSeleccionadaPage() {
 
           {/* Images Section */}
           <div className={styles.imagesSection}>
-            <h3 className={styles.sectionTitle}>Imágenes de la pista</h3>
+            <h3 className={styles.sectionTitle}>Imágenes de referencia</h3>
             <div className={styles.imageCarousel}>
               <button className={styles.carouselButton} onClick={prevImage}>
                 ←
               </button>
               <div className={styles.imageContainer}>
-                <Image
-                  src={cancha.images[currentImageIndex] || "/sports/atletismo/canchas/Cancha1.png"}
+                <Image 
+                  src={cancha.images[currentImageIndex] || "/sports/atletismo/canchas/Cancha1.png"} 
                   alt={`${cancha.name} - Imagen ${currentImageIndex + 1}`}
                   className={styles.courtImage}
                   width={600}
                   height={400}
                   onError={(e: any) => {
-                    e.target.src = "/sports/atletismo/canchas/Cancha1.png";
+                    e.target.src = "/sports/atletismo/atletismo.png";
                   }}
                 />
                 <div className={styles.imageOverlay}>
@@ -368,10 +357,11 @@ export default function CanchaSeleccionadaPage() {
         {/* Help Button */}
         <div className={styles.helpSection}>
           <button className={styles.helpButton} onClick={handleHelp}>
-            ❓ ¿Necesitas ayuda?
+            ❓ Ayuda
           </button>
         </div>
       </div>
     </div>
   );
 }
+

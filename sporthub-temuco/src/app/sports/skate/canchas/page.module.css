@@ -97,7 +97,7 @@
 }
 
 .headerLeft:hover .headerTitle {
-  color: #ea580c;
+  color: #000000;
 }
 
 .headerRight {
@@ -107,7 +107,7 @@
 }
 
 .userButton {
-  background: linear-gradient(135deg, #79e45f 0%, #56E832 100%);
+  background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
   color: white;
   padding: 12px 24px;
   border-radius: 50px;
@@ -142,7 +142,7 @@
 }
 
 .userButton:hover {
-  background: linear-gradient(135deg, #79e45f 0%, #56E832 100%);
+  background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
 }
@@ -154,7 +154,7 @@
 }
 
 .breadcrumbButton {
-  background: linear-gradient(135deg, #79e45f 0%, #56E832 100%);
+  background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
   color: white;
   padding: 8px 14px;
   border-radius: 6px;
@@ -170,7 +170,7 @@
 }
 
 .breadcrumbButton:hover {
-  background: linear-gradient(135deg, #79e45f 0%, #3b9e22 100%);
+  background: linear-gradient(135deg, #6b7280 0%, #3b9e22 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
 }
@@ -206,7 +206,7 @@
 }
 
 .filtersContainer:hover .filtersTitle {
-  color: #ea580c;
+  color: #000000;
 }
 
 .filtersGrid {
@@ -233,7 +233,7 @@
 }
 
 .filterField:hover .filterLabel {
-  color: #ea580c;
+  color: #000000;
 }
 
 .filterInput, .filterSelect {
@@ -253,13 +253,13 @@
 
 .filterInput:focus, .filterSelect:focus {
   outline: none;
-  border-color: #ea580c;
+  border-color: #000000;
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
   transform: scale(1.02);
 }
 
 .filterInput:hover, .filterSelect:hover {
-  border-color: #dc2626;
+  border-color: #1f2937;
   transform: translateY(-1px);
 }
 
@@ -286,7 +286,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  background: linear-gradient(135deg, #000000 0%, #1f2937 100%);
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3);
   border: 2px solid white;
@@ -298,7 +298,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  background: linear-gradient(135deg, #000000 0%, #1f2937 100%);
   cursor: pointer;
   border: 2px solid white;
   box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3);
@@ -326,7 +326,7 @@
 }
 
 .searchButton {
-  background: linear-gradient(135deg, #79e45f 0%, #56E832 100%);
+  background: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
   color: white;
   padding: 8px 20px;
   border-radius: 6px;
@@ -363,7 +363,7 @@
 }
 
 .searchButton:hover {
-  background: linear-gradient(135deg, #79e45f 0%, #4ac22c 100%);
+  background: linear-gradient(135deg, #6b7280 0%, #4ac22c 100%);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
 }
@@ -437,23 +437,23 @@
 
 .availabilityText {
   font-weight: 600;
-  color: #dc2626;
+  color: #15803d;
   font-size: 14px;
   transition: color 0.3s ease;
 }
 
 .availabilityCard:hover .availabilityText {
-  color: #ea580c;
+  color: #000000;
 }
 
 .availabilityNumber {
-  color: #dc2626;
+  color: #15803d;
   font-weight: 700;
   transition: all 0.3s ease;
 }
 
 .availabilityCard:hover .availabilityNumber {
-  color: #ea580c;
+  color: #000000;
   transform: scale(1.1);
 }
 
@@ -486,7 +486,7 @@
 }
 
 .noResults:hover h3 {
-  color: #ea580c;
+  color: #000000;
 }
 
 .noResults p {
@@ -495,7 +495,7 @@
 }
 
 .noResults button {
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  background: linear-gradient(135deg, #000000 0%, #1f2937 100%);
   color: white;
   padding: 10px 20px;
   border-radius: 8px;
@@ -527,7 +527,7 @@
 }
 
 .noResults button:hover {
-  background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%);
+  background: linear-gradient(135deg, #1f2937 0%, #15803d 100%);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
 }

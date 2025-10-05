@@ -226,6 +226,7 @@ export default function FutbolPage() {
                 icon={stat.icon}
                 subtitle={stat.subtitle}
                 trend={stat.trend}
+                sport="futbol"
                 onClick={() => {
                   console.log(`Clicked on ${stat.title} stat`);
                   // Agregar navegación específica si es necesario

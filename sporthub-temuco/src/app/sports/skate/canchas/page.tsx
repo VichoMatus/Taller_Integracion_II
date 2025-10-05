@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
 import Sidebar from '../../../../components/layout/Sidebar';
-import skateCommon from '../skate.module.css';
+import styles from './page.module.css';
 
 const canchas = [
   {
@@ -36,15 +36,15 @@ export default function Page() {
   const availableNow = filteredCanchas.filter(c => c.nextAvailable !== "No disponible hoy" && !c.nextAvailable.includes("Mañana")).length;
 
   return (
-    <div className={skateCommon.pageContainer}>
+    <div className={styles.pageContainer}>
       <Sidebar userRole="usuario" sport="skate" />
-      <div className={skateCommon.mainContent}>
-        <div className={skateCommon.header}>
-          <div className={skateCommon.headerLeft}>
-            <div className={skateCommon.headerIcon}>🛹</div>
-            <h1 className={skateCommon.headerTitle}>Skate</h1>
+      <div className={styles.mainContent}>
+        <div className={styles.header}>
+          <div className={styles.headerLeft}>
+            <div className={styles.headerIcon}>🛹</div>
+            <h1 className={styles.headerTitle}>Skate</h1>
           </div>
-          <div className={skateCommon.headerRight}>
+          <div className={styles.headerRight}>
             <SearchBar
               value={searchTerm}
               onChange={handleSearchChange}
@@ -52,31 +52,32 @@ export default function Page() {
               placeholder="Nombre del skatepark o ubicación..."
               sport="skate"
             />
-            <button className={skateCommon.userButton} onClick={() => router.push('/usuario/perfil')}>
+            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
               <span>👤</span>
               <span>usuario</span>
             </button>
           </div>
         </div>
 
-        <div className={skateCommon.filtersContainer}>
-          <h3 className={skateCommon.filtersTitle}>Filtrar skateparks</h3>
-          <div className={skateCommon.filtersGrid}>
-            <div className={skateCommon.filterField}><label className={skateCommon.filterLabel}>📍 Ubicación</label><input type="text" placeholder="Centro, Barrio..." className={skateCommon.filterInput} /></div>
-            <div className={skateCommon.filterField}><label className={skateCommon.filterLabel}>📅 Fecha</label><input type="text" placeholder="dd-mm-aaaa" className={skateCommon.filterInput} /></div>
-            <div className={skateCommon.filterField}><label className={skateCommon.filterLabel}>💰 Precio</label><input type="range" min="0" max="100" className={skateCommon.priceSlider} /></div>
-            <div className={skateCommon.filterField}><label className={skateCommon.filterLabel}>⚙️ Tipo</label><select className={skateCommon.filterSelect}><option>Tipo</option></select></div>
+        <div className={styles.filtersContainer}>
+          <h3 className={styles.filtersTitle}>Filtrar skateparks</h3>
+          <div className={styles.filtersGrid}>
+            <div className={styles.filterField}><label className={styles.filterLabel}>📍 Ubicación</label><input type="text" placeholder="Centro, Barrio..." className={styles.filterInput} /></div>
+            <div className={styles.filterField}><label className={styles.filterLabel}>📅 Fecha</label><input type="text" placeholder="dd-mm-aaaa" className={styles.filterInput} /></div>
+            <div className={styles.filterField}><label className={styles.filterLabel}>💰 Precio</label><input type="range" min="0" max="100" className={styles.priceSlider} /></div>
+            <div className={styles.filterField}><label className={styles.filterLabel}>⚙️ Tipo</label><select className={styles.filterSelect}><option>Tipo</option></select></div>
           </div>
-          <div className={skateCommon.filtersActions}><button className={skateCommon.searchButton}>🔍 Buscar</button></div>
+          <div className={styles.filtersActions}><button className={styles.searchButton}>🔍 Buscar</button></div>
         </div>
 
-  {filteredCanchas.length === 0 && searchTerm && <div className={skateCommon.noResults}><h3>No se encontraron resultados para &quot;{searchTerm}&quot;</h3></div>}
+  {filteredCanchas.length === 0 && searchTerm && <div className={styles.noResults}><h3>No se encontraron resultados para &quot;{searchTerm}&quot;</h3></div>}
 
-        <div className={skateCommon.cardsContainer}>
-          <div className={skateCommon.cardsGrid}>{filteredCanchas.map((cancha, idx) => (<CourtCard key={idx} {...cancha} sport="skate" />))}</div>
-          <div className={skateCommon.availabilityMessage}><div className={skateCommon.availabilityCard}><span>Skateparks Disponibles ahora: <strong>{availableNow}</strong></span></div></div>
+        <div className={styles.cardsContainer}>
+          <div className={styles.cardsGrid}>{filteredCanchas.map((cancha, idx) => (<CourtCard key={idx} {...cancha} sport="skate" />))}</div>
+          <div className={styles.availabilityMessage}><div className={styles.availabilityCard}><span>Skateparks Disponibles ahora: <strong>{availableNow}</strong></span></div></div>
         </div>
       </div>
     </div>
   );
 }
+
