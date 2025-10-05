@@ -1,65 +1,60 @@
-/* Footer con sidebar para rutas de /sports */
+/* 🔥 ESTILOS BASE PARA EL FOOTER - ADAPTADOS DESDE Footer.css */
+
+/* Footer para páginas con sidebar */
 .footerWithSidebar {
   background: white;
   border-top: 1px solid #e5e7eb;
-  padding: 7px 24px;
-  margin-left: 250px; /* Espacio para el sidebar */
+  padding: 9px 24px;
+  margin-left: 256px; /* Espacio para el sidebar */
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 30;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+  text-align: center;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); /* Sombra sutil para definir mejor los límites */
 }
 
-/* Footer sin sidebar (por si acaso) */
+/* Footer para login (sin sidebar) */
 .footerWithoutSidebar {
   background: white;
   border-top: 1px solid #e5e7eb;
-  padding: 10px 24px;
+  padding: 16px 24px;
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 30;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
-}
-
-/* Variante minimal */
-.footerMinimal {
   text-align: center;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
 }
 
-/* Variante full */
-.footerFull {
-  text-align: center;
-}
-
-/* Contenido minimal */
+/* 🔥 CONTENIDO MINIMAL */
 .footerMinimalContent {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  padding: 8px 16px;
+  text-align: center;
 }
 
 .footerMinimalText {
   color: #6b7280;
   font-size: 12px;
+  margin: 0;
 }
 
-/* Contenido full */
+/* 🔥 CONTENIDO FULL */
 .footerFullContent {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  text-align: center;
 }
 
 .footerLinks {
-  font-size: 13px;
   color: #6b7280;
+  font-size: 12px;
+  text-align: center;
 }
 
-/* Responsive design */
+/* 🔥 RESPONSIVE DESIGN */
 @media (max-width: 1024px) {
   .footerWithSidebar {
     margin-left: 0;
@@ -67,9 +62,29 @@
 }
 
 @media (max-width: 768px) {
-  .footerWithSidebar,
-  .footerWithoutSidebar {
+  .footerWithoutSidebar,
+  .footerWithSidebar {
     position: relative;
     margin-left: 0;
   }
+}
+
+/* 🔥 CLASES ADICIONALES PARA COMPATIBILIDAD */
+.footerMinimal {
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  padding: 8px 16px;
+  text-align: center;
+}
+
+.footerFull {
+  text-align: center;
+}
+
+/* 🔥 ESTILOS BASE GENERALES */
+.footer {
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
 }

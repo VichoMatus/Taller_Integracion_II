@@ -66,7 +66,7 @@ export default function RutaSeleccionadaPage() {
   }, []);
 
   const handleBackToRutas = () => {
-    router.push('/sports/enduro/canchas');
+    router.push('/sports/enduro/rutas');
   };
 
   const nextImage = () => {
@@ -150,7 +150,7 @@ export default function RutaSeleccionadaPage() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <span className={styles.headerIcon}>🏍️</span>
-            <h1 className={styles.headerTitle}>Enduro - {ruta.name}</h1>
+            <h1 className={styles.headerTitle}>Enduro</h1>
           </div>
           <div className={styles.headerRight}>
            <SearchBar

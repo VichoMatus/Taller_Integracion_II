@@ -146,7 +146,7 @@ export default function CanchaSeleccionadaPage() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <span className={styles.headerIcon}>⚽</span>
-            <h1 className={styles.headerTitle}>Fútbol - {cancha.name}</h1>
+            <h1 className={styles.headerTitle}>Fútbol</h1>
           </div>
           <div className={styles.headerRight}>
            <SearchBar

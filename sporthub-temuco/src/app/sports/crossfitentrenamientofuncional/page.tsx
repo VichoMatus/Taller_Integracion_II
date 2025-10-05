@@ -183,7 +183,7 @@ export default function CrossfitPage() {
         <Sidebar userRole="usuario" sport="crossfitentrenamientofuncional" />
         <div className={styles.mainContent}>
           <div style={{ height: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <p>Cargando boxes de CrossFit...</p>
+            <p>Cargando Gimnasios de CrossFit y Entrenamiento Funcional...</p>
           </div>
         </div>
       </div>

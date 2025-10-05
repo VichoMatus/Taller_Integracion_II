@@ -3,8 +3,8 @@
   position: relative;
   display: flex;
   align-items: center;
-  width: 100%;
-  max-width: 500px;
+  width: 78%;
+  max-width: 700px;
   background: linear-gradient(135deg,#ffffff,#f3f6fb);
   backdrop-filter: blur(8px);
   border: 2px solid rgba(30,64,175,0.08);

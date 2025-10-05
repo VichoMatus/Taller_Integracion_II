@@ -139,7 +139,7 @@ export default function Page() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>🏋️‍♂️</div>
-            <h1 className={styles.headerTitle}>Gimnasios de CrossFit y Entrenamiento Funcional</h1>
+            <h1 className={styles.headerTitle}>CrossFit y Entrenamiento Funcional</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar

@@ -1,10 +1,11 @@
-/* Footer.css - Mejorado */
-/* Footer para páginas con sidebar */
+/* Footer.css - Adaptado para que se vea igual que Footer.module.css */
+
+/* 🔥 FOOTER PARA PÁGINAS CON SIDEBAR */
 .footer-sidebar {
     background: white;
     border-top: 1px solid #e5e7eb;
-    padding: 16px 24px;
-    margin-left: 256px; /* Espacio para el sidebar */
+    padding: 9px 24px;
+    margin-left: 256px;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -14,11 +15,11 @@
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); /* Sombra sutil para definir mejor los límites */
 }
 
-/* Footer para login (sin sidebar) */
+/* 🔥 FOOTER PARA LOGIN (SIN SIDEBAR) */
 .footer-login {
     background: white;
     border-top: 1px solid #e5e7eb;
-    padding: 16px 24px;
+    padding: 9px 24px;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -28,6 +29,7 @@
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
 }
 
+/* 🔥 CONTENIDO MINIMAL */
 .footer-minimal {
     background: white;
     border-top: 1px solid #e5e7eb;
@@ -38,9 +40,25 @@
 .footer-minimal-text {
     color: #6b7280;
     font-size: 12px;
+    margin: 0;
 }
 
-/* Responsive design */
+/* 🔥 CONTENIDO FULL */
+.footer-content {
+    text-align: center;
+}
+
+.footer-full {
+    text-align: center;
+}
+
+.footer-links {
+    color: #6b7280;
+    font-size: 12px;
+    text-align: center;
+}
+
+/* 🔥 RESPONSIVE DESIGN */
 @media (max-width: 1024px) {
     .footer-sidebar {
         margin-left: 0;
@@ -52,9 +70,5 @@
     .footer-sidebar {
         position: relative;
         margin-left: 0;
-    }
-    
-    .login-container {
-        padding-bottom: 20px; /* Reduce el padding en móviles */
     }
 }

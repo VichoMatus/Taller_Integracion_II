@@ -94,7 +94,7 @@ export default function Page() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>🏀</div>
-            <h1 className={styles.headerTitle}>Canchas de Basquetbol</h1>
+            <h1 className={styles.headerTitle}>Basquetbol</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar

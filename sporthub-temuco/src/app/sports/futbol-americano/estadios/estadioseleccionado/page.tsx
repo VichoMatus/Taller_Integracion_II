@@ -146,7 +146,7 @@ export default function EstadioSeleccionadoPage() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <span className={styles.headerIcon}>🏈</span>
-            <h1 className={styles.headerTitle}>Fútbol Americano - {estadio.name}</h1>
+            <h1 className={styles.headerTitle}>Fútbol Americano</h1>
           </div>
           <div className={styles.headerRight}>
            <SearchBar

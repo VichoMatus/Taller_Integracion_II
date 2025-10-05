@@ -147,7 +147,7 @@ export default function PiscinaSeleccionadaPage() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <span className={styles.headerIcon}>🏊‍♂️</span>
-            <h1 className={styles.headerTitle}>Natación - {piscina.name}</h1>
+            <h1 className={styles.headerTitle}>Natación</h1>
           </div>
           <div className={styles.headerRight}>
            <SearchBar

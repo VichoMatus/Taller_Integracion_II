@@ -88,8 +88,6 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
         return patinajeStyles;
         // return tenisStyles;
         return basquetbolStyles; // temporal
-      case 'voleibol':
-      case 'padel':
       case 'enduro':
         return enduroStyles;
       case 'futbol-americano':
@@ -99,11 +97,10 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
       case 'mountain-bike':
         return mountainbikeStyles;
 
-
       case 'escalada':
         return escaladaStyles;
       default:
-        return indexStyles; // Cambiado a indexStyles para casos no manejados
+        return indexStyles; 
     }
   };
 

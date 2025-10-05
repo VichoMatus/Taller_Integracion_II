@@ -92,7 +92,7 @@ export default function Page() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>🏉</div>
-            <h1 className={styles.headerTitle}>Campos de Rugby</h1>
+            <h1 className={styles.headerTitle}>Rugby</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar

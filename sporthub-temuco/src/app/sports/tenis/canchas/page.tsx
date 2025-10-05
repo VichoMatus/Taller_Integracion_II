@@ -118,7 +118,7 @@ export default function Page() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>🎾</div>
-            <h1 className={styles.headerTitle}>Canchas de Tenis</h1>
+            <h1 className={styles.headerTitle}>Tenis</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar
