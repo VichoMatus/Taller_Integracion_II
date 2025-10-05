@@ -5,8 +5,49 @@ import { useRegistro } from '../../../hooks/useRegistro';
 import { MessageDisplay } from '../../../components/ui/MessageDisplay';
 
 export default function RegistroPage() {
-  // Usar nuestro custom hook que contiene toda la lógica
   const { state, handleSubmit } = useRegistro();
+
+  // Si se muestra el mensaje de verificación, mostrar solo ese mensaje
+  if (state.showVerificationMessage) {
+    return (
+      <div>
+        <header style={{ backgroundColor: '#4F46E5', color: 'white', padding: '1rem', textAlign: 'center' }}>
+          <h1 className="header-logo">SportHub</h1>
+        </header>
+        <div className="login-container">
+          <div className="login-form registro-form" style={{ maxWidth: '500px' }}>
+            <div className="login-left" style={{ width: '100%', textAlign: 'center' }}>
+              <MessageDisplay 
+                error={state.error}
+                success={state.success}
+                showVerification={state.showVerificationMessage}
+              />
+              <div style={{ marginTop: '20px' }}>
+                <Link 
+                  href="/login" 
+                  style={{
+                    display: 'inline-block',
+                    backgroundColor: '#4F46E5',
+                    color: 'white',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    textDecoration: 'none',
+                    fontWeight: '600',
+                    transition: 'background-color 0.3s'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4338CA'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#4F46E5'}
+                >
+                  Volver al Inicio de Sesión
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <header style={{ backgroundColor: '#4F46E5', color: 'white', padding: '1rem', textAlign: 'center' }}>
@@ -95,7 +136,7 @@ export default function RegistroPage() {
               </button>
             </form>
             <div className="or">o</div>
-            <button className="google-btn">
+            <button className="google-btn" disabled={state.isLoading}>
               <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" />
               Continuar con Google
             </button>

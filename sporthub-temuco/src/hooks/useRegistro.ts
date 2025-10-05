@@ -11,6 +11,7 @@ interface UseRegistroState {
   isLoading: boolean;
   error: string | null;
   success: string | null;
+  showVerificationMessage: boolean; // Nuevo estado
 }
 
 interface UseRegistroReturn {
@@ -24,7 +25,8 @@ export const useRegistro = (): UseRegistroReturn => {
   const [state, setState] = useState<UseRegistroState>({
     isLoading: false,
     error: null,
-    success: null
+    success: null,
+    showVerificationMessage: false
   });
 
   /**
@@ -34,7 +36,7 @@ export const useRegistro = (): UseRegistroReturn => {
     e.preventDefault();
     
     // Limpiar mensajes anteriores
-    setState(prev => ({ ...prev, error: null, success: null }));
+    setState(prev => ({ ...prev, error: null, success: null, showVerificationMessage: false }));
     
     // Establecer estado de carga
     setState(prev => ({ ...prev, isLoading: true }));
@@ -47,17 +49,15 @@ export const useRegistro = (): UseRegistroReturn => {
       const result = await authService.registrarUsuario(formData);
       
       if (result.ok) {
-        // Mostrar mensaje de éxito
+        // Mostrar mensaje de verificación de correo
         setState(prev => ({
           ...prev,
           isLoading: false,
-          success: '¡Registro exitoso! Bienvenido a SportHub'
+          success: '¡Registro exitoso!',
+          showVerificationMessage: true
         }));
         
-        // Redirigir después de un breve delay
-        setTimeout(() => {
-          router.push('/dashboard');
-        }, 1500);
+        // NO redirigir automáticamente, mostrar mensaje de verificación
         
       } else {
         // Mostrar error
@@ -81,7 +81,7 @@ export const useRegistro = (): UseRegistroReturn => {
    * Limpia los mensajes de error y éxito
    */
   const clearMessages = () => {
-    setState(prev => ({ ...prev, error: null, success: null }));
+    setState(prev => ({ ...prev, error: null, success: null, showVerificationMessage: false }));
   };
 
   return {
