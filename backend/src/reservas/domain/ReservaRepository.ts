@@ -1,4 +1,4 @@
-import { Reserva, EstadoReserva, MetodoPago } from "../../domain/reserva/Reserva";
+import { Reserva, EstadoReserva, MetodoPago, CotizacionReserva } from "../../domain/reserva/Reserva";
 import { Paginated } from "../../app/common/pagination";
 
 /**
@@ -59,6 +59,17 @@ export interface DisponibilidadInput {
   fechaInicio: Date;
   fechaFin: Date;
   reservaId?: number; // Para excluir una reserva específica al editar
+}
+
+/**
+ * Parámetros para cotizar una reserva.
+ */
+export interface CotizacionInput {
+  canchaId: number;
+  fechaInicio: string;
+  fechaFin: string;
+  crearHold?: boolean; // Si crear un "hold" temporal
+  holdDuracionMinutos?: number; // Duración del hold en minutos
 }
 
 /**
@@ -135,4 +146,26 @@ export interface ReservaRepository {
    * @returns Promise con la reserva cancelada
    */
   cancelarReserva(id: number, motivo?: string): Promise<Reserva>;
+
+  /**
+   * Cotiza el precio de una reserva y opcionalmente crea un hold temporal.
+   * @param input - Parámetros de cotización
+   * @returns Promise con cotización detallada
+   */
+  cotizarReserva(input: CotizacionInput): Promise<CotizacionReserva>;
+
+  /**
+   * Marca asistencia del usuario a la reserva.
+   * @param id - ID de la reserva
+   * @returns Promise con la reserva actualizada
+   */
+  checkInReserva(id: number): Promise<Reserva>;
+
+  /**
+   * Marca inasistencia del usuario a la reserva.
+   * @param id - ID de la reserva
+   * @param observaciones - Observaciones adicionales
+   * @returns Promise con la reserva actualizada
+   */
+  noShowReserva(id: number, observaciones?: string): Promise<Reserva>;
 }
