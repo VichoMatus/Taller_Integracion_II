@@ -103,7 +103,7 @@ router.post('/login', validateLoginData, controller.login);
 // GET /api/auth/me - Obtener perfil de usuario autenticado
 // Header: Authorization: Bearer <token>
 // Response: UserPublic con datos del usuario
-router.get('/me', controller.getProfile);
+router.get('/me', controller.getMe);
 
 // POST /api/auth/logout - Cerrar sesión
 // Body: { refresh_token? }
@@ -119,11 +119,6 @@ router.post('/refresh', controller.refreshToken);
  * RUTAS DE GESTIÓN DE PERFIL
  * ==========================
  */
-
-// GET /api/auth/me - Obtener perfil del usuario actual
-// Headers: Authorization: Bearer <access_token>
-// Response: UserPublic con datos del usuario
-router.get('/me', controller.getMe);
 
 // PATCH /api/auth/me - Actualizar perfil del usuario
 // Headers: Authorization: Bearer <access_token>
@@ -148,8 +143,8 @@ router.post('/me/push-token', controller.registerPushToken);
  * ==============================
  */
 
-// POST /api/auth/verify-email - Verificar email con token
-// Body: { token }
+// POST /api/auth/verify-email - Verificar email con código
+// Body: { email, code }
 // Response: SimpleMessage confirmando la verificación
 router.post('/verify-email', controller.verifyEmail);
 
@@ -157,6 +152,11 @@ router.post('/verify-email', controller.verifyEmail);
 // Body: { email }
 // Response: SimpleMessage confirmando el envío
 router.post('/resend-verification', controller.resendVerification);
+
+// POST /api/auth/send-verification - Enviar código de verificación
+// Body: { email }
+// Response: SimpleMessage confirmando el envío del código
+router.post('/send-verification', controller.sendVerification);
 
 /**
  * RUTAS DE RECUPERACIÓN DE CONTRASEÑA
@@ -181,5 +181,41 @@ router.post('/reset-password', controller.resetPassword);
 // GET /api/auth/status - Estado del servicio de autenticación
 // Response: Estado del servicio y lista de endpoints disponibles
 router.get('/status', controller.getStatus);
+
+// GET /api/auth/register/status - Verificar conectividad del endpoint de registro
+router.get('/register/status', controller.getRegisterStatus);
+
+// GET /api/auth/login/status - Verificar conectividad del endpoint de login
+router.get('/login/status', controller.getLoginStatus);
+
+// GET /api/auth/logout/status - Verificar conectividad del endpoint de logout
+router.get('/logout/status', controller.getLogoutStatus);
+
+// GET /api/auth/me/status - Verificar conectividad del endpoint de perfil
+router.get('/me/status', controller.getMeStatus);
+
+// GET /api/auth/verify-email/status - Verificar conectividad del endpoint de verificación
+router.get('/verify-email/status', controller.getVerifyEmailStatus);
+
+// GET /api/auth/resend-verification/status - Verificar conectividad del endpoint de reenvío
+router.get('/resend-verification/status', controller.getResendVerificationStatus);
+
+// GET /api/auth/send-verification/status - Verificar conectividad del endpoint de envío
+router.get('/send-verification/status', controller.getSendVerificationStatus);
+
+// GET /api/auth/forgot-password/status - Verificar conectividad del endpoint de recuperación
+router.get('/forgot-password/status', controller.getForgotPasswordStatus);
+
+// GET /api/auth/refresh/status - Verificar conectividad del endpoint de refresh
+router.get('/refresh/status', controller.getRefreshStatus);
+
+// GET /api/auth/reset-password/status - Verificar conectividad del endpoint de reset password
+router.get('/reset-password/status', controller.getResetPasswordStatus);
+
+// GET /api/auth/me/push-token/status - Verificar conectividad del endpoint de push tokens
+router.get('/me/push-token/status', controller.getPushTokenStatus);
+
+// GET /api/auth/status/all - Verificar conectividad de todos los endpoints
+router.get('/status/all', controller.getAllEndpointsStatus);
 
 export default router;
