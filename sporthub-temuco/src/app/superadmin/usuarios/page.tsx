@@ -96,7 +96,7 @@ export default function UsuariosPage() {
                 type="text"
                 placeholder="Buscar"
                 value={searchTerm}
-                onChange={(e: any) => setSearchTerm(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                 className="admin-search-input"
               />
               <svg className="admin-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,7 +192,7 @@ export default function UsuariosPage() {
         {/* Paginación */}
         <div className="admin-pagination-container">
           <div className="admin-pagination-info">
-            mostrando {startIndex + 1} de {Math.min(startIndex + itemsPerPage, filteredUsers.length)} de {filteredUsers.length} usuarios
+            mostrando {startIndex + 1} de {Math.min(startIndex + itemsPerPage, filteredUsers.length)} usuarios
           </div>
           
           <div className="admin-pagination-controls">

@@ -1,0 +1,327 @@
+/* Variables de colores */
+:root {
+  --primary-color: #7c73e6;
+  --primary-light: #9a94ea;
+  --primary-very-light: #f0eeff;
+  --background-color: #fafbfc;
+  --card-background: #ffffff;
+  --text-dark: #4b5563;
+  --text-medium: #6b7280;
+  --text-light: #9ca3af;
+  --border-color: #e5e7eb;
+}
+
+/* Animaciones suaves */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Estructura principal igual que Reservas y Editar Perfil */
+.mensajeria-wrapper {
+  margin-top: 14px;
+  margin-left: 256px;
+  padding: 24px;
+  min-height: calc(100vh - 14px);
+  background: var(--background-color);
+  animation: fadeIn 0.5s ease;
+}
+
+/* Título a la izquierda como en Reservas */
+.mensajeria-header {
+  margin-bottom: 32px;
+  animation: slideIn 0.6s ease;
+}
+
+.mensajeria-titulo {
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin: 0 0 8px 0;
+}
+
+.mensajeria-subtitulo {
+  font-size: 1.1rem;
+  color: var(--text-medium);
+  margin: 0;
+}
+
+/* Contenedor principal */
+.mensajeria-container {
+  display: flex;
+  gap: 24px;
+  min-height: 600px;
+  animation: fadeIn 0.8s ease 0.2s both;
+}
+
+/* Panel izquierdo - Lista de reservas */
+.reservas-lista {
+  display: flex;
+  flex-direction: column;
+  width: 350px;
+  background: var(--card-background);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+.lista-header {
+  background: var(--primary-color);
+  color: white;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.lista-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.reservas-count {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.reservas-items {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.reserva-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  animation: slideIn 0.4s ease-out;
+}
+
+.reserva-item:hover {
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+.reserva-item.active {
+  border-color: var(--primary-color);
+  background: var(--primary-very-light);
+}
+
+.reserva-info h3 {
+  margin: 0 0 6px 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.reserva-info p {
+  margin: 0 0 8px 0;
+  font-size: 0.85rem;
+  color: var(--text-medium);
+}
+
+.reserva-fecha {
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  font-weight: 500;
+  background: var(--primary-very-light);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.mensajes-indicador {
+  background: var(--primary-color);
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* Panel derecho - Mensajes */
+.mensajes-panel {
+  flex: 1;
+  background: var(--card-background);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mensajes-header {
+  background: var(--background-color);
+  padding: 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.mensajes-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.mensajes-header p {
+  margin: 0 0 12px 0;
+  color: var(--text-medium);
+  font-size: 0.95rem;
+}
+
+.reserva-status {
+  font-size: 0.9rem;
+  color: var(--primary-color);
+  font-weight: 500;
+  background: var(--primary-very-light);
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.mensajes-contenedor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.mensajes-info {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mensajes-info h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.mensajes-info span {
+  font-size: 0.9rem;
+  color: var(--text-medium);
+}
+
+.mensajes-lista {
+  flex: 1;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Mensajes */
+.mensaje-card {
+  background: var(--primary-very-light);
+  border-radius: 8px;
+  padding: 16px;
+  border-left: 3px solid var(--primary-color);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.mensaje-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.mensaje-autor {
+  font-weight: 600;
+  color: var(--primary-color);
+  font-size: 0.9rem;
+}
+
+.mensaje-fecha {
+  font-size: 0.8rem;
+  color: var(--text-medium);
+}
+
+.mensaje-texto {
+  margin: 0;
+  line-height: 1.5;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+}
+
+/* Estados vacíos */
+.sin-mensajes, .seleccionar-reserva {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-light);
+}
+
+.sin-mensajes-icon, .seleccionar-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.sin-mensajes h4, .seleccionar-reserva h3 {
+  margin: 16px 0 8px 0;
+  color: var(--text-dark);
+  font-weight: 600;
+}
+
+.seleccionar-reserva p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Scrollbar */
+.mensajes-lista::-webkit-scrollbar {
+  width: 4px;
+}
+
+.mensajes-lista::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.mensajes-lista::-webkit-scrollbar-thumb {
+  background: var(--primary-light);
+  border-radius: 2px;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .mensajeria-wrapper {
+    margin-left: 0;
+    padding: 16px;
+  }
+  
+  .mensajeria-container {
+    flex-direction: column;
+  }
+  
+  .reservas-lista {
+    width: 100%;
+  }
+}

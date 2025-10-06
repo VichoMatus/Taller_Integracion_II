@@ -1,0 +1,294 @@
+.courtCard {
+  background: white;
+  width: 342px;
+  height: 453px;
+  border-radius: 12px;
+  box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.55);
+  border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer; 
+  transition: all 0.3s ease; 
+}
+
+
+.courtCard:hover {
+  transform: translateY(-8px); 
+  box-shadow: 
+    0 12px 30px rgba(143, 249, 22, 0.15),
+    0 4px 8px rgba(113, 249, 22, 0.1); 
+  border-color: #aafeb5;
+  background: linear-gradient(135deg, #ffffff 0%, #f6fef0 100%); 
+}
+
+.courtCard:hover .cardImage {
+  transform: scale(1.05); 
+  filter: brightness(1.1); 
+}
+
+.courtCard:hover .cardTitle {
+  color: #77ea0c; 
+}
+
+
+.courtCard:hover .ratingBadge {
+  transform: scale(1.05);
+  border-color: #7cf916;
+  background: #f0fef0;
+}
+
+
+.courtCard:hover .tag {
+  transform: translateY(-2px); 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); 
+  background: #b1feaa;
+  border-color: #61f50b;
+}
+
+/* 🔥 Efecto en el botón al hacer hover de la tarjeta */
+.courtCard:hover .actionButton {
+  transform: scale(1.05); /* 🔥 Agranda el botón */
+  box-shadow: 0 6px 12px rgba(60, 249, 22, 0.4); /* 🔥 Sombra más intensa */
+  background: #77ea0c; /* 🔥 Color más intenso */
+}
+
+/* 🔥 Efecto de pulso al hacer clic */
+.courtCard:active {
+  transform: translateY(-4px) scale(0.98);
+}
+
+.cardImage {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  transition: all 0.3s ease; /* 🔥 Transición para la imagen */
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 16px;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  min-height: 50px;
+  max-height: 50px;
+}
+
+.cardTitleSection {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.cardTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #000000;
+  line-height: 1.2;
+  margin: 0;
+  transition: color 0.3s ease; 
+  max-height: 38px; /* Aproximadamente 2 líneas */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Máximo 2 líneas */
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+}
+
+.cardAddress {
+  font-size: 12px;
+  color: #333333;
+  line-height: 1.2;
+  margin-top: 10px;
+}
+
+.ratingBadge {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #ffffff 0%, #f3fef0 100%);
+  border: 2px solid #aafeb1;
+  border-radius: 25px;
+  padding: 8px 14px;
+  box-shadow: 
+    0 4px 12px rgba(113, 249, 22, 0.15),
+    0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-left: 12px;
+  min-width: 120px;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+/* Efecto shimmer en rating */
+.ratingBadge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(86, 249, 22, 0.2), transparent);
+  transition: left 0.6s ease;
+}
+
+.courtCard:hover .ratingBadge {
+  transform: scale(1.05) rotate(1deg);
+  border-color: #56f916;
+  background: linear-gradient(135deg, #fff7ed 0%, #aafeaa 100%);
+  box-shadow: 0 8px 20px rgba(86, 249, 22, 0.25);
+}
+
+.courtCard:hover .ratingBadge::before {
+  left: 100%;
+}
+
+.starIcon {
+  width: 16px;
+  height: 16px;
+  color: #fbbf24;
+  margin-right: 4px;
+}
+
+.ratingNumber {
+  font-size: 11px;
+  font-weight: 700;
+  color: #3a9207;
+}
+
+.ratingReviews {
+  font-size: 10px;
+  font-weight: 600;
+  color: #3a9207;
+  margin-left: 6px;
+}
+
+.tagsContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+  margin-top: 2px;
+}
+
+.tag {
+  background: #aafeb1;
+  color: #2d8a11;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #9bfd74;
+  text-align: center;
+  min-width: 80px;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.25)
+}
+
+.description {
+  color: #4b5563;
+  font-size: 12px;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  margin-top: 0;
+  flex: 1;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: auto;
+}
+
+.priceSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.price {
+  color: #3a9207;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.nextTime {
+  color: #9ca3af;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.actionButton {
+  background: linear-gradient(135deg, #88fd6b 0%, #56E832 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  box-shadow: 
+    0 6px 20px rgba(60, 249, 22, 0.3),
+    0 3px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  min-width: 120px;
+  height: 35px;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Efecto de brillo que recorre el botón */
+.actionButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+  z-index: 1;
+}
+
+.actionButton:hover::before {
+  left: 100%;
+}
+
+/* Estados del botón */
+.actionButton:hover {
+  transform: translateY(-3px) scale(1.05);
+  background: linear-gradient(135deg, #336b25 0%, #156301 100%);
+  box-shadow: 
+    0 10px 30px rgba(55, 224, 21, 0.4),
+    0 6px 16px rgba(75, 234, 12, 0.3);
+  border-color: #7ffd74;
+}
+
+.actionButton:active {
+  transform: translateY(-1px) scale(1.02);
+  transition: transform 0.1s ease;
+  box-shadow: 
+    0 6px 20px rgba(60, 249, 22, 0.3),
+    0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Efecto de pulso cuando está en focus */
+.actionButton:focus {
+  outline: none;
+  animation: buttonPulse 0.6s ease-in-out;
+}

@@ -111,7 +111,7 @@
 }
 
 .sidebarHeader:hover::before {
-  transform: translateX(100%);
+  transform: translateY(0%);
 }
 
 .sidebarLogoContainer {
@@ -306,8 +306,8 @@
 .sidebarMenuLink:hover {
   background: linear-gradient(
     135deg,
-    rgba(251, 146, 60, 0.15) 0%,
-    rgba(249, 115, 22, 0.1) 100%
+    rgb(255, 146, 56) 0%,
+    rgb(255, 94, 0) 100%
   );
   color: white;
   transform: translateX(5px) scale(1.02);

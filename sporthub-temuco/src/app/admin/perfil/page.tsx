@@ -16,80 +16,153 @@ export default function PerfilAdministrador() {
   ];
 
   const [hoveredDia, setHoveredDia] = useState<string | null>(null);
+  
+  // Simulamos que no hay imagen para mostrar el avatar con inicial
+  const userImage = null;
+  const userName = "Administrador";
+  
+  const getInitial = (name: string) => {
+    return name.charAt(0).toUpperCase();
+  };
 
   return (
     <AdminLayout userRole="admin" userName="Admin" notificationCount={3}>
-      <div className="admin-layout">
+      <div className="admin-container">
         
-        {/* Panel Izquierdo */}
-        <div className="admin-info">
-          <div className="admin-avatar">
-            <img src="https://placedog.net/200/200?id=12" alt="Foto de perfil" className="avatar-img"/>
+        {/* Panel Izquierdo - Perfil */}
+        <div className="profile-card">
+          <div className="avatar-container">
+            {userImage ? (
+              <img 
+                src={userImage} 
+                alt="Foto de perfil" 
+                className="avatar-image"
+              />
+            ) : (
+              <div className="avatar-default">
+                <span className="avatar-initial">{getInitial(userName)}</span>
+              </div>
+            )}
+            <div className="online-status"></div>
           </div>
 
-          <h2 className="admin-nombre">Administrador</h2>
-          <p className="admin-role">Administrador</p>
+          <h2 className="profile-name">{userName}</h2>
 
-          <div className="admin-details">
-            <div className="admin-detail-row">
-              <span className="detail-label">Número Telefónico:</span>
-              <span className="detail-value">+569 12098456</span>
+          <div className="profile-details">
+            <div className="detail-item">
+              <div className="detail-content">
+                <span className="detail-label">Teléfono</span>
+                <span className="detail-value">+569 12098456</span>
+              </div>
             </div>
-            <div className="admin-detail-row">
-              <span className="detail-label">Correo:</span>
-              <span className="detail-value">Admin@gmail.com</span>
+            
+            <div className="detail-item">
+              <div className="detail-content">
+                <span className="detail-label">Correo</span>
+                <span className="detail-value">Admin@gmail.com</span>
+              </div>
             </div>
-            <div className="admin-detail-row">
-              <span className="detail-label">Edad:</span>
-              <span className="detail-value">41</span>
+            
+            <div className="detail-item">
+              <div className="detail-content">
+                <span className="detail-label">Edad</span>
+                <span className="detail-value">41 años</span>
+              </div>
             </div>
-            <div className="admin-detail-row">
-              <span className="detail-label">Encargado:</span>
-              <span className="encargado-text">Reservas</span>
+            
+            <div className="detail-item">
+              <div className="detail-content">
+                <span className="detail-label">Encargado de</span>
+                <span className="detail-value highlight">Reservas y Gestión</span>
+              </div>
             </div>
           </div>
 
-          <button className="btn-editar">Editar Perfil</button>
+          <button className="edit-button">
+            Editar Perfil
+          </button>
         </div>
 
-        {/* Panel Derecho */}
-        <div className="admin-content">
-          <div className="admin-header">
-            <h2 className="admin-title">Panel del Administrador</h2>
+        {/* Panel Derecho - Contenido */}
+        <div className="content-panel">
+          <div className="dashboard-header">
+            <h1 className="dashboard-title">Panel del Administrador</h1>
+            <p className="dashboard-subtitle">Bienvenido de vuelta, aquí tienes tu resumen semanal</p>
           </div>
 
-          {/* Gráfico de Horas */}
-          <div className="grafico-box">
-            <h3 className="grafico-title">Gráfico de Horas Semanales</h3>
-
-            <div className="grafico-barras">
-              {horasPorDia.map((dia) => (
-                <div
-                  key={dia.dia}
-                  className="barra-item"
-                  onMouseEnter={() => setHoveredDia(dia.dia)}
-                  onMouseLeave={() => setHoveredDia(null)}
-                >
-                  <div
-                    className="barra"
-                    style={{
-                      height: `${dia.horas * 10}px`,
-                      backgroundColor:
-                        hoveredDia === dia.dia ? '#ffb347' : '#5a6993',
-                    }}
-                  >
-                    {hoveredDia === dia.dia && (
-                      <div className="tooltip">{dia.horas}h</div>
-                    )}
-                  </div>
-                  <span className="dia-label">{dia.dia}</span>
-                </div>
-              ))}
+          <div className="chart-container">
+            <div className="chart-header">
+              <h3 className="chart-title">Horas Trabajadas - Semana 12</h3>
             </div>
 
-            <div className="grafico-footer">
-              <p className="semana-label">Semana: 12</p>
-              <button className="btn-excel">Generar Excel</button>
+            <div className="chart-content">
+              <div className="bars-container">
+                {horasPorDia.map((dia) => (
+                  <div
+                    key={dia.dia}
+                    className="bar-wrapper"
+                    onMouseEnter={() => setHoveredDia(dia.dia)}
+                    onMouseLeave={() => setHoveredDia(null)}
+                  >
+                    {hoveredDia === dia.dia && (
+                      <div className="tooltip-content">
+                        {dia.horas}h {dia.dia}
+                      </div>
+                    )}
+                    
+                    <div 
+                      className={`bar ${hoveredDia === dia.dia ? 'bar-hover' : ''}`}
+                      style={{ height: `${dia.horas * 12}px` }}
+                    ></div>
+                    
+                    <span className="bar-label">{dia.dia.substring(0, 3)}</span>
+                    <span className="bar-value">{dia.horas}h</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="chart-footer">
+              <div className="stats-container">
+                <div className="stat-item">
+                  <span className="stat-label">Total Semanal: </span>
+                  <span className="stat-value">32 horas</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">Promedio Diario: </span>
+                  <span className="stat-value">4.6 horas</span>
+                </div>
+              </div>
+              
+              <button className="excel-button">
+                Generar Reporte Excel
+              </button>
+            </div>
+          </div>
+
+          <div className="stats-grid">
+            <div className="stat-card">
+              <div className="stat-icon">👥</div>
+              <div className="stat-info">
+                <span className="stat-number">156</span>
+                <span className="stat-text">Usuarios Activos</span>
+              </div>
+            </div>
+            
+            <div className="stat-card">
+              <div className="stat-icon">✅</div>
+              <div className="stat-info">
+                <span className="stat-number">89%</span>
+                <span className="stat-text">Eficiencia</span>
+              </div>
+            </div>
+            
+            <div className="stat-card">
+              <div className="stat-icon">⏰</div>
+              <div className="stat-info">
+                <span className="stat-number">32h</span>
+                <span className="stat-text">Esta Semana</span>
+              </div>
             </div>
           </div>
         </div>

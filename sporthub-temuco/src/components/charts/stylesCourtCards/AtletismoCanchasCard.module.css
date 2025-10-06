@@ -1,0 +1,424 @@
+/* 🏃‍♂️ COURT CARD - ATLETISMO STYLES */
+
+.courtCard {
+  width: 320px;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(30, 64, 175, 0.1);
+  border: 1px solid rgba(30, 64, 175, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  animation: fadeInUp 0.6s ease-out;
+  font-family: 'Inter', sans-serif;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.courtCard:hover {
+  transform: translateY(-8px);
+  box-shadow:
+    0 12px 30px rgba(59, 130, 246, 0.15),
+    0 4px 8px rgba(37, 99, 235, 0.1);
+  border-color: #93C5FD;
+  background: linear-gradient(135deg, #ffffff 0%, #EFF6FF 100%);
+}
+
+.courtCard:hover .cardImage {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+.courtCard:hover .cardTitle {
+  color: #2563EB;
+}
+
+.courtCard:hover .ratingBadge {
+  transform: scale(1.05) rotate(1deg);
+  border-color: #3B82F6;
+  background: linear-gradient(135deg, #fff7ed 0%, #DBEAFE 100%);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+}
+
+.courtCard:hover .tag {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  background: #DBEAFE;
+  border-color: #3B82F6;
+}
+
+/* 🔥 Efecto en el botón al hacer hover de la tarjeta */
+.courtCard:hover .actionButton {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(59, 130, 246, 0.4);
+  background: #2563EB;
+}
+
+/* 🔥 Efecto de pulso al hacer clic */
+.courtCard:active {
+  transform: translateY(-4px) scale(0.98);
+}
+
+.courtCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #1e40af, #3b82f6, #60a5fa);
+  z-index: 1;
+}
+
+.cardImage {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  transition: all 0.3s ease;
+}
+
+.courtCard:hover .cardImage {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+.cardContent {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.cardTitleSection {
+  flex: 1;
+}
+
+.cardTitle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1e40af;
+  margin: 0 0 6px 0;
+  line-height: 1.3;
+  transition: color 0.3s ease;
+}
+
+.cardAddress {
+  color: #3b82f6;
+  font-size: 0.9rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cardAddress::before {
+  content: "📍";
+  font-size: 0.8rem;
+}
+
+.ratingBadge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #ffffff 0%, #EFF6FF 100%);
+  border: 2px solid #93C5FD;
+  border-radius: 25px;
+  padding: 8px 14px;
+  box-shadow:
+    0 4px 12px rgba(59, 130, 246, 0.15),
+    0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-left: 12px;
+  min-width: 90px;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* Efecto shimmer en rating */
+.ratingBadge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), transparent);
+  transition: left 0.6s ease;
+}
+
+.courtCard:hover .ratingBadge {
+  transform: scale(1.05) rotate(1deg);
+  border-color: #3B82F6;
+  background: linear-gradient(135deg, #fff7ed 0%, #DBEAFE 100%);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+}
+
+.courtCard:hover .ratingBadge::before {
+  left: 100%;
+}
+
+.starIcon {
+  width: 14px;
+  height: 14px;
+  color: #f59e0b;
+}
+
+.ratingNumber {
+  font-weight: 700;
+  color: #1e40af;
+  font-size: 0.9rem;
+}
+
+.ratingReviews {
+  color: #78716c;
+  font-size: 0.7rem;
+  display: none;
+}
+
+.tagsContainer {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.tag {
+  background: #DBEAFE;
+  color: #1e40af;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #93C5FD;
+  text-align: center;
+  min-width: 80px;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.description {
+  color: #4b5563;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.cardFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgba(30, 64, 175, 0.1);
+}
+
+.priceSection {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.price {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e40af;
+}
+
+.nextTime {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.actionButton {
+  background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 10px 10px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  box-shadow:
+    0 6px 20px rgba(59, 130, 246, 0.3),
+    0 3px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  min-width: 120px;
+  height: 35px;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Efecto de brillo que recorre el botón */
+.actionButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s ease;
+  z-index: 1;
+}
+
+.actionButton:hover::before {
+  left: 100%;
+}
+
+/* Estados del botón */
+.actionButton:hover {
+  transform: translateY(-3px) scale(1.05);
+  background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%);
+  box-shadow:
+    0 10px 30px rgba(59, 130, 246, 0.4),
+    0 6px 16px rgba(37, 99, 235, 0.3);
+  border-color: #2563EB;
+}
+
+.actionButton:active {
+  transform: translateY(-1px) scale(1.02);
+  transition: transform 0.1s ease;
+  box-shadow:
+    0 6px 20px rgba(59, 130, 246, 0.3),
+    0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Efecto de pulso cuando está en focus */
+.actionButton:focus {
+  outline: none;
+  animation: buttonPulse 0.6s ease-in-out;
+}
+
+/* Animación de pulso para el botón */
+@keyframes buttonPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+/* Variante específica para atletismo */
+.courtCardAtletismo {
+  border-left: 4px solid #1e40af;
+}
+
+.courtCardAtletismo .tag {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.courtCardAtletismo .cardTitle::before {
+  content: "🏃‍♂️ ";
+  font-size: 1rem;
+  margin-right: 4px;
+}
+
+/* Estados especiales */
+.courtCard.available {
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.courtCard.available::before {
+  background: linear-gradient(90deg, #3B82F6, #1e40af);
+}
+
+.courtCard.busy {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.courtCard.busy::before {
+  background: linear-gradient(90deg, #ef4444, #dc2626);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .courtCard {
+    width: 100%;
+    max-width: 320px;
+  }
+  
+  .cardContent {
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .cardTitle {
+    font-size: 1.1rem;
+  }
+  
+  .cardImage {
+    height: 160px;
+  }
+  
+  .ratingReviews {
+    display: block;
+  }
+  
+  .tagsContainer {
+    gap: 4px;
+  }
+  
+  .tag {
+    font-size: 0.7rem;
+    padding: 3px 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .ratingBadge {
+    align-self: flex-start;
+  }
+  
+  .cardFooter {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  
+  .actionButton {
+    width: 100%;
+    justify-content: center;
+  }
+}

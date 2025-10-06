@@ -1,0 +1,5 @@
+.bubble { max-width: 70%; padding:10px 14px; border-radius:12px; margin:8px 0; display:inline-block; }
+.me { background: linear-gradient(135deg,#3b82f6,#06b6d4); color: white; margin-left:auto; }
+.they { background: #f3f4f6; color: #111827; margin-right:auto; }
+.text { font-size:14px; }
+.meta { font-size:11px; opacity:0.8; margin-top:6px; text-align:right; }

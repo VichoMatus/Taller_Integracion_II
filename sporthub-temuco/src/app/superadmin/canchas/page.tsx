@@ -23,7 +23,7 @@ export default function CanchasPage() {
     router.push(`/superadmin/canchas/${courtId}`);
   };
 
-  // Datos de ejemplo basados en la imagen
+  // Datos de ejemplo, luego vendrian de la API
   const courts: Court[] = [
     { id: '1', name: 'Cancha Central', location: 'Av. Principal 123', status: 'Activo', type: 'Futbol' },
     { id: '2', name: 'Cancha Central', location: 'Av. Principal 123', status: 'Inactivo', type: 'Futbol' },
@@ -79,7 +79,7 @@ export default function CanchasPage() {
                 type="text"
                 placeholder="Buscar"
                 value={searchTerm}
-                onChange={(e: any) => setSearchTerm(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                 className="admin-search-input"
               />
               <svg className="admin-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">

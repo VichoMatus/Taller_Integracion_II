@@ -1,134 +1,422 @@
-h2 {
-  align-items: center;
-  
+:root {
+  --primary-color: #7c73e6;
+  --primary-light: #9a94ea;
+  --primary-very-light: #f0eeff;
+  --success-color: #34d399;
+  --success-light: #d1fae5;
+  --warning-color: #fbbf24;
+  --warning-light: #fef3c7;
+  --error-color: #f87171;
+  --error-light: #fee2e2;
+  --background-color: #fafbfc;
+  --card-background: #ffffff;
+  --text-dark: #4b5563;
+  --text-medium: #6b7280;
+  --text-light: #9ca3af;
+  --border-color: #e5e7eb;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.reserva-wrapper {
+  margin-top: 14px;
+  margin-left: 256px;
+  padding: 24px;
+  min-height: calc(100vh - 14px);
+  background: var(--background-color);
+  animation: fadeIn 0.5s ease;
+}
+
+.reserva-header {
+  margin-bottom: 32px;
+  padding: 0;
+  animation: fadeIn 0.6s ease;
+}
+
+.reserva-titulo {
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin: 0 0 8px 0;
+}
+
+.reserva-subtitulo {
+  font-size: 1.1rem;
+  color: var(--text-medium);
+  margin: 0;
 }
 
 .reserva-layout {
   display: flex;
-  height: 100vh;
-  background-color: #f5f7fa;
+  gap: 24px;
+  min-height: 600px;
+  height: calc(100vh - 200px);
 }
 
-/* Panel izquierdo */
 .reserva-listado {
-  width: 60%;
-  padding: 30px;
-  overflow-y: auto;
-  background-color: #ffffff;
-  border-right: 1px solid #e0e0e0;
-}
-
-.reserva-listado h2 {
-  margin-bottom: 20px;
-}
-
-.reserva-listado-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-}
-
-.resumen-card {
+  flex: 0 0 400px;
+  background: var(--card-background);
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  background: #f9f9f9;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
 }
 
+.listado-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-.btn-ver-info {
-  align-self: center; /* Esto lo centra horizontalmente */
-  margin-top: 10px;
-  padding: 8px 14px;
-  background-color: #5a6993;
+.listado-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.reserva-count {
+  background: var(--primary-very-light);
+  color: var(--primary-color);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.reserva-grid {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+}
+
+.reserva-card {
+  background: var(--card-background);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.reserva-card:hover {
+  border-color: var(--primary-light);
+  transform: translateY(-1px);
+}
+
+.reserva-card.active {
+  border-color: var(--primary-color);
+  background: var(--primary-very-light);
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.deporte-icon {
+  font-size: 1.8rem;
+  background: var(--primary-very-light);
+  padding: 8px;
+  border-radius: 8px;
+  color: var(--primary-color);
+}
+
+.card-info h3 {
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.estado-badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.estado-confirmada {
+  background: var(--success-light);
+  color: #065f46;
+}
+
+.estado-pendiente {
+  background: var(--warning-light);
+  color: #92400e;
+}
+
+.estado-cancelada {
+  background: var(--error-light);
+  color: #991b1b;
+}
+
+.card-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.detail-label {
+  color: var(--text-medium);
+  font-weight: 500;
+  min-width: 70px;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.precio {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.btn-ver-detalles {
+  background: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 8px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
   cursor: pointer;
+  transition: all 0.3s ease;
 }
 
+.btn-ver-detalles:hover {
+  background: var(--primary-light);
+}
 
-/* Panel derecho */
 .reserva-detalle {
-  width: 40%;
-  padding: 30px;
-  overflow-y: auto;
-  background-color: #ffffff;
+  flex: 1;
+  background: var(--card-background);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
 }
 
 .detalle-card {
-  background: white;
-  padding: 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
 }
 
-.detalle-img {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
+.detalle-header {
+  padding: 24px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.deporte-icon-large {
+  font-size: 2.5rem;
+  background: var(--primary-very-light);
+  padding: 12px;
+  border-radius: 10px;
+  color: var(--primary-color);
+}
+
+.detalle-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.estado-badge-large {
+  padding: 6px 14px;
   border-radius: 8px;
-  margin-bottom: 15px;
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
-.estado-disponible {
-  color: green;
-  font-weight: bold;
+.detalle-imagen {
+  padding: 24px 24px 0 24px;
+}
+
+.detalle-imagen img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.detalle-info {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-label {
+  font-weight: 600;
+  color: var(--text-medium);
+  font-size: 0.9rem;
+}
+
+.precio-detalle {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.descripcion-section h4 {
+  margin: 0 0 8px 0;
+  color: var(--text-dark);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.descripcion-section p {
+  margin: 0;
+  color: var(--text-medium);
+  line-height: 1.5;
+  font-size: 0.9rem;
 }
 
 .detalle-actions {
   display: flex;
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.btn-contactar,
-.btn-anular {
-  padding: 10px 16px;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.3s ease;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
 }
 
 .btn-contactar {
-  background-color: #4caf50;
+  flex: 2;
+  background: var(--success-color);
   color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-contactar:hover {
+  background: #10b981;
 }
 
 .btn-anular {
-  background-color: #f44336;
+  flex: 1;
+  background: var(--error-color);
   color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-anular:hover {
+  background: #ef4444;
 }
 
 .detalle-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: #888;
-  font-size: 16px;
-  text-align: center;
-}
-
-.page-wrapper {
-  margin-top: 14px;   /* espacio para header */
-  margin-left: 256px; /* espacio para sidebar */
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  width: calc(100% - 256px);
-  padding: 20px;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  text-align: center;
+  color: var(--text-light);
 }
 
-.titulo-principal {
-  font-size: 1.8rem;
-  font-weight: bold;
-  text-align: center; /* centra horizontalmente */
-  color: #333;
-  margin-bottom: 20px; /* espacio con el contenido debajo */
+.placeholder-icon {
+  font-size: 3.5rem;
+  margin-bottom: 16px;
+  opacity: 0.4;
+}
+
+.detalle-placeholder h3 {
+  margin: 0 0 8px 0;
+  color: var(--text-medium);
+  font-size: 1.2rem;
+}
+
+.detalle-placeholder p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.reserva-grid::-webkit-scrollbar {
+  width: 5px;
+}
+
+.reserva-grid::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.reserva-grid::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+@media (max-width: 1024px) {
+  .reserva-wrapper {
+    margin-left: 0;
+    padding: 16px;
+  }
+  
+  .reserva-layout {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .reserva-listado {
+    flex: none;
+    height: 400px;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .detalle-actions {
+    flex-direction: column;
+  }
 }

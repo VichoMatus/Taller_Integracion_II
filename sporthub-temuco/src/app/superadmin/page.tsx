@@ -39,11 +39,13 @@ export default function SuperAdminDashboard() {
         <div className="management-section">
           <div className="section-header">
             <h2 className="section-title">Gestionar Administradores</h2>
-            <button className="section-button add-button">
-              <span className="button-icon">+</span>
-              Agregar
-            </button>
-            <button className="section-button view-button">Ver todo</button>
+            <div className="section-header-buttons">
+              <button className="section-button add-button">
+                <span className="button-icon">+</span>
+                Agregar
+              </button>
+              <button className="section-button view-button">Ver todo</button>
+            </div>
           </div>
           
           <table className="management-table">
@@ -93,7 +95,13 @@ export default function SuperAdminDashboard() {
         <div className="management-section">
           <div className="section-header">
             <h2 className="section-title">Gestionar Usuarios</h2>
-            <button className="section-button view-button">Ver todo</button>
+            <div className="section-header-buttons">
+              <button className="section-button add-button">
+                <span className="button-icon">+</span>
+                Agregar
+              </button>
+              <button className="section-button view-button">Ver todo</button>
+            </div>
           </div>
           
           <table className="management-table">
@@ -143,12 +151,14 @@ export default function SuperAdminDashboard() {
       {/* Sección de Gestión de Canchas */}
       <div className="management-section courts-section">
         <div className="section-header">
-          <h2 className="section-title">Gestión de Canchas</h2>
-          <button className="section-button add-button">
-            <span className="button-icon">+</span>
-            Agregar
-          </button>
-          <button className="section-button view-button">Ver todo</button>
+          <h2 className="section-title">Gestion de canchas</h2>
+          <div className="section-header-buttons">
+            <button className="section-button add-button">
+              <span className="button-icon">+</span>
+              Agregar
+            </button>
+            <button className="section-button view-button">Ver todo</button>
+          </div>
         </div>
         
         <table className="management-table">
