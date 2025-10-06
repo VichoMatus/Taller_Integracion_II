@@ -15,6 +15,10 @@ import escaladaStyles from './stylesSearchBar/EscaladaSearchBar.module.css';
 import atletismoSearchStyles from './stylesSearchBar/AtletismoSearchBar.module.css';
 import skateSearchStyles from './stylesSearchBar/SkateSearchBar.module.css';
 import ciclismoSearchStyles from './stylesSearchBar/CiclismoSearchBar.module.css';
+import enduroStyles from './stylesSearchBar/EnduroSearchBar.module.css';
+import futbolAmericanoStyles from './stylesSearchBar/Futbol-AmericanoSearchBar.module.css';
+import mountainBikeStyles from './stylesSearchBar/Mountain-BikeSearchBar.module.css';
+import rugbyStyles from './stylesSearchBar/RugbySearchBar.module.css';
 
 interface SearchBarProps {
   value?: string;
@@ -68,8 +72,16 @@ const SearchBar = ({
         return patinaje;
       case 'escalada':
         return escaladaStyles;
+      case 'enduro':
+        return enduroStyles;
+      case 'futbol-americano':
+        return futbolAmericanoStyles;
+      case 'rugby':
+        return rugbyStyles;
+      case 'mountain-bike':
+        return mountainBikeStyles;
       default:
-        return indexStyles; // fallback al index
+        return indexStyles;
     }
   };
 

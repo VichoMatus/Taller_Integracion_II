@@ -94,7 +94,7 @@ export default function EnduroPage() {
 
   // Stats específicos para Enduro
   const stats = {
-    rutasDisponibles: 15,
+    rutasDisponibles: 4,
     precioPromedio: { min: 25, max: 45 },
     promedioCalificacion: 4.6,
     kilometrosTotales: 85

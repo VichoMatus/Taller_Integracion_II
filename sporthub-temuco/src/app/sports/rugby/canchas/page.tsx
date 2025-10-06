@@ -88,7 +88,7 @@ export default function Page() {
       <Sidebar userRole="usuario" sport="rugby" />
 
       <div className={styles.mainContent}>
-        {/* Header */}
+        {/* Header - IDÉNTICO al de la página principal de rugby */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>🏉</div>
@@ -96,15 +96,15 @@ export default function Page() {
           </div>
           <div className={styles.headerRight}>
             <SearchBar
-            value={searchTerm}
-            onChange={handleSearchChange}
-            onSearch={handleSearch}
-            placeholder="Nombre del campo"
-            sport="rugby" 
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onSearch={handleSearch}
+              placeholder="Nombre del campo..."
+              sport="rugby" 
             />
             <button className={styles.userButton}>
               <span>👤</span>
-              <span>Usuario</span>
+              <span>usuario</span>
             </button>
           </div>
         </div>

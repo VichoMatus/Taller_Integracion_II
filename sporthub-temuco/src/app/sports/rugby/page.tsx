@@ -5,9 +5,9 @@ import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
+import StatsCard from '../../../components/charts/StatsCard';
 import styles from './page.module.css';
 
-// Datos de ejemplo para las canchas mejor calificadas (6 tarjetas)
 const topRatedCourts = [
   {
     imageUrl: "/sports/rugby/canchas/Cancha1.png",
@@ -93,7 +93,7 @@ export default function RugbyPage() {
 
   // Stats de ejemplo para rugby
   const stats = {
-    disponiblesHoy: 8,
+    disponiblesHoy: 4,
     precioPromedio: { min: 42, max: 55 },
     promedioCalificacion: 4.6,
     cantidadJugadores: 30
@@ -164,24 +164,46 @@ export default function RugbyPage() {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* 🔥 Stats Cards para Rugby - USANDO EL COMPONENTE StatsCard IGUAL QUE ENDURO */}
         <div className={styles.statsContainer}>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.disponiblesHoy}</div>
-            <div className={styles.statLabel}>Campos Disponibles hoy</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>${stats.precioPromedio.min}-{stats.precioPromedio.max}</div>
-            <div className={styles.statLabel}>Rango de precios por hora</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.promedioCalificacion} ⭐</div>
-            <div className={styles.statLabel}>Promedio de calificación</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.cantidadJugadores}</div>
-            <div className={styles.statLabel}>Jugadores por equipo</div>
-          </div>
+          <StatsCard
+            title="Campos Disponibles Hoy"
+            value={stats.disponiblesHoy}
+            icon="🏉"
+            color="red"
+            sport="rugby"
+            ariaLabel={`${stats.disponiblesHoy} campos disponibles hoy`}
+          />
+          
+          <StatsCard
+            title="Rango de Precios"
+            value={`$${stats.precioPromedio.min}-${stats.precioPromedio.max}`}
+            icon="💰"
+            subtitle="Por hora"
+            color="purple"
+            sport="rugby"
+            ariaLabel={`Precios desde $${stats.precioPromedio.min} hasta $${stats.precioPromedio.max} por hora`}
+          />
+          
+          <StatsCard
+            title="Calificación Promedio"
+            value={stats.promedioCalificacion}
+            icon="⭐"
+            subtitle="Basado en reseñas"
+            color="yellow"
+            sport="rugby"
+            ariaLabel={`Calificación promedio de ${stats.promedioCalificacion} estrellas`}
+          />
+          
+          <StatsCard
+            title="Jugadores por Equipo"
+            value={stats.cantidadJugadores}
+            icon="👥"
+            subtitle="Capacidad máxima"
+            color="green"
+            sport="rugby"
+            ariaLabel={`${stats.cantidadJugadores} jugadores por equipo`}
+          />
         </div>
 
         <div className={styles.quickAccessSection}>

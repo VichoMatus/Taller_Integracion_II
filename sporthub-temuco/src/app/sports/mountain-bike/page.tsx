@@ -5,9 +5,9 @@ import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
+import StatsCard from '../../../components/charts/StatsCard';
 import styles from './page.module.css';
 
-// Datos de ejemplo para las rutas mejor calificadas (6 tarjetas)
 const topRatedCourts = [
   {
     imageUrl: "/sports/mountain-bike/rutas/Ruta1.png",
@@ -82,7 +82,7 @@ export default function MountainBikePage() {
 
   // Stats de ejemplo para mountain bike
   const stats = {
-    disponiblesHoy: 8,
+    disponiblesHoy: 3,
     precioPromedio: { min: 12, max: 25 },
     promedioCalificacion: 4.6,
     kilometrosTotales: 45
@@ -140,51 +140,73 @@ export default function MountainBikePage() {
           </div>
           <div className={styles.headerRight}>
             <SearchBar
-            value={searchTerm}
-            onChange={handleSearchChange}
-            onSearch={handleSearch}
-            placeholder="Nombre de la ruta..."
-            sport="mountain-bike" 
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onSearch={handleSearch}
+              placeholder="Nombre de la ruta..."
+              sport="mountain-bike" 
             />
             <button className={styles.userButton}>
               <span>👤</span>
               <span>usuario</span>
             </button>
-            
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* 🔥 Stats Cards para Mountain Bike - USANDO EL COMPONENTE StatsCard */}
         <div className={styles.statsContainer}>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.disponiblesHoy}</div>
-            <div className={styles.statLabel}>Rutas Disponibles hoy</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>${stats.precioPromedio.min}-{stats.precioPromedio.max}</div>
-            <div className={styles.statLabel}>Rango de precios por día</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.promedioCalificacion} ⭐</div>
-            <div className={styles.statLabel}>Promedio de calificación</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.kilometrosTotales}km</div>
-            <div className={styles.statLabel}>Kilómetros totales de rutas</div>
-          </div>
+          <StatsCard
+            title="Rutas Disponibles Hoy"
+            value={stats.disponiblesHoy}
+            icon="🚵"
+            color="green"
+            sport="mountain-bike"
+            ariaLabel={`${stats.disponiblesHoy} rutas disponibles hoy`}
+          />
+          
+          <StatsCard
+            title="Rango de Precios"
+            value={`$${stats.precioPromedio.min}-${stats.precioPromedio.max}`}
+            icon="💰"
+            subtitle="Por día"
+            color="purple"
+            sport="mountain-bike"
+            ariaLabel={`Precios desde $${stats.precioPromedio.min} hasta $${stats.precioPromedio.max} por día`}
+          />
+          
+          <StatsCard
+            title="Calificación Promedio"
+            value={stats.promedioCalificacion}
+            icon="⭐"
+            subtitle="Basado en reseñas"
+            color="yellow"
+            sport="mountain-bike"
+            ariaLabel={`Calificación promedio de ${stats.promedioCalificacion} estrellas`}
+          />
+          
+          <StatsCard
+            title="Kilómetros Totales"
+            value={stats.kilometrosTotales}
+            icon="📏"
+            subtitle="De rutas disponibles"
+            color="blue"
+            sport="mountain-bike"
+            ariaLabel={`${stats.kilometrosTotales} kilómetros totales de rutas`}
+          />
         </div>
+
         <div className={styles.quickAccessSection}>
-        <button 
+          <button 
             className={styles.mainCourtButton}
             onClick={() => window.location.href = '/sports/mountain-bike/rutas'}
-            >
+          >
             <div className={styles.courtButtonIcon}>🚵</div>
             <div className={styles.courtButtonText}>
-            <span className={styles.courtButtonTitle}>Explorar Rutas</span>
-            <span className={styles.courtButtonSubtitle}>Ver todas las rutas disponibles</span>
+              <span className={styles.courtButtonTitle}>Explorar Rutas</span>
+              <span className={styles.courtButtonSubtitle}>Ver todas las rutas disponibles</span>
             </div>
             <div className={styles.courtButtonArrow}>→</div>
-        </button>
+          </button>
         </div>
 
         {/* Rutas mejor calificadas con carrusel */}
