@@ -203,8 +203,6 @@
   left: 0;
   width: 0;
   height: 3px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 2px;
 }
 

@@ -171,6 +171,30 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
+.sidebar-header-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: all 0.2s ease;
+}
+
+.sidebar-header-link:hover {
+  transform: scale(1.02);
+}
+
+/* Para los module.css files, agrega también: */
+.sidebarHeaderLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: all 0.2s ease;
+}
+
+.sidebarHeaderLink:hover {
+  transform: scale(1.02);
+}
+
+
 .sidebarTitle {
   color: white;
   font-size: 18px;

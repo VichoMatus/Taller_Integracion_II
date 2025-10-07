@@ -227,22 +227,37 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
   const menuItems = userRole === 'superadmin' ? superAdminMenuItems : userRole === 'admin' ? adminMenuItems : usuarioMenuItems;
   const userTitle = userRole === 'superadmin' ? 'Superadministrador' : userRole === 'admin' ? 'Administrador' : 'Usuario';
 
+  // 🔥 FUNCIÓN PARA DETERMINAR EL HREF DEL HEADER
+  const getHeaderHref = () => {
+    switch (userRole) {
+      case 'admin':
+        return '/sports';
+      case 'superadmin':
+        return '/sports';
+      case 'usuario':
+        return '/sports';
+      default:
+        return '/sports';
+    }
+  };
+
   return (
     <div className={styles ? styles.sidebarContainer : 'sidebar-container'}>
-      {/* Header */}
-      <div className={styles ? styles.sidebarHeader : 'sidebar-header'}>
-        <div className={styles ? styles.sidebarLogoContainer : 'sidebar-logo-container'}>
-          <div className={styles ? styles.sidebarLogoIcon : 'sidebar-logo-icon'}>
-            SH
+      {/* Header - 🔥 AHORA ES CLICKEABLE */}
+      <Link href={getHeaderHref()} className={styles ? styles.sidebarHeaderLink : 'sidebar-header-link'}>
+        <div className={styles ? styles.sidebarHeader : 'sidebar-header'}>
+          <div className={styles ? styles.sidebarLogoContainer : 'sidebar-logo-container'}>
+            <div className={styles ? styles.sidebarLogoIcon : 'sidebar-logo-icon'}>
+              SH
+            </div>
+            <div>
+              <h1 className={styles ? styles.sidebarTitle : 'sidebar-title'}>SportHub</h1>
+              <p className={styles ? styles.sidebarSubtitle : 'sidebar-subtitle'}>{userTitle}</p>
+            </div>
           </div>
-          <div>
-            <h1 className={styles ? styles.sidebarTitle : 'sidebar-title'}>SportHub</h1>
-            <p className={styles ? styles.sidebarSubtitle : 'sidebar-subtitle'}>{userTitle}</p>
-          </div>
+          {userRole === 'usuario' && sport && styles && <div className={styles.sportIcon}></div>}
         </div>
-        {userRole === 'usuario' && sport && styles && <div className={styles.sportIcon}></div>}
-  {/* Removed sport icon box to avoid the extra blue square in the sidebar */}
-      </div>
+      </Link>
 
       {/* Navigation */}
       <nav className={styles ? styles.sidebarNav : 'sidebar-nav'}>
