@@ -30,13 +30,12 @@ interface CourtCardProps {
   name: string;
   address: string;
   rating: number;
-  reviews: string | number;
+  // 🔥 REMOVIDO: reviews prop ya no existe
   tags: string[];
   description: string;
   price: string;
   nextAvailable: string;
   sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje' | 'escalada' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
-
   onClick?: () => void;
 }
 
@@ -45,7 +44,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
   name,
   address,
   rating,
-  reviews,
+  // 🔥 REMOVIDO: reviews de los params
   tags,
   description,
   price,
@@ -84,6 +83,14 @@ const CourtCard: React.FC<CourtCardProps> = ({
         return ciclismoStyles;
       case 'karting':
         return kartingStyles;
+      case 'enduro':
+        return enduroStyles;
+      case 'futbol-americano':
+        return futbolAmericanoStyles;
+      case 'rugby':
+        return rugbyStyles;
+      case 'mountain-bike':
+        return mountainBikeStyles;
       default:
         console.warn(`Estilo no encontrado para el deporte: ${sport}. Usando basquetbol como fallback.`);
         return basquetbolStyles; // Fallback a basquetbol
@@ -91,14 +98,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
   };
 
   // 🔥 OBTENER LOS ESTILOS APROPIADOS
-  const styles = getSportStyles();
-  
-  const currentStyles = 
-    sport === 'enduro' ? enduroStyles :
-    sport === 'futbol-americano' ? futbolAmericanoStyles :
-    sport === 'rugby' ? rugbyStyles :
-    sport === 'mountain-bike' ? mountainBikeStyles :
-    styles;
+  const currentStyles = getSportStyles(); // 🔥 CAMBIADO A currentStyles
   
   // 🔥 Limitar a máximo 4 tags
   const displayTags = tags.slice(0, 4);
@@ -159,7 +159,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
             location: address,
             description: description,
             rating: rating.toString(),
-            reviews: reviews.toString().replace(' reseñas', ''),
+            // 🔥 REMOVIDO: reviews ya no existe
             priceFrom: (parseInt(price) * 1000).toString(),
           });
           router.push(`/sports/tenis/canchas/canchaseleccionada?${tenisParams.toString()}`);
@@ -172,7 +172,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
             location: address,
             description: description,
             rating: rating.toString(),
-            reviews: reviews.toString().replace(' reseñas', ''),
+            // 🔥 REMOVIDO: reviews ya no existe
             priceFrom: (parseInt(price) * 1000).toString(),
           });
           router.push(`/sports/voleibol/canchas/canchaseleccionada?${voleibolParams.toString()}`);
@@ -193,7 +193,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
             location: address,
             description: description,
             rating: rating.toString(),
-            reviews: reviews.toString().replace(' reseñas', ''),
+            // 🔥 REMOVIDO: reviews ya no existe
             priceFrom: (parseInt(price) * 1000).toString(),
           });
           router.push(`/sports/futbol-americano/estadios/estadioseleccionado?${futbolAmericanoParams.toString()}`);
@@ -206,7 +206,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
             location: address,
             description: description,
             rating: rating.toString(),
-            reviews: reviews.toString().replace(' reseñas', ''),
+            // 🔥 REMOVIDO: reviews ya no existe
             priceFrom: (parseInt(price) * 1000).toString(),
           });
           router.push(`/sports/rugby/canchas/canchaseleccionada?${rugbyParams.toString()}`);
@@ -219,7 +219,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
             location: address,
             description: description,
             rating: rating.toString(),
-            reviews: reviews.toString().replace(' reseñas', ''),
+            // 🔥 REMOVIDO: reviews ya no existe
             priceFrom: (parseInt(price) * 1000).toString(),
           });
           router.push(`/sports/mountain-bike/rutas/rutaseleccionada?${mountainBikeParams.toString()}`);
@@ -293,14 +293,14 @@ const CourtCard: React.FC<CourtCardProps> = ({
   };
   
   return (
-    <div className={styles.courtCard} data-sport={sport}>
+    <div className={currentStyles.courtCard} data-sport={sport}>
       {/* 🔥 CONTENEDOR DE IMAGEN CON FALLBACK */}
-      <div className={`${styles.imageContainer} ${imageError ? styles.fallback : ''}`}>
+      <div className={`${currentStyles.imageContainer} ${imageError ? currentStyles.fallback : ''}`}>
         {!imageError ? (
           <Image
             src={imageUrl}
             alt={name}
-            className={styles.cardImage}
+            className={currentStyles.cardImage}
             width={300}
             height={200}
             onError={handleImageError}
@@ -330,7 +330,6 @@ const CourtCard: React.FC<CourtCardProps> = ({
               <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.967a1 1 0 00.95.69h4.175c.969 0 1.371 1.24.588 1.81l-3.38 2.455a1 1 0 00-.364 1.118l1.287 3.966c.3.921-.755 1.688-1.54 1.118l-3.38-2.455a1 1 0 00-1.175 0l-3.38 2.455c-.784.57-1.838-.197-1.539-1.118l1.287-3.966a1 1 0 00-.364-1.118L2.049 9.394c-.783-.57-.38-1.81.588-1.81h4.175a1 1 0 00.95-.69l1.287-3.967z"/>
             </svg>
             <span className={currentStyles.ratingNumber}>{rating}</span>
-            <span className={currentStyles.ratingReviews}>({reviews} reseñas)</span>
           </div>
         </div>
 
@@ -352,11 +351,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
             <span className={currentStyles.nextTime}>Próximo: {nextAvailable}</span>
           </div>
           
-          <button onClick={handleInternalClick} className={currentStyles.actionButton}>
-            {sport === 'enduro' ? 'Ir a ruta →' : 
-             sport === 'futbol-americano' ? 'Ir a estadio →' : 
-             sport === 'rugby' ? 'Ir a campo →' : 
-             sport === 'mountain-bike' ? 'Ir a ruta →' : 'Ir a cancha →'}
+          <button onClick={handleInternalClick} className={currentStyles.actionButton}> Ir a →
           </button>
         </div>
       </div>

@@ -15,7 +15,6 @@ const topRatedCourts = [
     name: "Skate - Plaza Central",
     address: "Plaza, Centro",
     rating: 4.6,
-    reviews: "72 reseñas",
     tags: ["Skatepark", "Bordes", "Rampas"],
     description: "Skatepark en el centro con bowl y rampas diversas",
     price: "0",

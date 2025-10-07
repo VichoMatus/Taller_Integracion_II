@@ -141,12 +141,12 @@
   background: linear-gradient(135deg, #ffffff 0%, #f5f5dc 100%);
   border: 2px solid #8B8C5A;
   border-radius: 25px;
-  padding: 8px 14px;
+  padding: 6px 0;
   box-shadow: 
     0 4px 12px rgba(75, 83, 32, 0.15),
     0 2px 4px rgba(0, 0, 0, 0.05);
   margin-left: 12px;
-  min-width: 120px;
+  min-width: 60px;
   justify-content: center;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;

@@ -12,7 +12,6 @@ const canchas = [
     name: "Skate - Plaza Central",
     address: "Plaza, Centro",
     rating: 4.6,
-    reviews: "72 reseñas",
     tags: ["Skatepark", "Bowl", "Rampas"],
     description: "Skatepark en el centro",
     price: "0",
