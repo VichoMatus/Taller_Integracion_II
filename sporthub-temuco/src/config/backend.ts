@@ -2,11 +2,9 @@
  * CONFIGURACIÓN DE AXIOS PARA EL FRONTEND
  * ======================================
  * 
- * Configuración centralizada para todas las llamadas API
+ * Configuración centralizada para todas las llamadas al Backend-for-Frontend (BFF)
+ * Next.js maneja automáticamente las variables de entorno, no necesitamos dotenv
  */
-
-import dotenv from 'dotenv';
-dotenv.config();
 
 import axios from 'axios';
 

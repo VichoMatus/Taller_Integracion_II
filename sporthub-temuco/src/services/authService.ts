@@ -235,5 +235,164 @@ export const authService = {
     localStorage.removeItem('token');
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+  },
+
+  // ========================================
+  // MÉTODOS LEGACY ADICIONALES PARA COMPATIBILIDAD
+  // ========================================
+
+  /**
+   * Registrar usuario (versión anterior)
+   * @deprecated Usar register() con RegisterRequest en su lugar
+   */
+  async registrarUsuario(data: RegistroData): Promise<RegistroResponse> {
+    try {
+      // Validar datos antes de enviar
+      const validationError = this.validateRegistroData(data);
+      if (validationError) {
+        return {
+          ok: false,
+          error: validationError
+        };
+      }
+
+      // Adaptar al nuevo formato
+      const registerPayload: RegisterRequest = {
+        nombre: data.nombre.trim(),
+        apellido: data.apellido.trim(),
+        email: data.email.trim().toLowerCase(),
+        contrasena: data.password,
+        telefono: data.telefono?.trim() || null
+      };
+
+      // Usar el nuevo método register
+      const result = await this.register(registerPayload);
+      
+      // Adaptar la respuesta al formato anterior
+      return {
+        ok: true,
+        data: {
+          access_token: result.token,
+          user: {
+            id: result.usuario.id_usuario.toString(),
+            nombre: result.usuario.nombre,
+            apellido: result.usuario.apellido,
+            email: result.usuario.email
+          }
+        }
+      };
+    } catch (error: any) {
+      console.error('Error en registro:', error);
+      return {
+        ok: false,
+        error: error.message || 'Error de conexión. Verifica que el servidor esté funcionando.'
+      };
+    }
+  },
+
+  /**
+   * Validar datos de registro
+   * @deprecated Para uso interno del método legacy
+   */
+  validateRegistroData(data: RegistroData): string | null {
+    // Validar campos requeridos
+    if (!data.nombre.trim()) return 'El nombre es requerido';
+    if (!data.apellido.trim()) return 'El apellido es requerido';
+    if (!data.email.trim()) return 'El email es requerido';
+    if (!data.password) return 'La contraseña es requerida';
+    if (!data.confirmPassword) return 'La confirmación de contraseña es requerida';
+
+    // Validar formato de email
+    if (!this.isValidEmail(data.email)) {
+      return 'El formato del email no es válido';
+    }
+
+    // Validar longitud de contraseña
+    if (data.password.length < 6) {
+      return 'La contraseña debe tener al menos 6 caracteres';
+    }
+
+    // Validar que las contraseñas coincidan
+    if (data.password !== data.confirmPassword) {
+      return 'Las contraseñas no coinciden';
+    }
+
+    // Validar teléfono si se proporciona
+    if (data.telefono && !this.isValidPhone(data.telefono)) {
+      return 'El formato del teléfono no es válido. Ejemplo: +56912345678';
+    }
+
+    return null; // Sin errores
+  },
+
+  /**
+   * Validar formato de email
+   * @deprecated Para uso interno
+   */
+  isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  },
+
+  /**
+   * Validar formato de teléfono internacional
+   * @deprecated Para uso interno
+   */
+  isValidPhone(phone: string): boolean {
+    const phoneRegex = /^\+[1-9]\d{1,14}$/;
+    return phoneRegex.test(phone);
+  },
+
+  /**
+   * Extraer datos del formulario HTML
+   * @deprecated Para uso interno
+   */
+  extractFormData(form: HTMLFormElement): RegistroData {
+    const formData = new FormData(form);
+    
+    return {
+      nombre: (formData.get('nombre') as string) || '',
+      apellido: (formData.get('apellido') as string) || '',
+      email: (formData.get('email') as string) || '',
+      password: (formData.get('password') as string) || '',
+      confirmPassword: (formData.get('confirmPassword') as string) || '',
+      telefono: (formData.get('telefono') as string) || ''
+    };
   }
 };
+
+// ========================================
+// INTERFACES LEGACY PARA COMPATIBILIDAD
+// ========================================
+
+/**
+ * @deprecated Usar RegisterRequest en su lugar
+ */
+export interface RegistroData {
+  nombre: string;
+  apellido: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  telefono: string | null;
+}
+
+/**
+ * @deprecated Usar BFFTokenResponse en su lugar
+ */
+export interface RegistroResponse {
+  ok: boolean;
+  data?: {
+    access_token: string;
+    user: {
+      id: string;
+      nombre: string;
+      apellido: string;
+      email: string;
+    };
+  };
+  error?: string;
+}
+
+// Exportar el servicio como default
+export default authService;
