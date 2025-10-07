@@ -52,6 +52,37 @@ const topRatedRoutes = [
 
 ];
 
+const enduroStats = [
+  {
+    title: "Rutas Disponibles Hoy",
+    value: "4",
+    icon: "🏍️",
+    subtitle: "Listas para explorar",
+    trend: { value: 2, isPositive: true }
+  },
+  {
+    title: "Rango de Precios",
+    value: "$25-45",
+    icon: "💰",
+    subtitle: "Por ruta",
+    trend: { value: 5, isPositive: true }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.6⭐",
+    icon: "🏆",
+    subtitle: "De nuestras rutas",
+    trend: { value: 0.1, isPositive: true }
+  },
+  {
+    title: "Kilómetros Totales",
+    value: "85km",
+    icon: "📏",
+    subtitle: "De rutas disponibles",
+    trend: { value: 15, isPositive: true }
+  }
+];
+
 export default function EnduroPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
@@ -87,14 +118,6 @@ export default function EnduroPage() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  // Stats específicos para Enduro
-  const stats = {
-    rutasDisponibles: 4,
-    precioPromedio: { min: 25, max: 45 },
-    promedioCalificacion: 4.6,
-    kilometrosTotales: 85
-  };
 
   const totalSlides = Math.max(1, topRatedRoutes.length - cardsToShow + 1);
 
@@ -162,45 +185,31 @@ export default function EnduroPage() {
         </div>
 
         {/* Stats Cards para Enduro - USANDO EL COMPONENTE StatsCard */}
-        <div className={styles.statsContainer}>
-          <StatsCard
-            title="Rutas Disponibles"
-            value={stats.rutasDisponibles}
-            icon="🏍️"
-            color="blue"
-            sport="enduro"
-            ariaLabel={`${stats.rutasDisponibles} rutas de enduro disponibles`}
-          />
-          
-          <StatsCard
-            title="Rango de Precios"
-            value={`$${stats.precioPromedio.min}-${stats.precioPromedio.max}`}
-            icon="💰"
-            subtitle="Por ruta"
-            color="green"
-            sport="enduro"
-            ariaLabel={`Precios desde $${stats.precioPromedio.min} hasta $${stats.precioPromedio.max}`}
-          />
-          
-          <StatsCard
-            title="Calificación Promedio"
-            value={stats.promedioCalificacion}
-            icon="⭐"
-            subtitle="Basado en reseñas"
-            color="yellow"
-            sport="enduro"
-            ariaLabel={`Calificación promedio de ${stats.promedioCalificacion} estrellas`}
-          />
-          
-          <StatsCard
-            title="Kilómetros Totales"
-            value={stats.kilometrosTotales}
-            icon="📏"
-            subtitle="De rutas disponibles"
-            color="purple"
-            sport="enduro"
-            ariaLabel={`${stats.kilometrosTotales} kilómetros totales de rutas`}
-          />
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas del Enduro en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {enduroStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                sport="enduro"
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Agregar navegación específica si es necesario
+                  if (stat.title.includes("Rutas")) {
+                    router.push('/sports/enduro/rutas');
+                  }
+                }}
+              />
+            ))}
+          </div>
         </div>
 
         <div className={styles.quickAccessSection}>
@@ -305,6 +314,7 @@ export default function EnduroPage() {
             address="Zona de rutas, Temuco"
             zoom={11}
             height="400px"
+            sport="enduro" 
           />
 
           <div className={styles.mapActions}>

@@ -41,6 +41,38 @@ const topRatedCourts = [
   }
 ];
 
+// 🔥 DATOS PARA LAS ESTADÍSTICAS DE MOUNTAIN BIKE - ACTUALIZADOS
+const mountainBikeStats = [
+  {
+    title: "Rutas Disponibles Hoy",
+    value: "3",
+    icon: "🚵",
+    subtitle: "Listas para recorrer",
+    trend: { value: 3, isPositive: true }
+  },
+  {
+    title: "Rango de Precios",
+    value: "$10-25",
+    icon: "💰",
+    subtitle: "Por día",
+    trend: { value: 5, isPositive: true }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.6⭐",
+    icon: "🏆",
+    subtitle: "De nuestras rutas",
+    trend: { value: 0.2, isPositive: true }
+  },
+  {
+    title: "Kilómetros Totales",
+    value: "85km",
+    icon: "📏",
+    subtitle: "De rutas disponibles",
+    trend: { value: 15, isPositive: true }
+  }
+];
+
 export default function MountainBikePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
@@ -76,14 +108,6 @@ export default function MountainBikePage() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  // Stats de ejemplo para mountain bike
-  const stats = {
-    disponiblesHoy: 3,
-    precioPromedio: { min: 12, max: 25 },
-    promedioCalificacion: 4.6,
-    kilometrosTotales: 45
-  };
 
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
@@ -150,46 +174,32 @@ export default function MountainBikePage() {
           </div>
         </div>
 
-        {/* 🔥 Stats Cards para Mountain Bike - USANDO EL COMPONENTE StatsCard */}
-        <div className={styles.statsContainer}>
-          <StatsCard
-            title="Rutas Disponibles Hoy"
-            value={stats.disponiblesHoy}
-            icon="🚵"
-            color="green"
-            sport="mountain-bike"
-            ariaLabel={`${stats.disponiblesHoy} rutas disponibles hoy`}
-          />
-          
-          <StatsCard
-            title="Rango de Precios"
-            value={`$${stats.precioPromedio.min}-${stats.precioPromedio.max}`}
-            icon="💰"
-            subtitle="Por día"
-            color="purple"
-            sport="mountain-bike"
-            ariaLabel={`Precios desde $${stats.precioPromedio.min} hasta $${stats.precioPromedio.max} por día`}
-          />
-          
-          <StatsCard
-            title="Calificación Promedio"
-            value={stats.promedioCalificacion}
-            icon="⭐"
-            subtitle="Basado en reseñas"
-            color="yellow"
-            sport="mountain-bike"
-            ariaLabel={`Calificación promedio de ${stats.promedioCalificacion} estrellas`}
-          />
-          
-          <StatsCard
-            title="Kilómetros Totales"
-            value={stats.kilometrosTotales}
-            icon="📏"
-            subtitle="De rutas disponibles"
-            color="blue"
-            sport="mountain-bike"
-            ariaLabel={`${stats.kilometrosTotales} kilómetros totales de rutas`}
-          />
+        {/* Stats Cards para Mountain-Bike - USANDO EL COMPONENTE StatsCard*/}
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas del Mountain Bike en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {mountainBikeStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                sport="mountain-bike"
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Agregar navegación específica si es necesario
+                  if (stat.title.includes("Rutas")) {
+                    router.push('/sports/mountain-bike/rutas');
+                  }
+                }}
+              />
+            ))}
+          </div>
         </div>
 
         <div className={styles.quickAccessSection}>
@@ -294,6 +304,7 @@ export default function MountainBikePage() {
             address="Temuco, Chile"
             zoom={13}
             height="400px"
+            sport="mountain-bike" 
           />
 
           <div className={styles.mapActions}>

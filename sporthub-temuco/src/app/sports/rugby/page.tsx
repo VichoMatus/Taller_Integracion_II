@@ -51,6 +51,38 @@ const topRatedCourts = [
   }
 ];
 
+// 🔥 DATOS PARA LAS ESTADÍSTICAS DE RUGBY - ACTUALIZADOS
+const rugbyStats = [
+  {
+    title: "Campos Disponibles Hoy",
+    value: "4",
+    icon: "🏉",
+    subtitle: "Listos para partidos",
+    trend: { value: 2, isPositive: true }
+  },
+  {
+    title: "Rango de Precios",
+    value: "$42-60",
+    icon: "💰",
+    subtitle: "Por hora",
+    trend: { value: 8, isPositive: false }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.6⭐",
+    icon: "🏆",
+    subtitle: "De nuestros campos",
+    trend: { value: 0.2, isPositive: true }
+  },
+  {
+    title: "Jugadores por Equipo",
+    value: "30",
+    icon: "👥",
+    subtitle: "Capacidad máxima",
+    trend: { value: 2, isPositive: true }
+  }
+];
+
 export default function RugbyPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
@@ -86,14 +118,6 @@ export default function RugbyPage() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  // Stats de ejemplo para rugby
-  const stats = {
-    disponiblesHoy: 4,
-    precioPromedio: { min: 42, max: 55 },
-    promedioCalificacion: 4.6,
-    cantidadJugadores: 30
-  };
 
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
@@ -160,46 +184,32 @@ export default function RugbyPage() {
           </div>
         </div>
 
-        {/* 🔥 Stats Cards para Rugby - USANDO EL COMPONENTE StatsCard IGUAL QUE ENDURO */}
-        <div className={styles.statsContainer}>
-          <StatsCard
-            title="Campos Disponibles Hoy"
-            value={stats.disponiblesHoy}
-            icon="🏉"
-            color="red"
-            sport="rugby"
-            ariaLabel={`${stats.disponiblesHoy} campos disponibles hoy`}
-          />
-          
-          <StatsCard
-            title="Rango de Precios"
-            value={`$${stats.precioPromedio.min}-${stats.precioPromedio.max}`}
-            icon="💰"
-            subtitle="Por hora"
-            color="purple"
-            sport="rugby"
-            ariaLabel={`Precios desde $${stats.precioPromedio.min} hasta $${stats.precioPromedio.max} por hora`}
-          />
-          
-          <StatsCard
-            title="Calificación Promedio"
-            value={stats.promedioCalificacion}
-            icon="⭐"
-            subtitle="Basado en reseñas"
-            color="yellow"
-            sport="rugby"
-            ariaLabel={`Calificación promedio de ${stats.promedioCalificacion} estrellas`}
-          />
-          
-          <StatsCard
-            title="Jugadores por Equipo"
-            value={stats.cantidadJugadores}
-            icon="👥"
-            subtitle="Capacidad máxima"
-            color="green"
-            sport="rugby"
-            ariaLabel={`${stats.cantidadJugadores} jugadores por equipo`}
-          />
+        {/* Stats Cards para Rugby - USANDO EL COMPONENTE StatsCard*/}
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas del Rugby en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {rugbyStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                sport="rugby"
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Agregar navegación específica si es necesario
+                  if (stat.title.includes("Campos")) {
+                    router.push('/sports/rugby/canchas');
+                  }
+                }}
+              />
+            ))}
+          </div>
         </div>
 
         <div className={styles.quickAccessSection}>
@@ -304,6 +314,7 @@ export default function RugbyPage() {
             address="Temuco, Chile"
             zoom={13}
             height="400px"
+            sport="rugby" 
           />
 
           <div className={styles.mapActions}>

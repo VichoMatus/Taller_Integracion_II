@@ -31,6 +31,38 @@ const topRatedCourts = [
   }
 ];
 
+// 🔥 DATOS PARA LAS ESTADÍSTICAS DE FÚTBOL AMERICANO - ACTUALIZADOS
+const footballStats = [
+  {
+    title: "Estadios Disponibles Hoy",
+    value: "2",
+    icon: "🏈",
+    subtitle: "Listos para partidos",
+    trend: { value: 2, isPositive: true }
+  },
+  {
+    title: "Rango de Precios",
+    value: "$85-150",
+    icon: "💰",
+    subtitle: "Por hora",
+    trend: { value: 10, isPositive: false }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.7⭐",
+    icon: "🏆",
+    subtitle: "De nuestros estadios",
+    trend: { value: 0.3, isPositive: true }
+  },
+  {
+    title: "Capacidad por Equipo",
+    value: "22 jugadores",
+    icon: "👥",
+    subtitle: "En promedio",
+    trend: { value: 4, isPositive: true }
+  }
+];
+
 export default function FutbolAmericanoPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
@@ -66,14 +98,6 @@ export default function FutbolAmericanoPage() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  // Stats específicos para Fútbol Americano
-  const stats = {
-    disponiblesHoy: 2,
-    precioPromedio: { min: 85, max: 120 },
-    promedioCalificacion: 4.7,
-    capacidadPromedio: "22 jugadores"
-  };
 
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
@@ -140,46 +164,32 @@ export default function FutbolAmericanoPage() {
           </div>
         </div>
 
-        {/* 🔥 Stats Cards para Fútbol Americano - USANDO EL COMPONENTE StatsCard */}
-        <div className={styles.statsContainer}>
-          <StatsCard
-            title="Estadios Disponibles Hoy"
-            value={stats.disponiblesHoy}
-            icon="🏈"
-            color="blue"
-            sport="futbol-americano"
-            ariaLabel={`${stats.disponiblesHoy} estadios disponibles hoy`}
-          />
-          
-          <StatsCard
-            title="Rango de Precios"
-            value={`$${stats.precioPromedio.min}-${stats.precioPromedio.max}`}
-            icon="💰"
-            subtitle="Por hora"
-            color="purple"
-            sport="futbol-americano"
-            ariaLabel={`Precios desde $${stats.precioPromedio.min} hasta $${stats.precioPromedio.max} por hora`}
-          />
-          
-          <StatsCard
-            title="Calificación Promedio"
-            value={stats.promedioCalificacion}
-            icon="⭐"
-            subtitle="Basado en reseñas"
-            color="yellow"
-            sport="futbol-americano"
-            ariaLabel={`Calificación promedio de ${stats.promedioCalificacion} estrellas`}
-          />
-          
-          <StatsCard
-            title="Capacidad por Equipo"
-            value={stats.capacidadPromedio}
-            icon="👥"
-            subtitle="Jugadores por equipo"
-            color="green"
-            sport="futbol-americano"
-            ariaLabel={`Capacidad promedio de ${stats.capacidadPromedio} jugadores por equipo`}
-          />
+        {/* Stats Cards para Futbol-Americano - USANDO EL COMPONENTE StatsCard*/}
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas del Fútbol Americano en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {footballStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                sport="futbol-americano"
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Agregar navegación específica si es necesario
+                  if (stat.title.includes("Estadios")) {
+                    router.push('/sports/futbol-americano/estadios');
+                  }
+                }}
+              />
+            ))}
+          </div>
         </div>
 
         <div className={styles.quickAccessSection}>
@@ -284,6 +294,7 @@ export default function FutbolAmericanoPage() {
             address="Temuco, Chile"
             zoom={13}
             height="400px"
+            sport="futbol-americano" 
           />
 
           <div className={styles.mapActions}>

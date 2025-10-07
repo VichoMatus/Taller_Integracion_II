@@ -14,6 +14,10 @@ import voleiStyles from './stylesLocationMap/VoleibolLocationMap.module.css';
 import natacionStyles from './stylesLocationMap/NatacionLocationMap.module.css';
 import patinajeStyles from './stylesLocationMap/PatinajeLocationMap.module.css';
 import escaladaStyles from './stylesLocationMap/EscaladaLocationMap.module.css';
+import enduroStyles from './stylesLocationMap/EnduroLocationMap.module.css';
+import rugbyStyles from './stylesLocationMap/RugbyLocationMap.module.css';
+import futbolAmericanoStyles from './stylesLocationMap/Futbol-AmericanoLocationMap.module.css';
+import mountainBikeStyles from './stylesLocationMap/Mountain-BikeLocationMap.module.css';
 
 interface LocationMapProps {
   latitude: number;
@@ -21,7 +25,7 @@ interface LocationMapProps {
   address?: string;
   zoom?: number;
   height?: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje' | 'escalada' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje' | 'escalada' | 'atletismo' | 'skate' | 'ciclismo' | 'karting' | 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike';
 }
 
 const LocationMap: React.FC<LocationMapProps> = ({
@@ -54,6 +58,14 @@ const LocationMap: React.FC<LocationMapProps> = ({
       case 'escalada':
         return escaladaStyles;
       // case 'tenis':
+      case 'enduro':
+        return enduroStyles;
+      case 'rugby':
+        return rugbyStyles;
+      case 'futbol-americano':
+        return futbolAmericanoStyles;
+      case 'mountain-bike':
+        return mountainBikeStyles;
       default:
         return basquetbolStyles; // Fallback
     }
@@ -83,6 +95,14 @@ const LocationMap: React.FC<LocationMapProps> = ({
         return '⛸️';
       case 'escalada':
         return '🧗‍♂️';
+      case 'enduro':
+        return '🏍️';
+      case 'rugby':
+        return '🏉';
+      case 'futbol-americano':
+        return '🏈';
+      case 'mountain-bike':
+        return '🚵‍♂️';
       default:
         return '🏀';
     }
@@ -107,6 +127,15 @@ const LocationMap: React.FC<LocationMapProps> = ({
         return 'Natación';
       case 'patinaje':
         return 'Patinaje';
+      case 'enduro':
+        return 'Enduro';
+      case 'rugby':
+        return 'Rugby';
+      case 'futbol-americano':
+        return 'Fútbol Americano';
+      case 'mountain-bike':
+        return 'Mountain Bike';
+
       default:
         return 'Basquetbol';
     }
@@ -131,6 +160,15 @@ const LocationMap: React.FC<LocationMapProps> = ({
         return 'Encuentra las mejores piscinas y centros de natación cerca de ti';
       case 'patinaje':
         return 'Encuentra las mejores pistas de patinaje cerca de ti';
+      case 'enduro':
+        return 'Descubre las mejores rutas de enduro para motocross';
+      case 'rugby':
+        return 'Encuentra los mejores campos de rugby en tu área';
+      case 'futbol-americano':
+        return 'Descubre campos de fútbol americano en tu zona';
+      case 'mountain-bike':
+        return 'Explora los mejores senderos de mountain bike';
+
       default:
         return 'Encuentra las mejores instalaciones deportivas cerca de ti';
     }
