@@ -228,7 +228,6 @@ export default function KartingCanchasPage() {
                 name={track.name}
                 address={track.location}
                 rating={track.rating}
-                reviews={Math.floor(Math.random() * 100) + 20}
                 tags={track.features}
                 description={`Pista de karting ${track.trackType} de nivel ${track.difficulty} con duración de ${track.duration}`}
                 price={track.price}
@@ -252,3 +251,4 @@ export default function KartingCanchasPage() {
     </div>
   );
 }
+//holsa
