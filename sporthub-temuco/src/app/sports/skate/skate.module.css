@@ -1,16 +1,40 @@
-/* Skate - theme 'Underground' (oscuros, grises y acento óxido) */
+/* Skate - theme 'Underground' (grays unified palette) */
 :root {
-  /* Skate light / neutral palette: grays que tiran a blanco */
-  --skate-bg: #e6e9ec; /* light gray background */
-  --skate-surface: #f7f8fa; /* soft surface panels */
-  --skate-accent: #6b7280; /* slate gray for accents and buttons */
-  --skate-accent-2: #d1d5db; /* lighter concrete gray */
-  --sport-accent-2: var(--skate-accent-2);
-  --skate-text: #0f172a; /* dark slate text */
-  --card-bg: #f8fafb; /* card background - subtle off-white */
-  /* make sport-accent available for shared components */
-  --sport-accent: var(--skate-accent);
-  --skate-accent-rgb: 107,114,128;
+  /* Skate unified gray palette - consistent across all components */
+  --skate-primary: #374151; /* dark gray primary */
+  --skate-secondary: #6b7280; /* medium gray secondary */  
+  --skate-accent: #9ca3af; /* light gray accent */
+  --skate-light: #d1d5db; /* very light gray */
+  --skate-bg: #f9fafb; /* light background */
+  --skate-bg-secondary: #f3f4f6; /* secondary background */
+  --skate-text: #1f2937; /* dark text */
+  --skate-text-secondary: #4b5563; /* medium gray text */
+  --skate-border: rgba(107, 114, 128, 0.2); /* semi-transparent border */
+  --skate-shadow: rgba(107, 114, 128, 0.1); /* soft shadow */
+  --card-bg: #ffffff;
+  --skate-primary-rgb: 55, 65, 81;
+  --skate-secondary-rgb: 107, 114, 128;
+  --skate-accent-rgb: 156, 163, 175;
+  
+  /* Legacy variables for compatibility */
+  --sport-accent: var(--skate-secondary);
+  --sport-accent-2: var(--skate-accent);
+  
+  /* Skate emoji standards - consistent across all components */
+  --skate-main-emoji: "🛹"; /* Main skate icon */
+  --skate-star-emoji: "⭐"; /* Star rating - simple star */
+  --skate-location-emoji: "📍"; /* Location pin */
+  --skate-money-emoji: "💰"; /* Money/price */
+  --skate-calendar-emoji: "📅"; /* Calendar/date */
+  --skate-user-emoji: "👤"; /* User profile */
+  --skate-group-emoji: "👥"; /* Group of users */
+  --skate-trophy-emoji: "🏆"; /* Trophy/achievement */
+  --skate-search-emoji: "🔍"; /* Search functionality */
+  --skate-help-emoji: "❓"; /* Help/question */
+  --skate-arrow-left: "←"; /* Navigation left */
+  --skate-arrow-right: "→"; /* Navigation right */
+  --skate-ruler-emoji: "📏"; /* Ruler/measurement */
+  --skate-settings-emoji: "⚙️"; /* Settings/gear */
 }
 
 /* 🔥 ANIMACIONES PARA HEADER */
@@ -31,7 +55,7 @@
   width: 100vw;
   margin: 0 !important;
   padding-left: 0 !important;
-  background: linear-gradient(180deg, var(--skate-bg), var(--skate-surface));
+  background: linear-gradient(180deg, var(--skate-bg), var(--skate-bg-secondary));
   font-family: 'Inter', sans-serif;
 }
 
@@ -43,29 +67,29 @@
   height: 100vh;
 }
 
-/* 🔥 HEADER MEJORADO - CLON DE ENDURO CON COLORES GRISES */
+/* � HEADER MEJORADO - SKATE THEME CON COLORES GRISES */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.9) 0%,
-    rgba(248, 250, 252, 0.8) 100%
+    var(--skate-surface) 0%,
+    var(--skate-bg-secondary) 100%
   );
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(107, 114, 128, 0.3);
+  border: 1px solid var(--skate-border);
   padding: 20px 30px;
   border-radius: 16px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 20px rgba(107, 114, 128, 0.15);
+  box-shadow: 0 4px 20px rgba(55, 65, 81, 0.15);
   animation: slideInRight 0.8s ease-out;
   transition: all 0.3s ease;
 }
 
 .header:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(107, 114, 128, 0.2);
+  box-shadow: 0 8px 30px rgba(55, 65, 81, 0.2);
 }
 
 .headerLeft {
@@ -81,7 +105,7 @@
   justify-content: center;
   width: 50px;
   height: 50px;
-  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  background: linear-gradient(135deg, var(--skate-secondary) 0%, var(--skate-primary) 100%);
   border-radius: 12px;
   transition: transform 0.3s ease;
 }
@@ -93,7 +117,7 @@
 .headerTitle {
   font-size: 28px;
   font-weight: 700;
-  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  background: linear-gradient(135deg, var(--skate-text) 0%, var(--skate-primary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -110,7 +134,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  background: linear-gradient(135deg, var(--skate-primary) 0%, var(--skate-accent) 100%);
   color: white;
   border: none;
   padding: 12px 20px;

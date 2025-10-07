@@ -1,4 +1,48 @@
-/* 🔥 ANIMACIONES SUTILES */
+/* �‍♂️ VARIABLES CSS PARA CICLISMO THEME */
+:root {
+  /* Colores principales - Verde Naturaleza */
+  --cycling-primary: #16a34a;
+  --cycling-secondary: #22c55e;
+  --cycling-accent: #15803d;
+  --cycling-highlight: #86efac;
+  
+  /* Fondos */
+  --cycling-bg: #f0fdf4;
+  --cycling-bg-secondary: #dcfce7;
+  --cycling-surface: #ffffff;
+  --cycling-border: #bbf7d0;
+  
+  /* Textos */
+  --cycling-text: #1f2937;
+  --cycling-text-secondary: #15803d;
+  --cycling-text-muted: #6b7280;
+  
+  /* Estados */
+  --cycling-success: #10b981;
+  --cycling-warning: #f59e0b;
+  --cycling-error: #ef4444;
+  
+  /* Colores RGB para transparencias */
+  --cycling-primary-rgb: 22, 163, 74;
+  --cycling-secondary-rgb: 34, 197, 94;
+  
+  /* Sombras */
+  --cycling-shadow: rgba(22, 163, 74, 0.1);
+  --cycling-shadow-hover: rgba(22, 163, 74, 0.15);
+  
+  /* Emojis estandarizados */
+  --cycling-main-emoji: "🚴‍♂️";
+  --cycling-star-emoji: "⭐";
+  --cycling-location-emoji: "📍";
+  --cycling-time-emoji: "🕐";
+  --cycling-user-emoji: "👤";
+  --cycling-search-emoji: "🔍";
+  --cycling-filter-emoji: "🔧";
+  --cycling-route-emoji: "🛣️";
+  --cycling-mountain-emoji: "⛰️";
+}
+
+/* 🚴‍♂️ ANIMACIONES SUTILES */
 @keyframes fadeInUp {
   0% {
     opacity: 0;
@@ -24,7 +68,7 @@
 .pageContainer {
   display: flex;
   min-height: 100vh;
-  background-color: #EAEFEF;
+  background-color: var(--cycling-bg);
   font-family: 'Inter', sans-serif;
 }
 
@@ -32,13 +76,13 @@
   flex: 1;
   margin-left: 256px;
   padding: 20px;
-  background-color: #f8f9fa;
+  background-color: var(--cycling-bg-secondary);
   min-height: 100vh;
   overflow-x: auto;
   animation: fadeInUp 0.6s ease-out;
 }
 
-/* Header Styles Mejorados con Paleta Verde */
+/* Header Styles Mejorados con Paleta Verde Ciclismo */
 .header {
   display: flex;
   align-items: center;
@@ -47,20 +91,20 @@
   background: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.9) 0%,
-    rgba(240, 255, 244, 0.8) 100%
+    rgba(248, 250, 252, 0.8) 100%
   );
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  border: 1px solid var(--cycling-border);
   padding: 20px;
   border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.1);
+  box-shadow: 0 4px 20px var(--cycling-shadow);
   animation: slideInDown 0.7s ease-out;
   transition: all 0.3s ease;
 }
 
 .header:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(34, 197, 94, 0.15);
+  box-shadow: 0 8px 30px rgba(var(--cycling-primary-rgb), 0.15);
 }
 
 .headerLeft {
@@ -76,9 +120,14 @@
   justify-content: center;
   width: 50px;
   height: 50px;
-  background: linear-gradient(135deg, #bbf7d0 0%, #86efac 100%);
+  background: linear-gradient(135deg, var(--cycling-highlight) 0%, var(--cycling-accent) 100%);
   border-radius: 12px;
   transition: transform 0.3s ease;
+}
+
+.headerIcon::before {
+  content: var(--cycling-main-emoji);
+  font-size: 32px;
 }
 
 .headerIcon:hover {
@@ -88,7 +137,7 @@
 .headerTitle {
   font-size: 28px;
   font-weight: 700;
-  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  background: linear-gradient(135deg, var(--cycling-text) 0%, var(--cycling-text-secondary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -97,7 +146,7 @@
 }
 
 .headerLeft:hover .headerTitle {
-  color: #ea580c;
+  color: var(--cycling-secondary);
 }
 
 .headerRight {
@@ -107,7 +156,7 @@
 }
 
 .userButton {
-  background: linear-gradient(135deg, #79e45f 0%, #56E832 100%);
+  background: linear-gradient(135deg, var(--cycling-accent) 0%, var(--cycling-highlight) 100%);
   color: white;
   padding: 12px 24px;
   border-radius: 50px;
@@ -118,7 +167,7 @@
   align-items: center;
   gap: 8px;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 4px 15px rgba(var(--cycling-primary-rgb), 0.3);
   position: relative;
   overflow: hidden;
 }
@@ -142,9 +191,9 @@
 }
 
 .userButton:hover {
-  background: linear-gradient(135deg, #79e45f 0%, #56E832 100%);
+  background: linear-gradient(135deg, var(--cycling-accent) 0%, var(--cycling-highlight) 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+  box-shadow: 0 6px 20px rgba(var(--cycling-primary-rgb), 0.4);
 }
 
 /* Breadcrumb Styles Mejorados con Verde */
@@ -154,7 +203,7 @@
 }
 
 .breadcrumbButton {
-  background: linear-gradient(135deg, #79e45f 0%, #56E832 100%);
+  background: linear-gradient(135deg, var(--cycling-secondary) 0%, var(--cycling-primary) 100%);
   color: white;
   padding: 8px 14px;
   border-radius: 6px;
@@ -166,13 +215,13 @@
   align-items: center;
   gap: 6px;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 2px 8px rgba(var(--cycling-primary-rgb), 0.3);
 }
 
 .breadcrumbButton:hover {
-  background: linear-gradient(135deg, #79e45f 0%, #3b9e22 100%);
+  background: linear-gradient(135deg, var(--cycling-secondary) 0%, var(--cycling-accent) 100%);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+  box-shadow: 0 4px 12px rgba(var(--cycling-primary-rgb), 0.4);
 }
 
 /* Filters Styles Mejorados con Verde */
@@ -183,10 +232,10 @@
     rgba(240, 255, 244, 0.9) 100%
   );
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  border: 1px solid var(--cycling-border);
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.1);
+  box-shadow: 0 4px 20px var(--cycling-shadow);
   margin-bottom: 24px;
   animation: fadeInUp 0.9s ease-out 0.3s both;
   transition: all 0.3s ease;
@@ -194,19 +243,19 @@
 
 .filtersContainer:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(34, 197, 94, 0.15);
+  box-shadow: 0 8px 30px rgba(var(--cycling-primary-rgb), 0.15);
 }
 
 .filtersTitle {
   font-weight: 700;
   font-size: 16px;
   margin-bottom: 12px;
-  color: #1f2937;
+  color: var(--cycling-text);
   transition: color 0.3s ease;
 }
 
 .filtersContainer:hover .filtersTitle {
-  color: #ea580c;
+  color: var(--cycling-accent);
 }
 
 .filtersGrid {
@@ -228,22 +277,22 @@
   font-size: 12px;
   font-weight: 500;
   margin-bottom: 6px;
-  color: #3a3a3a;
+  color: var(--cycling-text-secondary);
   transition: color 0.3s ease;
 }
 
 .filterField:hover .filterLabel {
-  color: #ea580c;
+  color: var(--cycling-accent);
 }
 
 .filterInput, .filterSelect {
   width: 90%;
   padding: 8px 10px;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  border: 1px solid var(--cycling-border);
   border-radius: 6px;
   font-size: 12px;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.1);
+  box-shadow: 0 2px 6px var(--cycling-shadow);
   background: linear-gradient(
     135deg,
     rgba(240, 255, 244, 0.9) 0%,
@@ -253,13 +302,13 @@
 
 .filterInput:focus, .filterSelect:focus {
   outline: none;
-  border-color: #ea580c;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+  border-color: var(--cycling-accent);
+  box-shadow: 0 0 0 3px rgba(var(--cycling-primary-rgb), 0.2);
   transform: scale(1.02);
 }
 
 .filterInput:hover, .filterSelect:hover {
-  border-color: #dc2626;
+  border-color: var(--cycling-primary);
   transform: translateY(-1px);
 }
 
@@ -286,9 +335,9 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  background: linear-gradient(135deg, var(--cycling-accent) 0%, var(--cycling-primary) 100%);
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 2px 6px rgba(var(--cycling-primary-rgb), 0.3);
   border: 2px solid white;
   transition: all 0.3s ease;
 }
@@ -298,10 +347,10 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  background: linear-gradient(135deg, var(--cycling-accent) 0%, var(--cycling-primary) 100%);
   cursor: pointer;
   border: 2px solid white;
-  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 2px 6px rgba(var(--cycling-primary-rgb), 0.3);
   transition: all 0.3s ease;
 }
 
@@ -316,17 +365,17 @@
 
 /* Estilos adicionales para mejor apariencia */
 .priceSlider:hover::-webkit-slider-thumb {
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+  box-shadow: 0 4px 12px rgba(var(--cycling-primary-rgb), 0.4);
   transform: scale(1.1);
 }
 
 .priceSlider:hover::-moz-range-thumb {
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+  box-shadow: 0 4px 12px rgba(var(--cycling-primary-rgb), 0.4);
   transform: scale(1.1);
 }
 
 .searchButton {
-  background: linear-gradient(135deg, #79e45f 0%, #56E832 100%);
+  background: linear-gradient(135deg, var(--cycling-secondary) 0%, var(--cycling-primary) 100%);
   color: white;
   padding: 8px 20px;
   border-radius: 6px;
@@ -339,7 +388,7 @@
   gap: 5px;
   transition: all 0.3s ease;
   align-self: flex-end;
-  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+  box-shadow: 0 4px 15px rgba(var(--cycling-primary-rgb), 0.3);
   position: relative;
   overflow: hidden;
 }
@@ -363,7 +412,7 @@
 }
 
 .searchButton:hover {
-  background: linear-gradient(135deg, #79e45f 0%, #4ac22c 100%);
+  background: linear-gradient(135deg, var(--cycling-secondary) 0%, #4ac22c 100%);
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
 }

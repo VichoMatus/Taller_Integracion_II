@@ -143,10 +143,12 @@ export default function KartingCanchasPage() {
             <h1 className={styles.headerTitle}>Karting</h1>
           </div>
           <div className={styles.headerRight}>
-           <SearchBar
-            placeholder="Buscar pistas de karting..."
-            sport="karting"
-            onSearch={(term: string) => console.log('Buscando:', term)}
+            <SearchBar
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onSearch={handleSearch}
+              placeholder="Buscar pistas de karting..."
+              sport="karting"
             />
             <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
               <span>👤</span>

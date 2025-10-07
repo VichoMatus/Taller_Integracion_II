@@ -13,7 +13,7 @@ export default function CanchaSeleccionadaPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   
-  // 🔥 DATOS ESTÁTICOS PARA ATLETISMO
+  // 🏃 DATOS ESTÁTICOS PARA ATLETISMO
   const cancha = {
     id: 1,
     name: "Pista Atlética Central Temuco",
@@ -132,7 +132,7 @@ export default function CanchaSeleccionadaPage() {
       <div className={styles.pageContainer}>
         <Sidebar userRole="usuario" sport="atletismo" />
         <div className={styles.loading}>
-          <div className={styles.loadingSpinner}>🏃‍♂️</div>
+          <div className={styles.loadingSpinner}>🏃</div>
           <p>Cargando información de la pista atlética...</p>
         </div>
       </div>
@@ -147,8 +147,8 @@ export default function CanchaSeleccionadaPage() {
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <span className={styles.headerIcon}>🏃‍♂️</span>
-            <h1 className={styles.headerTitle}>Atletismo</h1>
+            <span className={styles.headerIcon}>🏃</span>
+            <h1 className={styles.headerTitle}>Pista Atlética</h1>
           </div>
           <div className={styles.headerRight}>
            <SearchBar

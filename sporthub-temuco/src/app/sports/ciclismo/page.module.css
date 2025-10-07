@@ -1,4 +1,48 @@
-/* 🔥 ANIMACIONES BÁSICAS */
+/* �‍♂️ VARIABLES CSS PARA CICLISMO THEME */
+:root {
+  /* Colores principales - Verde Naturaleza */
+  --cycling-primary: #16a34a;
+  --cycling-secondary: #22c55e;
+  --cycling-accent: #15803d;
+  --cycling-highlight: #86efac;
+  
+  /* Fondos */
+  --cycling-bg: #f0fdf4;
+  --cycling-bg-secondary: #dcfce7;
+  --cycling-surface: #ffffff;
+  --cycling-border: #bbf7d0;
+  
+  /* Textos */
+  --cycling-text: #1f2937;
+  --cycling-text-secondary: #15803d;
+  --cycling-text-muted: #6b7280;
+  
+  /* Estados */
+  --cycling-success: #10b981;
+  --cycling-warning: #f59e0b;
+  --cycling-error: #ef4444;
+  
+  /* Colores RGB para transparencias */
+  --cycling-primary-rgb: 22, 163, 74;
+  --cycling-secondary-rgb: 34, 197, 94;
+  
+  /* Sombras */
+  --cycling-shadow: rgba(22, 163, 74, 0.1);
+  --cycling-shadow-hover: rgba(22, 163, 74, 0.15);
+  
+  /* Emojis estandarizados */
+  --cycling-main-emoji: "🚴‍♂️";
+  --cycling-star-emoji: "⭐";
+  --cycling-location-emoji: "📍";
+  --cycling-time-emoji: "🕐";
+  --cycling-user-emoji: "👤";
+  --cycling-search-emoji: "🔍";
+  --cycling-filter-emoji: "🔧";
+  --cycling-route-emoji: "🛣️";
+  --cycling-mountain-emoji: "⛰️";
+}
+
+/* 🚴‍♂️ ANIMACIONES BÁSICAS */
 @keyframes fadeInUp {
   0% {
     opacity: 0;
@@ -21,14 +65,14 @@
   }
 }
 
-/* 🔥 CONTENEDOR PRINCIPAL */
+/* �‍♂️ CONTENEDOR PRINCIPAL */
 .pageContainer {
   display: flex;
   min-height: 100vh;
   width: 100vw;
   margin: 0 !important;
   padding-left: 0 !important;
-  background: #FFF7ED;
+  background: var(--cycling-bg);
   background-size: 200% 200%;
   font-family: 'Inter', sans-serif;
   position: fixed;
@@ -53,43 +97,43 @@
 }
 
 .mainContent::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--cycling-bg-secondary);
   border-radius: 10px;
 }
 
 .mainContent::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%);
+  background: linear-gradient(135deg, var(--cycling-primary) 0%, var(--cycling-secondary) 100%);
   border-radius: 10px;
   transition: all 0.3s ease;
 }
 
 .mainContent::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(45deg, rgba(105, 249, 22, 0.8), rgba(19, 234, 12, 0.8));
+  background: linear-gradient(45deg, var(--cycling-secondary), var(--cycling-accent));
 }
 
-/* 🔥 HEADER MEJORADO */
+/* �‍♂️ HEADER MEJORADO */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: linear-gradient(
     135deg,
-    rgba(255, 255, 255, 0.9) 0%,
-    rgba(238, 255, 237, 0.8) 100%
+    var(--cycling-surface) 0%,
+    var(--cycling-bg-secondary) 100%
   );
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(48, 249, 22, 0.2);
+  border: 1px solid var(--cycling-border);
   padding: 20px 30px;
   border-radius: 16px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 20px rgba(60, 249, 22, 0.1);
+  box-shadow: 0 4px 20px var(--cycling-shadow);
   animation: slideInRight 0.8s ease-out;
   transition: all 0.3s ease;
 }
 
 .header:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(29, 249, 22, 0.15);
+  box-shadow: 0 8px 30px var(--cycling-shadow-hover);
 }
 
 .headerLeft {
@@ -105,9 +149,14 @@
   justify-content: center;
   width: 50px;
   height: 50px;
-  background: linear-gradient(135deg, #fed7aa 0%, #fca5a5 100%);
+  background: linear-gradient(135deg, var(--cycling-secondary) 0%, var(--cycling-primary) 100%);
   border-radius: 12px;
   transition: transform 0.3s ease;
+}
+
+.headerIcon::before {
+  content: var(--cycling-main-emoji);
+  font-size: 32px;
 }
 
 .headerIcon:hover {
@@ -117,7 +166,7 @@
 .headerTitle {
   font-size: 28px;
   font-weight: 700;
-  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  background: linear-gradient(135deg, var(--cycling-text) 0%, var(--cycling-primary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -134,7 +183,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #ea580c 0%, #dc2626 100%);
+  background: linear-gradient(135deg, var(--cycling-primary) 0%, var(--cycling-accent) 100%);
   color: white;
   border: none;
   padding: 12px 20px;
@@ -142,16 +191,16 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(75, 249, 22, 0.3);
+  box-shadow: 0 4px 15px rgba(var(--cycling-primary-rgb), 0.3);
 }
 
 .userButton:hover {
-  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  background: linear-gradient(135deg, var(--cycling-accent) 0%, var(--cycling-primary) 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(60, 249, 22, 0.4);
+  box-shadow: 0 6px 20px rgba(var(--cycling-primary-rgb), 0.4);
 }
 
-/* 🔥 STATS CARDS SUTILES */
+/* �‍♂️ STATS CARDS SUTILES */
 .statsContainer {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -162,8 +211,8 @@
 .statCard {
   background: linear-gradient(
     145deg,
-    rgba(255, 255, 255, 0.9) 0%,
-    rgba(220, 255, 211, 0.8) 100%
+    var(--cycling-surface) 0%,
+    var(--cycling-bg-secondary) 100%
   );
   backdrop-filter: blur(10px);
   padding: 20px;
@@ -172,31 +221,31 @@
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
-  border: 1px solid rgba(60, 249, 22, 0.1);
+  border: 1px solid var(--cycling-border);
 }
 
 .statCard:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(29, 249, 22, 0.15);
-  border-color: rgba(75, 249, 22, 0.3);
+  box-shadow: 0 8px 25px var(--cycling-shadow-hover);
+  border-color: var(--cycling-secondary);
 }
 
 .statCard:hover .statNumber {
   transform: scale(1.1);
-  color: #ea580c;
+  color: var(--cycling-primary);
 }
 
 .statNumber {
   font-size: 24px;
   font-weight: 700;
-  color: #dc2626;
+  color: var(--cycling-accent);
   margin-bottom: 5px;
   transition: all 0.3s ease;
 }
 
 .statLabel {
   font-size: 12px;
-  color: #6b7280;
+  color: var(--cycling-text-muted);
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -272,10 +321,13 @@
   backdrop-filter: blur(10px);
 }
 
+/* 🚴‍♂️ CAROUSEL OPTIMIZADO PARA RENDIMIENTO */
 .carouselContainer {
   overflow: hidden;
   width: 100%;
   position: relative;
+  contain: layout style; /* Mejora el rendimiento del scroll */
+  transform: translateZ(0); /* Fuerza hardware acceleration */
 }
 
 .carouselContainer::before,
@@ -287,6 +339,7 @@
   height: 100%;
   z-index: 10;
   pointer-events: none;
+  will-change: auto; /* Evita activar aceleración innecesaria */
 }
 
 .carouselContainer::before {
@@ -302,21 +355,23 @@
 .courtsGrid {
   display: flex;
   gap: 20px;
-  transition: transform 0.4s ease;
+  transition: transform 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Optimización de easing y duración */
   width: fit-content;
   padding-bottom: 10px;
   padding-top: 10px;
+  will-change: transform; /* Solo cuando se use el carousel */
 }
 
 .courtsGrid > * {
   flex: 0 0 320px;
   width: 320px;
   height: 440px;
-  transition: transform 0.3s ease;
+  transition: transform 0.2s ease; /* Reducido de 0.3s */
+  transform: translateZ(0); /* Hardware acceleration */
 }
 
 .courtsGrid > *:hover {
-  transform: translateY(-5px);
+  transform: translateY(-5px) translateZ(0); /* Mantener hardware acceleration */
 }
 
 /* 🔥 MAP SECTION */

@@ -72,7 +72,7 @@ const topRatedCourts = [
   }
 ];
 
-// 🔥 DATOS PARA LAS ESTADÍSTICAS DE ATLETISMO
+// 🏃 DATOS PARA LAS ESTADÍSTICAS DE ATLETISMO
 const atletismoStats = [
   {
     title: "Pistas Disponibles Hoy",
@@ -205,10 +205,10 @@ export default function AtletismoPage() {
           </div>
         </div>
 
-        {/* 🔥 STATS CARDS MEJORADAS CON STATSCARD */}
+        {/* 🏃 STATS CARDS MEJORADAS CON STATSCARD */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
-            <span className={styles.statsTitleIcon}>�</span>
+            <span className={styles.statsTitleIcon}>📊</span>
             Estadísticas del Atletismo en Temuco
           </h2>
           <div className={styles.statsContainer}>

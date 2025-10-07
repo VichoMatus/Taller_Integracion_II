@@ -9,11 +9,41 @@ import styles from './page.module.css';
 const canchas = [
   {
     imageUrl: "/sports/skate/canchas/Skate1.svg",
-    name: "Skate - Plaza Central",
-    address: "Plaza, Centro",
+    name: "Skate Plaza Central",
+    address: "Plaza de Armas, Centro",
     rating: 4.6,
-    tags: ["Skatepark", "Bowl", "Rampas"],
-    description: "Skatepark en el centro",
+    tags: ["Bowl", "Street", "Rampas"],
+    description: "Skatepark urbano con bowl profesional y zona street completa",
+    price: "0",
+    nextAvailable: "Abierto",
+  },
+  {
+    imageUrl: "/sports/skate/canchas/Skate2.svg",
+    name: "Skatepark Universidad",
+    address: "Campus Universitario, Temuco",
+    rating: 4.4,
+    tags: ["Principiantes", "Mini Ramp", "Flatground"],
+    description: "Área perfecta para aprender, con obstáculos básicos",
+    price: "0",
+    nextAvailable: "Abierto",
+  },
+  {
+    imageUrl: "/sports/skate/canchas/Skate1.svg",
+    name: "Bowl Parque Costanera",
+    address: "Costanera Norte, Temuco",
+    rating: 4.8,
+    tags: ["Bowl Profundo", "Avanzado", "Vert"],
+    description: "Bowl de concreto de nivel profesional con transiciones perfectas",
+    price: "0",
+    nextAvailable: "Abierto",
+  },
+  {
+    imageUrl: "/sports/skate/canchas/Skate2.svg",
+    name: "Street Plaza Condell",
+    address: "Av. Condell, Temuco",
+    rating: 4.3,
+    tags: ["Street", "Rails", "Escaleras"],
+    description: "Plaza de street skating con rails, escaleras y bordillos",
     price: "0",
     nextAvailable: "Abierto",
   }
@@ -40,7 +70,9 @@ export default function Page() {
       <div className={styles.mainContent}>
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerIcon}>🛹</div>
+            <div className={styles.headerIcon} style={{ '--emoji': 'var(--skate-main-emoji)' } as React.CSSProperties}>
+              {/* Emoji desde CSS variable */}
+            </div>
             <h1 className={styles.headerTitle}>Skate</h1>
           </div>
           <div className={styles.headerRight}>

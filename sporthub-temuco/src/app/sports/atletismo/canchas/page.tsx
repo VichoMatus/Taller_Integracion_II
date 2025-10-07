@@ -119,7 +119,7 @@ export default function Page() {
               placeholder="Nombre de la pista"
               sport="atletismo"
             />
-            <button className={styles.userButton}>
+            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
               <span>👤</span>
               <span>Usuario</span>
             </button>
@@ -177,7 +177,7 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#1e40af'}}>�</span>
+                <span style={{color: '#1e40af'}}>🏃</span>
                 <span>Tipo de pista</span>
               </label>
               <select className={styles.filterSelect}>

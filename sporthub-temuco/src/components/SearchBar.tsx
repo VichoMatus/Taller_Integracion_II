@@ -19,6 +19,7 @@ import enduroStyles from './stylesSearchBar/EnduroSearchBar.module.css';
 import futbolAmericanoStyles from './stylesSearchBar/Futbol-AmericanoSearchBar.module.css';
 import mountainBikeStyles from './stylesSearchBar/Mountain-BikeSearchBar.module.css';
 import rugbyStyles from './stylesSearchBar/RugbySearchBar.module.css';
+import kartingStyles from './stylesSearchBar/KartingSearchBar.module.css';
 
 interface SearchBarProps {
   value?: string;
@@ -80,6 +81,8 @@ const SearchBar = ({
         return rugbyStyles;
       case 'mountain-bike':
         return mountainBikeStyles;
+      case 'karting':
+        return kartingStyles;
       default:
         return indexStyles;
     }

@@ -1,12 +1,35 @@
 ﻿/* Shared styles for Atletismo pages - variables and common classes */
 :root {
-  /* Atletismo palette: blue + gray tones (requested) */
-  --atletismo-bg: #F3F6FB; /* very light blue-gray background */
-  --atletismo-accent: #1E40AF; /* deep indigo / primary blue */
-  --atletismo-accent-2: #60A5FA; /* light blue accent */
-  --atletismo-text: #0F172A; /* dark slate text */
+  /* Atletismo palette: blue tones unified */
+  --atletismo-primary: #1E40AF; /* deep indigo primary */
+  --atletismo-secondary: #3B82F6; /* medium blue secondary */
+  --atletismo-accent: #60A5FA; /* light blue accent */
+  --atletismo-light: #93C5FD; /* very light blue */
+  --atletismo-bg: #F8FAFC; /* light gray-blue background */
+  --atletismo-bg-secondary: #F1F5F9; /* secondary background */
+  --atletismo-text: #1E293B; /* dark slate text */
+  --atletismo-text-secondary: #475569; /* medium gray text */
+  --atletismo-border: rgba(59, 130, 246, 0.2); /* semi-transparent border */
+  --atletismo-shadow: rgba(59, 130, 246, 0.1); /* soft shadow */
   --card-bg: #ffffff;
-  --atletismo-accent-rgb: 30,64,175;
+  --atletismo-primary-rgb: 30, 64, 175;
+  --atletismo-secondary-rgb: 59, 130, 246;
+  --atletismo-accent-rgb: 96, 165, 250;
+  
+  /* Atletismo emoji standards - consistent across all components */
+  --atletismo-main-emoji: "🏃"; /* Main atletismo icon - simple runner */
+  --atletismo-star-emoji: "⭐"; /* Star rating - simple star */
+  --atletismo-location-emoji: "📍"; /* Location pin */
+  --atletismo-money-emoji: "💰"; /* Money/price */
+  --atletismo-calendar-emoji: "📅"; /* Calendar/date */
+  --atletismo-user-emoji: "👤"; /* User profile */
+  --atletismo-group-emoji: "👥"; /* Group of users */
+  --atletismo-trophy-emoji: "🏆"; /* Trophy/achievement */
+  --atletismo-search-emoji: "🔍"; /* Search functionality */
+  --atletismo-help-emoji: "❓"; /* Help/question */
+  --atletismo-arrow-left: "←"; /* Navigation left */
+  --atletismo-arrow-right: "→"; /* Navigation right */
+  --atletismo-ruler-emoji: "📏"; /* Ruler/measurement */
 }
 
 /* Overlay de navegación específico para Atletismo (used by CourtCard) */
@@ -30,7 +53,7 @@
 
 .navLoaderIcon {
   font-size: 72px;
-  filter: drop-shadow(0 8px 18px rgba(var(--atletismo-accent-rgb),0.10));
+  filter: drop-shadow(0 8px 18px rgba(var(--atletismo-secondary-rgb), 0.15));
 }
 
 .navLoaderText {
@@ -38,3 +61,18 @@
   color: var(--atletismo-text);
   font-weight: 700;
 }
+
+/* Utility classes for consistent emoji usage across atletismo components */
+.emojiMain::before { content: var(--atletismo-main-emoji); }
+.emojiStar::before { content: var(--atletismo-star-emoji); }
+.emojiLocation::before { content: var(--atletismo-location-emoji); }
+.emojiMoney::before { content: var(--atletismo-money-emoji); }
+.emojiCalendar::before { content: var(--atletismo-calendar-emoji); }
+.emojiUser::before { content: var(--atletismo-user-emoji); }
+.emojiGroup::before { content: var(--atletismo-group-emoji); }
+.emojiTrophy::before { content: var(--atletismo-trophy-emoji); }
+.emojiSearch::before { content: var(--atletismo-search-emoji); }
+.emojiHelp::before { content: var(--atletismo-help-emoji); }
+.emojiArrowLeft::before { content: var(--atletismo-arrow-left); }
+.emojiArrowRight::before { content: var(--atletismo-arrow-right); }
+.emojiRuler::before { content: var(--atletismo-ruler-emoji); }
