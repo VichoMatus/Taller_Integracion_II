@@ -1,6 +1,7 @@
 import api from "@/config/backend";
 import { LoginRequest, LoginResponse, RegisterRequest, MeResponse } from "@/types/auth";
 
+
 /**
  * Maneja autenticación. Si usas JWT:
  * - Guarda el token en localStorage (o cookie HttpOnly si backend lo maneja)
