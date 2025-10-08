@@ -6,34 +6,77 @@ import {
   NotificacionListQuery,
   UnreadCount,
 } from "../types/notificaciones";
+import { handleApiError } from "../services/ApiError";
 
 export const notificacionesService = {
-  list(params?: NotificacionListQuery) {
-    return api.get<Notificacion[]>("/notificaciones", { params }).then(r => r.data);
+  async list(params?: NotificacionListQuery): Promise<Notificacion[]> {
+    try {
+      const { data } = await api.get<Notificacion[]>("/notificaciones", { params });
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
   },
-  get(id: string | number) {
-    return api.get<Notificacion>(`/notificaciones/${id}`).then(r => r.data);
+
+  async get(id: string | number): Promise<Notificacion> {
+    try {
+      const { data } = await api.get<Notificacion>(`/notificaciones/${id}`);
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
   },
-  create(payload: NotificacionCreateRequest) {
-    return api.post<Notificacion>("/notificaciones", payload).then(r => r.data);
+
+  async create(payload: NotificacionCreateRequest): Promise<Notificacion> {
+    try {
+      const { data } = await api.post<Notificacion>("/notificaciones", payload);
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
   },
-  update(id: string | number, payload: NotificacionUpdateRequest) {
-    return api.put<Notificacion>(`/notificaciones/${id}`, payload).then(r => r.data);
+
+  async update(id: string | number, payload: NotificacionUpdateRequest): Promise<Notificacion> {
+    try {
+      const { data } = await api.put<Notificacion>(`/notificaciones/${id}`, payload);
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
   },
-  remove(id: string | number) {
-    return api.delete<void>(`/notificaciones/${id}`).then(r => r.data);
+
+  async remove(id: string | number): Promise<void> {
+    try {
+      await api.delete<void>(`/notificaciones/${id}`);
+    } catch (err) {
+      handleApiError(err);
+    }
   },
-  marcarLeida(id: string | number) {
-    return api.patch<Notificacion>(`/notificaciones/${id}/leer`).then(r => r.data);
+
+  async marcarLeida(id: string | number): Promise<Notificacion> {
+    try {
+      const { data } = await api.patch<Notificacion>(`/notificaciones/${id}/leer`);
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
   },
-  marcarTodasLeidas(id_usuario: string | number) {
-    return api
-      .patch<{ updated: number }>("/notificaciones/leer-todas", { id_usuario })
-      .then(r => r.data);
+
+  async marcarTodasLeidas(id_usuario: string | number): Promise<{ updated: number }> {
+    try {
+      const { data } = await api.patch<{ updated: number }>("/notificaciones/leer-todas", { id_usuario });
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
   },
-  noLeidasCount(id_usuario: string | number) {
-    return api
-      .get<UnreadCount>("/notificaciones/no-leidas", { params: { id_usuario } })
-      .then(r => r.data);
+
+  async noLeidasCount(id_usuario: string | number): Promise<UnreadCount> {
+    try {
+      const { data } = await api.get<UnreadCount>("/notificaciones/no-leidas", { params: { id_usuario } });
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
   },
 };
