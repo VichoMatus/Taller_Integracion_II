@@ -40,6 +40,8 @@ export default function RegistroPage() {
                 >
                   Volver al Inicio de Sesión
                 </Link>
+                <p>¿No recibiste el correo de verificación?</p>
+                <p>Revisa tu carpeta de spam o intenta registrarte nuevamente.</p>
               </div>
             </div>
           </div>

@@ -6,7 +6,7 @@ body {
 }
 
 .header-logo {
-    text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #4F46E5, 0 0 40px #4F46E5, 0 0 50px #4F46E5, 0 0 60px #4F46E5, 0 0 70px #4F46E5;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(79, 70, 229, 0.2);
 }
 
 .login-container {
