@@ -41,19 +41,19 @@ export const API_CONFIG = {
 export const API_ENDPOINTS = {
   // Endpoints de autenticación
   auth: {
-    register: '/auth/register',
-    login: '/auth/login',
-    logout: '/auth/logout',
-    refresh: '/auth/refresh',
-    me: '/auth/me',
-    updateMe: '/auth/me',
-    changePassword: '/auth/me/password',
-    pushToken: '/auth/me/push-token',
-    verifyEmail: '/auth/verify-email',
-    resendVerification: '/auth/resend-verification',
-    sendVerification: '/auth/send-verification', 
-    forgotPassword: '/auth/forgot-password',
-    resetPassword: '/auth/reset-password'
+    register: '/api/v1/auth/register',
+    login: '/api/v1/auth/login',
+    logout: '/api/v1/auth/logout',
+    refresh: '/api/v1/auth/refresh',
+    me: '/api/v1/auth/me',
+    updateMe: '/api/v1/auth/me',
+    changePassword: '/api/v1/auth/me/password',
+    pushToken: '/api/v1/auth/me/push-token',
+    verifyEmail: '/api/v1/auth/verify-email',
+    resendVerification: '/api/v1/auth/resend-verification',
+    sendVerification: '/api/v1/auth/send-verification', 
+    forgotPassword: '/api/v1/auth/forgot-password',
+    resetPassword: '/api/v1/auth/reset-password'
   },
   
   // Endpoints de usuarios
