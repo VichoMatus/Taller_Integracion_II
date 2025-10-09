@@ -1,0 +1,475 @@
+/* Sidebar Component - Diseño animado con efectos glassmorphism - Tema Ciclismo */
+
+@keyframes slideInLeft {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.sidebarContainer {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 256px;
+  height: 100vh;
+  background: linear-gradient(
+    145deg, 
+    #22c55e 0%,
+    #16a34a 50%,
+    #15803d 100%
+  );
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    2px 0 8px rgba(0, 0, 0, 0.1),
+    inset -1px 0 0 rgba(255, 255, 255, 0.1);
+  z-index: 40;
+  overflow-y: auto;
+  animation: slideInLeft 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebarContainer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 30%, rgba(34, 197, 94, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(22, 163, 74, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 40% 80%, rgba(21, 128, 61, 0.03) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+@keyframes logoPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(22, 163, 74, 0);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(22, 163, 74, 0.3);
+  }
+}
+
+@keyframes textGlow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    text-shadow: 
+      0 0 10px rgba(255, 255, 255, 0.8),
+      0 0 20px rgba(22, 163, 74, 0.3);
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Header de la sidebar */
+.sidebarHeader {
+  padding: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  backdrop-filter: blur(10px);
+  position: relative;
+  animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s both;
+}
+
+.sidebarHeader::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.sidebarHeader:hover::before {
+  transform: translateX(100%);
+}
+
+.sidebarLogoContainer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+.sidebarLogoIcon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(
+    135deg,
+    rgba(34, 197, 94, 0.8) 0%,
+    rgba(22, 163, 74, 0.8) 100%
+  );
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: logoPulse 3s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebarLogoIcon::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 70%
+  );
+  transform: rotate(45deg) translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.sidebarLogoIcon:hover::before {
+  transform: rotate(45deg) translateX(100%);
+}
+
+.sidebarLogoIcon:hover {
+  transform: scale(1.1) rotate(5deg);
+  box-shadow: 
+    0 4px 20px rgba(22, 163, 74, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+.sidebar-header-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: all 0.2s ease;
+}
+
+.sidebar-header-link:hover {
+  transform: scale(1.02);
+}
+
+/* Para los module.css files, agrega también: */
+.sidebarHeaderLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: all 0.2s ease;
+}
+
+.sidebarHeaderLink:hover {
+  transform: scale(1.02);
+}
+
+.sidebarTitle {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.2;
+  animation: textGlow 4s ease-in-out infinite;
+  transition: all 0.3s ease;
+}
+
+.sidebarTitle:hover {
+  transform: scale(1.02);
+  color: #dcfce7;
+}
+
+.sidebarSubtitle {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  margin: 2px 0 0 0;
+  line-height: 1.2;
+  transition: all 0.3s ease;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.sidebarSubtitle:hover {
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 0 8px rgba(22, 163, 74, 0.3);
+}
+
+/* Navegación */
+.sidebarNav {
+  flex: 1;
+  padding: 16px 0;
+  padding-bottom: 80px; /* Espacio para el botón de logout */
+  animation: fadeInUp 1s cubic-bezier(0.4, 0, 0.2, 1) 0.4s both;
+}
+
+.sidebarMenu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sidebarMenuItem {
+  padding: 0 16px;
+  animation: fadeInUp 1.2s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.sidebarMenuItem:nth-child(1) { animation-delay: 0.5s; }
+.sidebarMenuItem:nth-child(2) { animation-delay: 0.6s; }
+.sidebarMenuItem:nth-child(3) { animation-delay: 0.7s; }
+.sidebarMenuItem:nth-child(4) { animation-delay: 0.8s; }
+.sidebarMenuItem:nth-child(5) { animation-delay: 0.9s; }
+.sidebarMenuItem:nth-child(6) { animation-delay: 1.0s; }
+
+.sidebarMenuLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  font-weight: 500;
+  backdrop-filter: blur(5px);
+  border: 1px solid transparent;
+}
+
+.sidebarMenuLink::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 12px;
+}
+
+.sidebarMenuLink:hover::before {
+  opacity: 1;
+}
+
+.sidebarMenuLink:hover {
+  color: white;
+  transform: translateX(4px);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 4px 12px rgba(22, 163, 74, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.sidebarMenuLink.active {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(255, 255, 255, 0.1) 100%
+  );
+  color: white;
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 
+    0 4px 16px rgba(22, 163, 74, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translateX(6px);
+}
+
+.sidebarMenuLink.active::before {
+  opacity: 1;
+}
+
+.sidebarMenuIcon {
+  font-size: 20px;
+  transition: all 0.3s ease;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.sidebarMenuLink:hover .sidebarMenuIcon {
+  transform: scale(1.1);
+  filter: drop-shadow(0 2px 4px rgba(22, 163, 74, 0.3));
+}
+
+.sidebarMenuLink.active .sidebarMenuIcon {
+  transform: scale(1.15);
+  filter: drop-shadow(0 2px 6px rgba(22, 163, 74, 0.4));
+}
+
+.sidebarMenuText {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* Logout button */
+.sidebarLogout {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  animation: fadeInUp 1.4s cubic-bezier(0.4, 0, 0.2, 1) 1.1s both;
+}
+
+.sidebarLogoutButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.sidebarLogoutButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  transition: left 0.6s ease;
+}
+
+.sidebarLogoutButton:hover::before {
+  left: 100%;
+}
+
+.sidebarLogoutButton:hover {
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 20px rgba(22, 163, 74, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.sidebarLogoutIcon {
+  font-size: 16px;
+  transition: transform 0.3s ease;
+}
+
+.sidebarLogoutButton:hover .sidebarLogoutIcon {
+  transform: rotate(10deg) scale(1.1);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .sidebarContainer {
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+  }
+  
+  .sidebarContainer.mobile-open {
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebarContainer {
+    width: 280px;
+  }
+  
+  .sidebarHeader {
+    padding: 20px;
+  }
+  
+  .sidebarMenuItem {
+    padding: 0 12px;
+  }
+  
+  .sidebarMenuLink {
+    padding: 10px 12px;
+  }
+  
+  .sidebarLogout {
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+  }
+}
+
+/* Scrollbar personalizada */
+.sidebarContainer::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebarContainer::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.sidebarContainer::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(22, 163, 74, 0.6) 0%,
+    rgba(21, 128, 61, 0.6) 100%
+  );
+  border-radius: 3px;
+  transition: background 0.3s ease;
+}
+
+.sidebarContainer::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(22, 163, 74, 0.8) 0%,
+    rgba(21, 128, 61, 0.8) 100%
+  );
+}

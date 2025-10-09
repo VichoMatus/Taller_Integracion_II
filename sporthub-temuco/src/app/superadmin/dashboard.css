@@ -64,30 +64,36 @@
   box-shadow: var(--card-shadow);
 }
 
-/* Ajustes responsivos */
-@media (max-width: 1024px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .management-sections-grid {
-    grid-template-columns: 1fr;
-  }
+/* Asegurar que los botones estén alineados horizontalmente */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: nowrap; /* Evitar que se envuelvan en una línea nueva */
 }
 
+.section-header-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0; /* Evitar que se reduzcan */
+}
+
+/* Ajustes responsivos para mantener los botones juntos */
 @media (max-width: 640px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
+  .section-header {
+    flex-direction: row; /* Mantener dirección horizontal */
+    align-items: center;
+    gap: 1rem;
   }
 
-  .section-header {
-    flex-direction: column;
-    align-items: flex-start;
+  .section-header-buttons {
+    flex-direction: row; /* Mantener botones en línea */
+    width: auto; /* Ancho automático en lugar del 100% */
   }
 
   .section-button {
-    margin: 0.5rem 0;
-    width: 100%;
-    justify-content: center;
+    margin: 0; /* Eliminar márgenes que causaban problemas */
+    width: auto; /* Ancho automático en lugar del 100% */
+    white-space: nowrap; /* Evitar que el texto se divida en varias líneas */
   }
 }

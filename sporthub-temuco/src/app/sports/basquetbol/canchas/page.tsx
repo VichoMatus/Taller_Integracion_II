@@ -12,7 +12,6 @@ const canchas = [
     name: "Basquetbol - Centro",
     address: "Norte, Centro, Sur",
     rating: 4.3,
-    reviews: "130 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
     description: "Cancha para basquetbol ubicada en el centro y con implementos deportivos (Balones y petos)",
     price: "21",
@@ -23,7 +22,6 @@ const canchas = [
     name: "Basquetbol - Norte",
     address: "Sector Norte",
     rating: 4.5,
-    reviews: "85 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento"],
     description: "Cancha para basquetbol ubicada en el centro y con implementos deportivos (Balones y petos)",
     price: "19",
@@ -34,7 +32,6 @@ const canchas = [
     name: "Basquetbol - Sur",
     address: "Sector Sur",
     rating: 4.1,
-    reviews: "67 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación"],
     description: "Cancha para basquetbol ubicada en el centro y con implementos deportivos (Balones y petos)",
     price: "23",
@@ -45,7 +42,6 @@ const canchas = [
     name: "Basquetbol - Premium",
     address: "Centro Premium", 
     rating: 4.7,
-    reviews: "142 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
     description: "Cancha para basquetbol ubicada en el centro y con implementos deportivos (Balones y petos)",
     price: "26",
@@ -94,7 +90,7 @@ export default function Page() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>🏀</div>
-            <h1 className={styles.headerTitle}>Canchas de Basquetbol</h1>
+            <h1 className={styles.headerTitle}>Basquetbol</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar
@@ -104,7 +100,7 @@ export default function Page() {
             placeholder="Nombre de la cancha"
             sport="basquetbol" 
             />
-            <button className={styles.userButton}>
+            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
               <span>👤</span>
               <span>Usuario</span>
             </button>
@@ -176,7 +172,7 @@ export default function Page() {
           <div className={styles.filtersActions}>
             <button className={styles.searchButton}>
               <span>🔍</span>
-              <span>Buscar</span>
+              <span>Buscar canchas</span>
             </button>
           </div>
         </div>
@@ -201,14 +197,7 @@ export default function Page() {
             ))}
           </div>
           
-          {/* Mensaje de disponibilidad */}
-          <div className={styles.availabilityMessage}>
-            <div className={styles.availabilityCard}>
-              <span className={styles.availabilityText}>
-                Canchas Disponibles ahora: <span className={styles.availabilityNumber}> {availableNow}</span>
-              </span>
-            </div>
-          </div>
+        
         </div>
       </div>
     </div>

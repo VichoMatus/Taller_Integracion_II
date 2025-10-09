@@ -79,7 +79,7 @@ export default function AdministradoresPage() {
                 type="text"
                 placeholder="Buscar"
                 value={searchTerm}
-                onChange={(e: any) => setSearchTerm(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                 className="admin-search-input"
               />
               <svg className="admin-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">

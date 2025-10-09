@@ -79,11 +79,17 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 8px;
+  margin-bottom: 16px;
+  min-height: 50px;
+  max-height: 50px;
 }
 
 .cardTitleSection {
   flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .cardTitle {
@@ -91,8 +97,14 @@
   font-weight: 700;
   color: #000000;
   line-height: 1.2;
-  margin: 0 0 4px 0;
+  margin: 0;
   transition: color 0.3s ease; 
+  max-height: 38px; /* Aproximadamente 2 líneas */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2; /* Máximo 2 líneas */
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
 }
 
 .cardAddress {
@@ -108,12 +120,12 @@
   background: linear-gradient(135deg, #ffffff 0%, #fef7f0 100%);
   border: 2px solid #fed7aa;
   border-radius: 25px;
-  padding: 8px 14px;
+  padding: 4px 0;
   box-shadow: 
     0 4px 12px rgba(249, 115, 22, 0.15),
     0 2px 4px rgba(0, 0, 0, 0.05);
   margin-left: 12px;
-  min-width: 120px;
+  min-width: 60px;
   justify-content: center;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
@@ -190,6 +202,7 @@
   font-size: 12px;
   line-height: 1.4;
   margin-bottom: 16px;
+  margin-top: 0;
   flex: 1;
 }
 

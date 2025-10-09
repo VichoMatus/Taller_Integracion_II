@@ -1,10 +1,98 @@
-/* ===== RESET Y BASE ===== */
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* ===== VARIABLES ===== */
+:root {
+  --primary-color: #7c73e6;
+  --primary-light: #9a94ea;
+  --primary-very-light: #f0eeff;
+  --background-color: #fafbfc;
+  --card-background: #ffffff;
+  --text-dark: #4b5563;
+  --text-medium: #6b7280;
+  --text-light: #9ca3af;
+  --border-color: #e5e7eb;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+}
 
-html, body {
-  height: 100%;
-  background-color: rgba(234, 239, 239, 0.8);
-  font-family: Arial, sans-serif;
+/* ===== ANIMACIONES ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInFromLeft {
+  from { opacity: 0; transform: translateX(-30px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.3); }
+  50% { opacity: 1; transform: scale(1.05); }
+  70% { transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ===== ESTRUCTURA PRINCIPAL ===== */
+.perfil-wrapper {
+  margin-top: 14px;
+  margin-left: 256px;
+  padding: 24px;
+  min-height: calc(100vh - 14px);
+  background: var(--background-color);
+  animation: fadeIn 0.6s ease;
+}
+
+/* ===== HEADER COMO OTRAS PÁGINAS ===== */
+.perfil-header {
+  margin-bottom: 32px;
+  animation: slideInFromLeft 0.8s ease;
+}
+
+.perfil-titulo {
+  font-size: 2.2rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin: 0 0 8px 0;
+}
+
+.perfil-subtitulo {
+  font-size: 1.1rem;
+  color: var(--text-medium);
+  margin: 0;
+}
+
+/* ===== LOADING SPINNER ===== */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 20px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--primary-very-light);
+  border-left: 4px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-spinner p {
+  color: var(--text-medium);
+  font-size: 1.1rem;
 }
 
 /* ===== LAYOUT PRINCIPAL ===== */
@@ -22,22 +110,25 @@ html, body {
   padding: 25px;
   max-width: 1200px;
   width: 100%;
+  animation: fadeIn 0.8s ease 0.2s both;
 }
 
 /* ===== COLUMNA IZQUIERDA - PERFIL ===== */
 .profile-left {
   flex: 1;
-  background: #f7f7f7;
+  background: var(--card-background);
   border-radius: 12px;
   padding: 25px;
   text-align: center;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid var(--border-color);
+  animation: slideInFromLeft 0.6s ease 0.3s both;
 }
 
 .avatar-iniciales {
   width: 200px;
   height: 200px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -48,23 +139,34 @@ html, body {
   font-weight: bold;
   border: 4px solid white;
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  animation: bounceIn 0.8s ease 0.4s both;
+}
+
+.avatar-iniciales:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
 }
 
 .profile-left h2 {
   margin: 10px 0 0;
   font-size: 22px;
+  color: var(--text-dark);
+  animation: fadeIn 0.6s ease 0.5s both;
 }
 
 .profile-left p {
   margin: 0;
-  color: gray;
+  color: var(--text-medium);
   font-size: 14px;
+  animation: fadeIn 0.6s ease 0.6s both;
 }
 
 .profile-details {
   margin-top: 25px;
   text-align: left;
   font-size: 14px;
+  animation: fadeIn 0.6s ease 0.7s both;
 }
 
 .profile-details div {
@@ -72,21 +174,29 @@ html, body {
   justify-content: space-between;
   margin: 10px 0;
   padding: 5px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.profile-details div:last-child {
+  border-bottom: none;
 }
 
 .edit-btn {
   margin-top: 20px;
   padding: 10px 20px;
-  background-color: #f9c7c7;
+  background: var(--primary-color);
+  color: white;
   border: none;
-  border-radius: 20px;
+  border-radius: 8px;
   cursor: pointer;
   font-weight: bold;
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
+  animation: fadeIn 0.6s ease 0.8s both;
 }
 
 .edit-btn:hover {
-  background-color: #f5a5a5;
+  background: var(--primary-light);
+  transform: translateY(-2px);
 }
 
 /* ===== COLUMNA DERECHA ===== */
@@ -95,24 +205,33 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 25px;
+  animation: fadeIn 0.6s ease 0.4s both;
 }
 
 .info-box, .reservas-box {
-  background: white;
+  background: var(--card-background);
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid var(--border-color);
+  transition: transform 0.3s ease;
+}
+
+.info-box:hover, .reservas-box:hover {
+  transform: translateY(-2px);
 }
 
 .info-box h3, .reservas-box h3 {
   margin-bottom: 10px;
+  color: var(--text-dark);
 }
 
 .info-box p {
-  background: #f2f2f2;
+  background: var(--primary-very-light);
   padding: 10px;
   border-radius: 8px;
   font-size: 14px;
+  color: var(--text-medium);
 }
 
 /* ===== RESERVAS ===== */
@@ -122,12 +241,19 @@ html, body {
 }
 
 .reserva-card {
-  background: #fff;
+  background: var(--card-background);
   border-radius: 10px;
   padding: 15px;
   flex: 1;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  border: 1px solid var(--border-color);
   text-align: center;
+  transition: all 0.3s ease;
+}
+
+.reserva-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .reserva-card img {
@@ -141,25 +267,27 @@ html, body {
 .reserva-btn {
   margin-top: 10px;
   padding: 8px 12px;
-  background-color: #f7b37a;
+  background: var(--primary-color);
+  color: white;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-size: 13px;
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .reserva-btn:hover {
-  background-color: #f59e50;
+  background: var(--primary-light);
+  transform: translateY(-1px);
 }
 
 /* ===== DETALLES EXPANDIBLES ===== */
 .detalles-reserva {
   margin-top: 15px;
   padding: 15px;
-  background: #f8f9fa;
+  background: var(--primary-very-light);
   border-radius: 8px;
-  border-left: 4px solid #f7b37a;
+  border-left: 4px solid var(--primary-color);
   animation: slideDown 0.3s ease-out;
 }
 
@@ -172,7 +300,7 @@ html, body {
 
 .detalles-header h4 {
   margin: 0;
-  color: #333;
+  color: var(--text-dark);
   font-size: 16px;
 }
 
@@ -184,13 +312,13 @@ html, body {
 }
 
 .estado.confirmada {
-  background: #d4edda;
-  color: #155724;
+  background: #d1fae5;
+  color: #065f46;
 }
 
 .estado.pendiente-de-pago {
-  background: #fff3cd;
-  color: #856404;
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .detalles-grid {
@@ -203,7 +331,7 @@ html, body {
   display: flex;
   justify-content: space-between;
   padding: 5px 0;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .detalles-grid div:last-child {
@@ -212,7 +340,7 @@ html, body {
 
 .detalles-grid span:first-child {
   font-weight: 600;
-  color: #555;
+  color: var(--text-dark);
 }
 
 .detalles-actions {
@@ -227,40 +355,39 @@ html, body {
   border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
   flex: 1;
 }
 
 .btn-ir-reservas {
-  background: #4CAF50;
+  background: var(--success-color);
   color: white;
 }
 
 .btn-ir-reservas:hover {
-  background: #45a049;
+  background: #059669;
+  transform: translateY(-1px);
 }
 
 .btn-cancelar {
-  background: #f44336;
+  background: var(--error-color);
   color: white;
 }
 
 .btn-cancelar:hover {
-  background: #da190b;
-}
-
-@keyframes slideDown {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  background: #dc2626;
+  transform: translateY(-1px);
 }
 
 /* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
-  .page-wrapper {
+@media (max-width: 1024px) {
+  .perfil-wrapper {
     margin-left: 0;
-    padding: 10px;
+    padding: 16px;
   }
-  
+}
+
+@media (max-width: 768px) {
   .profile-card {
     flex-direction: column;
   }
@@ -277,5 +404,13 @@ html, body {
     width: 150px;
     height: 150px;
     font-size: 60px;
+  }
+  
+  .perfil-titulo {
+    font-size: 1.8rem;
+  }
+  
+  .perfil-subtitulo {
+    font-size: 1rem;
   }
 }

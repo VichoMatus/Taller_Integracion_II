@@ -1,0 +1,81 @@
+/* Estilos para el mapa de Natación */
+.mapContainer {
+  background: linear-gradient(145deg, #ffffff, #f0f9ff);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(30, 64, 175, 0.1);
+  margin: 20px 0;
+  overflow: hidden;
+  border: 1px solid rgba(30, 64, 175, 0.2);
+}
+
+.mapPlaceholder {
+  width: 100%;
+  min-height: 200px;
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 15px;
+  padding: 20px;
+  color: #1e40af;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.mapPlaceholder:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 25px rgba(30, 64, 175, 0.15);
+}
+
+.mapIcon {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.mapTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1e40af;
+  margin: 10px 0;
+}
+
+.mapMessage {
+  color: #3b82f6;
+  font-size: 16px;
+  margin: 5px 0;
+}
+
+.addressInfo {
+  color: #1e40af;
+  font-size: 14px;
+  margin: 5px 0;
+}
+
+.coordsInfo {
+  display: flex;
+  gap: 15px;
+  font-size: 12px;
+  color: #3b82f6;
+  margin: 10px 0;
+}
+
+.implementButton {
+  background: linear-gradient(135deg, #1e40af, #1e3a8a);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 15px;
+  box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
+}
+
+.implementButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
+}
