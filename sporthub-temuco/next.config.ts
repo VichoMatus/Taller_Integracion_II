@@ -1,17 +1,5 @@
 import type { NextConfig } from "next";
 
-// Cargar variables de entorno desde la raíz del workspace solo en desarrollo
-if (process.env.NODE_ENV !== 'production' && typeof window === 'undefined') {
-  try {
-    const { config } = require('dotenv');
-    const { resolve } = require('path');
-    config({ path: resolve(__dirname, '../.env') });
-  } catch (error) {
-    // Si dotenv no está disponible, continuar sin error
-    console.warn('dotenv no disponible, usando variables de sistema');
-  }
-}
-
 const nextConfig: NextConfig = {
   /* config options here */
   allowedDevOrigins: [
