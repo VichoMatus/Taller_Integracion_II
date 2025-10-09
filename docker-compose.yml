@@ -1,6 +1,9 @@
 services:
   frontend:
-    build: ./sporthub-temuco
+    build: 
+      context: ./sporthub-temuco
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     ports:
       - "3000:3000"
     volumes:
@@ -8,6 +11,7 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     command: npm run dev
     restart: unless-stopped
 
