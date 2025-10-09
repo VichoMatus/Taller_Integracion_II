@@ -8,9 +8,14 @@
 
 import axios from 'axios';
 
+// Configuración centralizada de URLs
+const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+export const BACKEND_URL = BACKEND_BASE_URL; // Para uso directo
+export const API_BASE_URL = `${BACKEND_BASE_URL}/api`; // Para API calls
+
 // Instancia de axios apuntando al Backend for Frontend (BFF)
 export const apiBackend = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api',
+  baseURL: API_BASE_URL,
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
