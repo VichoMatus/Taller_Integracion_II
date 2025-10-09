@@ -9,9 +9,19 @@
 import axios from 'axios';
 
 // Configuración centralizada de URLs
-// TEMPORAL: Hardcoded para testing
-const BACKEND_BASE_URL = 'http://backend-mn66n6-82bd05-168-232-167-73.traefik.me';
-// const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+// Detecta automáticamente el entorno
+const getBackendUrl = () => {
+  // En cliente: detecta por hostname
+  if (typeof window !== 'undefined') {
+    return window.location.hostname === 'localhost' 
+      ? 'http://localhost:4000'
+      : 'https://backend-mn66n6-82bd05-168-232-167-73.traefik.me';
+  }
+  // En servidor: usa variable de entorno o localhost por defecto
+  return 'http://localhost:4000';
+};
+
+const BACKEND_BASE_URL = getBackendUrl();
 
 export const BACKEND_URL = BACKEND_BASE_URL; // Para uso directo
 export const API_BASE_URL = `${BACKEND_BASE_URL}/api`; // Para API calls
