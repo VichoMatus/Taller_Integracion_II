@@ -1,13 +1,15 @@
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Cargar variables de entorno desde el .env de la raíz del proyecto
-// En Docker, el .env se monta en /app/.env
-// En desarrollo local, está en ../../../.env
-dotenv.config({ 
-  path: process.env.NODE_ENV === 'development' && process.cwd().includes('/app')
-    ? path.resolve(__dirname, '../../.env')     // Docker (montado en /app/.env)
-    : path.resolve(__dirname, '../../../.env')  // Desarrollo local
+// Cargar variables de entorno desde el único archivo .env de la raíz
+const rootPath = path.resolve(__dirname, '../../..');
+dotenv.config({ path: path.join(rootPath, '.env') });
+
+// Log de configuración para debugging
+console.log('🔧 Config: Variables cargadas desde .env:', {
+  NODE_ENV: process.env.NODE_ENV,
+  API_BASE_URL: process.env.API_BASE_URL,
+  BFF_PORT: process.env.BFF_PORT
 });
 
 /**

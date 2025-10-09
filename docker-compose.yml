@@ -24,15 +24,17 @@ services:
       - /app/node_modules
       - ./.env:/app/.env  # Montar el archivo .env de la raíz
     environment:
-      - NODE_ENV=development
+      # Variables para el BFF Node.js
+      - NODE_ENV=${NODE_ENV:-development}
+      - API_BASE_URL=${API_BASE_URL}
+      - API_TIMEOUT=${API_TIMEOUT}
+      - BFF_PORT=${BFF_PORT}
+      - FRONTEND_URL=${FRONTEND_URL}
+      # Variables para Docker Compose (base de datos local)
       - DB_HOST=db
       - DB_USER=${DOCKER_POSTGRES_USER}
       - DB_PASS=${DOCKER_POSTGRES_PASSWORD}
       - DB_NAME=${DOCKER_POSTGRES_DB}
-      - API_BASE_URL=${API_BASE_URL}
-      - FASTAPI_URL=${API_BASE_URL}
-      - BFF_PORT=${BFF_PORT}
-      - FRONTEND_URL=${FRONTEND_URL}
     depends_on:
       - db
     command: npm run dev

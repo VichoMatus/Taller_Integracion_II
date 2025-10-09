@@ -37,17 +37,11 @@ import canchasRoutes from './canchas/routes/canchas.routes';
 import complejosRoutes from './complejos/routes/complejos.routes';
 
 /**
- * CARGA DE VARIABLES DE ENTORNO
+ * CONFIGURACIÓN E IMPORTACIONES
  */
 
-// Cargar variables de entorno desde el .env de la raíz del proyecto
-// En Docker, el .env se monta en /app/.env
-// En desarrollo local, está en ../../.env
-dotenv.config({ 
-  path: process.env.NODE_ENV === 'development' && process.cwd().includes('/app')
-    ? path.resolve(__dirname, '../.env')       // Docker (montado en /app/.env)
-    : path.resolve(__dirname, '../../.env')    // Desarrollo local
-});
+// Importar configuración centralizada (ya incluye carga de .env)
+import './config/config';
 
 const app = express();
 const PORT = process.env.BFF_PORT || process.env.PORT || 4000;
