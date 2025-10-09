@@ -1,4 +1,5 @@
-import api from "../config/backend";
+import apiBackend from "../config/backend";
+import { handleApiError } from "../services/ApiError";
 import {
   Favorito,
   FavoritoCreateRequest,
@@ -8,29 +9,83 @@ import {
 } from "../types/favoritos";
 
 export const favoritosService = {
-  list(params?: FavoritoListQuery) {
-    return api.get<Favorito[]>("/favoritos", { params }).then(r => r.data);
+  // 🔹 Listar favoritos
+  async listar(params?: FavoritoListQuery): Promise<Favorito[]> {
+    try {
+      const { data } = await apiBackend.get<Favorito[]>("/favoritos", { params });
+      return data;
+    } catch (e) {
+      handleApiError(e);
+    }
   },
-  get(id: string | number) {
-    return api.get<Favorito>(`/favoritos/${id}`).then(r => r.data);
+
+  // 🔹 Obtener un favorito por ID
+  async obtener(id: string | number): Promise<Favorito> {
+    try {
+      const { data } = await apiBackend.get<Favorito>(`/favoritos/${id}`);
+      return data;
+    } catch (e) {
+      handleApiError(e);
+    }
   },
-  create(payload: FavoritoCreateRequest) {
-    return api.post<Favorito>("/favoritos", payload).then(r => r.data);
+
+  // 🔹 Crear un favorito
+  async crear(payload: FavoritoCreateRequest): Promise<Favorito> {
+    try {
+      const { data } = await apiBackend.post<Favorito>("/favoritos", payload);
+      return data;
+    } catch (e) {
+      handleApiError(e);
+    }
   },
-  remove(id: string | number) {
-    return api.delete<void>(`/favoritos/${id}`).then(r => r.data);
+
+  // 🔹 Eliminar por ID
+  async eliminar(id: string | number): Promise<void> {
+    try {
+      await apiBackend.delete(`/favoritos/${id}`);
+    } catch (e) {
+      handleApiError(e);
+    }
   },
-  removeByKey(id_usuario: string | number, id_cancha: string | number) {
-    return api.delete<void>("/favoritos", { params: { id_usuario, id_cancha } }).then(r => r.data);
+
+  // 🔹 Eliminar por combinación usuario + cancha
+  async eliminarPorClave(
+    id_usuario: string | number,
+    id_cancha: string | number
+  ): Promise<void> {
+    try {
+      await apiBackend.delete(`/favoritos`, { params: { id_usuario, id_cancha } });
+    } catch (e) {
+      handleApiError(e);
+    }
   },
-  esFavorito(id_usuario: string | number, id_cancha: string | number) {
-    return api
-      .get<EsFavoritoResponse>("/favoritos/es-favorito", { params: { id_usuario, id_cancha } })
-      .then(r => r.data);
+
+  // 🔹 Verificar si un usuario tiene una cancha como favorita
+  async esFavorito(
+    id_usuario: string | number,
+    id_cancha: string | number
+  ): Promise<EsFavoritoResponse> {
+    try {
+      const { data } = await apiBackend.get<EsFavoritoResponse>(
+        `/favoritos/es-favorito`,
+        { params: { id_usuario, id_cancha } }
+      );
+      return data;
+    } catch (e) {
+      handleApiError(e);
+    }
   },
-  countByUsuario(id_usuario: string | number) {
-    return api
-      .get<CountResponse>("/favoritos/count", { params: { id_usuario } })
-      .then(r => r.data);
+
+  // 🔹 Contar favoritos por usuario
+  async contarPorUsuario(id_usuario: string | number): Promise<CountResponse> {
+    try {
+      const { data } = await apiBackend.get<CountResponse>(
+        `/favoritos/count`,
+        { params: { id_usuario } }
+      );
+      return data;
+    } catch (e) {
+      handleApiError(e);
+    }
   },
 };

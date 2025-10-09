@@ -1,4 +1,5 @@
-import api from "@/config/backend";
+import apiBackend from "../config/backend";
+import { handleApiError } from "../services/ApiError";
 import {
   Usuario,
   UsuarioCreateRequest,
@@ -7,28 +8,83 @@ import {
 } from "../types/usuarios";
 
 export const usuariosService = {
-  list(params?: UsuarioListQuery) {
-    return api.get<Usuario[]>("/usuarios", { params }).then(r => r.data);
+  // Listar usuarios
+  async listar(params?: UsuarioListQuery): Promise<Usuario[]> {
+    try {
+      const { data } = await apiBackend.get<Usuario[]>("/usuarios", { params });
+      return data;
+    } catch (e) {
+      handleApiError(e);
+    }
   },
-  get(id: string | number) {
-    return api.get<Usuario>(`/usuarios/${id}`).then(r => r.data);
+
+  // Obtener usuario por ID
+  async obtener(id: string | number): Promise<Usuario> {
+    try {
+      const { data } = await apiBackend.get<Usuario>(`/usuarios/${id}`);
+      return data;
+    } catch (e) {
+      handleApiError(e);
+    }
   },
-  create(payload: UsuarioCreateRequest) {
-    return api.post<Usuario>("/usuarios", payload).then(r => r.data);
+
+  // Crear usuario
+  async crear(payload: UsuarioCreateRequest): Promise<Usuario> {
+    try {
+      const { data } = await apiBackend.post<Usuario>("/usuarios", payload);
+      return data;
+    } catch (e) {
+      handleApiError(e);
+    }
   },
-  update(id: string | number, payload: UsuarioUpdateRequest) {
-    return api.put<Usuario>(`/usuarios/${id}`, payload).then(r => r.data);
+
+  // Actualizar usuario
+  async actualizar(
+    id: string | number,
+    payload: UsuarioUpdateRequest
+  ): Promise<Usuario> {
+    try {
+      const { data } = await apiBackend.put<Usuario>(`/usuarios/${id}`, payload);
+      return data;
+    } catch (e) {
+      handleApiError(e);
+    }
   },
-  remove(id: string | number) {
-    return api.delete<void>(`/usuarios/${id}`).then(r => r.data);
+
+  // Eliminar usuario
+  async eliminar(id: string | number): Promise<void> {
+    try {
+      await apiBackend.delete(`/usuarios/${id}`);
+    } catch (e) {
+      handleApiError(e);
+    }
   },
-  activar(id: string | number) {
-    return api.patch<Usuario>(`/usuarios/${id}/activar`).then(r => r.data);
+
+  // Activar / Desactivar / Verificar
+  async activar(id: string | number): Promise<Usuario> {
+    try {
+      const { data } = await apiBackend.patch<Usuario>(`/usuarios/${id}/activar`);
+      return data;
+    } catch (e) {
+      handleApiError(e);
+    }
   },
-  desactivar(id: string | number) {
-    return api.patch<Usuario>(`/usuarios/${id}/desactivar`).then(r => r.data);
+
+  async desactivar(id: string | number): Promise<Usuario> {
+    try {
+      const { data } = await apiBackend.patch<Usuario>(`/usuarios/${id}/desactivar`);
+      return data;
+    } catch (e) {
+      handleApiError(e);
+    }
   },
-  verificar(id: string | number) {
-    return api.patch<Usuario>(`/usuarios/${id}/verificar`).then(r => r.data);
+
+  async verificar(id: string | number): Promise<Usuario> {
+    try {
+      const { data } = await apiBackend.patch<Usuario>(`/usuarios/${id}/verificar`);
+      return data;
+    } catch (e) {
+      handleApiError(e);
+    }
   },
 };

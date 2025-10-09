@@ -1,10 +1,12 @@
 import { apiBackend } from '../config/backend';
+import { handleApiError } from "../services/ApiError";
 import {
   Bloqueo,
   BloqueoCreate,
   BloqueoUpdate,
   BloqueoListQuery,
 } from "../types/bloqueos";
+
 
 export const bloqueosService = {
   list(params?: BloqueoListQuery) {
