@@ -1,5 +1,6 @@
-'use client';
+ 'use client';
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image'
 import Sidebar from '../../components/layout/Sidebar';
 import SearchBar from '../../components/SearchBar';
@@ -53,17 +54,118 @@ const sportsData = [
     href: '/sports/natacion'
   },
   {
-    id: 'voley',
-    name: 'Voley',
-    imageUrl: '/sports/voley/voley.png',
-    description: 'Explora voleibol y competencias.',
+    id: 'atletismo',
+    name: 'Atletismo',
+    imageUrl: '/sports/atletismo/atletismo.png',
+    description: 'Pistas de atletismo, eventos de carreras y competencias deportivas.',
     tag: 'Nuevo',
-    tagColor: '#ec4899', // Rosa
-    href: '/sports/voley'
-  }
+    tagColor: '#1E40AF', // Blue/gray palette for Atletismo
+    href: '/sports/atletismo'
+  },
+  {
+    id: 'skate',
+    name: 'Skate',
+    imageUrl: '/sports/skate/skate.png',
+    description: 'Skateparks, rampas, bowls y zonas de street skating.',
+    tag: 'Nuevo',
+    tagColor: '#6b7280', // neutral gray (no naranja)
+    href: '/sports/skate'
+  },
+  {
+    id: 'ciclismo',
+    name: 'Ciclismo',
+    imageUrl: '/sports/ciclismo/ciclismo.png',
+    description: 'Ciclovías urbanas, rutas de montaña y pistas de ciclismo.',
+    tag: 'Nuevo',
+    tagColor: '#22c55e', // Verde para ciclismo
+    href: '/sports/ciclismo'
+  },
+  {
+    id: 'karting',
+    name: 'Karting',
+    imageUrl: '/sports/karting/karting.png',
+    description: 'Kartódromos profesionales, pistas techadas y competencias de velocidad.',
+    tag: 'Nuevo',
+    tagColor: '#ef4444', // Rojo para karting
+    href: '/sports/karting'
+  },
+  // NUEVOS DEPORTES AGREGADOS
+  {
+    id: 'enduro',
+    name: 'Enduro',
+    imageUrl: '/sports/enduro/enduro.png',
+    description: 'Rutas y circuitos para enduro. Terrenos desafiantes y emocionantes.',
+    tag: 'Extremo',
+    tagColor: '#4B5320', // verde militar
+    href: '/sports/enduro'
+  },
+  {
+    id: 'futbol-americano',
+    name: 'Futbol Americano',
+    imageUrl: '/sports/futbol-americano/futbol-americano.png',
+    description: 'Campos profesionales para partidos y entrenamientos de football americano.',
+    tag: 'Contacto',
+    tagColor: '#002147', // azul marino
+    href: '/sports/futbol-americano'
+  },
+  {
+    id: 'rugby',
+    name: 'Rugby',
+    imageUrl: '/sports/rugby/rugby.png',
+    description: 'Campos de rugby con medidas oficiales para partidos y entrenamientos.',
+    tag: 'Intenso',
+    tagColor: '#722F37', // vino titno
+    href: '/sports/rugby'
+  },
+  {
+    id: 'mountain-bike',
+    name: 'Mountain Bike',
+    imageUrl: '/sports/mountain-bike/mountain-bike.png',
+    description: 'Senderos y circuitos para mountain bike. Diferentes niveles de dificultad.',
+    tag: 'Aventura',
+    tagColor: '#4E342E', // Índigo
+    href: '/sports/mountain-bike'
+  },
+  {
+    id: 'voleibol',
+    name: 'Voleibol',
+    imageUrl: '/sports/voleibol/voleibol.png',
+    description: 'Campos de voleibol para partidos y entrenamientos.',
+    tag: 'Equipo',
+    tagColor: '#FF0000',
+    href: '/sports/voleibol'
+  },
+  {
+    id: 'entrenamientofuncional',
+    name: 'Crossfit y Entrenamiento Funcional',
+    imageUrl: '/sports/crossfitentrenamientofuncional/crossfitentrenamientofuncional.png',
+    description: 'Explora entrenamiento funcional y rutinas de ejercicio.',
+    tag: 'Nuevo',
+    tagColor: '#272829', // Gris Oscuro
+    href: '/sports/crossfitentrenamientofuncional'
+  },
+  {
+    id: 'patinaje',
+    name: 'Patinaje',
+    imageUrl: '/sports/patinaje/patinaje.png',
+    description: 'Explora patinaje y competencias.',
+    tag: 'Nuevo',
+    tagColor: '#55f2edff', // Rosa
+    href: '/sports/patinaje'
+  },
+  {
+    id: 'escalada',
+    name: 'Escalada',
+    imageUrl: '/sports/escalada/escalada.png',
+    description: 'Explora centros de escalada y rutas.',
+    tag: 'Nuevo',
+    tagColor: '#A67B5B', // Marrón
+    href: '/sports/escalada'
+  },
 ];
 
 export default function SportsPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('competitivo');
   const [filteredSports, setFilteredSports] = useState(sportsData);
@@ -83,11 +185,6 @@ export default function SportsPage() {
     }
   };
 
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortBy(e.target.value);
-    // Aquí podrías implementar la lógica de ordenamiento
-  };
-
   const handleSportClick = (sport: typeof sportsData[0]) => {
     if (sport.href) {
       window.location.href = sport.href;
@@ -105,7 +202,7 @@ export default function SportsPage() {
         <div className={styles.header}>
           <h1 className={styles.pageTitle}>Explora Deportes</h1>
           <div className={styles.headerRight}>
-            <button className={styles.userButton}>
+            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
               <span>👤</span>
               <span>Usuario</span>
             </button>
@@ -138,12 +235,11 @@ export default function SportsPage() {
                     src={sport.imageUrl} 
                     alt={sport.name}
                     className={styles.sportImage}
-                    width={300}  // Requerido
-                    height={200} // Requerido
+                    width={300}
+                    height={200}
                     placeholder="blur"
                     blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                   />
-                {/* Tag del deporte */}
                 <div 
                   className={styles.sportTag}
                   style={{ backgroundColor: sport.tagColor }}
@@ -152,12 +248,10 @@ export default function SportsPage() {
                 </div>
               </div>
 
-              {/* Contenido de la card */}
               <div className={styles.sportContent}>
                 <h3 className={styles.sportName}>{sport.name}</h3>
                 <p className={styles.sportDescription}>{sport.description}</p>
                 
-                {/* Botón de acción */}
                 <button className={styles.exploreButton}>
                   Explorar
                 </button>

@@ -1,0 +1,663 @@
+/* Animaciones */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Container principal */
+.pageContainer {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(
+    135deg,
+    #fef2f2 0%,
+    #fff5f5 25%,
+    #fef2f2 50%,
+    #fff1f1 75%,
+    #fef2f2 100%
+  );
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.mainContent {
+  flex: 1;
+  margin-left: 250px;
+  padding: 2rem;
+  overflow-x: hidden;
+  animation: fadeIn 0.6s ease-out;
+}
+
+/* 🔥 HEADER MEJORADO - CLON DE ENDURO CON COLORES ROJOS */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(254, 226, 226, 0.8) 100%
+  );
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 20px 30px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
+  animation: slideInRight 0.8s ease-out;
+  transition: all 0.3s ease;
+}
+
+.header:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(239, 68, 68, 0.2);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.headerIcon {
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+}
+
+.headerIcon:hover {
+  transform: scale(1.1);
+}
+
+.headerTitle {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.userButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.userButton:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+/* Stats container */
+.statsContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+  animation: fadeInUp 0.8s ease-out 0.1s both;
+}
+
+.statCard {
+  background: rgba(255, 255, 255, 0.95);
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.1);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.statCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* Quick access section */
+.quickAccessSection {
+  margin-bottom: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeInUp 1s ease-out 0.4s both;
+}
+
+.mainCourtButton {
+  background: linear-gradient(135deg, #ffffff 0%, #fef2f2 100%);
+  border: 2px solid #ef4444;
+  border-radius: 16px;
+  padding: 24px 32px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 550px;
+  box-shadow: 
+    0 4px 20px rgba(239, 68, 68, 0.15),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+.mainCourtButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg, 
+    transparent 0%, 
+    rgba(239, 68, 68, 0.1) 50%, 
+    transparent 100%
+  );
+  transition: left 0.6s ease;
+  z-index: 1;
+}
+
+.mainCourtButton:hover::before {
+  left: 100%;
+}
+
+.mainCourtButton:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+  color: white;
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 
+    0 12px 40px rgba(239, 68, 68, 0.3),
+    0 0 0 2px rgba(239, 68, 68, 0.2);
+  border-color: #f97316;
+}
+
+.mainCourtButton:active {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.containerCard {
+  overflow: hidden;
+  position: relative;
+}
+
+.containerCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(239, 68, 68, 0.1),
+    transparent
+  );
+  transition: left 0.6s ease;
+}
+
+.containerCard:hover::before {
+  left: 100%;
+}
+
+.courtButtonIcon {
+  font-size: 36px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
+}
+
+.mainCourtButton:hover .courtButtonIcon {
+  transform: scale(1.3) rotate(15deg);
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
+}
+
+.courtButtonText {
+  flex: 1;
+  text-align: left;
+  z-index: 2;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.courtButtonTitle {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+  color: #1f2937;
+  transition: all 0.3s ease;
+  line-height: 1.2;
+}
+
+.courtButtonSubtitle {
+  display: block;
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  transition: all 0.3s ease;
+  line-height: 1.3;
+}
+
+.mainCourtButton:hover .courtButtonTitle,
+.mainCourtButton:hover .courtButtonSubtitle {
+  color: white;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.courtButtonArrow {
+  font-size: 28px;
+  font-weight: 700;
+  color: #ef4444;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 2;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+}
+
+.mainCourtButton:hover .courtButtonArrow {
+  color: white;
+  transform: translateX(8px) scale(1.1);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.mainCourtButton::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1;
+}
+
+.mainCourtButton:hover::after {
+  opacity: 1;
+}
+
+.mainCourtButton:focus {
+  outline: none;
+  box-shadow: 
+    0 4px 20px rgba(239, 68, 68, 0.25),
+    0 0 0 3px rgba(239, 68, 68, 0.3);
+}
+
+/* Top rated section */
+.topRatedSection {
+  margin-bottom: 2.5rem;
+  animation: fadeInUp 1s ease-out 0.3s both;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding: 0 0.5rem;
+}
+
+.sectionTitle {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #dc2626;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sectionIcon {
+  font-size: 1.5rem;
+}
+
+.carouselControls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.carouselButton {
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.2rem;
+  color: #dc2626;
+  font-weight: 600;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1);
+}
+
+.carouselButton:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+}
+
+.carouselButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.slideIndicator {
+  font-size: 0.9rem;
+  color: #7f1d1d;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  backdrop-filter: blur(5px);
+}
+
+.carouselContainer {
+  overflow: hidden;
+  border-radius: 16px;
+  padding: 0.5rem;
+}
+
+.courtsGrid {
+  display: flex;
+  gap: 20px;
+  transition: transform 0.4s ease;
+  will-change: transform;
+}
+
+/* Map section */
+.mapSection {
+  margin-bottom: 2rem;
+  animation: fadeInUp 1.1s ease-out 0.4s both;
+}
+
+.locationSearch {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.locationInputContainer {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.locationIcon {
+  position: absolute;
+  left: 1rem;
+  font-size: 1.2rem;
+  color: #ef4444;
+  z-index: 1;
+}
+
+.locationInput {
+  width: 100%;
+  padding: 1rem 1rem 1rem 2.8rem;
+  border: 2px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(5px);
+}
+
+.locationInput:focus {
+  outline: none;
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.radiusContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.radiusIcon {
+  position: absolute;
+  left: 1rem;
+  font-size: 1rem;
+  color: #ef4444;
+  z-index: 1;
+}
+
+.radiusSelect {
+  padding: 1rem 1rem 1rem 2.8rem;
+  border: 2px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.8);
+  color: #7f1d1d;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(5px);
+}
+
+.radiusSelect:focus {
+  outline: none;
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.searchButton {
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+  white-space: nowrap;
+}
+
+.searchButton:hover {
+  background: linear-gradient(135deg, #dc2626, #ea580c);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
+.mapActions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+  gap: 1rem;
+}
+
+.helpButton {
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(239, 68, 68, 0.2);
+  border-radius: 12px;
+  color: #dc2626;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1);
+}
+
+.helpButton:hover {
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .mainContent {
+    margin-left: 0;
+    padding: 1.5rem;
+  }
+  
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .headerTitle {
+    font-size: 2rem;
+  }
+  
+  .statsContainer {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+  
+  .locationSearch {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .locationInputContainer {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    padding: 1rem;
+  }
+  
+  .header {
+    padding: 1rem;
+  }
+  
+  .headerTitle {
+    font-size: 1.8rem;
+  }
+  
+  .headerIcon {
+    font-size: 2rem;
+  }
+  
+  .statsContainer {
+    grid-template-columns: 1fr;
+  }
+  
+  .mainCourtButton {
+    padding: 1.5rem;
+    flex-direction: column;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .courtButtonIcon {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+  }
+  
+  .sectionHeader {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .carouselControls {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .headerTitle {
+    font-size: 1.5rem;
+  }
+  
+  .courtButtonTitle {
+    font-size: 1.2rem;
+  }
+  
+  .courtButtonSubtitle {
+    font-size: 0.9rem;
+  }
+  
+  .sectionTitle {
+    font-size: 1.5rem;
+  }
+  
+  .carouselButton {
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+  }
+}

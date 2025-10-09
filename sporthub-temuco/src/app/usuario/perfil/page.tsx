@@ -1,19 +1,20 @@
 'use client';
 
 import './perfil.css';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import UserLayout from '../UsuarioLayout';
 import Link from 'next/link';
 
 export default function PerfilUsuario() {
   const [reservasExpandidas, setReservasExpandidas] = useState<number[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   const userData = {
     name: "Usuario",
     location: "Padre Las Casas",
     phone: "+569 28102374",
     email: "Usuario@gmail.com", 
-    sport: "Fútbol",
+    sport: undefined, // ✅ CORREGIDO: usar : en lugar de =
     age: "28",
     gender: "Masculino"
   };
@@ -53,20 +54,47 @@ export default function PerfilUsuario() {
     }
   ];
 
+  // Simular carga inicial
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
   const toggleDetalles = (id: number) => {
     setReservasExpandidas(prev => 
       prev.includes(id) 
-        ? prev.filter(item => item !== id) // Remover si ya está
-        : [...prev, id] // Agregar si no está
+        ? prev.filter(item => item !== id)
+        : [...prev, id]
     );
   };
 
+  if (isLoading) {
+    return (
+      <UserLayout userName={userData.name} notificationCount={2}> {/* ✅ Sin sport */}
+        <div className="perfil-wrapper">
+          <div className="loading-spinner">
+            <div className="spinner"></div>
+            <p>Cargando perfil...</p>
+          </div>
+        </div>
+      </UserLayout>
+    );
+  }
+
   return (
     <div id="tailwind-wrapper">
-      <UserLayout userName={userData.name} sport="futbol" notificationCount={2}>
-        <div className="page-wrapper">
+      <UserLayout userName={userData.name} notificationCount={2}> {/* ✅ Sin sport */}
+        <div className="perfil-wrapper">
+          {/* Título a la izquierda como en las otras páginas */}
+          <div className="perfil-header">
+            <h1 className="perfil-titulo">Perfil de Usuario</h1>
+            <p className="perfil-subtitulo">Gestiona tu información y reservas</p>
+          </div>
+
           <div className="profile-card">
-            
             <div className="profile-left">
               <div className="avatar-iniciales">
                 <span>{userInitial}</span>
@@ -79,7 +107,7 @@ export default function PerfilUsuario() {
                 <div><span>Ubicación</span><span>{userData.location}</span></div>
                 <div><span>Teléfono</span><span>{userData.phone}</span></div>
                 <div><span>Correo</span><span>{userData.email}</span></div>
-                <div><span>Deporte favorito</span><span style={{ color: 'green' }}>{userData.sport}</span></div>
+                <div><span>Deporte favorito</span><span style={{ color: 'green' }}>{userData.sport || 'No especificado'}</span></div>
                 <div><span>Edad</span><span>{userData.age}</span></div>
                 <div><span>Género</span><span>{userData.gender}</span></div>
               </div>

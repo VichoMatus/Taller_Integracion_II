@@ -91,21 +91,15 @@
   background-size: 400% 400%;
   animation: gradientShift 8s ease infinite;
   font-family: 'Inter', sans-serif;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow: hidden;
+  position: relative;           /* antes fixed */
+  overflow-x: hidden;           /* evita scroll lateral */
+  overflow-y: visible;          /* deja que el body maneje el scroll */
 }
 
 .pageContainer::before {
   content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  position: fixe;
+  inset: 0;
   background: 
     radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
@@ -120,8 +114,8 @@
   padding: 20px;
   margin-left: 250px;
   overflow-y: auto;
-  height: 100vh;
-  padding-bottom: 300px; /* 🔥 AUMENTADO SIGNIFICATIVAMENTE de 180px a 300px */
+  min-height: 100vh;
+  padding-bottom: 0;
   animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(5px);
   display: flex;
@@ -454,6 +448,13 @@
   background-clip: text;
   transition: all 0.3s ease;
   position: relative;
+  min-height: 2.8rem; /* Altura fija para 2 líneas aproximadamente */
+  line-height: 1; /* Espaciado de línea consistente */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; /* Limita a 2 líneas */
+  text-overflow: ellipsis;
+  max-height: 2.8em;
 }
 
 .sportCard:hover .sportName {
@@ -468,6 +469,13 @@
   margin: 0;
   flex: 1;
   transition: all 0.3s ease;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3; /* Limita a 3 líneas */
+  text-overflow: ellipsis;
+  min-height: 4.8em; /* 3 líneas × 1.6 line-height = 4.8em */
+  max-height: 4.8em; /* Altura fija para mantener consistencia */
 }
 
 .sportCard:hover .sportDescription {
@@ -601,79 +609,4 @@
   background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
   transform: translateY(-2px) scale(1.05);
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-}
-
-/* 🔥 RESPONSIVE MEJORADO */
-@media (max-width: 1300px) {
-  .sportsGrid {
-    grid-template-columns: repeat(2, 400px);
-  }
-  
-  .header {
-    max-width: 900px;
-  }
-  
-  .cardsSection {
-    max-width: 900px;
-  }
-}
-
-@media (max-width: 768px) {
-  .mainContent {
-    margin-left: 0;
-    padding: 15px;
-    padding-bottom: 200px; /* 🔥 AUMENTADO para móviles también */
-  }
-  
-  .sportsGrid {
-    grid-template-columns: 1fr;
-    max-width: 400px;
-    justify-items: center;
-    padding-bottom: 30px; /* 🔥 Menos padding en móviles */
-  }
-  
-  .sportCard {
-    width: 100%;
-    max-width: 400px;
-    margin-bottom: 30px; /* 🔥 AUMENTADO para móviles */
-  }
-  
-  .header {
-    flex-direction: column;
-    gap: 20px;
-    align-items: flex-start;
-    padding: 20px 25px;
-    max-width: 100%;
-  }
-  
-  .pageTitle {
-    font-size: 24px;
-  }
-  
-  .sportCard:hover {
-    transform: translateY(-10px) scale(1.02);
-  }
-  
-  .searchSection {
-    max-width: 100%;
-  }
-  
-  .cardsSection {
-    margin-bottom: 150px; /* 🔥 AUMENTADO para móviles */
-  }
-  
-  .noResults {
-    margin-bottom: 150px; /* 🔥 AUMENTADO para móviles */
-  }
-}
-
-@media (max-width: 480px) {
-  .sportsGrid {
-    max-width: 100%;
-  }
-  
-  .sportCard {
-    width: 100%;
-    max-width: none;
-  }
 }

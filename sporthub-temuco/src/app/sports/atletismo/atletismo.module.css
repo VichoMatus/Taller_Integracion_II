@@ -1,0 +1,40 @@
+﻿/* Shared styles for Atletismo pages - variables and common classes */
+:root {
+  /* Atletismo palette: blue + gray tones (requested) */
+  --atletismo-bg: #F3F6FB; /* very light blue-gray background */
+  --atletismo-accent: #1E40AF; /* deep indigo / primary blue */
+  --atletismo-accent-2: #60A5FA; /* light blue accent */
+  --atletismo-text: #0F172A; /* dark slate text */
+  --card-bg: #ffffff;
+  --atletismo-accent-rgb: 30,64,175;
+}
+
+/* Overlay de navegación específico para Atletismo (used by CourtCard) */
+.navLoader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.96);
+  font-family: 'Inter', sans-serif;
+}
+
+.navLoaderInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.navLoaderIcon {
+  font-size: 72px;
+  filter: drop-shadow(0 8px 18px rgba(var(--atletismo-accent-rgb),0.10));
+}
+
+.navLoaderText {
+  font-size: 18px;
+  color: var(--atletismo-text);
+  font-weight: 700;
+}

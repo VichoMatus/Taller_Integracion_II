@@ -7,15 +7,33 @@ import { usePathname } from 'next/navigation';
 import './Sidebar.css'; 
 import indexStyles from './StylesSportsSideBar/IndexSideBar.module.css';
 import basquetbolStyles from './StylesSportsSideBar/BasquetbolSideBar.module.css';
-// import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
+import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
+import padelStyles from './StylesSportsSideBar/PadelSideBar.module.css';
+import crossfitentrenamientofuncionalStyles from './StylesSportsSideBar/CrossfitEntrenamientoFuncionalSideBar.module.css';
+import escaladaStyles from './StylesSportsSideBar/EscaladaSideBar.module.css';
 // import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
+import atletismoStyles from './StylesSportsSideBar/AtletismoSideBar.module.css';
+import ciclismoStyles from './StylesSportsSideBar/CiclismoSideBar.module.css';
+import kartingStyles from './StylesSportsSideBar/KartingSideBar.module.css';
+// skateStyles removed: skate uses indexStyles now
+// import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
+import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
+import voleiStyles from './StylesSportsSideBar/VoleibolSideBar.module.css';
+import natacionStyles from './StylesSportsSideBar/NatacionSideBar.module.css';
+import patinajeStyles from './StylesSportsSideBar/PatinajeSideBar.module.css';
+import enduroStyles from './StylesSportsSideBar/EnduroSideBar.module.css';
+// import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
+import futbolamericanoStyles from './StylesSportsSideBar/FutbolAmericanoSideBar.module.css';
+import rugbyStyles from './StylesSportsSideBar/RugbySideBar.module.css';
+import mountainbikeStyles from './StylesSportsSideBar/MountainBikeSideBar.module.css';
 
 interface SidebarProps {
   userRole: 'admin' | 'superadmin' | 'usuario';
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje'| 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | 'escalada' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
+
 }
 
-const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
+const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado a undefined por defecto
   const pathname = usePathname();
 
   // Función para obtener los estilos según el rol Y deporte
@@ -25,6 +43,11 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
       return null; 
     }
 
+    // 🔥 PRIMERO: Si no hay deporte seleccionado, usar indexStyles (color base)
+    if (!sport) {
+      return indexStyles;
+    }
+
     if (pathname === '/' || pathname === '/sports' || pathname === '/sports/') {
       return indexStyles;
     }
@@ -32,18 +55,53 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
     if (pathname === '/' || pathname === '/sports/reservacancha' || pathname === '/sports/reservacancha/') {
       return indexStyles;
     }
+    
+    // Ensure Favoritos and Mensajería use the generic Sports styles (not the sport-specific ones)
+    if (pathname && (pathname.startsWith('/sports/favoritos') || pathname.startsWith('/sports/mensajeria'))) {
+      return indexStyles;
+    }
  
     switch (sport) {
       case 'basquetbol':
         return basquetbolStyles;
+      case 'skate':
+        return indexStyles;
+      case 'atletismo':
+        console.log('🏃 Using atletismoStyles for Atletismo');
+        return atletismoStyles;
+      case 'ciclismo':
+        return ciclismoStyles;
+      case 'karting':
+        return kartingStyles;
       case 'futbol':
-        // return futbolStyles;
-        return basquetbolStyles; // temporal
+        return futbolStyles; 
       case 'tenis':
+       return tenisStyles;
+      case 'voleibol':
+        return voleiStyles;
+      case 'padel':
+        return padelStyles;
+      case 'crossfitentrenamientofuncional':
+        return crossfitentrenamientofuncionalStyles;
+      case 'natacion':
+        return natacionStyles;
+      case 'patinaje':
+        return patinajeStyles;
         // return tenisStyles;
         return basquetbolStyles; // temporal
+      case 'enduro':
+        return enduroStyles;
+      case 'futbol-americano':
+        return futbolamericanoStyles;
+      case 'rugby':
+        return rugbyStyles;
+      case 'mountain-bike':
+        return mountainbikeStyles;
+
+      case 'escalada':
+        return escaladaStyles;
       default:
-        return basquetbolStyles;
+        return indexStyles; 
     }
   };
 
@@ -149,20 +207,20 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
     {
       name: 'Favoritos',
       icon: '⭐',
-      href: '/favoritos',
-      active: pathname === '/favoritos'
+      href: '/sports/favoritos',
+      active: pathname === '/sports/favoritos'
     },
     {
       name: 'Perfil',
       icon: '👤',
-      href: '/perfil',
-      active: pathname === '/perfil'
+      href: '/usuario/perfil',
+      active: pathname === '/usuario/perfil'
     },
     {
       name: 'Mensajería',
       icon: '💬',
-      href: '/mensajeria',
-      active: pathname === '/mensajeria'
+      href: '/sports/mensajeria',
+      active: pathname && pathname.startsWith('/sports/mensajeria')
     }
   ];
 
@@ -182,7 +240,8 @@ const Sidebar = ({ userRole, sport = 'basquetbol' }: SidebarProps) => {
             <p className={styles ? styles.sidebarSubtitle : 'sidebar-subtitle'}>{userTitle}</p>
           </div>
         </div>
-        {userRole === 'usuario' && styles && <div className={styles.sportIcon}></div>}
+        {userRole === 'usuario' && sport && styles && <div className={styles.sportIcon}></div>}
+  {/* Removed sport icon box to avoid the extra blue square in the sidebar */}
       </div>
 
       {/* Navigation */}
