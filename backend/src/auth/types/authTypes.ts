@@ -128,11 +128,12 @@ export interface ForgotPasswordRequest {
 }
 
 /**
- * Restablecer contraseña con token
+ * Restablecer contraseña con código
  * Utilizada en el endpoint POST /auth/reset-password
  */
 export interface ResetPasswordRequest {
-  token: string;            // Token de restablecimiento recibido por email
+  email: string;            // Email del usuario
+  code: string;             // Código de restablecimiento recibido por email (4-12 chars)
   new_password: string;     // Nueva contraseña (min 8 caracteres)
 }
 
@@ -142,11 +143,12 @@ export interface ResetPasswordRequest {
  */
 
 /**
- * Verificar email con token
+ * Verificar email con código
  * Utilizada en el endpoint POST /auth/verify-email
  */
 export interface VerifyEmailRequest {
-  token: string;            // Token de verificación recibido por email
+  email: string;            // Email del usuario a verificar
+  code: string;             // Código de verificación recibido por email (4-12 chars)
 }
 
 /**
@@ -155,6 +157,14 @@ export interface VerifyEmailRequest {
  */
 export interface ResendVerificationRequest {
   email: string;            // Email al que reenviar la verificación
+}
+
+/**
+ * Enviar código de verificación
+ * Utilizada en el endpoint POST /auth/send-verification
+ */
+export interface SendVerificationRequest {
+  email: string;            // Email al que enviar el código de verificación
 }
 
 /**
@@ -197,7 +207,7 @@ export interface PushTokenRequest {
  * Utilizada para confirmaciones y mensajes informativos
  */
 export interface SimpleMessage {
-  detail: string;           // Mensaje descriptivo de la operación
+  message: string;          // Mensaje descriptivo de la operación
 }
 
 /**
@@ -227,3 +237,26 @@ export type UserRole = 'usuario' | 'admin' | 'super_admin';
  * Plataformas soportadas para notificaciones push
  */
 export type PushPlatform = 'android' | 'ios' | 'web';
+
+/**
+ * INTERFACES DE STATUS Y HEALTH CHECK
+ * ===================================
+ */
+
+/**
+ * Respuesta de status de un endpoint específico
+ */
+export interface EndpointStatus {
+  ok: boolean;                    // Si el endpoint está disponible
+  endpoint: string;               // Nombre del endpoint
+  url?: string;                   // URL completa del endpoint
+  responseTime?: number;          // Tiempo de respuesta en ms
+  statusCode?: number;            // Código HTTP de respuesta
+  error?: string;                 // Mensaje de error si hay problemas
+  timestamp: string;              // Timestamp del check
+}
+
+/**
+ * Tipos de endpoints disponibles para hacer health check
+ */
+export type EndpointType = 'register' | 'login' | 'logout' | 'refresh' | 'me' | 'verifyEmail' | 'resendVerification' | 'sendVerification' | 'forgotPassword' | 'resetPassword' | 'pushToken';

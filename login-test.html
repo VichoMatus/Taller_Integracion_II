@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Login API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .response {
+            margin-top: 20px;
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Prueba de Login API</h1>
+    
+    <div class="container">
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+    </div>
+
+    <div class="container">
+        <h3>Estado:</h3>
+        <div id="status"></div>
+        
+        <h3>Token:</h3>
+        <div id="token" class="response"></div>
+        
+        <h3>Información del Usuario:</h3>
+        <div id="userData" class="response"></div>
+    </div>
+
+    <script>
+        // URL base de la API
+        const API_URL = 'http://localhost:4000';
+
+        // Función para guardar el token en localStorage
+        function saveToken(token) {
+            localStorage.setItem('accessToken', token);
+        }
+
+        // Función para obtener el token del localStorage
+        function getToken() {
+            return localStorage.getItem('accessToken');
+        }
+
+        // Función para limpiar el token del localStorage
+        function clearToken() {
+            localStorage.removeItem('accessToken');
+        }
+
+        // Función para realizar el login
+        async function login(email, password) {
+            try {
+                // Actualizar estado
+                document.getElementById('status').innerHTML = '<p>Intentando iniciar sesión...</p>';
+                
+                // Realizar la petición a la API
+                const response = await fetch(`${API_URL}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                // Obtener datos de respuesta
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Actualizar estado y mostrar datos
+                    document.getElementById('status').innerHTML = '<p class="success">Inicio de sesión exitoso</p>';
+                    
+                    // Guardar token
+                    if (data.access_token) {
+                        saveToken(data.access_token);
+                        document.getElementById('token').textContent = data.access_token;
+                    }
+                    
+                    // Mostrar datos del usuario
+                    if (data.user) {
+                        document.getElementById('userData').textContent = JSON.stringify(data.user, null, 2);
+                    }
+                } else {
+                    // Mostrar error
+                    document.getElementById('status').innerHTML = `<p class="error">Error: ${data.message || 'No se pudo iniciar sesión'}</p>`;
+                    document.getElementById('token').textContent = '';
+                    document.getElementById('userData').textContent = '';
+                }
+            } catch (error) {
+                // Manejar errores
+                console.error('Error al iniciar sesión:', error);
+                document.getElementById('status').innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                document.getElementById('token').textContent = '';
+                document.getElementById('userData').textContent = '';
+            }
+        }
+
+        // Evento para el formulario de login
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Obtener valores del formulario
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Realizar login
+            login(email, password);
+        });
+
+        // Comprobar si ya hay un token guardado al cargar la página
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = getToken();
+            if (token) {
+                document.getElementById('token').textContent = token;
+                document.getElementById('status').innerHTML = '<p>Token encontrado en almacenamiento local</p>';
+                
+                // Aquí podrías añadir código para verificar si el token es válido
+                // Por ejemplo, haciendo una petición a un endpoint protegido
+            }
+        });
+    </script>
+</body>
+</html>
