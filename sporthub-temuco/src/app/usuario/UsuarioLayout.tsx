@@ -9,14 +9,14 @@ import './UserLayout.css';
 interface UserLayoutProps {
   children: React.ReactNode;
   userName: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel';
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | undefined;
   notificationCount?: number;
 }
 
 const UserLayout = ({
   children,
   userName,
-  sport = 'futbol',
+  sport = undefined, // Ya está correcto
   notificationCount = 0,
 }: UserLayoutProps) => {
   return (

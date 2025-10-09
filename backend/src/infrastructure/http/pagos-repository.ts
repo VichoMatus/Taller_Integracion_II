@@ -44,4 +44,50 @@ export class HttpPagoRepository implements PagoRepository {
       throw new Error(`Error fetching pagos for reserva ${reservaId}: ${error}`);
     }
   }
+
+  async createPago(data: Omit<Pago, 'id_pago' | 'created_at' | 'updated_at'>): Promise<Pago> {
+    try {
+      const response: AxiosResponse<Pago> = await this.apiClient.post('/pagos', data);
+      return response.data;
+    } catch (error) {
+      throw new Error(`Error creating pago: ${error}`);
+    }
+  }
+
+  async updatePago(id: number, data: Partial<Pago>): Promise<Pago> {
+    try {
+      const response: AxiosResponse<Pago> = await this.apiClient.patch(`/pagos/${id}`, data);
+      return response.data;
+    } catch (error) {
+      throw new Error(`Error updating pago ${id}: ${error}`);
+    }
+  }
+
+  async procesarPago(id: number): Promise<Pago> {
+    try {
+      const response: AxiosResponse<Pago> = await this.apiClient.post(`/pagos/${id}/procesar`);
+      return response.data;
+    } catch (error) {
+      throw new Error(`Error processing pago ${id}: ${error}`);
+    }
+  }
+
+  async reembolsarPago(id: number, motivo?: string): Promise<Pago> {
+    try {
+      const payload = motivo ? { motivo } : {};
+      const response: AxiosResponse<Pago> = await this.apiClient.post(`/pagos/${id}/reembolsar`, payload);
+      return response.data;
+    } catch (error) {
+      throw new Error(`Error refunding pago ${id}: ${error}`);
+    }
+  }
+
+  async confirmarPago(id: number): Promise<Pago> {
+    try {
+      const response: AxiosResponse<Pago> = await this.apiClient.post(`/pagos/${id}/confirmar`);
+      return response.data;
+    } catch (error) {
+      throw new Error(`Error confirming pago ${id}: ${error}`);
+    }
+  }
 }

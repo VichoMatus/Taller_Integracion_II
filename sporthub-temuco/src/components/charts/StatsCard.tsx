@@ -3,6 +3,15 @@
 import React, { useState } from 'react';
 import styles from './StatsCard.module.css';
 
+// Importar CSS específicos por deporte
+import atletismoStyles from './stylesStatsCard/AtletismoStatsCard.module.css';
+import futbolStyles from './stylesStatsCard/FutbolStatsCard.module.css';
+import skateStyles from './stylesStatsCard/SkateStatsCard.module.css';
+import voleibolStyles from './stylesStatsCard/VoleibolStatsCard.module.css';
+import tenisStyles from './stylesStatsCard/TenisStatsCard.module.css';
+import natacionStyles from './stylesStatsCard/NatacionStatsCard.module.css';
+import patinajeStyles from './stylesStatsCard/PatinajeStatsCard.module.css';
+
 // Definición del tipo para colores
 export type CardColor = 'blue' | 'green' | 'red' | 'purple' | 'yellow';
 
@@ -16,6 +25,7 @@ interface StatsCardProps {
     isPositive: boolean;
   };
   color?: CardColor;
+  sport?: string;
   onClick?: () => void;
   className?: string;
   loading?: boolean;               // Skeleton loading
@@ -31,6 +41,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
   subtitle,
   trend,
   color = 'blue',
+  sport,
   onClick,
   className = '',
   loading = false,
@@ -40,6 +51,30 @@ const StatsCard: React.FC<StatsCardProps> = ({
 }) => {
   const [displayValue, setDisplayValue] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+
+  // Seleccionar el CSS correcto basado en el deporte
+  const getStyles = () => {
+    switch (sport) {
+      case 'atletismo':
+        return atletismoStyles;
+      case 'futbol':
+        return futbolStyles;
+      case 'skate':
+        return skateStyles;
+      case 'voleibol':
+        return voleibolStyles;
+      case 'tenis':
+        return tenisStyles;
+      case 'natacion':
+        return natacionStyles;
+      case 'patinaje':
+        return patinajeStyles;
+      default:
+        return styles;
+    }
+  };
+
+  const currentStyles = getStyles();
 
   // Animación del contador
   useState(() => {
@@ -64,19 +99,22 @@ const StatsCard: React.FC<StatsCardProps> = ({
   });
 
   // Color variants para iconos
+  // If this card is rendered inside Atletismo pages, avoid yellow icons (use blue instead)
+  const effectiveColor = (sport === 'atletismo' && color === 'yellow') ? 'blue' : color;
+
   const iconColorVariants = {
-    blue: styles.iconBlue,
-    green: styles.iconGreen,
-    red: styles.iconRed,
-    purple: styles.iconPurple,
-    yellow: styles.iconYellow
+    blue: currentStyles.iconBlue,
+    green: currentStyles.iconGreen,
+    red: currentStyles.iconRed,
+    purple: currentStyles.iconPurple,
+    yellow: currentStyles.iconYellow
   };
 
   // Skeleton con animación mejorada
   if (loading) {
     return (
-      <div className={`${styles.skeletonCard} ${className}`}>
-        <div className={styles.cardContent}>
+      <div className={`${currentStyles.skeletonCard} ${className}`}>
+        <div className={currentStyles.cardContent}>
           <div>
             <div style={{height: '16px', width: '120px', backgroundColor: '#e5e7eb', borderRadius: '4px', marginBottom: '12px'}} />
             <div style={{height: '24px', width: '80px', backgroundColor: '#d1d5db', borderRadius: '4px', marginBottom: '8px'}} />
@@ -93,36 +131,36 @@ const StatsCard: React.FC<StatsCardProps> = ({
 
   return (
     <div
-      className={`${styles.statsCard} ${onClick ? styles.clickable : ''} ${className}`}
+      className={`${currentStyles.statsCard} ${onClick ? currentStyles.clickable : ''} ${className}`}
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       role="group"
       aria-label={ariaLabel || title}
     >
-      <div className={styles.cardContent}>
+      <div className={currentStyles.cardContent}>
         <div>
-          <div className={styles.cardTitle}>{title}</div>
+          <div className={currentStyles.cardTitle}>{title}</div>
           {empty ? (
             <div style={{color: '#9ca3af', fontSize: '14px'}}>{emptyMessage}</div>
           ) : (
-            <div className={styles.cardValue}>
+            <div className={currentStyles.cardValue}>
               {valueToShow}
             </div>
           )}
           
           {!empty && trend && (
-            <div className={styles.trendContainer}>
+            <div className={currentStyles.trendContainer}>
               {trend.isPositive ? (
-                <svg className={`${styles.trendIcon} ${styles.trendPositive}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className={`${currentStyles.trendIcon} ${currentStyles.trendPositive}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
                 </svg>
               ) : (
-                <svg className={`${styles.trendIcon} ${styles.trendNegative}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className={`${currentStyles.trendIcon} ${currentStyles.trendNegative}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                 </svg>
               )}
-              <span className={trend.isPositive ? styles.trendPositive : styles.trendNegative}>
+              <span className={trend.isPositive ? currentStyles.trendPositive : currentStyles.trendNegative}>
                 {trend.value}%
               </span>
               <span style={{color: '#6b7280', fontSize: '12px', marginLeft: '4px'}}>vs mes anterior</span>
@@ -130,13 +168,13 @@ const StatsCard: React.FC<StatsCardProps> = ({
           )}
           
           {!empty && subtitle && (
-            <div className={styles.cardSubtitle}>
+            <div className={currentStyles.cardSubtitle}>
               {subtitle}
             </div>
           )}
         </div>
         
-        <div className={`${styles.cardIcon} ${iconColorVariants[color]}`}>
+        <div className={`${currentStyles.cardIcon} ${iconColorVariants[effectiveColor]}`}>
           {icon}
         </div>
       </div>

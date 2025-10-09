@@ -5,8 +5,8 @@ import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
+import StatsCard from '../../../components/charts/StatsCard';
 import styles from './page.module.css';
-
 
 // Datos de ejemplo para las canchas mejor calificadas (6 tarjetas)
 const topRatedCourts = [
@@ -15,7 +15,6 @@ const topRatedCourts = [
     name: "Basquetbol - Centro",
     address: "Norte, Centro, Sur",
     rating: 4.3,
-    reviews: "130 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
     description: "Cancha para basquetbol ubicada en el centro y con implementos deportivos (Balones y petos)",
     price: "21",
@@ -26,55 +25,82 @@ const topRatedCourts = [
     name: "Basquetbol - Norte",
     address: "Sector Norte",
     rating: 4.5,
-    reviews: "85 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento"],
     description: "Cancha para basquetbol ubicada en el centro y con implementos deportivos (Balones y petos)",
     price: "19",
     nextAvailable: "14:30-15:30", 
   },
   {
-    imageUrl: "/path/to/basketball-court3.jpg",
+    imageUrl: "/sports/basquetbol/canchas/Cancha3.png",
     name: "Basquetbol - Sur",
     address: "Sector Sur",
     rating: 4.1,
-    reviews: "67 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación"],
     description: "Cancha para basquetbol ubicada en el centro y con implementos deportivos (Balones y petos)",
     price: "23",
     nextAvailable: "Mañana 09:00-10:00",
   },
   {
-    imageUrl: "/path/to/basketball-court4.jpg",
+    imageUrl: "/sports/basquetbol/canchas/Cancha4.png",
     name: "Basquetbol Premium",
     address: "Centro Premium", 
     rating: 4.7,
-    reviews: "142 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
     description: "Cancha para basquetbol ubicada en el centro y con implementos deportivos (Balones y petos)",
     price: "26",
     nextAvailable: "Disponible ahora",
   },
   {
-    imageUrl: "/path/to/basketball-court5.jpg",
+    imageUrl: "/sports/basquetbol/canchas/Cancha5.png",
     name: "Basquetbol - Elite",
     address: "Zona Elite", 
     rating: 4.8,
-    reviews: "203 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
     description: "Cancha premium para basquetbol con todas las comodidades y equipamiento profesional",
     price: "28",
     nextAvailable: "18:00-19:00",
   },
   {
-    imageUrl: "/path/to/basketball-court6.jpg",
+    imageUrl: "/sports/basquetbol/canchas/Cancha6.png",
     name: "Basquetbol - Deportivo",
     address: "Centro Deportivo", 
     rating: 4.4,
-    reviews: "97 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación"],
     description: "Cancha de basquetbol en complejo deportivo con múltiples servicios disponibles",
     price: "22",
     nextAvailable: "16:30-17:30",
+  }
+];
+
+// 🔥 DATOS PARA LAS ESTADÍSTICAS DE BASQUETBOL
+const basketballStats = [
+  {
+    title: "Canchas Disponibles Hoy",
+    value: "12",
+    icon: "🏀",
+    subtitle: "Listas para jugar",
+    trend: { value: 2, isPositive: true }
+  },
+  {
+    title: "Rango de Precios",
+    value: "$19-28",
+    icon: "💰",
+    subtitle: "Por hora",
+    trend: { value: 6, isPositive: true }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.5⭐",
+    icon: "🏆",
+    subtitle: "De nuestras canchas",
+    trend: { value: 0.1, isPositive: true }
+  },
+  {
+    title: "Jugadores en Cancha",
+    value: "18",
+    icon: "👥",
+    subtitle: "Ahora mismo",
+    trend: { value: 6, isPositive: true }
   }
 ];
 
@@ -86,7 +112,6 @@ export default function BasquetbolPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
-  // 🔥 Elimina el estado sidebarLoaded
 
   useEffect(() => {
     setIsClient(true);
@@ -110,21 +135,10 @@ export default function BasquetbolPage() {
 
     window.addEventListener('resize', handleResize);
 
-    // 🔥 Elimina el setTimeout del sidebar
-
     return () => {
       window.removeEventListener('resize', handleResize);
-      // 🔥 Elimina el clearTimeout
     };
   }, []);
-
-  // Stats de ejemplo
-  const stats = {
-    disponiblesHoy: 12,
-    precioPromedio: { min: 24, max: 30 },
-    promedioCalificacion: 4.6,
-    cantidadJugadores: 10
-  };
 
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
@@ -141,26 +155,29 @@ export default function BasquetbolPage() {
   };
 
   const handleSearch = () => {
-    console.log('Buscando:', searchTerm);
+    console.log('Buscando cancha de basquetbol:', searchTerm);
   };
 
   const handleLocationSearch = () => {
-    console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
+    console.log('Buscando ubicación de canchas:', locationSearch, 'Radio:', radiusKm);
   };
 
   const handleCanchaClick = (court: any) => {
-  console.log('Test navigation...');
-  router.push('/sports/basquetbol/canchas/canchaseleccionada');
-};
+    console.log('Navegando a cancha de basquetbol...');
+    router.push('/sports/basquetbol/canchas/canchaseleccionada');
+  };
 
-  // 🔥 Elimina el estado de carga inicial
+  const handleHelp = () => {
+    alert('¿Necesitas ayuda con reservas de basquetbol? Contáctanos al (45) 555-0000 o envía un email a basquet@sporthub.cl');
+  };
+
   if (!isClient) {
     return (
       <div className={styles.pageContainer}>
         <Sidebar userRole="usuario" sport="basquetbol" />
         <div className={styles.mainContent}>
           <div style={{ height: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <p>Cargando...</p>
+            <p>Cargando canchas de basquetbol...</p>
           </div>
         </div>
       </div>
@@ -169,7 +186,6 @@ export default function BasquetbolPage() {
 
   return (
     <div className={styles.pageContainer}>
-      {/* 🔥 Siempre mostrar el Sidebar real */}
       <Sidebar userRole="usuario" sport="basquetbol" />
 
       <div className={styles.mainContent}>
@@ -180,51 +196,58 @@ export default function BasquetbolPage() {
           </div>
           <div className={styles.headerRight}>
             <SearchBar
-            value={searchTerm}
-            onChange={handleSearchChange}
-            onSearch={handleSearch}
-            placeholder="Nombre de la cancha..."
-            sport="basquetbol" 
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onSearch={handleSearch}
+              placeholder="Nombre de la cancha..."
+              sport="basquetbol" 
             />
-            <button className={styles.userButton}>
+            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
               <span>👤</span>
               <span>usuario</span>
             </button>
-            
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className={styles.statsContainer}>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.disponiblesHoy}</div>
-            <div className={styles.statLabel}>Canchas Disponibles hoy</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>${stats.precioPromedio.min}-{stats.precioPromedio.max}</div>
-            <div className={styles.statLabel}>Rango de precios por hora</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.promedioCalificacion} ⭐</div>
-            <div className={styles.statLabel}>Promedio de calificacion</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.cantidadJugadores}</div>
-            <div className={styles.statLabel}>Cantidad de jugadores en cancha</div>
+        {/* 🔥 STATS CARDS MEJORADAS CON STATSCARD */}
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas del Basquetbol en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {basketballStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Navegación específica para basquetbol
+                  if (stat.title.includes("Canchas")) {
+                    router.push('/sports/basquetbol/canchas');
+                  }
+                }}
+              />
+            ))}
           </div>
         </div>
+
         <div className={styles.quickAccessSection}>
-        <button 
+          <button 
             className={styles.mainCourtButton}
             onClick={() => window.location.href = '/sports/basquetbol/canchas'}
-            >
+          >
             <div className={styles.courtButtonIcon}>🏀</div>
             <div className={styles.courtButtonText}>
-            <span className={styles.courtButtonTitle}>Explorar Canchas</span>
-            <span className={styles.courtButtonSubtitle}>Ver todas las canchas disponibles</span>
+              <span className={styles.courtButtonTitle}>Explorar Canchas</span>
+              <span className={styles.courtButtonSubtitle}>Ver todas las canchas disponibles</span>
             </div>
             <div className={styles.courtButtonArrow}>→</div>
-        </button>
+          </button>
         </div>
 
         {/* Canchas mejor calificadas con carrusel */}
@@ -315,10 +338,11 @@ export default function BasquetbolPage() {
             address="Temuco, Chile"
             zoom={13}
             height="400px"
+            sport="basquetbol"
           />
 
           <div className={styles.mapActions}>
-            <button className={styles.helpButton}>
+            <button className={styles.helpButton} onClick={handleHelp}>
               ❓ Ayuda
             </button>
           </div>

@@ -29,10 +29,10 @@
 import axios, { AxiosInstance } from 'axios';
 import { API_CONFIG, API_ENDPOINTS } from '../../config/config';
 import {
-  UserRegister, UserLogin, TokenResponse, ApiResponse, UserPublic,
+  UserRegister, UserRegisterAPI, UserLogin, TokenResponse, ApiResponse, UserPublic,
   UserUpdate, ChangePasswordRequest, ForgotPasswordRequest, ResetPasswordRequest,
-  VerifyEmailRequest, ResendVerificationRequest, RefreshTokenRequest,
-  LogoutRequest, PushTokenRequest, SimpleMessage, AccessTokenOnly
+  VerifyEmailRequest, ResendVerificationRequest, SendVerificationRequest, RefreshTokenRequest,
+  LogoutRequest, PushTokenRequest, SimpleMessage, AccessTokenOnly, EndpointStatus, EndpointType
 } from '../types/authTypes';
 
 /**
@@ -82,7 +82,16 @@ export class AuthService {
    */
   async register(userData: UserRegister): Promise<ApiResponse<TokenResponse>> {
     try {
-      const response = await this.apiClient.post(API_ENDPOINTS.auth.register, userData);
+      console.log('🔄 AuthService: Iniciando registro con datos:', JSON.stringify(userData, null, 2));
+      console.log('🔄 AuthService: URL de API:', API_CONFIG.baseURL + API_ENDPOINTS.auth.register);
+      
+      // Crear objeto sin confirmPassword para enviar a la API
+      const { confirmPassword, ...apiData } = userData;
+      console.log('🔄 AuthService: Datos para API (sin confirmPassword):', JSON.stringify(apiData, null, 2));
+      
+      const response = await this.apiClient.post(API_ENDPOINTS.auth.register, apiData);
+      
+      console.log('✅ AuthService: Registro exitoso', response.data);
       
       // Almacenar token para futuras peticiones
       if (response.data.access_token) {
@@ -91,9 +100,21 @@ export class AuthService {
       
       return { ok: true, data: response.data };
     } catch (error: any) {
+      console.error('❌ AuthService: Error en registro:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          data: error.config?.data
+        }
+      });
+      
       return { 
         ok: false, 
-        error: error.response?.data?.detail || 'Error en el registro de usuario' 
+        error: error.response?.data?.detail || error.message || 'Error en el registro de usuario' 
       };
     }
   }
@@ -228,8 +249,8 @@ export class AuthService {
    */
 
   /**
-   * Verificar email con token
-   * @param verifyData - Token de verificación
+   * Verificar email con código
+   * @param verifyData - Email y código de verificación
    * @returns Promise<ApiResponse<SimpleMessage>> - Confirmación de verificación
    */
   async verifyEmail(verifyData: VerifyEmailRequest): Promise<ApiResponse<SimpleMessage>> {
@@ -262,6 +283,23 @@ export class AuthService {
   }
 
   /**
+   * Enviar código de verificación
+   * @param sendData - Email al que enviar el código de verificación
+   * @returns Promise<ApiResponse<SimpleMessage>> - Confirmación de envío
+   */
+  async sendVerification(sendData: SendVerificationRequest): Promise<ApiResponse<SimpleMessage>> {
+    try {
+      const response = await this.apiClient.post(API_ENDPOINTS.auth.sendVerification, sendData);
+      return { ok: true, data: response.data };
+    } catch (error: any) {
+      return { 
+        ok: false, 
+        error: error.response?.data?.detail || 'Error al enviar verificación' 
+      };
+    }
+  }
+
+  /**
    * MÉTODOS DE RECUPERACIÓN DE CONTRASEÑA
    * =====================================
    */
@@ -284,19 +322,13 @@ export class AuthService {
   }
 
   /**
-   * Restablecer contraseña con token
-   * @param resetData - Token y nueva contraseña
-   * @returns Promise<ApiResponse<TokenResponse>> - Nueva autenticación
+   * Restablecer contraseña con código
+   * @param resetData - Email, código y nueva contraseña
+   * @returns Promise<ApiResponse<SimpleMessage>> - Confirmación del cambio
    */
-  async resetPassword(resetData: ResetPasswordRequest): Promise<ApiResponse<TokenResponse>> {
+  async resetPassword(resetData: ResetPasswordRequest): Promise<ApiResponse<SimpleMessage>> {
     try {
       const response = await this.apiClient.post(API_ENDPOINTS.auth.resetPassword, resetData);
-      
-      // Almacenar nuevo token
-      if (response.data.access_token) {
-        this.authToken = response.data.access_token;
-      }
-      
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { 
@@ -354,5 +386,120 @@ export class AuthService {
    */
   getCurrentToken(): string | null {
     return this.authToken;
+  }
+
+  /**
+   * MÉTODOS DE HEALTH CHECK Y STATUS
+   * ================================
+   */
+
+  /**
+   * Verificar el status de conectividad de un endpoint específico
+   * @param endpointType - Tipo de endpoint a verificar
+   * @returns Promise<EndpointStatus> - Estado del endpoint
+   */
+  async checkEndpointStatus(endpointType: EndpointType): Promise<EndpointStatus> {
+    const startTime = Date.now();
+    const timestamp = new Date().toISOString();
+    
+    // Mapear tipos de endpoint a URLs
+    const endpointMap: Record<EndpointType, string> = {
+      register: API_ENDPOINTS.auth.register,
+      login: API_ENDPOINTS.auth.login,
+      logout: API_ENDPOINTS.auth.logout,
+      refresh: API_ENDPOINTS.auth.refresh,
+      me: API_ENDPOINTS.auth.me,
+      verifyEmail: API_ENDPOINTS.auth.verifyEmail,
+      resendVerification: API_ENDPOINTS.auth.resendVerification,
+      sendVerification: API_ENDPOINTS.auth.sendVerification,
+      forgotPassword: API_ENDPOINTS.auth.forgotPassword,
+      resetPassword: API_ENDPOINTS.auth.resetPassword,
+      pushToken: API_ENDPOINTS.auth.pushToken
+    };
+
+    const endpoint = endpointMap[endpointType];
+    const fullUrl = `${API_CONFIG.baseURL}${endpoint}`;
+
+    try {
+      // Para endpoints que requieren autenticación, hacer un HEAD request
+      // Para endpoints públicos, hacer un OPTIONS request para verificar CORS
+      const method = ['me', 'pushToken'].includes(endpointType) ? 'head' : 'options';
+      
+      const response = await this.apiClient.request({
+        method,
+        url: endpoint,
+        timeout: 5000, // 5 segundos timeout
+        validateStatus: (status) => status < 500 // Considerar 4xx como disponible pero con error de validación
+      });
+
+      const responseTime = Date.now() - startTime;
+
+      return {
+        ok: true,
+        endpoint: endpointType,
+        url: fullUrl,
+        responseTime,
+        statusCode: response.status,
+        timestamp
+      };
+
+    } catch (error: any) {
+      const responseTime = Date.now() - startTime;
+
+      // Si es un error de red (ECONNREFUSED, timeout, etc.)
+      if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT' || error.code === 'ENOTFOUND') {
+        return {
+          ok: false,
+          endpoint: endpointType,
+          url: fullUrl,
+          responseTime,
+          error: `Conexión fallida: ${error.message}`,
+          timestamp
+        };
+      }
+
+      // Si es un error HTTP pero el servidor respondió
+      if (error.response) {
+        return {
+          ok: false,
+          endpoint: endpointType,
+          url: fullUrl,
+          responseTime,
+          statusCode: error.response.status,
+          error: `HTTP ${error.response.status}: ${error.response.statusText}`,
+          timestamp
+        };
+      }
+
+      // Otros errores
+      return {
+        ok: false,
+        endpoint: endpointType,
+        url: fullUrl,
+        responseTime,
+        error: error.message || 'Error desconocido',
+        timestamp
+      };
+    }
+  }
+
+  /**
+   * Verificar el status de todos los endpoints de autenticación
+   * @returns Promise<Record<EndpointType, EndpointStatus>> - Status de todos los endpoints
+   */
+  async checkAllEndpointsStatus(): Promise<Record<EndpointType, EndpointStatus>> {
+    const endpoints: EndpointType[] = ['register', 'login', 'logout', 'refresh', 'me', 'verifyEmail', 'resendVerification', 'sendVerification', 'forgotPassword', 'resetPassword', 'pushToken'];
+    
+    const statusChecks = endpoints.map(async (endpoint) => {
+      const status = await this.checkEndpointStatus(endpoint);
+      return { endpoint, status };
+    });
+
+    const results = await Promise.all(statusChecks);
+    
+    return results.reduce((acc, { endpoint, status }) => {
+      acc[endpoint] = status;
+      return acc;
+    }, {} as Record<EndpointType, EndpointStatus>);
   }
 }

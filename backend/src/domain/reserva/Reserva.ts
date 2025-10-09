@@ -1,7 +1,14 @@
 /**
  * Estados disponibles para una reserva.
  */
-export type EstadoReserva = "pendiente" | "confirmada" | "cancelada" | "completada" | "no_show";
+export enum EstadoReserva {
+  PENDIENTE = "pendiente",
+  CONFIRMADA = "confirmada", 
+  CANCELADA = "cancelada",
+  COMPLETADA = "completada",
+  NO_SHOW = "no_show",
+  TENTATIVA = "tentativa"
+}
 
 /**
  * Métodos de pago disponibles.
@@ -63,4 +70,39 @@ export interface Reserva {
     direccion: string;
     telefono?: string;
   };
+}
+
+/**
+ * Cotización de reserva con desglose de precios
+ */
+export interface CotizacionReserva {
+  /** ID de la cancha cotizada */
+  canchaId: number;
+  /** Fecha de inicio */
+  fechaInicio: string;
+  /** Fecha de fin */
+  fechaFin: string;
+  /** Precio base por hora */
+  precioBase: number;
+  /** Duración en horas */
+  duracionHoras: number;
+  /** Subtotal (precio base * horas) */
+  subtotal: number;
+  /** Descuentos aplicados */
+  descuentos: number;
+  /** Cargos adicionales */
+  cargosAdicionales: number;
+  /** Precio total final */
+  precioTotal: number;
+  /** Token de hold temporal (opcional) */
+  holdToken?: string;
+  /** Tiempo de expiración del hold */
+  holdExpiraEn?: Date;
+  /** Disponibilidad confirmada */
+  disponible: boolean;
+  /** Desglose de cargos/descuentos */
+  desglose?: {
+    concepto: string;
+    monto: number;
+  }[];
 }

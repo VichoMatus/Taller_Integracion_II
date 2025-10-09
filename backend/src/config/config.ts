@@ -51,6 +51,7 @@ export const API_ENDPOINTS = {
     pushToken: '/api/v1/auth/me/push-token',
     verifyEmail: '/api/v1/auth/verify-email',
     resendVerification: '/api/v1/auth/resend-verification',
+    sendVerification: '/api/v1/auth/send-verification', 
     forgotPassword: '/api/v1/auth/forgot-password',
     resetPassword: '/api/v1/auth/reset-password'
   },

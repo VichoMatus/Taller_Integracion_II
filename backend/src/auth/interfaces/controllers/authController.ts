@@ -36,7 +36,7 @@ import { Request, Response } from 'express';
 import { AuthService } from '../../services/authService';
 import {
   UserRegister, UserLogin, UserUpdate, ChangePasswordRequest,
-  VerifyEmailRequest, ResendVerificationRequest, ForgotPasswordRequest,
+  VerifyEmailRequest, ResendVerificationRequest, SendVerificationRequest, ForgotPasswordRequest,
   ResetPasswordRequest, RefreshTokenRequest, LogoutRequest, PushTokenRequest
 } from '../../types/authTypes';
 
@@ -59,14 +59,14 @@ export class AuthController {
   /**
    * POST /register
    * Registrar nuevo usuario en el sistema
-   * Body: { nombre?, apellido?, email, password, telefono? }
+   * Body: { nombre?, apellido?, email, password, confirmPassword?, telefono? }
    * Response: { ok: boolean, data?: TokenResponse, error?: string }
    */
   register = async (req: Request, res: Response): Promise<void> => {
     try {
       const userData: UserRegister = req.body;
       
-      // Validación básica de email
+      // Validaciones básicas requeridas
       if (!userData.email || !userData.password) {
         res.status(400).json({ 
           ok: false, 
@@ -75,6 +75,50 @@ export class AuthController {
         return;
       }
 
+      // Validación de confirmación de contraseña
+      if (userData.confirmPassword && userData.password !== userData.confirmPassword) {
+        res.status(400).json({ 
+          ok: false, 
+          error: 'contraseñas no coinciden' 
+        });
+        return;
+      }
+
+      // Validación de longitud mínima de contraseña
+      if (userData.password.length < 6) {
+        res.status(400).json({ 
+          ok: false, 
+          error: 'La contraseña debe tener al menos 6 caracteres' 
+        });
+        return;
+      }
+
+      // Validación de formato de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(userData.email)) {
+        res.status(400).json({ 
+          ok: false, 
+          error: 'El formato del email no es válido' 
+        });
+        return;
+      }
+
+      // Validación de teléfono (si se proporciona)
+      if (userData.telefono && userData.telefono.length > 0) {
+        // Acepta múltiples prefijos internacionales: +56 (Chile), +54 (Argentina), +1 (USA/Canadá), 
+        // +34 (España), +52 (México), +57 (Colombia), +51 (Perú), +55 (Brasil), etc.
+        const telefonoRegex = /^(\+[1-9]\d{0,3})?[0-9]{7,10}$/;
+        if (!telefonoRegex.test(userData.telefono.replace(/[\s-]/g, ''))) {
+          res.status(400).json({ 
+            ok: false, 
+            error: 'El formato del teléfono no es válido (ejemplos: +56912345678, +1234567890, +34123456789)' 
+          });
+          return;
+        }
+      }
+
+      console.log('✅ AuthController: Validaciones pasadas, enviando a AuthService');
+      
       const result = await this.service.register(userData);
       const status = result.ok ? 201 : 400;
       res.status(status).json(result);
@@ -280,19 +324,29 @@ export class AuthController {
 
   /**
    * POST /verify-email
-   * Verificar email con token
-   * Body: { token }
+   * Verificar email con código
+   * Body: { email, code }
    * Response: { ok: boolean, data?: SimpleMessage, error?: string }
    */
   verifyEmail = async (req: Request, res: Response): Promise<void> => {
     try {
       const verifyData: VerifyEmailRequest = req.body;
       
-      // Validación del token
-      if (!verifyData.token) {
+      // Validación de email y código
+      if (!verifyData.email || !verifyData.code) {
         res.status(400).json({ 
           ok: false, 
-          error: 'Token de verificación es requerido' 
+          error: 'Email y código de verificación son requeridos' 
+        });
+        return;
+      }
+
+      // Validación básica del formato de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(verifyData.email)) {
+        res.status(400).json({ 
+          ok: false, 
+          error: 'El formato del email no es válido' 
         });
         return;
       }
@@ -325,6 +379,43 @@ export class AuthController {
       }
 
       const result = await this.service.resendVerification(resendData);
+      const status = result.ok ? 200 : 400;
+      res.status(status).json(result);
+    } catch (error) {
+      res.status(500).json({ ok: false, error: 'Error interno del servidor' });
+    }
+  };
+
+  /**
+   * POST /send-verification
+   * Enviar código de verificación
+   * Body: { email }
+   * Response: { ok: boolean, data?: SimpleMessage, error?: string }
+   */
+  sendVerification = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const sendData: SendVerificationRequest = req.body;
+      
+      // Validación del email
+      if (!sendData.email) {
+        res.status(400).json({ 
+          ok: false, 
+          error: 'Email es requerido' 
+        });
+        return;
+      }
+
+      // Validación básica del formato de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(sendData.email)) {
+        res.status(400).json({ 
+          ok: false, 
+          error: 'El formato del email no es válido' 
+        });
+        return;
+      }
+
+      const result = await this.service.sendVerification(sendData);
       const status = result.ok ? 200 : 400;
       res.status(status).json(result);
     } catch (error) {
@@ -366,19 +457,28 @@ export class AuthController {
 
   /**
    * POST /reset-password
-   * Restablecer contraseña con token
-   * Body: { token, new_password }
-   * Response: { ok: boolean, data?: TokenResponse, error?: string }
+   * Restablecer contraseña con código
+   * Body: { email, code, new_password }
+   * Response: { ok: boolean, data?: SimpleMessage, error?: string }
    */
   resetPassword = async (req: Request, res: Response): Promise<void> => {
     try {
       const resetData: ResetPasswordRequest = req.body;
       
       // Validación de campos requeridos
-      if (!resetData.token || !resetData.new_password) {
+      if (!resetData.email || !resetData.code || !resetData.new_password) {
         res.status(400).json({ 
           ok: false, 
-          error: 'Token y nueva contraseña son requeridos' 
+          error: 'Email, código y nueva contraseña son requeridos' 
+        });
+        return;
+      }
+
+      // Validación de longitud mínima de contraseña
+      if (resetData.new_password.length < 6) {
+        res.status(400).json({ 
+          ok: false, 
+          error: 'La nueva contraseña debe tener al menos 6 caracteres' 
         });
         return;
       }
@@ -418,12 +518,260 @@ export class AuthController {
           pushToken: 'POST /me/push-token',
           verifyEmail: 'POST /verify-email',
           resendVerification: 'POST /resend-verification',
+          sendVerification: 'POST /send-verification',
           forgotPassword: 'POST /forgot-password',
           resetPassword: 'POST /reset-password'
         }
       });
     } catch (error) {
       res.status(500).json({ ok: false, error: 'Error interno del servidor' });
+    }
+  };
+
+  /**
+   * MÉTODOS DE STATUS POR ENDPOINT
+   * ==============================
+   */
+
+  /**
+   * GET /register/status
+   * Verificar conectividad del endpoint de registro
+   */
+  getRegisterStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const status = await this.service.checkEndpointStatus('register');
+      const httpStatus = status.ok ? 200 : 503;
+      res.status(httpStatus).json(status);
+    } catch (error) {
+      res.status(500).json({ 
+        ok: false, 
+        endpoint: 'register',
+        error: 'Error interno del servidor',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * GET /login/status
+   * Verificar conectividad del endpoint de login
+   */
+  getLoginStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const status = await this.service.checkEndpointStatus('login');
+      const httpStatus = status.ok ? 200 : 503;
+      res.status(httpStatus).json(status);
+    } catch (error) {
+      res.status(500).json({ 
+        ok: false, 
+        endpoint: 'login',
+        error: 'Error interno del servidor',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * GET /logout/status
+   * Verificar conectividad del endpoint de logout
+   */
+  getLogoutStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const status = await this.service.checkEndpointStatus('logout');
+      const httpStatus = status.ok ? 200 : 503;
+      res.status(httpStatus).json(status);
+    } catch (error) {
+      res.status(500).json({ 
+        ok: false, 
+        endpoint: 'logout',
+        error: 'Error interno del servidor',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * GET /me/status
+   * Verificar conectividad del endpoint de perfil
+   */
+  getMeStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const status = await this.service.checkEndpointStatus('me');
+      const httpStatus = status.ok ? 200 : 503;
+      res.status(httpStatus).json(status);
+    } catch (error) {
+      res.status(500).json({ 
+        ok: false, 
+        endpoint: 'me',
+        error: 'Error interno del servidor',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * GET /verify-email/status
+   * Verificar conectividad del endpoint de verificación de email
+   */
+  getVerifyEmailStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const status = await this.service.checkEndpointStatus('verifyEmail');
+      const httpStatus = status.ok ? 200 : 503;
+      res.status(httpStatus).json(status);
+    } catch (error) {
+      res.status(500).json({ 
+        ok: false, 
+        endpoint: 'verifyEmail',
+        error: 'Error interno del servidor',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * GET /resend-verification/status
+   * Verificar conectividad del endpoint de reenvío de verificación
+   */
+  getResendVerificationStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const status = await this.service.checkEndpointStatus('resendVerification');
+      const httpStatus = status.ok ? 200 : 503;
+      res.status(httpStatus).json(status);
+    } catch (error) {
+      res.status(500).json({ 
+        ok: false, 
+        endpoint: 'resendVerification',
+        error: 'Error interno del servidor',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * GET /send-verification/status
+   * Verificar conectividad del endpoint de envío de verificación
+   */
+  getSendVerificationStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const status = await this.service.checkEndpointStatus('sendVerification');
+      const httpStatus = status.ok ? 200 : 503;
+      res.status(httpStatus).json(status);
+    } catch (error) {
+      res.status(500).json({ 
+        ok: false, 
+        endpoint: 'sendVerification',
+        error: 'Error interno del servidor',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * GET /forgot-password/status
+   * Verificar conectividad del endpoint de recuperación de contraseña
+   */
+  getForgotPasswordStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const status = await this.service.checkEndpointStatus('forgotPassword');
+      const httpStatus = status.ok ? 200 : 503;
+      res.status(httpStatus).json(status);
+    } catch (error) {
+      res.status(500).json({ 
+        ok: false, 
+        endpoint: 'forgotPassword',
+        error: 'Error interno del servidor',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * GET /refresh/status
+   * Verificar conectividad del endpoint de refresh token
+   */
+  getRefreshStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const status = await this.service.checkEndpointStatus('refresh');
+      const httpStatus = status.ok ? 200 : 503;
+      res.status(httpStatus).json(status);
+    } catch (error) {
+      res.status(500).json({ 
+        ok: false, 
+        endpoint: 'refresh',
+        error: 'Error interno del servidor',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * GET /reset-password/status
+   * Verificar conectividad del endpoint de reset password
+   */
+  getResetPasswordStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const status = await this.service.checkEndpointStatus('resetPassword');
+      const httpStatus = status.ok ? 200 : 503;
+      res.status(httpStatus).json(status);
+    } catch (error) {
+      res.status(500).json({ 
+        ok: false, 
+        endpoint: 'resetPassword',
+        error: 'Error interno del servidor',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * GET /me/push-token/status
+   * Verificar conectividad del endpoint de push tokens
+   */
+  getPushTokenStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const status = await this.service.checkEndpointStatus('pushToken');
+      const httpStatus = status.ok ? 200 : 503;
+      res.status(httpStatus).json(status);
+    } catch (error) {
+      res.status(500).json({ 
+        ok: false, 
+        endpoint: 'pushToken',
+        error: 'Error interno del servidor',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * GET /status/all
+   * Verificar conectividad de todos los endpoints de autenticación
+   */
+  getAllEndpointsStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const allStatus = await this.service.checkAllEndpointsStatus();
+      
+      // Verificar si todos los endpoints están funcionando
+      const allOk = Object.values(allStatus).every(status => status.ok);
+      const httpStatus = allOk ? 200 : 503;
+      
+      res.status(httpStatus).json({
+        ok: allOk,
+        service: 'auth',
+        timestamp: new Date().toISOString(),
+        summary: {
+          total: Object.keys(allStatus).length,
+          healthy: Object.values(allStatus).filter(s => s.ok).length,
+          unhealthy: Object.values(allStatus).filter(s => !s.ok).length
+        },
+        endpoints: allStatus
+      });
+    } catch (error) {
+      res.status(500).json({ 
+        ok: false, 
+        service: 'auth',
+        error: 'Error interno del servidor al verificar endpoints',
+        timestamp: new Date().toISOString()
+      });
     }
   };
 }

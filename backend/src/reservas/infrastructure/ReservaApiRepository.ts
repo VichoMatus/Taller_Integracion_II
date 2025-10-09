@@ -1,6 +1,6 @@
 import { AxiosInstance } from "axios";
-import { ReservaRepository, ReservaFilters, CreateReservaInput, UpdateReservaInput, DisponibilidadInput } from "../domain/ReservaRepository";
-import { Reserva, MetodoPago } from "../../domain/reserva/Reserva";
+import { ReservaRepository, ReservaFilters, CreateReservaInput, UpdateReservaInput, DisponibilidadInput, CotizacionInput } from "../domain/ReservaRepository";
+import { Reserva, MetodoPago, CotizacionReserva } from "../../domain/reserva/Reserva";
 import { toReserva, FastReserva } from "./mappers";
 import { httpError } from "../../infra/http/errors";
 import { Paginated, normalizePage } from "../../app/common/pagination";
@@ -139,6 +139,47 @@ export class ReservaApiRepository implements ReservaRepository {
     try {
       const payload = motivo ? { motivo } : {};
       const { data } = await this.http.post<FastReserva>(`/reservas/${id}/cancelar`, payload);
+      return toReserva(data);
+    } catch (e) {
+      throw httpError(e);
+    }
+  }
+
+  /**
+   * Cotiza el precio de una reserva en FastAPI.
+   */
+  async cotizarReserva(input: CotizacionInput): Promise<CotizacionReserva> {
+    try {
+      const payload = toSnake({
+        ...input,
+        canchaId: input.canchaId
+      });
+      const { data } = await this.http.post<any>(`/reservas/cotizar`, payload);
+      return data; // Asumir que FastAPI retorna en formato correcto
+    } catch (e) {
+      throw httpError(e);
+    }
+  }
+
+  /**
+   * Marca asistencia del usuario a la reserva.
+   */
+  async checkInReserva(id: number): Promise<Reserva> {
+    try {
+      const { data } = await this.http.post<FastReserva>(`/reservas/${id}/check-in`, {});
+      return toReserva(data);
+    } catch (e) {
+      throw httpError(e);
+    }
+  }
+
+  /**
+   * Marca inasistencia del usuario a la reserva.
+   */
+  async noShowReserva(id: number, observaciones?: string): Promise<Reserva> {
+    try {
+      const payload = observaciones ? { observaciones } : {};
+      const { data } = await this.http.post<FastReserva>(`/reservas/${id}/no-show`, payload);
       return toReserva(data);
     } catch (e) {
       throw httpError(e);

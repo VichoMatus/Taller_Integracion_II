@@ -3,7 +3,7 @@
 import React from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import Footer from './Footer';
+import './Sidebar.css';
 
 interface LayoutProps {
   userRole: 'admin' | 'superadmin';
@@ -26,7 +26,6 @@ const Layout = ({ userRole, userName, notificationCount = 0, children }: LayoutP
           {children}
         </main>
       </div>
-      <Footer />
     </div>
   );
 };

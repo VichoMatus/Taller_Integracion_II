@@ -216,8 +216,10 @@
 }
 
 .iconYellow {
-  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(253, 230, 138, 0.2));
-  color: #f59e0b;
+  /* Use sport-level accent variables when available so pages can override the "yellow" variant.
+     Fallbacks keep the original orange tones for existing sports that don't define the variables. */
+  background: linear-gradient(135deg, var(--sport-accent-2, rgba(245, 158, 11, 0.1)), var(--sport-accent-2, rgba(253, 230, 138, 0.2)));
+  color: var(--sport-accent, #f59e0b);
 }
 
 .iconRed {
