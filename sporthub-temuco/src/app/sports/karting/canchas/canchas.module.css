@@ -78,6 +78,90 @@
   animation: slideInUp 0.8s ease-out 0.2s both;
 }
 
+/* 🔥 HEADER MEJORADO - CLON DE ENDURO CON COLORES ROJOS */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(254, 226, 226, 0.8) 100%
+  );
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  padding: 20px 30px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
+  animation: slideInRight 0.8s ease-out;
+  transition: all 0.3s ease;
+}
+
+.header:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(239, 68, 68, 0.2);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.headerIcon {
+  font-size: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+}
+
+.headerIcon:hover {
+  transform: scale(1.1);
+}
+
+.headerTitle {
+  font-size: 28px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.userButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.userButton:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+}
+
 /* Filters Section */
 .filtersSection {
   background: white;
@@ -216,6 +300,17 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
   }
 }
 

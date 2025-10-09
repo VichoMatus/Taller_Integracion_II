@@ -12,7 +12,6 @@ const canchas = [
     name: "Rugby - Centro",
     address: "Norte, Centro, Sur",
     rating: 4.3,
-    reviews: "130 reseñas",
     tags: ["Campo Abierto", "Estacionamiento", "Iluminación", "Vestuarios"],
     description: "Campo de rugby ubicado en el centro con vestuarios y equipamiento profesional",
     price: "45",
@@ -23,7 +22,6 @@ const canchas = [
     name: "Rugby - Norte",
     address: "Sector Norte",
     rating: 4.5,
-    reviews: "85 reseñas",
     tags: ["Campo Abierto", "Estacionamiento", "Vestuarios"],
     description: "Campo de rugby con excelente mantenimiento y áreas de entrenamiento",
     price: "42",
@@ -34,7 +32,6 @@ const canchas = [
     name: "Rugby - Sur",
     address: "Sector Sur",
     rating: 4.1,
-    reviews: "67 reseñas",
     tags: ["Campo Abierto", "Estacionamiento", "Iluminación"],
     description: "Campo profesional de rugby con medidas reglamentarias",
     price: "48",
@@ -45,7 +42,6 @@ const canchas = [
     name: "Rugby - Premium",
     address: "Centro Premium", 
     rating: 4.7,
-    reviews: "142 reseñas",
     tags: ["Campo Abierto", "Estacionamiento", "Iluminación", "Vestuarios"],
     description: "Campo premium para rugby con todas las comodidades profesionales",
     price: "52",
@@ -88,23 +84,23 @@ export default function Page() {
       <Sidebar userRole="usuario" sport="rugby" />
 
       <div className={styles.mainContent}>
-        {/* Header */}
+        {/* Header - IDÉNTICO al de la página principal de rugby */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>🏉</div>
-            <h1 className={styles.headerTitle}>Campos de Rugby</h1>
+            <h1 className={styles.headerTitle}>Rugby</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar
-            value={searchTerm}
-            onChange={handleSearchChange}
-            onSearch={handleSearch}
-            placeholder="Nombre del campo"
-            sport="rugby" 
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onSearch={handleSearch}
+              placeholder="Nombre del campo..."
+              sport="rugby" 
             />
             <button className={styles.userButton}>
               <span>👤</span>
-              <span>Usuario</span>
+              <span>usuario</span>
             </button>
           </div>
         </div>

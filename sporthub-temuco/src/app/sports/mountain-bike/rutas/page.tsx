@@ -12,7 +12,6 @@ const rutas = [
     name: "Ruta Montañosa - Centro",
     address: "Norte, Centro, Sur",
     rating: 4.3,
-    reviews: "130 reseñas",
     tags: ["Dificultad Media", "Estacionamiento", "Iluminación", "Área Descanso"],
     description: "Ruta para mountain bike ubicada en zona montañosa con paisajes espectaculares y diversos terrenos",
     price: "21",
@@ -23,7 +22,6 @@ const rutas = [
     name: "Ruta Bosque - Norte",
     address: "Sector Norte",
     rating: 4.5,
-    reviews: "85 reseñas",
     tags: ["Dificultad Alta", "Estacionamiento"],
     description: "Ruta técnica a través del bosque con descensos desafiantes y subidas exigentes",
     price: "19",
@@ -34,7 +32,6 @@ const rutas = [
     name: "Ruta Valle - Sur",
     address: "Sector Sur",
     rating: 4.1,
-    reviews: "67 reseñas",
     tags: ["Dificultad Baja", "Estacionamiento", "Iluminación"],
     description: "Ruta ideal para principiantes con terreno estable y vistas panorámicas del valle",
     price: "23",
@@ -80,7 +77,7 @@ export default function Page() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>🚵‍♂️</div>
-            <h1 className={styles.headerTitle}>Rutas de Mountain Bike</h1>
+            <h1 className={styles.headerTitle}>Mountain Bike</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar

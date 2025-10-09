@@ -146,7 +146,7 @@ export default function CentroSeleccionadoPage() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <span className={styles.headerIcon}>🧗‍♂️</span>
-            <h1 className={styles.headerTitle}>Escalada - {centro.name}</h1>
+            <h1 className={styles.headerTitle}>Escalada</h1>
           </div>
           <div className={styles.headerRight}>
            <SearchBar

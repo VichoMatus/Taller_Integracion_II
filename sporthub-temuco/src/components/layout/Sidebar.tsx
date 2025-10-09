@@ -67,6 +67,7 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
       case 'skate':
         return indexStyles;
       case 'atletismo':
+        console.log('🏃 Using atletismoStyles for Atletismo');
         return atletismoStyles;
       case 'ciclismo':
         return ciclismoStyles;
@@ -88,8 +89,6 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
         return patinajeStyles;
         // return tenisStyles;
         return basquetbolStyles; // temporal
-      case 'voleibol':
-      case 'padel':
       case 'enduro':
         return enduroStyles;
       case 'futbol-americano':
@@ -99,11 +98,10 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
       case 'mountain-bike':
         return mountainbikeStyles;
 
-
       case 'escalada':
         return escaladaStyles;
       default:
-        return indexStyles; // Cambiado a indexStyles para casos no manejados
+        return indexStyles; 
     }
   };
 
@@ -229,38 +227,53 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
   const menuItems = userRole === 'superadmin' ? superAdminMenuItems : userRole === 'admin' ? adminMenuItems : usuarioMenuItems;
   const userTitle = userRole === 'superadmin' ? 'Superadministrador' : userRole === 'admin' ? 'Administrador' : 'Usuario';
 
+  // 🔥 FUNCIÓN PARA DETERMINAR EL HREF DEL HEADER
+  const getHeaderHref = () => {
+    switch (userRole) {
+      case 'admin':
+        return '/sports';
+      case 'superadmin':
+        return '/sports';
+      case 'usuario':
+        return '/sports';
+      default:
+        return '/sports';
+    }
+  };
+
   return (
-    <div className={styles ? styles.sidebarContainer : 'sidebarContainer'}>
-      {/* Header */}
-      <div className={styles ? styles.sidebarHeader : 'sidebarHeader'}>
-        <div className={styles ? styles.sidebarLogoContainer : 'sidebarLogoContainer'}>
-          <div className={styles ? styles.sidebarLogoIcon : 'sidebarLogoIcon'}>
-            SH
+    <div className={styles ? styles.sidebarContainer : 'sidebar-container'}>
+      {/* Header - 🔥 AHORA ES CLICKEABLE */}
+      <Link href={getHeaderHref()} className={styles ? styles.sidebarHeaderLink : 'sidebar-header-link'}>
+        <div className={styles ? styles.sidebarHeader : 'sidebar-header'}>
+          <div className={styles ? styles.sidebarLogoContainer : 'sidebar-logo-container'}>
+            <div className={styles ? styles.sidebarLogoIcon : 'sidebar-logo-icon'}>
+              SH
+            </div>
+            <div>
+              <h1 className={styles ? styles.sidebarTitle : 'sidebar-title'}>SportHub</h1>
+              <p className={styles ? styles.sidebarSubtitle : 'sidebar-subtitle'}>{userTitle}</p>
+            </div>
           </div>
-          <div>
-            <h1 className={styles ? styles.sidebarTitle : 'sidebarTitle'}>SportHub</h1>
-            <p className={styles ? styles.sidebarSubtitle : 'sidebarSubtitle'}>{userTitle}</p>
-          </div>
+          {userRole === 'usuario' && sport && styles && <div className={styles.sportIcon}></div>}
         </div>
-        {userRole === 'usuario' && sport && styles && <div className={styles.sportIcon}></div>}
-  {/* Removed sport icon box to avoid the extra blue square in the sidebar */}
-      </div>
+      </Link>
 
       {/* Navigation */}
-      <nav className={styles ? styles.sidebarNav : 'sidebarNav'}>
-        <ul className={styles ? styles.sidebarMenu : 'sidebarMenu'}>
+      <nav className={styles ? styles.sidebarNav : 'sidebar-nav'}>
+        <ul className={styles ? styles.sidebarMenu : 'sidebar-menu'}>
           {menuItems.map((item) => (
-            <li key={item.name} className={styles ? styles.sidebarMenuItem : 'sidebarMenuItem'}>
+            <li key={item.name} className={styles ? styles.sidebarMenuItem : 'sidebar-menu-item'}>
               <Link
                 href={item.href}
-                className={`${styles ? styles.sidebarMenuLink : 'sidebarMenuLink'} ${
+                className={`${styles ? styles.sidebarMenuLink : 'sidebar-menu-link'} ${
                   item.active ? (styles ? styles.active : 'active') : ''
                 }`}
               >
-                <span className={styles ? styles.sidebarMenuIcon : 'sidebarMenuIcon'}>
+                <span className={styles ? styles.sidebarMenuIcon : 'sidebar-menu-icon'}>
                   {item.icon}
                 </span>
-                <span className={styles ? styles.sidebarMenuText : 'sidebarMenuText'}>
+                <span className={styles ? styles.sidebarMenuText : 'sidebar-menu-text'}>
                   {item.name}
                 </span>
               </Link>
@@ -270,9 +283,9 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
       </nav>
 
       {/* Logout Button */}
-      <div className={styles ? styles.sidebarLogout : 'sidebarLogout'}>
-        <button className={styles ? styles.sidebarLogoutButton : 'sidebarLogoutButton'}>
-          <span className={styles ? styles.sidebarLogoutIcon : 'sidebarLogoutIcon'}>🚪</span>
+      <div className={styles ? styles.sidebarLogout : 'sidebar-logout'}>
+        <button className={styles ? styles.sidebarLogoutButton : 'sidebar-logout-button'}>
+          <span className={styles ? styles.sidebarLogoutIcon : 'sidebar-logout-icon'}>🚪</span>
           <span>Cerrar Sesión</span>
         </button>
       </div>

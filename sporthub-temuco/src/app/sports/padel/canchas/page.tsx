@@ -12,7 +12,6 @@ const canchas = [
     name: "Padel - Centro",
     address: "Norte, Centro, Sur",
     rating: 4.6,
-    reviews: "185 reseñas",
     tags: ["Cancha de Cristal", "Estacionamiento", "Iluminación LED", "Vestuarios"],
     description: "Cancha de padel profesional con paredes de cristal ubicada en el centro con raquetas y pelotas incluidas",
     price: "32",
@@ -23,7 +22,6 @@ const canchas = [
     name: "Padel - Norte",
     address: "Sector Norte",
     rating: 4.4,
-    reviews: "92 reseñas",
     tags: ["Cancha Premium", "Estacionamiento", "Climatizada"],
     description: "Cancha de padel premium con superficie de última generación ubicada en el sector norte",
     price: "28",
@@ -34,7 +32,6 @@ const canchas = [
     name: "Padel - Sur",
     address: "Sector Sur",
     rating: 4.2,
-    reviews: "74 reseñas",
     tags: ["Cancha Techada", "Estacionamiento", "Iluminación", "Cafetería"],
     description: "Cancha de padel techada ubicada en el sur, ideal para jugar en cualquier clima",
     price: "30",
@@ -45,7 +42,6 @@ const canchas = [
     name: "Padel Premium",
     address: "Centro Premium", 
     rating: 4.8,
-    reviews: "156 reseñas",
     tags: ["Cancha Profesional", "Estacionamiento", "Iluminación LED", "Bar"],
     description: "Cancha de padel profesional con estándar internacional y todas las comodidades VIP",
     price: "45",
@@ -56,7 +52,6 @@ const canchas = [
     name: "Padel - Elite",
     address: "Zona Elite",
     rating: 4.7,
-    reviews: "221 reseñas",
     tags: ["Cancha Internacional", "Estacionamiento", "Climatizada", "Spa"],
     description: "Cancha de padel de élite con superficie sintética de competición y servicios exclusivos",
     price: "50",
@@ -67,7 +62,6 @@ const canchas = [
     name: "Padel - Club",
     address: "Club Deportivo",
     rating: 4.5,
-    reviews: "118 reseñas",
     tags: ["Cancha de Club", "Estacionamiento", "Iluminación", "Torneos"],
     description: "Cancha de padel en club deportivo con torneos regulares y ambiente competitivo",
     price: "35",
@@ -117,7 +111,7 @@ export default function Page() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>🎾</div>
-            <h1 className={styles.headerTitle}>Canchas de Padel</h1>
+            <h1 className={styles.headerTitle}>Padel</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar

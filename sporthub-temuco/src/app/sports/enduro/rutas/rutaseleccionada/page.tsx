@@ -28,9 +28,9 @@ export default function RutaSeleccionadaPage() {
     reviews: 95,
     priceFrom: 35000,
     images: [
-      "/sports/enduro/rutas/ruta1.png",
-      "/sports/enduro/rutas/ruta2.png",
-      "/sports/enduro/enduro.png"
+      "/sports/enduro/rutas/rutaseleccionada/rutaSelec1.png",
+      "/sports/enduro/rutas/rutaseleccionada/rutaSelec2.png",
+      "/sports/enduro/rutas/rutaseleccionada/rutaSelec3.png"
     ],
     amenities: ["Guía Certificado", "Equipo Seguridad", "Terreno Rocoso", "Vistas Panorámicas"],
     difficulty: "Alta",
@@ -66,7 +66,7 @@ export default function RutaSeleccionadaPage() {
   }, []);
 
   const handleBackToRutas = () => {
-    router.push('/sports/enduro/canchas');
+    router.push('/sports/enduro/rutas');
   };
 
   const nextImage = () => {
@@ -150,7 +150,7 @@ export default function RutaSeleccionadaPage() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <span className={styles.headerIcon}>🏍️</span>
-            <h1 className={styles.headerTitle}>Enduro - {ruta.name}</h1>
+            <h1 className={styles.headerTitle}>Enduro</h1>
           </div>
           <div className={styles.headerRight}>
            <SearchBar

@@ -15,7 +15,6 @@ const topRatedGyms = [
     name: "CrossFit Iron Box",
     address: "Centro, Temuco",
     rating: 4.8,
-    reviews: "156 reseñas",
     tags: ["Entrenamiento Funcional", "CrossFit", "Box Profesional", "Coaching"],
     description: "Box de CrossFit completamente equipado con rigs, kettlebells, barras olímpicas y entrenadores certificados",
     price: "15",
@@ -26,7 +25,6 @@ const topRatedGyms = [
     name: "Functional Fitness Center",
     address: "Sector Norte",
     rating: 4.6,
-    reviews: "124 reseñas",
     tags: ["Entrenamiento Funcional", "TRX", "Kettlebells", "Personal Training"],
     description: "Centro especializado en entrenamiento funcional con equipos TRX, battle ropes y entrenamientos personalizados",
     price: "12",
@@ -37,7 +35,6 @@ const topRatedGyms = [
     name: "Elite CrossFit Sud",
     address: "Sector Sur",
     rating: 4.7,
-    reviews: "98 reseñas",
     tags: ["CrossFit", "Halterofilia", "Box Equipado", "Clases Grupales"],
     description: "Box de CrossFit con plataformas de halterofilia, anillas y clases grupales dirigidas por atletas certificados",
     price: "18",
@@ -48,7 +45,6 @@ const topRatedGyms = [
     name: "Beast Mode Gym",
     address: "Centro Premium", 
     rating: 4.9,
-    reviews: "187 reseñas",
     tags: ["CrossFit Elite", "Competencia", "Coaching Avanzado", "Nutrición"],
     description: "Box premium de CrossFit para atletas de competencia con equipamiento profesional y coaching nutricional",
     price: "25",
@@ -59,7 +55,6 @@ const topRatedGyms = [
     name: "Functional Training Hub",
     address: "Zona Industrial", 
     rating: 4.5,
-    reviews: "143 reseñas",
     tags: ["Entrenamiento Funcional", "Calistenia", "Strongman", "Open Box"],
     description: "Hub de entrenamiento funcional con área de calistenia, implementos strongman y concepto open box 24/7",
     price: "20",
@@ -70,7 +65,6 @@ const topRatedGyms = [
     name: "CrossFit Patagonia",
     address: "Centro Deportivo", 
     rating: 4.4,
-    reviews: "112 reseñas",
     tags: ["CrossFit", "Outdoor Training", "Bootcamp", "Recuperación"],
     description: "Box de CrossFit con área outdoor, bootcamps al aire libre y zona de recuperación con sauna y masajes",
     price: "16",
@@ -183,7 +177,7 @@ export default function CrossfitPage() {
         <Sidebar userRole="usuario" sport="crossfitentrenamientofuncional" />
         <div className={styles.mainContent}>
           <div style={{ height: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <p>Cargando boxes de CrossFit...</p>
+            <p>Cargando Gimnasios de CrossFit y Entrenamiento Funcional...</p>
           </div>
         </div>
       </div>

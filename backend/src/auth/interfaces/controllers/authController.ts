@@ -59,14 +59,14 @@ export class AuthController {
   /**
    * POST /register
    * Registrar nuevo usuario en el sistema
-   * Body: { nombre?, apellido?, email, password, telefono? }
+   * Body: { nombre?, apellido?, email, password, confirmPassword?, telefono? }
    * Response: { ok: boolean, data?: TokenResponse, error?: string }
    */
   register = async (req: Request, res: Response): Promise<void> => {
     try {
       const userData: UserRegister = req.body;
       
-      // Validación básica de email
+      // Validaciones básicas requeridas
       if (!userData.email || !userData.password) {
         res.status(400).json({ 
           ok: false, 
@@ -75,6 +75,50 @@ export class AuthController {
         return;
       }
 
+      // Validación de confirmación de contraseña
+      if (userData.confirmPassword && userData.password !== userData.confirmPassword) {
+        res.status(400).json({ 
+          ok: false, 
+          error: 'contraseñas no coinciden' 
+        });
+        return;
+      }
+
+      // Validación de longitud mínima de contraseña
+      if (userData.password.length < 6) {
+        res.status(400).json({ 
+          ok: false, 
+          error: 'La contraseña debe tener al menos 6 caracteres' 
+        });
+        return;
+      }
+
+      // Validación de formato de email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(userData.email)) {
+        res.status(400).json({ 
+          ok: false, 
+          error: 'El formato del email no es válido' 
+        });
+        return;
+      }
+
+      // Validación de teléfono (si se proporciona)
+      if (userData.telefono && userData.telefono.length > 0) {
+        // Acepta múltiples prefijos internacionales: +56 (Chile), +54 (Argentina), +1 (USA/Canadá), 
+        // +34 (España), +52 (México), +57 (Colombia), +51 (Perú), +55 (Brasil), etc.
+        const telefonoRegex = /^(\+[1-9]\d{0,3})?[0-9]{7,10}$/;
+        if (!telefonoRegex.test(userData.telefono.replace(/[\s-]/g, ''))) {
+          res.status(400).json({ 
+            ok: false, 
+            error: 'El formato del teléfono no es válido (ejemplos: +56912345678, +1234567890, +34123456789)' 
+          });
+          return;
+        }
+      }
+
+      console.log('✅ AuthController: Validaciones pasadas, enviando a AuthService');
+      
       const result = await this.service.register(userData);
       const status = result.ok ? 201 : 400;
       res.status(status).json(result);

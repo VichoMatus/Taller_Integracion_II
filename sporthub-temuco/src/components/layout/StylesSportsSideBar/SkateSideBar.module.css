@@ -3,6 +3,28 @@
 .sidebarHeader { margin-bottom: 18px; }
 .sidebarLogoContainer { display:flex; gap:12px; align-items:center; }
 .sidebarLogoIcon { width:44px; height:44px; border-radius:10px; background:linear-gradient(135deg,#eef2f7 0%, #f7f8fa 100%); display:flex; align-items:center; justify-content:center; color:var(--sport-accent, #6b7280); font-weight:700; }
+.sidebar-header-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: all 0.2s ease;
+}
+
+.sidebar-header-link:hover {
+  transform: scale(1.02);
+}
+
+/* Para los module.css files, agrega también: */
+.sidebarHeaderLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: all 0.2s ease;
+}
+
+.sidebarHeaderLink:hover {
+  transform: scale(1.02);
+}
 .sidebarTitle { font-size:18px; margin:0; font-weight:700; color:var(--skate-text, #0f172a); }
 .sidebarSubtitle { font-size:12px; color:#6b7280; }
 .sidebarNav { margin-top:12px; }

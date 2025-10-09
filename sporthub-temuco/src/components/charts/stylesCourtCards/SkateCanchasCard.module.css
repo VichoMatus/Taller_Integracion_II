@@ -10,8 +10,8 @@
 .tagsContainer { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
 .tag { background: rgba(var(--skate-accent-rgb,107,114,128),0.06); color:var(--sport-accent, #6b7280); padding:6px 8px; border-radius:8px; font-size:12px; }
 .description { margin:12px 0; color:#475569; font-size:14px; }
-.cardFooter { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.cardFooter { display:flex; justify-content:space-between; align-items:flex-end; gap:12px; }
 .price { font-weight:700; }
-.actionButton { background: var(--sport-accent, #6b7280); color:white; border:none; padding:8px 10px; border-radius:8px; cursor:pointer; }
+.actionButton { background: var(--sport-accent, #6b7280); color:white; border:none; padding:10px 16px; border-radius:8px; cursor:pointer; }
 
 .courtCardSkate { /* sport-specific modifier if needed */ padding:0; }

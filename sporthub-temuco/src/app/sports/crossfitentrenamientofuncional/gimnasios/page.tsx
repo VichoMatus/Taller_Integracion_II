@@ -12,7 +12,6 @@ const gimnasios = [
     name: "CrossFit Iron Box",
     address: "Centro, Temuco",
     rating: 4.8,
-    reviews: "156 reseñas",
     tags: ["Entrenamiento Funcional", "CrossFit", "Box Profesional", "Coaching"],
     description: "Box de CrossFit completamente equipado con rigs, kettlebells, barras olímpicas y entrenadores certificados",
     price: "15",
@@ -23,7 +22,6 @@ const gimnasios = [
     name: "Functional Fitness Center",
     address: "Sector Norte",
     rating: 4.6,
-    reviews: "124 reseñas",
     tags: ["Entrenamiento Funcional", "TRX", "Kettlebells", "Personal Training"],
     description: "Centro especializado en entrenamiento funcional con equipos TRX, battle ropes y entrenamientos personalizados",
     price: "12",
@@ -34,7 +32,6 @@ const gimnasios = [
     name: "Elite CrossFit Sud",
     address: "Sector Sur",
     rating: 4.7,
-    reviews: "98 reseñas",
     tags: ["CrossFit", "Halterofilia", "Box Equipado", "Clases Grupales"],
     description: "Box de CrossFit con plataformas de halterofilia, anillas y clases grupales dirigidas por atletas certificados",
     price: "18",
@@ -45,7 +42,6 @@ const gimnasios = [
     name: "Beast Mode Gym",
     address: "Centro Premium", 
     rating: 4.9,
-    reviews: "187 reseñas",
     tags: ["CrossFit Elite", "Competencia", "Coaching Avanzado", "Nutrición"],
     description: "Box premium de CrossFit para atletas de competencia con equipamiento profesional y coaching nutricional",
     price: "25",
@@ -56,7 +52,6 @@ const gimnasios = [
     name: "Functional Training Hub",
     address: "Zona Industrial", 
     rating: 4.5,
-    reviews: "143 reseñas",
     tags: ["Entrenamiento Funcional", "Calistenia", "Strongman", "Open Box"],
     description: "Hub de entrenamiento funcional con área de calistenia, implementos strongman y concepto open box 24/7",
     price: "20",
@@ -67,7 +62,6 @@ const gimnasios = [
     name: "CrossFit Patagonia",
     address: "Centro Deportivo", 
     rating: 4.4,
-    reviews: "112 reseñas",
     tags: ["CrossFit", "Outdoor Training", "Bootcamp", "Recuperación"],
     description: "Box de CrossFit con área outdoor, bootcamps al aire libre y zona de recuperación con sauna y masajes",
     price: "16",
@@ -78,7 +72,6 @@ const gimnasios = [
     name: "Titan Functional Gym",
     address: "Sector Oriente", 
     rating: 4.3,
-    reviews: "89 reseñas",
     tags: ["Entrenamiento Funcional", "Powerlifting", "Acondicionamiento", "Flexibilidad"],
     description: "Gimnasio especializado en entrenamiento funcional con área de powerlifting y clases de movilidad",
     price: "14",
@@ -89,7 +82,6 @@ const gimnasios = [
     name: "Warrior CrossFit",
     address: "Zona Norte", 
     rating: 4.6,
-    reviews: "134 reseñas",
     tags: ["CrossFit", "MMA Conditioning", "Cardio Intensivo", "Fuerza"],
     description: "Box de CrossFit con enfoque en acondicionamiento para MMA, cardio intensivo y desarrollo de fuerza",
     price: "17",
@@ -139,7 +131,7 @@ export default function Page() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>🏋️‍♂️</div>
-            <h1 className={styles.headerTitle}>Gimnasios de CrossFit y Entrenamiento Funcional</h1>
+            <h1 className={styles.headerTitle}>CrossFit y Entrenamiento Funcional</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar

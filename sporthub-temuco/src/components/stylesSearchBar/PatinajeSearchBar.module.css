@@ -43,8 +43,8 @@
   position: relative;
   display: flex;
   align-items: center;
-  width: 100%;
-  max-width: 500px;
+  width: 78%;
+  max-width: 700px;
   background: linear-gradient(
     135deg,
     rgba(255, 255, 255, 0.95) 0%,

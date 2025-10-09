@@ -12,7 +12,6 @@ const rutas = [
     name: "Ciclismo - Sendero Bosque",
     address: "Parque Nacional, Zona Norte",
     rating: 4.7,
-    reviews: "156 reseñas",
     tags: ["Sendero natural", "Dificultad media", "Paisajes", "Estacionamiento"],
     description: "Ruta de ciclismo de montaña con senderos naturales y vistas panorámicas",
     price: "15",
@@ -23,7 +22,6 @@ const rutas = [
     name: "Ciclismo - Ruta Urbana",
     address: "Centro Ciudad",
     rating: 4.4,
-    reviews: "89 reseñas",
     tags: ["Ciclovía urbana", "Fácil acceso", "Iluminación"],
     description: "Ciclovía urbana segura con conexiones a puntos de interés de la ciudad",
     price: "8",
@@ -34,7 +32,6 @@ const rutas = [
     name: "Ciclismo - Sendero Lago",
     address: "Orilla del Lago",
     rating: 4.8,
-    reviews: "203 reseñas",
     tags: ["Vista al lago", "Dificultad alta", "Naturaleza", "Área de descanso"],
     description: "Ruta desafiante con hermosas vistas al lago y áreas de descanso",
     price: "20",
@@ -45,29 +42,26 @@ const rutas = [
     name: "Ciclismo - Ruta Cordillera",
     address: "Zona Montañosa",
     rating: 4.9,
-    reviews: "278 reseñas",
     tags: ["Alta montaña", "Dificultad extrema", "Aventura", "Guía incluida"],
     description: "Ruta de alta montaña para ciclistas experimentados con guía profesional",
     price: "35",
     nextAvailable: "06:00-07:00", 
   },
   {
-    imageUrl: "/sports/ciclismo/rutas/Ruta5.png",
-    name: "Ciclismo - Sendero Familiar",
-    address: "Parque Recreativo",
-    rating: 4.3,
-    reviews: "142 reseñas",
-    tags: ["Familiar", "Dificultad baja", "Área de picnic", "Alquiler bicicletas"],
-    description: "Ruta familiar ideal para principiantes con servicios de alquiler",
-    price: "10",
-    nextAvailable: "14:00-15:00", 
+    imageUrl: "/sports/ciclismo/rutas/Ruta1.png",
+    name: "Ciclismo - Ruta Valle",
+    address: "Valle Central",
+    rating: 4.5,
+    tags: ["Sendero intermedio", "Paisajes", "Estacionamiento", "Cafetería"],
+    description: "Ruta de ciclismo por el valle con paradas estratégicas y servicios",
+    price: "12",
+    nextAvailable: "12:00-13:00",
   },
   {
-    imageUrl: "/sports/ciclismo/rutas/Ruta6.png",
+    imageUrl: "/sports/ciclismo/rutas/Ruta2.png",
     name: "Ciclismo - Ruta Costera",
     address: "Borde Costero",
     rating: 4.6,
-    reviews: "198 reseñas",
     tags: ["Vista al mar", "Brisa marina", "Dificultad media", "Cafeterías"],
     description: "Hermosa ruta costera con paradas en cafeterías locales",
     price: "18",
@@ -75,222 +69,158 @@ const rutas = [
   }
 ];
 
-export default function CiclismoCanchasPage() {
+export default function Page() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredRutas, setFilteredRutas] = useState(rutas);
-  const [selectedFilter, setSelectedFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('rating');
-  const router = useRouter();
+  const [modalOpen, setModalOpen] = useState(false);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const term = e.target.value;
-    setSearchTerm(term);
-    
-    const filtered = rutas.filter(ruta =>
-      ruta.name.toLowerCase().includes(term.toLowerCase()) ||
-      ruta.address.toLowerCase().includes(term.toLowerCase()) ||
-      ruta.tags.some(tag => tag.toLowerCase().includes(term.toLowerCase()))
-    );
-    
-    setFilteredRutas(filtered);
+    setSearchTerm(e.target.value);
   };
 
   const handleSearch = () => {
-    console.log('Buscando:', searchTerm);
-  };
-
-  const handleFilterChange = (filter: string) => {
-    setSelectedFilter(filter);
-    
-    let filtered = rutas;
-    
-    switch (filter) {
-      case 'facil':
-        filtered = rutas.filter(ruta => 
-          ruta.tags.some(tag => tag.toLowerCase().includes('fácil') || tag.toLowerCase().includes('baja'))
-        );
-        break;
-      case 'medio':
-        filtered = rutas.filter(ruta => 
-          ruta.tags.some(tag => tag.toLowerCase().includes('media'))
-        );
-        break;
-      case 'dificil':
-        filtered = rutas.filter(ruta => 
-          ruta.tags.some(tag => tag.toLowerCase().includes('alta') || tag.toLowerCase().includes('extrema'))
-        );
-        break;
-      case 'urbano':
-        filtered = rutas.filter(ruta => 
-          ruta.tags.some(tag => tag.toLowerCase().includes('urbana'))
-        );
-        break;
-      case 'natural':
-        filtered = rutas.filter(ruta => 
-          ruta.tags.some(tag => 
-            tag.toLowerCase().includes('natural') || 
-            tag.toLowerCase().includes('sendero') ||
-            tag.toLowerCase().includes('montaña')
-          )
-        );
-        break;
-      default:
-        filtered = rutas;
-    }
-    
-    if (searchTerm) {
-      filtered = filtered.filter(ruta =>
+    if (searchTerm.trim() === '') {
+      setFilteredRutas(rutas);
+    } else {
+      const filtered = rutas.filter(ruta =>
         ruta.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ruta.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ruta.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+        ruta.address.toLowerCase().includes(searchTerm.toLowerCase())
       );
+      setFilteredRutas(filtered);
     }
-    
-    setFilteredRutas(filtered);
   };
 
-  const handleSortChange = (sort: string) => {
-    setSortBy(sort);
-    
-    const sorted = [...filteredRutas].sort((a, b) => {
-      switch (sort) {
-        case 'rating':
-          return b.rating - a.rating;
-        case 'price-low':
-          return parseInt(a.price) - parseInt(b.price);
-        case 'price-high':
-          return parseInt(b.price) - parseInt(a.price);
-        case 'name':
-          return a.name.localeCompare(b.name);
-        default:
-          return 0;
-      }
-    });
-    
-    setFilteredRutas(sorted);
+  const handleBackToCiclismo = () => {
+    router.push('/sports/ciclismo');
   };
+
+  const availableNow = filteredRutas.filter(ruta => 
+    ruta.nextAvailable !== "No disponible hoy" && 
+    !ruta.nextAvailable.includes("Mañana")
+  ).length;
 
   return (
     <div className={styles.pageContainer}>
       <Sidebar userRole="usuario" sport="ciclismo" />
-      
+
       <div className={styles.mainContent}>
+        {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <button 
-              className={styles.backButton}
-              onClick={() => router.push('/sports/ciclismo')}
-            >
-              ← Volver
-            </button>
-            <div className={styles.headerIcon}>🚴‍♂️</div>
-            <h1 className={styles.headerTitle}>Rutas de Ciclismo</h1>
+            <div className={styles.headerIcon}></div>
+            <h1 className={styles.headerTitle}>Ciclismo</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Buscar rutas..."
+              placeholder="Nombre de la ruta"
               sport="ciclismo"
             />
             <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
-              👤 Usuario
+              <span>👤</span>
+              <span>Usuario</span>
             </button>
           </div>
         </div>
 
-        <div className={styles.filtersSection}>
-          <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Dificultad:</label>
-            <div className={styles.filterButtons}>
-              {[
-                { value: 'all', label: 'Todas' },
-                { value: 'facil', label: 'Fácil' },
-                { value: 'medio', label: 'Medio' },
-                { value: 'dificil', label: 'Difícil' }
-              ].map(filter => (
-                <button
-                  key={filter.value}
-                  className={`${styles.filterButton} ${selectedFilter === filter.value ? styles.active : ''}`}
-                  onClick={() => handleFilterChange(filter.value)}
-                >
-                  {filter.label}
-                </button>
-              ))}
+        {/* Breadcrumb */}
+        <div className={styles.breadcrumb}>
+          <button
+            className={styles.breadcrumbButton}
+            onClick={handleBackToCiclismo}
+          >
+            <span>←</span>
+            <span>Ciclismo</span>
+          </button>
+        </div>
+
+        {/* Filtros */}
+        <div className={styles.filtersContainer}>
+          <h3 className={styles.filtersTitle}>Filtrar rutas de ciclismo</h3>
+          <div className={styles.filtersGrid}>
+            <div className={styles.filterField}>
+              <label className={styles.filterLabel}>
+                <span style={{color: '#16a34a'}}>📍</span>
+                <span>Ubicación o zona</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Norte, Centro, Valle, Montaña..."
+                className={styles.filterInput}
+              />
+            </div>
+            <div className={styles.filterField}>
+              <label className={styles.filterLabel}>
+                <span style={{color: '#16a34a'}}>📅</span>
+                <span>Fecha</span>
+              </label>
+              <input
+                type="text"
+                placeholder="dd - mm - aaaa"
+                className={styles.filterInput}
+              />
+            </div>
+            <div className={styles.filterField}>
+              <label className={styles.filterLabel}>
+                <span style={{color: '#22c55e'}}>💰</span>
+                <span>Precio (max $hr)</span>
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                className={styles.priceSlider}
+              />
+            </div>
+            <div className={styles.filterField}>
+              <label className={styles.filterLabel}>
+                <span style={{color: '#15803d'}}>🚴</span>
+                <span>Tipo de ruta</span>
+              </label>
+              <select className={styles.filterSelect}>
+                <option>Tipo de ruta</option>
+                <option>Sendero natural</option>
+                <option>Ciclovía urbana</option>
+                <option>Ruta de montaña</option>
+              </select>
             </div>
           </div>
-          
-          <div className={styles.filterGroup}>
-            <label className={styles.filterLabel}>Tipo:</label>
-            <div className={styles.filterButtons}>
-              {[
-                { value: 'urbano', label: 'Urbano' },
-                { value: 'natural', label: 'Natural' }
-              ].map(filter => (
-                <button
-                  key={filter.value}
-                  className={`${styles.filterButton} ${selectedFilter === filter.value ? styles.active : ''}`}
-                  onClick={() => handleFilterChange(filter.value)}
-                >
-                  {filter.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className={styles.sortGroup}>
-            <label className={styles.filterLabel}>Ordenar por:</label>
-            <select 
-              className={styles.sortSelect}
-              value={sortBy}
-              onChange={(e) => handleSortChange(e.target.value)}
-            >
-              <option value="rating">Mejor valoradas</option>
-              <option value="price-low">Precio: Menor a mayor</option>
-              <option value="price-high">Precio: Mayor a menor</option>
-              <option value="name">Nombre A-Z</option>
-            </select>
+          <div className={styles.filtersActions}>
+            <button className={styles.searchButton}>
+              <span>🔍</span>
+              <span>Buscar rutas</span>
+            </button>
           </div>
         </div>
 
-        <div className={styles.resultsInfo}>
-          <h3 className={styles.resultsTitle}>
-            {filteredRutas.length} rutas encontradas
-          </h3>
-          <p className={styles.resultsSubtitle}>
-            Descubre las mejores rutas de ciclismo en Temuco
-          </p>
-        </div>
-
-        <div className={styles.rutasGrid}>
-          {filteredRutas.map((ruta, index) => (
-            <CourtCard
-              key={index}
-              {...ruta}
-              sport="ciclismo"
-              onClick={() => router.push('/sports/ciclismo/canchas/canchaseleccionada')}
-            />
-          ))}
-        </div>
-
-        {filteredRutas.length === 0 && (
+        {/* Mensaje de no resultados */}
+        {filteredRutas.length === 0 && searchTerm && (
           <div className={styles.noResults}>
-            <div className={styles.noResultsIcon}>🔍</div>
-            <h3>No se encontraron rutas</h3>
-            <p>Intenta ajustar los filtros o términos de búsqueda</p>
-            <button 
-              className={styles.clearFiltersButton}
-              onClick={() => {
-                setSearchTerm('');
-                setSelectedFilter('all');
-                setFilteredRutas(rutas);
-              }}
-            >
-              Limpiar filtros
+            <h3>No se encontraron rutas de ciclismo para &quot;{searchTerm}&quot;</h3>
+            <p>Intenta con otros términos de búsqueda o ubicaciones</p>
+            <button onClick={() => {setSearchTerm(''); setFilteredRutas(rutas);}}>
+              Ver todas las rutas de ciclismo
             </button>
           </div>
         )}
+
+        {/* Contenedor de tarjetas */}
+        <div className={styles.cardsContainer}>
+          <div className={styles.cardsGrid}>
+            {filteredRutas.map((ruta, idx) => (
+              <CourtCard
+                key={idx}
+                {...ruta}
+                sport="ciclismo"
+              />
+            ))}
+          </div>
+
+
+        </div>
       </div>
     </div>
   );

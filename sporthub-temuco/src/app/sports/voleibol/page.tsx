@@ -15,7 +15,6 @@ const topRatedCourts = [
     name: "Voleibol - Centro",
     address: "Norte, Centro, Sur",
     rating: 4.8,
-    reviews: "320 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
     description: "Cancha para voleibol ubicada en el centro y con implementos deportivos (Balones y redes)",
     price: "25",
@@ -26,7 +25,6 @@ const topRatedCourts = [
     name: "Voleibol - Norte",
     address: "Sector Norte",
     rating: 4.6,
-    reviews: "185 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento", "Vestuarios"],
     description: "Cancha para voleibol ubicada en el centro y con implementos deportivos (Balones y redes)",
     price: "22",
@@ -37,7 +35,6 @@ const topRatedCourts = [
     name: "Voleibol - Sur",
     address: "Sector Sur",
     rating: 4.4,
-    reviews: "97 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación"],
     description: "Cancha para voleibol ubicada en el centro y con implementos deportivos (Balones y redes)",
     price: "28",
@@ -48,7 +45,6 @@ const topRatedCourts = [
     name: "Voleibol Premium",
     address: "Centro Premium", 
     rating: 4.9,
-    reviews: "242 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería", "Vestuarios"],
     description: "Cancha para voleibol ubicada en el centro y con implementos deportivos (Balones y redes)",
     price: "35",
@@ -59,7 +55,6 @@ const topRatedCourts = [
     name: "Voleibol - Elite",
     address: "Zona Elite", 
     rating: 4.7,
-    reviews: "156 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
     description: "Cancha premium para voleibol con todas las comodidades y equipamiento profesional",
     price: "32",
@@ -70,11 +65,41 @@ const topRatedCourts = [
     name: "Voleibol - Deportivo",
     address: "Centro Deportivo", 
     rating: 4.5,
-    reviews: "128 reseñas",
     tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación"],
     description: "Cancha de voleibol en complejo deportivo con múltiples servicios disponibles",
     price: "26",
     nextAvailable: "16:30-17:30",
+  }
+];
+
+const volleyballStats = [
+  {
+    title: "Canchas Disponibles Hoy",
+    value: "8",
+    icon: "🏐",
+    subtitle: "Listas para reservar",
+    trend: { value: 3, isPositive: true }
+  },
+  {
+    title: "Rango de Precios",
+    value: "$22-35",
+    icon: "💰",
+    subtitle: "Por hora",
+    trend: { value: 5, isPositive: true }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.6⭐",
+    icon: "🏆",
+    subtitle: "De nuestras canchas",
+    trend: { value: 0.3, isPositive: true }
+  },
+  {
+    title: "Jugadores en Cancha",
+    value: "12",
+    icon: "👥",
+    subtitle: "Ahora mismo",
+    trend: { value: 4, isPositive: true }
   }
 ];
 
@@ -132,14 +157,6 @@ export default function VoleibolPage() {
     };
   }, []);
 
-  // Stats específicos para voleibol
-  const stats = {
-    disponiblesHoy: 8,
-    precioPromedio: { min: 22, max: 35 },
-    promedioCalificacion: 4.6,
-    cantidadJugadores: 12
-  };
-
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -192,32 +209,32 @@ export default function VoleibolPage() {
           </div>
         </div>
 
-        <div className={styles.statsContainer}>
-          <StatsCard
-            title="Canchas Disponibles hoy"
-            value={stats.disponiblesHoy}
-            icon={<span>🏟️</span>}
-            color="purple"
-          />
-          <StatsCard
-            title="Rango de precios por hora"
-            value={`$${stats.precioPromedio.min}-${stats.precioPromedio.max}`}
-            icon={<span>💰</span>}
-            color="red"
-          />
-          <StatsCard
-            title="Promedio de calificación"
-            value={stats.promedioCalificacion}
-            subtitle="⭐"
-            color="yellow"
-            icon={<span>⭐</span>}
-          />
-          <StatsCard
-            title="Jugadores en cancha"
-            value={stats.cantidadJugadores}
-            icon={<span>👥</span>}
-            color="blue"
-          />
+        {/* 🔥 STATS CARDS MEJORADAS CON STATSCARD (nueva estructura) */}
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas del Voleibol en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {volleyballStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                sport="voleibol"
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Agregar navegación específica si es necesario
+                  if (stat.title.includes("Canchas")) {
+                    router.push('/sports/voleibol/canchas');
+                  }
+                }}
+              />
+            ))}
+          </div>
         </div>
 
         <div className={styles.quickAccessSection}>

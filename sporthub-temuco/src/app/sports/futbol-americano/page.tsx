@@ -5,6 +5,7 @@ import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
+import StatsCard from '../../../components/charts/StatsCard';
 import styles from './page.module.css';
 
 const topRatedCourts = [
@@ -13,7 +14,6 @@ const topRatedCourts = [
     name: "Estadio Los Titanes",
     address: "Zona Deportiva Norte",
     rating: 4.8,
-    reviews: "156 reseñas",
     tags: ["Estadio Profesional", "Cesped Natural", "Gradas", "Vestuarios"],
     description: "Estadio profesional con medidas oficiales NFL. Cesped natural y sistema de iluminación para partidos nocturnos.",
     price: "120",
@@ -24,11 +24,42 @@ const topRatedCourts = [
     name: "Coliseo del Fútbol",
     address: "Complejo Deportivo Central", 
     rating: 4.6,
-    reviews: "98 reseñas",
     tags: ["Estadio Semi-Profesional", "Cesped Sintético", "Torres de Iluminación", "Cabinas"],
     description: "Estadio semi-profesional con cesped sintético de última generación. Ideal para equipos universitarios y semi-profesionales.",
     price: "85",
     nextAvailable: "Domingo 10:00-13:00",
+  }
+];
+
+// 🔥 DATOS PARA LAS ESTADÍSTICAS DE FÚTBOL AMERICANO - ACTUALIZADOS
+const footballStats = [
+  {
+    title: "Estadios Disponibles Hoy",
+    value: "2",
+    icon: "🏈",
+    subtitle: "Listos para partidos",
+    trend: { value: 2, isPositive: true }
+  },
+  {
+    title: "Rango de Precios",
+    value: "$85-150",
+    icon: "💰",
+    subtitle: "Por hora",
+    trend: { value: 10, isPositive: false }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.7⭐",
+    icon: "🏆",
+    subtitle: "De nuestros estadios",
+    trend: { value: 0.3, isPositive: true }
+  },
+  {
+    title: "Capacidad por Equipo",
+    value: "22 jugadores",
+    icon: "👥",
+    subtitle: "En promedio",
+    trend: { value: 4, isPositive: true }
   }
 ];
 
@@ -67,14 +98,6 @@ export default function FutbolAmericanoPage() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  // Stats específicos para Fútbol Americano
-  const stats = {
-    disponiblesHoy: 2,
-    precioPromedio: { min: 85, max: 120 },
-    promedioCalificacion: 4.7,
-    capacidadPromedio: "22 jugadores"
-  };
 
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
@@ -141,23 +164,31 @@ export default function FutbolAmericanoPage() {
           </div>
         </div>
 
-        {/* Stats Cards para Fútbol Americano */}
-        <div className={styles.statsContainer}>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.disponiblesHoy}</div>
-            <div className={styles.statLabel}>Estadios Disponibles hoy</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>${stats.precioPromedio.min}-{stats.precioPromedio.max}</div>
-            <div className={styles.statLabel}>Rango de precios por hora</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.promedioCalificacion} ⭐</div>
-            <div className={styles.statLabel}>Promedio de calificación</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.capacidadPromedio}</div>
-            <div className={styles.statLabel}>Capacidad por equipo</div>
+        {/* Stats Cards para Futbol-Americano - USANDO EL COMPONENTE StatsCard*/}
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas del Fútbol Americano en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {footballStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                sport="futbol-americano"
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Agregar navegación específica si es necesario
+                  if (stat.title.includes("Estadios")) {
+                    router.push('/sports/futbol-americano/estadios');
+                  }
+                }}
+              />
+            ))}
           </div>
         </div>
 
@@ -263,6 +294,7 @@ export default function FutbolAmericanoPage() {
             address="Temuco, Chile"
             zoom={13}
             height="400px"
+            sport="futbol-americano" 
           />
 
           <div className={styles.mapActions}>

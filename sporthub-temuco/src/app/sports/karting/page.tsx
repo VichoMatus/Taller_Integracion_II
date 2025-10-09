@@ -15,7 +15,6 @@ const topRatedCourts = [
     name: "Kartódromo Speedway Temuco",
     address: "Sector Industrial, Temuco",
     rating: 4.8,
-    reviews: "124 reseñas",
     tags: ["Pista Techada", "Karts Eléctricos", "Cronometraje Digital", "Estacionamiento"],
     description: "Pista techada de última generación con karts eléctricos de alto rendimiento",
     price: "15",
@@ -26,7 +25,6 @@ const topRatedCourts = [
     name: "Circuit Racing Park",
     address: "Labranza, Temuco",
     rating: 4.6,
-    reviews: "98 reseñas",
     tags: ["Pista Outdoor", "Karts de Competición", "Área VIP"],
     description: "Circuito outdoor profesional con karts de competición y área VIP",
     price: "12",
@@ -37,7 +35,6 @@ const topRatedCourts = [
     name: "Thunder Kart Arena",
     address: "Pedro de Valdivia, Temuco",
     rating: 4.9,
-    reviews: "156 reseñas",
     tags: ["Pista Nocturna", "Simuladores", "Escuela de Karting", "Área de descanso"],
     description: "Arena de karting con pista nocturna, simuladores y escuela profesional",
     price: "18",
@@ -124,18 +121,19 @@ export default function KartingPage() {
         <div className={kartingCommon.header}>
           <div className={kartingCommon.headerLeft}>
             <div className={kartingCommon.headerIcon}>🏎️</div>
-            <h1 className={kartingCommon.headerTitle}>Pistas de Karting</h1>
+            <h1 className={kartingCommon.headerTitle}>Karting</h1>
           </div>
           <div className={kartingCommon.headerRight}>
             <SearchBar
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre de la pista"
+              placeholder="Nombre de la pista o ubicación..."
               sport="karting"
             />
             <button className={kartingCommon.userButton} onClick={() => router.push('/usuario/perfil')}>
-              👤 Usuario
+              <span>👤</span>
+              <span>usuario</span>
             </button>
           </div>
         </div>

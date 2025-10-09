@@ -1,37 +1,106 @@
-"use client";
+'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
-import atletismoCommon from './atletismo.module.css';
 import StatsCard from '../../../components/charts/StatsCard';
+import styles from './page.module.css';
 
-
-// Datos de ejemplo para las canchas mejor calificadas (6 tarjetas)
+// Datos de ejemplo para las pistas mejor calificadas (6 tarjetas)
 const topRatedCourts = [
   {
     imageUrl: "/sports/atletismo/canchas/Cancha1.png",
     name: "Atletismo - Centro",
     address: "Norte, Centro, Sur",
     rating: 4.3,
-    reviews: "130 reseñas",
     tags: ["Pista al aire libre", "Estacionamiento", "Iluminación", "Cafetería"],
     description: "Pista de atletismo ubicada en el centro con áreas para salto y lanzamiento",
     price: "21",
-    nextAvailable: "20:00-21:00", 
+    nextAvailable: "20:00-21:00",
   },
   {
     imageUrl: "/sports/atletismo/canchas/Cancha2.png",
     name: "Atletismo - Norte",
     address: "Sector Norte",
     rating: 4.5,
-    reviews: "85 reseñas",
     tags: ["Pista al aire libre", "Estacionamiento"],
     description: "Pista de atletismo con cronometraje y carriles reglamentarios",
     price: "19",
-    nextAvailable: "14:30-15:30", 
+    nextAvailable: "14:30-15:30",
+  },
+  {
+    imageUrl: "/sports/atletismo/canchas/Cancha1.png",
+    name: "Atletismo - Sur",
+    address: "Sector Sur",
+    rating: 4.8,
+    tags: ["Pista techada", "Vestuarios", "Entrenadores", "Áreas de salto"],
+    description: "Pista de atletismo con instalaciones completas y zona de entrenamiento",
+    price: "23",
+    nextAvailable: "10:30-11:30",
+  },
+  {
+    imageUrl: "/sports/atletismo/canchas/Cancha2.png",
+    name: "Atletismo - Premium",
+    address: "Centro Premium",
+    rating: 4.7,
+    tags: ["Pista Profesional", "Estacionamiento", "Iluminación", "Cafetería"],
+    description: "Pista de atletismo profesional con césped híbrido y todas las comodidades",
+    price: "28",
+    nextAvailable: "Disponible ahora",
+  },
+  {
+    imageUrl: "/sports/atletismo/canchas/Cancha1.png",
+    name: "Atletismo - Elite",
+    address: "Zona Elite",
+    rating: 4.8,
+    tags: ["Pista Profesional", "Estacionamiento", "Iluminación", "Cafetería"],
+    description: "Pista premium de atletismo con estándar internacional y equipamiento completo",
+    price: "32",
+    nextAvailable: "18:00-19:00",
+  },
+  {
+    imageUrl: "/sports/atletismo/canchas/Cancha2.png",
+    name: "Atletismo - Deportivo",
+    address: "Centro Deportivo",
+    rating: 4.4,
+    tags: ["Pista Sintética", "Estacionamiento", "Iluminación"],
+    description: "Pista de atletismo en complejo deportivo con múltiples servicios y torneos",
+    price: "25",
+    nextAvailable: "16:30-17:30",
+  }
+];
+
+// 🏃 DATOS PARA LAS ESTADÍSTICAS DE ATLETISMO
+const atletismoStats = [
+  {
+    title: "Pistas Disponibles Hoy",
+    value: "8",
+    icon: "🏃",
+    subtitle: "Listas para entrenar",
+    trend: { value: 2, isPositive: true }
+  },
+  {
+    title: "Rango de Precios",
+    value: "$19-32",
+    icon: "💰",
+    subtitle: "Por hora",
+    trend: { value: 5, isPositive: true }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.5⭐",
+    icon: "🏆",
+    subtitle: "De nuestras pistas",
+    trend: { value: 0.2, isPositive: true }
+  },
+  {
+    title: "Atletas Activos",
+    value: "45",
+    icon: "👥",
+    subtitle: "Ahora mismo",
+    trend: { value: 12, isPositive: true }
   }
 ];
 
@@ -46,12 +115,14 @@ export default function AtletismoPage() {
 
   useEffect(() => {
     setIsClient(true);
+
     const calculateCardsToShow = () => {
       const screenWidth = window.innerWidth;
       const cardWidth = 320;
       const gap = 20;
       const sidebarWidth = 240;
       const padding = 40;
+
       const availableWidth = screenWidth - sidebarWidth - padding;
       return Math.max(1, Math.min(4, Math.floor(availableWidth / (cardWidth + gap))));
     };
@@ -63,30 +134,44 @@ export default function AtletismoPage() {
     };
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
-  const stats = {
-    disponiblesHoy: 8,
-    precioPromedio: { min: 12, max: 20 },
-    promedioCalificacion: 4.4,
-    cantidadAtletas: 6
-  };
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
-  const nextSlide = () => setCurrentSlide((prev) => Math.min(prev + 1, totalSlides - 1));
-  const prevSlide = () => setCurrentSlide((prev) => Math.max(prev - 1, 0));
+  const nextSlide = () => {
+    setCurrentSlide((prev) => Math.min(prev + 1, totalSlides - 1));
+  };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value);
-  const handleSearch = () => console.log('Buscando:', searchTerm);
-  const handleLocationSearch = () => console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
+  const prevSlide = () => {
+    setCurrentSlide((prev) => Math.max(prev - 1, 0));
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSearch = () => {
+    console.log('Buscando:', searchTerm);
+  };
+
+  const handleLocationSearch = () => {
+    console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
+  };
+
+  const handleCanchaClick = (court: any) => {
+    console.log('Test navigation...');
+    router.push('/sports/atletismo/canchas/canchaseleccionada');
+  };
 
   if (!isClient) {
     return (
-      <div className={atletismoCommon.pageContainer}>
+      <div className={styles.pageContainer}>
         <Sidebar userRole="usuario" sport="atletismo" />
-        <div className={atletismoCommon.mainContent}>
+        <div className={styles.mainContent}>
           <div style={{ height: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <p>Cargando...</p>
           </div>
@@ -96,134 +181,171 @@ export default function AtletismoPage() {
   }
 
   return (
-    <div className={atletismoCommon.pageContainer}>
+    <div className={styles.pageContainer}>
       <Sidebar userRole="usuario" sport="atletismo" />
 
-      <div className={atletismoCommon.mainContent}>
-        <div className={atletismoCommon.header}>
-          <div className={atletismoCommon.headerLeft}>
-            <div className={atletismoCommon.headerIcon}>🏃‍♂️</div>
-            <h1 className={atletismoCommon.headerTitle}>{/* page title */}Pistas de Atletismo</h1>
+      <div className={styles.mainContent}>
+        <div className={styles.header}>
+          <div className={styles.headerLeft}>
+            <div className={styles.headerIcon}>🏃</div>
+            <h1 className={styles.headerTitle}>Atletismo</h1>
           </div>
-          <div className={atletismoCommon.headerRight}>
+          <div className={styles.headerRight}>
             <SearchBar
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre de la pista"
+              placeholder="Nombre de la pista..."
               sport="atletismo"
             />
-            <button className={atletismoCommon.userButton} onClick={() => router.push('/usuario/perfil')}>
-              👤 Usuario
+            <button className={styles.userButton}>
+              <span>👤</span>
+              <span>usuario</span>
             </button>
           </div>
         </div>
 
-        <div className={atletismoCommon.statsContainer}>
-          <StatsCard
-            title="Pistas disponibles hoy"
-            value={stats.disponiblesHoy}
-            icon={<span style={{fontSize: 20}}>📅</span>}
-            subtitle="Disponible ahora"
-            color="green"
-            className={atletismoCommon.statCard}
-            ariaLabel="Pistas disponibles hoy"
-            sport="atletismo"
-          />
-
-          <StatsCard
-            title="Rango de precios por hora"
-            value={`$${stats.precioPromedio.min}-${stats.precioPromedio.max}`}
-            icon={<span style={{fontSize: 20}}>💲</span>}
-            subtitle="Precio promedio"
-            color="blue"
-            className={atletismoCommon.statCard}
-            ariaLabel="Rango de precios por hora"
-            sport="atletismo"
-          />
-
-          <StatsCard
-            title="Promedio de calificación"
-            value={`${stats.promedioCalificacion} ⭐`}
-            icon={<span style={{fontSize: 20}}>⭐</span>}
-            subtitle="Reseñas acumuladas"
-            color="yellow"
-            className={atletismoCommon.statCard}
-            ariaLabel="Promedio de calificación"
-            sport="atletismo"
-          />
-
-          <StatsCard
-            title="Atletas en pista"
-            value={stats.cantidadAtletas}
-            icon={<span style={{fontSize: 20}}>🏃‍♂️</span>}
-            subtitle="Asistentes activos"
-            color="purple"
-            className={atletismoCommon.statCard}
-            ariaLabel="Atletas en pista"
-            sport="atletismo"
-          />
+        {/* 🏃 STATS CARDS MEJORADAS CON STATSCARD */}
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas del Atletismo en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {atletismoStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                sport="atletismo"
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Agregar navegación específica si es necesario
+                  if (stat.title.includes("Pistas")) {
+                    router.push('/sports/atletismo/canchas');
+                  }
+                }}
+              />
+            ))}
+          </div>
         </div>
 
-        <div className={atletismoCommon.quickAccessSection}>
-          <button 
-            className={`${atletismoCommon.mainCourtButton} ${atletismoCommon.containerCard}`}
-            onClick={() => router.push('/sports/atletismo/canchas')}
+        <div className={styles.quickAccessSection}>
+          <button
+            className={styles.mainCourtButton}
+            onClick={() => window.location.href = '/sports/atletismo/canchas/'}
           >
-            <div className={atletismoCommon.courtButtonIcon}>🏃‍♂️</div>
-            <div className={atletismoCommon.courtButtonText}>
-              <span className={atletismoCommon.courtButtonTitle}>Explorar Pistas</span>
-              <span className={atletismoCommon.courtButtonSubtitle}>Ver todas las pistas disponibles</span>
+            <div className={styles.courtButtonIcon}>🏃</div>
+            <div className={styles.courtButtonText}>
+              <span className={styles.courtButtonTitle}>Explorar Pistas</span>
+              <span className={styles.courtButtonSubtitle}>Ver todas las pistas disponibles</span>
             </div>
-            <div className={atletismoCommon.courtButtonArrow}>→</div>
+            <div className={styles.courtButtonArrow}>→</div>
           </button>
         </div>
 
-        <div className={atletismoCommon.topRatedSection}>
-          <div className={atletismoCommon.sectionHeader}>
-            <h2 className={atletismoCommon.sectionTitle}>
-              <span className={atletismoCommon.sectionIcon}>⭐</span>
+        {/* Pistas mejor calificadas con carrusel */}
+        <div className={styles.topRatedSection}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>
+              <span className={styles.sectionIcon}>⭐</span>
               Pistas mejor calificadas
             </h2>
-            <div className={atletismoCommon.carouselControls}>
-              <button onClick={prevSlide} className={atletismoCommon.carouselButton} disabled={currentSlide === 0}>←</button>
-              <span className={atletismoCommon.slideIndicator}>{currentSlide + 1} / {totalSlides}</span>
-              <button onClick={nextSlide} className={atletismoCommon.carouselButton} disabled={currentSlide === totalSlides - 1}>→</button>
+            <div className={styles.carouselControls}>
+              <button
+                onClick={prevSlide}
+                className={styles.carouselButton}
+                disabled={currentSlide === 0}
+                style={{ opacity: currentSlide === 0 ? 0.5 : 1 }}
+              >
+                ←
+              </button>
+              <span className={styles.slideIndicator}>
+                {currentSlide + 1} / {totalSlides}
+              </span>
+              <button
+                onClick={nextSlide}
+                className={styles.carouselButton}
+                disabled={currentSlide === totalSlides - 1}
+                style={{ opacity: currentSlide === totalSlides - 1 ? 0.5 : 1 }}
+              >
+                →
+              </button>
             </div>
           </div>
 
-          <div className={atletismoCommon.carouselContainer}>
-            <div className={atletismoCommon.courtsGrid} style={{ transform: `translateX(-${currentSlide * (320 + 20)}px)` }}>
+          <div className={styles.carouselContainer}>
+            <div
+              className={styles.courtsGrid}
+              style={{
+                transform: `translateX(-${currentSlide * (320 + 20)}px)`,
+              }}
+            >
               {topRatedCourts.map((court, index) => (
-                <CourtCard key={index} {...court} sport="atletismo" onClick={() => router.push('/sports/atletismo/canchas/canchaseleccionada')} />
+                <CourtCard
+                  key={index}
+                  {...court}
+                  sport="atletismo"
+                  onClick={() => router.push('/sports/atletismo/canchas/canchaseleccionada')}
+                />
               ))}
             </div>
           </div>
         </div>
 
-        <div className={atletismoCommon.mapSection}>
-          <h2 className={atletismoCommon.sectionTitle}>Ubicación en el mapa de las pistas</h2>
-            <div className={atletismoCommon.locationSearch}>
-            <div className={atletismoCommon.locationInputContainer}>
-              <span className={atletismoCommon.locationIcon}>📍</span>
-              <input type="text" placeholder="Dirección, barrio o ciudad" value={locationSearch} onChange={(e) => setLocationSearch(e.target.value)} className={atletismoCommon.locationInput} />
+        {/* Ubicación en el mapa */}
+        <div className={styles.mapSection}>
+          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las pistas</h2>
+
+          <div className={styles.locationSearch}>
+            <div className={styles.locationInputContainer}>
+              <span className={styles.locationIcon}>📍</span>
+              <input
+                type="text"
+                placeholder="Dirección, barrio o ciudad"
+                value={locationSearch}
+                onChange={(e) => setLocationSearch(e.target.value)}
+                className={styles.locationInput}
+              />
             </div>
-            <div className={atletismoCommon.radiusContainer}>
-              <span className={atletismoCommon.radiusIcon}>📏</span>
-              <select value={radiusKm} onChange={(e) => setRadiusKm(e.target.value)} className={atletismoCommon.radiusSelect}>
+            <div className={styles.radiusContainer}>
+              <span className={styles.radiusIcon}>📏</span>
+              <select
+                value={radiusKm}
+                onChange={(e) => setRadiusKm(e.target.value)}
+                className={styles.radiusSelect}
+              >
                 <option value="1">Radio 1km</option>
                 <option value="3">Radio 3km</option>
                 <option value="5">Radio 5km</option>
                 <option value="10">Radio 10km</option>
               </select>
             </div>
-            <button onClick={handleLocationSearch} className={atletismoCommon.searchButton}>Buscar</button>
+            <button onClick={handleLocationSearch} className={styles.searchLocationButton}>
+              Buscar
+            </button>
           </div>
 
-          <LocationMap sport="atletismo" latitude={-38.7359} longitude={-72.5904} address="Temuco, Chile" zoom={13} height="400px" />
-          <div className={atletismoCommon.mapActions}><button className={atletismoCommon.helpButton}>❓ Ayuda</button></div>
+          <LocationMap
+            latitude={-38.7359}
+            longitude={-72.5904}
+            address="Temuco, Chile"
+            zoom={13}
+            height="400px"
+            sport="atletismo"
+          />
+
+          <div className={styles.mapActions}>
+            <button className={styles.helpButton}>
+              ❓ Ayuda
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+

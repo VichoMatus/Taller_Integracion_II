@@ -68,6 +68,28 @@
 
 .sidebarLogoIcon:hover::before { transform: rotate(45deg) translateX(100%); }
 .sidebarLogoIcon:hover { transform: scale(1.08) rotate(3deg); box-shadow: 0 4px 20px rgba(var(--skate-accent-rgb,107,114,128),0.22); }
+.sidebar-header-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: all 0.2s ease;
+}
+
+.sidebar-header-link:hover {
+  transform: scale(1.02);
+}
+
+/* Para los module.css files, agrega también: */
+.sidebarHeaderLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: all 0.2s ease;
+}
+
+.sidebarHeaderLink:hover {
+  transform: scale(1.02);
+}
 
 .sidebarTitle { color: white; font-size:18px; font-weight:600; margin:0; line-height:1.2; animation:textGlow 4s ease-in-out infinite; transition: all 0.3s ease; }
 .sidebarTitle:hover { transform: scale(1.02); color: var(--sport-accent, var(--skate-accent, #6b7280)); }

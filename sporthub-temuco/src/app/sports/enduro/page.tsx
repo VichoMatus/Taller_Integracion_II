@@ -5,16 +5,15 @@ import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
+import StatsCard from '../../../components/charts/StatsCard';
 import styles from './page.module.css';
 
-// Datos de ejemplo para las rutas de Enduro mejor calificadas (6 tarjetas)
 const topRatedRoutes = [
   {
     imageUrl: "/sports/enduro/rutas/ruta1.png",
     name: "Ruta Montaña Extremo",
     address: "Cordillera Central",
     rating: 4.8,
-    reviews: "95 reseñas",
     tags: ["Dificultad Alta", "Terreno Rocoso", "Vistas Panorámicas", "Guía Incluido"],
     description: "Ruta desafiante para expertos con terrenos rocosos y descensos técnicos. Incluye guía certificado.",
     price: "35",
@@ -25,7 +24,6 @@ const topRatedRoutes = [
     name: "Sendero Bosque Verde",
     address: "Reserva Natural",
     rating: 4.5,
-    reviews: "67 reseñas",
     tags: ["Dificultad Media", "Bosque", "Ríos", "Familiar"],
     description: "Ruta intermedia a través de bosques nativos con cruces de ríos y paisajes espectaculares.",
     price: "28",
@@ -36,7 +34,6 @@ const topRatedRoutes = [
     name: "Circuito Técnico",
     address: "Parque de Aventura",
     rating: 4.6,
-    reviews: "82 reseñas",
     tags: ["Dificultad Alta", "Técnico", "Saltos", "Competencia"],
     description: "Circuito diseñado para entrenamiento técnico con saltos y obstáculos desafiantes.",
     price: "32",
@@ -47,33 +44,42 @@ const topRatedRoutes = [
     name: "Trail Iniciación",
     address: "Centro de Enduro", 
     rating: 4.3,
-    reviews: "45 reseñas",
     tags: ["Dificultad Baja", "Aprendizaje", "Equipo Incluido", "Instructor"],
     description: "Perfecta para principiantes. Incluye equipo completo y instructor especializado.",
     price: "40",
     nextAvailable: "Mañana 10:00-13:00",
   },
+
+];
+
+const enduroStats = [
   {
-    imageUrl: "/path/to/enduro-route5.jpg",
-    name: "Descenso Extremo",
-    address: "Cerro del Diablo", 
-    rating: 4.9,
-    reviews: "120 reseñas",
-    tags: ["Dificultad Extrema", "Descenso", "Experto", "Seguro Incluido"],
-    description: "Para riders experimentados. Descenso técnico con pendientes pronunciadas y obstáculos naturales.",
-    price: "45",
-    nextAvailable: "Fin de semana",
+    title: "Rutas Disponibles Hoy",
+    value: "4",
+    icon: "🏍️",
+    subtitle: "Listas para explorar",
+    trend: { value: 2, isPositive: true }
   },
   {
-    imageUrl: "/path/to/enduro-route6.jpg",
-    name: "Ruta Familiar",
-    address: "Valle Tranquilo", 
-    rating: 4.4,
-    reviews: "78 reseñas",
-    tags: ["Dificultad Baja", "Familiar", "Paisajes", "Picnic"],
-    description: "Ruta suave ideal para familias y paseos tranquilos con áreas de descanso y picnic.",
-    price: "25",
-    nextAvailable: "Todos los días",
+    title: "Rango de Precios",
+    value: "$25-45",
+    icon: "💰",
+    subtitle: "Por ruta",
+    trend: { value: 5, isPositive: true }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.6⭐",
+    icon: "🏆",
+    subtitle: "De nuestras rutas",
+    trend: { value: 0.1, isPositive: true }
+  },
+  {
+    title: "Kilómetros Totales",
+    value: "85km",
+    icon: "📏",
+    subtitle: "De rutas disponibles",
+    trend: { value: 15, isPositive: true }
   }
 ];
 
@@ -112,14 +118,6 @@ export default function EnduroPage() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  // Stats específicos para Enduro
-  const stats = {
-    rutasDisponibles: 15,
-    precioPromedio: { min: 25, max: 45 },
-    promedioCalificacion: 4.6,
-    kilometrosTotales: 85
-  };
 
   const totalSlides = Math.max(1, topRatedRoutes.length - cardsToShow + 1);
 
@@ -177,7 +175,7 @@ export default function EnduroPage() {
               onChange={handleSearchChange}
               onSearch={handleSearch}
               placeholder="Nombre de la ruta o ubicación..."
-              sport = "enduro" 
+              sport="enduro" 
             />
             <button className={styles.userButton}>
               <span>👤</span>
@@ -186,27 +184,34 @@ export default function EnduroPage() {
           </div>
         </div>
 
-        {/* Stats Cards para Enduro */}
-        <div className={styles.statsContainer}>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.rutasDisponibles}</div>
-            <div className={styles.statLabel}>Rutas Disponibles</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>${stats.precioPromedio.min}-{stats.precioPromedio.max}</div>
-            <div className={styles.statLabel}>Rango de precios por ruta</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.promedioCalificacion} ⭐</div>
-            <div className={styles.statLabel}>Promedio de calificación</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.kilometrosTotales}km</div>
-            <div className={styles.statLabel}>Kilómetros totales de rutas</div>
+        {/* Stats Cards para Enduro - USANDO EL COMPONENTE StatsCard */}
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas del Enduro en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {enduroStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                sport="enduro"
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Agregar navegación específica si es necesario
+                  if (stat.title.includes("Rutas")) {
+                    router.push('/sports/enduro/rutas');
+                  }
+                }}
+              />
+            ))}
           </div>
         </div>
 
-        {/* Botón de acceso rápido */}
         <div className={styles.quickAccessSection}>
           <button 
             className={styles.mainCourtButton}
@@ -309,6 +314,7 @@ export default function EnduroPage() {
             address="Zona de rutas, Temuco"
             zoom={11}
             height="400px"
+            sport="enduro" 
           />
 
           <div className={styles.mapActions}>

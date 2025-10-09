@@ -29,7 +29,7 @@
 import axios, { AxiosInstance } from 'axios';
 import { API_CONFIG, API_ENDPOINTS } from '../../config/config';
 import {
-  UserRegister, UserLogin, TokenResponse, ApiResponse, UserPublic,
+  UserRegister, UserRegisterAPI, UserLogin, TokenResponse, ApiResponse, UserPublic,
   UserUpdate, ChangePasswordRequest, ForgotPasswordRequest, ResetPasswordRequest,
   VerifyEmailRequest, ResendVerificationRequest, RefreshTokenRequest,
   LogoutRequest, PushTokenRequest, SimpleMessage, AccessTokenOnly
@@ -82,7 +82,16 @@ export class AuthService {
    */
   async register(userData: UserRegister): Promise<ApiResponse<TokenResponse>> {
     try {
-      const response = await this.apiClient.post(API_ENDPOINTS.auth.register, userData);
+      console.log('🔄 AuthService: Iniciando registro con datos:', JSON.stringify(userData, null, 2));
+      console.log('🔄 AuthService: URL de API:', API_CONFIG.baseURL + API_ENDPOINTS.auth.register);
+      
+      // Crear objeto sin confirmPassword para enviar a la API
+      const { confirmPassword, ...apiData } = userData;
+      console.log('🔄 AuthService: Datos para API (sin confirmPassword):', JSON.stringify(apiData, null, 2));
+      
+      const response = await this.apiClient.post(API_ENDPOINTS.auth.register, apiData);
+      
+      console.log('✅ AuthService: Registro exitoso', response.data);
       
       // Almacenar token para futuras peticiones
       if (response.data.access_token) {
@@ -91,9 +100,21 @@ export class AuthService {
       
       return { ok: true, data: response.data };
     } catch (error: any) {
+      console.error('❌ AuthService: Error en registro:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          data: error.config?.data
+        }
+      });
+      
       return { 
         ok: false, 
-        error: error.response?.data?.detail || 'Error en el registro de usuario' 
+        error: error.response?.data?.detail || error.message || 'Error en el registro de usuario' 
       };
     }
   }

@@ -5,16 +5,15 @@ import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
+import StatsCard from '../../../components/charts/StatsCard';
 import styles from './page.module.css';
 
-// Datos de ejemplo para las canchas mejor calificadas (6 tarjetas)
 const topRatedCourts = [
   {
     imageUrl: "/sports/rugby/canchas/Cancha1.png",
     name: "Rugby - Centro",
     address: "Norte, Centro, Sur",
     rating: 4.3,
-    reviews: "130 reseñas",
     tags: ["Campo Abierto", "Estacionamiento", "Iluminación", "Vestuarios"],
     description: "Campo de rugby ubicado en el centro con vestuarios y equipamiento",
     price: "45",
@@ -25,7 +24,6 @@ const topRatedCourts = [
     name: "Rugby - Norte",
     address: "Sector Norte",
     rating: 4.5,
-    reviews: "85 reseñas",
     tags: ["Campo Abierto", "Estacionamiento", "Vestuarios"],
     description: "Campo de rugby con excelente mantenimiento y áreas de entrenamiento",
     price: "42",
@@ -36,7 +34,6 @@ const topRatedCourts = [
     name: "Rugby - Sur",
     address: "Sector Sur",
     rating: 4.1,
-    reviews: "67 reseñas",
     tags: ["Campo Abierto", "Estacionamiento", "Iluminación"],
     description: "Campo profesional de rugby con medidas reglamentarias",
     price: "48",
@@ -47,11 +44,42 @@ const topRatedCourts = [
     name: "Rugby Premium",
     address: "Centro Premium", 
     rating: 4.7,
-    reviews: "142 reseñas",
     tags: ["Campo Abierto", "Estacionamiento", "Iluminación", "Vestuarios"],
     description: "Campo premium para rugby con todas las comodidades profesionales",
     price: "52",
     nextAvailable: "Disponible ahora",
+  }
+];
+
+// 🔥 DATOS PARA LAS ESTADÍSTICAS DE RUGBY - ACTUALIZADOS
+const rugbyStats = [
+  {
+    title: "Campos Disponibles Hoy",
+    value: "4",
+    icon: "🏉",
+    subtitle: "Listos para partidos",
+    trend: { value: 2, isPositive: true }
+  },
+  {
+    title: "Rango de Precios",
+    value: "$42-60",
+    icon: "💰",
+    subtitle: "Por hora",
+    trend: { value: 8, isPositive: false }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.6⭐",
+    icon: "🏆",
+    subtitle: "De nuestros campos",
+    trend: { value: 0.2, isPositive: true }
+  },
+  {
+    title: "Jugadores por Equipo",
+    value: "30",
+    icon: "👥",
+    subtitle: "Capacidad máxima",
+    trend: { value: 2, isPositive: true }
   }
 ];
 
@@ -90,14 +118,6 @@ export default function RugbyPage() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  // Stats de ejemplo para rugby
-  const stats = {
-    disponiblesHoy: 8,
-    precioPromedio: { min: 42, max: 55 },
-    promedioCalificacion: 4.6,
-    cantidadJugadores: 30
-  };
 
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
@@ -164,23 +184,31 @@ export default function RugbyPage() {
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className={styles.statsContainer}>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.disponiblesHoy}</div>
-            <div className={styles.statLabel}>Campos Disponibles hoy</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>${stats.precioPromedio.min}-{stats.precioPromedio.max}</div>
-            <div className={styles.statLabel}>Rango de precios por hora</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.promedioCalificacion} ⭐</div>
-            <div className={styles.statLabel}>Promedio de calificación</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.cantidadJugadores}</div>
-            <div className={styles.statLabel}>Jugadores por equipo</div>
+        {/* Stats Cards para Rugby - USANDO EL COMPONENTE StatsCard*/}
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas del Rugby en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {rugbyStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                sport="rugby"
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Agregar navegación específica si es necesario
+                  if (stat.title.includes("Campos")) {
+                    router.push('/sports/rugby/canchas');
+                  }
+                }}
+              />
+            ))}
           </div>
         </div>
 
@@ -286,6 +314,7 @@ export default function RugbyPage() {
             address="Temuco, Chile"
             zoom={13}
             height="400px"
+            sport="rugby" 
           />
 
           <div className={styles.mapActions}>

@@ -54,15 +54,6 @@ const sportsData = [
     href: '/sports/natacion'
   },
   {
-    id: 'voleibol',
-    name: 'Voleibol',
-    imageUrl: '/sports/voley/voley.png',
-    description: 'Explora voleibol y competencias.',
-    tag: 'Nuevo',
-    tagColor: '#ec4899', // Rosa
-    href: '/sports/voley'
-  },
-  {
     id: 'atletismo',
     name: 'Atletismo',
     imageUrl: '/sports/atletismo/atletismo.png',
@@ -134,7 +125,14 @@ const sportsData = [
     tag: 'Aventura',
     tagColor: '#4E342E', // Índigo
     href: '/sports/mountain-bike'
-  }
+  },
+  {
+    id: 'voleibol',
+    name: 'Voleibol',
+    imageUrl: '/sports/voleibol/voleibol.png',
+    description: 'Campos de voleibol para partidos y entrenamientos.',
+    tag: 'Equipo',
+    tagColor: '#FF0000',
     href: '/sports/voleibol'
   },
   {

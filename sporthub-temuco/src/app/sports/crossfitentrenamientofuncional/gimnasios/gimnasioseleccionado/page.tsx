@@ -169,7 +169,7 @@ export default function GimnasioSeleccionadoPage() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <span className={styles.headerIcon}>🏋️‍♂️</span>
-            <h1 className={styles.headerTitle}>CrossFit - {gimnasio.name}</h1>
+            <h1 className={styles.headerTitle}>CrossFit y Entrenamiento Funcional</h1>
           </div>
           <div className={styles.headerRight}>
            <SearchBar

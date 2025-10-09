@@ -12,7 +12,6 @@ const canchas = [
     name: "Fútbol - Centro",
     address: "Norte, Centro, Sur",
     rating: 4.3,
-    reviews: "130 reseñas",
     tags: ["Cancha de Césped", "Estacionamiento", "Iluminación", "Cafetería"],
     description: "Cancha de fútbol con césped sintético ubicada en el centro con implementos deportivos (Balones, conos y petos)",
     price: "25",
@@ -23,7 +22,6 @@ const canchas = [
     name: "Fútbol - Norte",
     address: "Sector Norte",
     rating: 4.5,
-    reviews: "85 reseñas",
     tags: ["Cancha Sintética", "Estacionamiento"],
     description: "Cancha de fútbol con césped sintético ubicada en el norte con implementos deportivos (Balones, conos y petos)",
     price: "22",
@@ -34,7 +32,6 @@ const canchas = [
     name: "Fútbol - Sur",
     address: "Sector Sur",
     rating: 4.1,
-    reviews: "67 reseñas",
     tags: ["Cancha Natural", "Estacionamiento", "Iluminación"],
     description: "Cancha de fútbol con césped natural ubicada en el sur con implementos deportivos (Balones, conos y petos)",
     price: "28",
@@ -45,7 +42,6 @@ const canchas = [
     name: "Fútbol - Premium",
     address: "Centro Premium", 
     rating: 4.7,
-    reviews: "142 reseñas",
     tags: ["Cancha Profesional", "Estacionamiento", "Iluminación", "Cafetería"],
     description: "Cancha de fútbol profesional con césped híbrido ubicada en el centro premium con todos los implementos",
     price: "35",
@@ -56,7 +52,6 @@ const canchas = [
     name: "Fútbol - Elite",
     address: "Zona Elite",
     rating: 4.4,
-    reviews: "203 reseñas",
     tags: ["Cancha Profesional", "Estacionamiento", "Iluminación", "Cafetería"],
     description: "Cancha de fútbol de élite con césped natural ubicada en zona exclusiva con vestuarios completos",
     price: "40",
@@ -67,7 +62,6 @@ const canchas = [
     name: "Fútbol - Oeste",
     address: "Sector Oeste",
     rating: 4.2,
-    reviews: "158 reseñas",
     tags: ["Cancha Sintética", "Estacionamiento", "Iluminación"],
     description: "Cancha de fútbol sintética ubicada en el sector oeste con implementos básicos disponibles",
     price: "24",
@@ -115,7 +109,7 @@ export default function Page() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>⚽</div>
-            <h1 className={styles.headerTitle}>Canchas de Fútbol</h1>
+            <h1 className={styles.headerTitle}>Fútbol</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar

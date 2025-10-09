@@ -12,7 +12,6 @@ const canchas = [
     name: "Estadio Azteca - Principal",
     address: "Zona Centro",
     rating: 4.8,
-    reviews: "245 reseñas",
     tags: ["Estadio Profesional", "Gradas", "Vestuarios", "Iluminación Nocturna"],
     description: "Estadio profesional para fútbol americano con medidas oficiales y equipamiento completo",
     price: "85",
@@ -23,7 +22,6 @@ const canchas = [
     name: "Campo Universitario - Norte",
     address: "Zona Norte",
     rating: 4.4,
-    reviews: "112 reseñas",
     tags: ["Campo Universitario", "Gradas", "Vestuarios"],
     description: "Campo universitario ideal para prácticas y partidos amateur con césped natural",
     price: "65",
@@ -68,23 +66,23 @@ export default function Page() {
 
       {/* Contenido principal */}
       <div className={styles.mainContent}>
-        {/* Header */}
+        {/* Header - IDÉNTICO al de la página anterior */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>🏈</div>
-            <h1 className={styles.headerTitle}>Estadios de Fútbol Americano</h1>
+            <h1 className={styles.headerTitle}>Fútbol Americano</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre del estadio"
+              placeholder="Nombre del estadio..."
               sport="futbol-americano" 
             />
             <button className={styles.userButton}>
               <span>👤</span>
-              <span>Usuario</span>
+              <span>usuario</span>
             </button>
           </div>
         </div>

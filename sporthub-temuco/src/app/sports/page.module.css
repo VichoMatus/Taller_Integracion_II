@@ -203,8 +203,6 @@
   left: 0;
   width: 0;
   height: 3px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 2px;
 }
 
@@ -448,6 +446,13 @@
   background-clip: text;
   transition: all 0.3s ease;
   position: relative;
+  min-height: 2.8rem; /* Altura fija para 2 líneas aproximadamente */
+  line-height: 1; /* Espaciado de línea consistente */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2; /* Limita a 2 líneas */
+  text-overflow: ellipsis;
+  max-height: 2.8em;
 }
 
 .sportCard:hover .sportName {

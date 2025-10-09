@@ -6,7 +6,7 @@ body {
 }
 
 .header-logo {
-    text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #4F46E5, 0 0 40px #4F46E5, 0 0 50px #4F46E5, 0 0 60px #4F46E5, 0 0 70px #4F46E5;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(79, 70, 229, 0.2);
 }
 
 .login-container {
@@ -246,4 +246,44 @@ body {
     .login-left {
         padding: 30px 25px;
     }
+}
+
+/* Agrega al final de Login.css */
+
+/* Estilos para el mensaje de verificación */
+.verification-message {
+  background: #e6f7ff;
+  border: 1px solid #b3d9ff;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.verification-message h3 {
+  color: #0056b3;
+  margin: 0 0 10px 0;
+}
+
+.verification-message p {
+  color: #0056b3;
+  margin: 0 0 15px 0;
+  line-height: 1.5;
+}
+
+.verification-note {
+  background: #fff;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  color: #666;
+  border: 1px solid #ddd;
+}
+
+/* Ajustes responsivos para el mensaje de verificación */
+@media (max-width: 768px) {
+  .verification-message {
+    padding: 15px;
+    margin: 10px;
+  }
 }

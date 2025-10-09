@@ -15,7 +15,6 @@ const topRatedCourts = [
     name: "Pista de Patinaje - Centro",
     address: "Norte, Centro, Sur",
     rating: 4.8,
-    reviews: "320 reseñas",
     tags: ["Pista Cubierta", "Estacionamiento", "Iluminación", "Alquiler Patines"],
     description: "Pista profesional de patinaje ubicada en el centro con alquiler de equipos y clases",
     price: "25",
@@ -26,7 +25,6 @@ const topRatedCourts = [
     name: "Pista - Norte",
     address: "Sector Norte",
     rating: 4.6,
-    reviews: "185 reseñas",
     tags: ["Pista Techada", "Estacionamiento", "Cafetería"],
     description: "Pista techada ideal para patinaje artístico y recreativo con áreas de descanso",
     price: "22",
@@ -37,7 +35,6 @@ const topRatedCourts = [
     name: "Pista - Sur",
     address: "Sector Sur",
     rating: 4.4,
-    reviews: "97 reseñas",
     tags: ["Pista Cubierta", "Estacionamiento", "Clases"],
     description: "Pista climatizada perfecta para patinaje en todas las estaciones del año",
     price: "28",
@@ -48,7 +45,6 @@ const topRatedCourts = [
     name: "Centro de Patinaje Premium",
     address: "Centro Premium", 
     rating: 4.9,
-    reviews: "242 reseñas",
     tags: ["Pista Olímpica", "Estacionamiento", "Tienda", "Restaurante", "Vestuarios"],
     description: "Complejo premium de patinaje con pista olímpica y servicios de primera",
     price: "35",
@@ -59,7 +55,6 @@ const topRatedCourts = [
     name: "Pista - Elite",
     address: "Zona Elite", 
     rating: 4.7,
-    reviews: "156 reseñas",
     tags: ["Pista Techada", "Estacionamiento", "Hockey", "Cafetería"],
     description: "Pista de alta gama especializada en hockey y patinaje artístico",
     price: "32",
@@ -70,11 +65,41 @@ const topRatedCourts = [
     name: "Complejo Deportivo de Patinaje",
     address: "Centro Deportivo", 
     rating: 4.5,
-    reviews: "128 reseñas",
     tags: ["Pista Semi-olímpica", "Estacionamiento", "Área infantil"],
     description: "Complejo deportivo con pistas para diferentes modalidades de patinaje",
     price: "26",
     nextAvailable: "16:30-17:30",
+  }
+];
+
+const skatingStats = [
+  {
+    title: "Pistas Disponibles Hoy",
+    value: "7",
+    icon: "⛸️",
+    subtitle: "Listas para reservar",
+    trend: { value: 3, isPositive: true }
+  },
+  {
+    title: "Rango de Precios",
+    value: "$22-35",
+    icon: "💰",
+    subtitle: "Por hora",
+    trend: { value: 5, isPositive: true }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.7⭐",
+    icon: "🏆",
+    subtitle: "De nuestras pistas",
+    trend: { value: 0.4, isPositive: true }
+  },
+  {
+    title: "Modalidades Disponibles",
+    value: "4",
+    icon: "🔄",
+    subtitle: "Diferentes estilos",
+    trend: { value: 1, isPositive: true }
   }
 ];
 
@@ -132,14 +157,6 @@ export default function PatinajePage() {
     };
   }, []);
 
-  // Stats específicos para patinaje
-  const stats = {
-    disponiblesHoy: 7,
-    precioPromedio: { min: 22, max: 35 },
-    promedioCalificacion: 4.7,
-    modalidades: 4
-  };
-
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -192,32 +209,32 @@ export default function PatinajePage() {
           </div>
         </div>
 
-        <div className={styles.statsContainer}>
-          <StatsCard
-            title="Pistas Disponibles hoy"
-            value={stats.disponiblesHoy}
-            icon={<span>⛸️</span>}
-            color="blue"
-          />
-          <StatsCard
-            title="Rango de precios por hora"
-            value={`$${stats.precioPromedio.min}-${stats.precioPromedio.max}`}
-            icon={<span>💰</span>}
-            color="green"
-          />
-          <StatsCard
-            title="Promedio de calificación"
-            value={stats.promedioCalificacion}
-            subtitle="⭐"
-            color="yellow"
-            icon={<span>⭐</span>}
-          />
-          <StatsCard
-            title="Modalidades disponibles"
-            value={stats.modalidades}
-            icon={<span>🔄</span>}
-            color="purple"
-          />
+        {/* 🔥 STATS CARDS MEJORADAS CON STATSCARD (nueva estructura) */}
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas de Patinaje en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {skatingStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                sport="patinaje"
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Agregar navegación específica si es necesario
+                  if (stat.title.includes("Pistas")) {
+                    router.push('/sports/patinaje/pistas');
+                  }
+                }}
+              />
+            ))}
+          </div>
         </div>
 
         <div className={styles.quickAccessSection}>

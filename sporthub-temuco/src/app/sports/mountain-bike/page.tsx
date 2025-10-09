@@ -5,16 +5,15 @@ import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
+import StatsCard from '../../../components/charts/StatsCard';
 import styles from './page.module.css';
 
-// Datos de ejemplo para las rutas mejor calificadas (6 tarjetas)
 const topRatedCourts = [
   {
     imageUrl: "/sports/mountain-bike/rutas/Ruta1.png",
     name: "Ruta Montaña - Centro",
     address: "Cerro Ñielol, Temuco",
     rating: 4.3,
-    reviews: "130 reseñas",
     tags: ["Dificultad Media", "Estacionamiento", "Mirador", "Área de Descanso"],
     description: "Ruta escénica de mountain bike con vistas panorámicas y terreno variado",
     price: "15",
@@ -25,7 +24,6 @@ const topRatedCourts = [
     name: "Ruta Bosque - Norte",
     address: "Sector Norte, Bosque Nativo",
     rating: 4.5,
-    reviews: "85 reseñas",
     tags: ["Dificultad Alta", "Técnica", "Descenso"],
     description: "Ruta técnica con descensos desafiantes y paisajes de bosque nativo",
     price: "12",
@@ -36,11 +34,42 @@ const topRatedCourts = [
     name: "Ruta Valle - Sur",
     address: "Valle Deportivo",
     rating: 4.1,
-    reviews: "67 reseñas",
     tags: ["Dificultad Baja", "Familiar", "Paisajística"],
     description: "Ruta ideal para principiantes y familias con paisajes del valle",
     price: "10",
     nextAvailable: "Mañana 09:00-10:00",
+  }
+];
+
+// 🔥 DATOS PARA LAS ESTADÍSTICAS DE MOUNTAIN BIKE - ACTUALIZADOS
+const mountainBikeStats = [
+  {
+    title: "Rutas Disponibles Hoy",
+    value: "3",
+    icon: "🚵",
+    subtitle: "Listas para recorrer",
+    trend: { value: 3, isPositive: true }
+  },
+  {
+    title: "Rango de Precios",
+    value: "$10-25",
+    icon: "💰",
+    subtitle: "Por día",
+    trend: { value: 5, isPositive: true }
+  },
+  {
+    title: "Calificación Promedio",
+    value: "4.6⭐",
+    icon: "🏆",
+    subtitle: "De nuestras rutas",
+    trend: { value: 0.2, isPositive: true }
+  },
+  {
+    title: "Kilómetros Totales",
+    value: "85km",
+    icon: "📏",
+    subtitle: "De rutas disponibles",
+    trend: { value: 15, isPositive: true }
   }
 ];
 
@@ -79,14 +108,6 @@ export default function MountainBikePage() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  // Stats de ejemplo para mountain bike
-  const stats = {
-    disponiblesHoy: 8,
-    precioPromedio: { min: 12, max: 25 },
-    promedioCalificacion: 4.6,
-    kilometrosTotales: 45
-  };
 
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
@@ -140,51 +161,59 @@ export default function MountainBikePage() {
           </div>
           <div className={styles.headerRight}>
             <SearchBar
-            value={searchTerm}
-            onChange={handleSearchChange}
-            onSearch={handleSearch}
-            placeholder="Nombre de la ruta..."
-            sport="mountain-bike" 
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onSearch={handleSearch}
+              placeholder="Nombre de la ruta..."
+              sport="mountain-bike" 
             />
             <button className={styles.userButton}>
               <span>👤</span>
               <span>usuario</span>
             </button>
-            
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className={styles.statsContainer}>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.disponiblesHoy}</div>
-            <div className={styles.statLabel}>Rutas Disponibles hoy</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>${stats.precioPromedio.min}-{stats.precioPromedio.max}</div>
-            <div className={styles.statLabel}>Rango de precios por día</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.promedioCalificacion} ⭐</div>
-            <div className={styles.statLabel}>Promedio de calificación</div>
-          </div>
-          <div className={styles.statCard}>
-            <div className={styles.statNumber}>{stats.kilometrosTotales}km</div>
-            <div className={styles.statLabel}>Kilómetros totales de rutas</div>
+        {/* Stats Cards para Mountain-Bike - USANDO EL COMPONENTE StatsCard*/}
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas del Mountain Bike en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {mountainBikeStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                sport="mountain-bike"
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  // Agregar navegación específica si es necesario
+                  if (stat.title.includes("Rutas")) {
+                    router.push('/sports/mountain-bike/rutas');
+                  }
+                }}
+              />
+            ))}
           </div>
         </div>
+
         <div className={styles.quickAccessSection}>
-        <button 
+          <button 
             className={styles.mainCourtButton}
             onClick={() => window.location.href = '/sports/mountain-bike/rutas'}
-            >
+          >
             <div className={styles.courtButtonIcon}>🚵</div>
             <div className={styles.courtButtonText}>
-            <span className={styles.courtButtonTitle}>Explorar Rutas</span>
-            <span className={styles.courtButtonSubtitle}>Ver todas las rutas disponibles</span>
+              <span className={styles.courtButtonTitle}>Explorar Rutas</span>
+              <span className={styles.courtButtonSubtitle}>Ver todas las rutas disponibles</span>
             </div>
             <div className={styles.courtButtonArrow}>→</div>
-        </button>
+          </button>
         </div>
 
         {/* Rutas mejor calificadas con carrusel */}
@@ -275,6 +304,7 @@ export default function MountainBikePage() {
             address="Temuco, Chile"
             zoom={13}
             height="400px"
+            sport="mountain-bike" 
           />
 
           <div className={styles.mapActions}>

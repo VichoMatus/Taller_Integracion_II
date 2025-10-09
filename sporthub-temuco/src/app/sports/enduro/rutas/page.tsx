@@ -12,7 +12,6 @@ const rutas = [
     name: "Ruta Montaña Extremo",
     address: "Cordillera Central",
     rating: 4.8,
-    reviews: "95 reseñas",
     tags: ["Dificultad Alta", "Terreno Rocoso", "Vistas Panorámicas", "Guía Incluido"],
     description: "Ruta desafiante para expertos con terrenos rocosos y descensos técnicos. Incluye guía certificado.",
     price: "35",
@@ -23,7 +22,6 @@ const rutas = [
     name: "Sendero Bosque Verde",
     address: "Reserva Natural",
     rating: 4.5,
-    reviews: "67 reseñas",
     tags: ["Dificultad Media", "Bosque", "Ríos", "Familiar"],
     description: "Ruta intermedia a través de bosques nativos con cruces de ríos y paisajes espectaculares.",
     price: "28",
@@ -34,7 +32,6 @@ const rutas = [
     name: "Circuito Técnico",
     address: "Parque de Aventura",
     rating: 4.6,
-    reviews: "82 reseñas",
     tags: ["Dificultad Alta", "Técnico", "Saltos", "Competencia"],
     description: "Circuito diseñado para entrenamiento técnico con saltos y obstáculos desafiantes.",
     price: "32",
@@ -45,33 +42,10 @@ const rutas = [
     name: "Trail Iniciación",
     address: "Centro de Enduro", 
     rating: 4.3,
-    reviews: "45 reseñas",
     tags: ["Dificultad Baja", "Aprendizaje", "Equipo Incluido", "Instructor"],
     description: "Perfecta para principiantes. Incluye equipo completo y instructor especializado.",
     price: "40",
     nextAvailable: "Mañana 10:00-13:00",
-  },
-  {
-    imageUrl: "/path/to/enduro-route5.jpg",
-    name: "Descenso Extremo",
-    address: "Cerro del Diablo", 
-    rating: 4.9,
-    reviews: "120 reseñas",
-    tags: ["Dificultad Extrema", "Descenso", "Experto", "Seguro Incluido"],
-    description: "Para riders experimentados. Descenso técnico con pendientes pronunciadas y obstáculos naturales.",
-    price: "45",
-    nextAvailable: "Fin de semana",
-  },
-  {
-    imageUrl: "/path/to/enduro-route6.jpg",
-    name: "Ruta Familiar",
-    address: "Valle Tranquilo", 
-    rating: 4.4,
-    reviews: "78 reseñas",
-    tags: ["Dificultad Baja", "Familiar", "Paisajes", "Picnic"],
-    description: "Ruta suave ideal para familias y paseos tranquilos con áreas de descanso y picnic.",
-    price: "25",
-    nextAvailable: "Todos los días",
   }
 ];
 
@@ -111,23 +85,22 @@ export default function Page() {
       <Sidebar userRole="usuario" sport="enduro" />
 
       <div className={styles.mainContent}>
-        {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>🏍️</div>
-            <h1 className={styles.headerTitle}>Rutas de Enduro</h1>
+            <h1 className={styles.headerTitle}>Enduro</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre de la ruta o ubicación"
+              placeholder="Nombre de la ruta o ubicación..."
               sport="enduro" 
             />
             <button className={styles.userButton}>
               <span>👤</span>
-              <span>Usuario</span>
+              <span>usuario</span>
             </button>
           </div>
         </div>
@@ -139,7 +112,7 @@ export default function Page() {
             onClick={handleBackToEnduro}
           >
             <span>←</span>
-            <span>Enduro</span>
+            <span>Volver a Enduro</span>
           </button>
         </div>
 

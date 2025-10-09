@@ -1,4 +1,4 @@
-/* Sidebar Component - Index clone adapted to Atletismo colors (azul/gris) */
+/* Sidebar Component - Atletismo colors (AZUL/GRIS) - Updated 2025-10-05 */
 
 @keyframes slideInLeft {
   0% { transform: translateX(-100%); opacity: 0; }
@@ -52,6 +52,28 @@
 .sidebarLogoIcon::before { content:''; position:absolute; top:-50%; left:-50%; width:200%; height:200%; background:linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.3) 50%, transparent 70%); transform:rotate(45deg) translateX(-100%); transition:transform 0.6s ease; }
 .sidebarLogoIcon:hover::before { transform: rotate(45deg) translateX(100%); }
 .sidebarLogoIcon:hover { transform: scale(1.1) rotate(5deg); box-shadow: 0 4px 20px rgba(59,130,246,0.4), inset 0 1px 0 rgba(255,255,255,0.3); }
+.sidebar-header-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: all 0.2s ease;
+}
+
+.sidebar-header-link:hover {
+  transform: scale(1.02);
+}
+
+/* Para los module.css files, agrega también: */
+.sidebarHeaderLink {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: all 0.2s ease;
+}
+
+.sidebarHeaderLink:hover {
+  transform: scale(1.02);
+}
 
 .sidebarTitle { color:white; font-size:18px; font-weight:600; margin:0; line-height:1.2; animation:textGlow 4s ease-in-out infinite; transition: all 0.3s ease; }
 .sidebarTitle:hover { transform: scale(1.02); color: #60A5FA; }
@@ -94,16 +116,4 @@
 .sidebarLogoutButton:hover .sidebarLogoutIcon{animation:logoutShake 0.5s ease-in-out;color:#3b82f6;text-shadow:0 0 8px rgba(59,130,246,0.18)}
 .sidebarLogoutButton:active{transform:translateY(0);box-shadow:0 2px 10px rgba(0,0,0,0.1),0 0 15px rgba(59,130,246,0.06)}
 .sidebarLogoutIcon{font-size:18px;width:24px;text-align:center;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);filter:drop-shadow(0 1px 2px rgba(0,0,0,0.1))}
-
-.sportIcon { width: 48px; height: 48px; border-radius: 8px; background: linear-gradient(135deg, #60A5FA 0%, #1E40AF 100%); box-shadow: 0 8px 28px rgba(96,165,250,0.12); }
-
-.sidebarMenuItem { margin-bottom: 6px; }
-
-.sidebarMenuLink { display:flex; align-items:center; gap:10px; padding:10px; border-radius:8px; color:#FFFFFF; text-decoration:none; }
-
-.sidebarMenuText { font-size:14px; color:#FFFFFF; }
-
-.active { background: linear-gradient(90deg, rgba(59,130,246,0.12), rgba(37,99,235,0.12)); box-shadow: 0 6px 18px rgba(30,64,175,0.06); }
-
-.sidebarLogoutButton { background: linear-gradient(90deg, #60A5FA 0%, #1E40AF 100%); color: #fff; }
 
