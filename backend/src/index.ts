@@ -50,9 +50,15 @@ const PORT = process.env.BFF_PORT || process.env.PORT || 4000;
  * MIDDLEWARES GLOBALES
  */
 
-// CORS - Permitir requests desde el frontend
+// CORS - Permitir requests desde múltiples orígenes (desarrollo y producción)
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://frontend-cdrhos-0246e7-168-232-167-73.traefik.me',
+  process.env.FRONTEND_URL
+].filter(Boolean) as string[];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: allowedOrigins,
   credentials: true
 }));
 
