@@ -9,9 +9,14 @@
 import axios from 'axios';
 
 // Configuración centralizada de URLs
-const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+// TEMPORAL: Hardcoded para testing
+const BACKEND_BASE_URL = 'http://backend-mn66n6-82bd05-168-232-167-73.traefik.me';
+// const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+
 export const BACKEND_URL = BACKEND_BASE_URL; // Para uso directo
 export const API_BASE_URL = `${BACKEND_BASE_URL}/api`; // Para API calls
+
+console.log('🔧 Backend config loaded:', { BACKEND_BASE_URL, API_BASE_URL });
 
 // Instancia de axios apuntando al Backend for Frontend (BFF)
 export const apiBackend = axios.create({
