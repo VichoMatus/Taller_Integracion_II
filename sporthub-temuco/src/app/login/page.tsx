@@ -43,12 +43,12 @@ export default function LoginPage() {
                         router.push('/superadmin');
                         break;
                     default:
-                        router.push('/usuario');
+                        router.push('/sports');
                         break;
                 }
             } else {
                 // Fallback si no hay rol definido
-                router.push('/');
+                router.push('/sports');
             }
         } catch (err: any) {
             console.error('Error en login:', err);
