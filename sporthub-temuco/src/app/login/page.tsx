@@ -1,7 +1,16 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import '../Login.css';
 
 export default function LoginPage() {
+    const router = useRouter();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     return (
         <div style={{ minHeight: '100vh', position: 'relative' }}>
             <header style={{ backgroundColor: '#4F46E5', color: 'white', padding: '1rem', textAlign: 'center' }}>
@@ -13,16 +22,80 @@ export default function LoginPage() {
                     <div className="login-left">
                         <h1>Inicio Sesión</h1>
                         <p>Inicie sesión para continuar con su cuenta</p>
-                        <form>
+                        <form onSubmit={async (e) => {
+                            e.preventDefault();
+                            setLoading(true);
+                            setError('');
+
+                            try {
+                                const response = await fetch('http://localhost:3001/api/superadmin/auth/login', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    body: JSON.stringify({ email, password }),
+                                });
+
+                                const data = await response.json();
+
+                                if (data.ok) {
+                                    // Guardar token y datos del usuario
+                                    localStorage.setItem('token', data.data.access_token);
+                                    localStorage.setItem('userData', JSON.stringify(data.data.user));
+
+                                    // Redirigir según el rol
+                                    switch (data.data.user.rol) {
+                                        case 'superadmin':
+                                            router.push('/superadmin');
+                                            break;
+                                        case 'admin':
+                                            router.push('/admin');
+                                            break;
+                                        default:
+                                            router.push('/');
+                                            break;
+                                    }
+                                } else {
+                                    setError(data.error || 'Error al iniciar sesión');
+                                }
+                            } catch (error) {
+                                setError('Error al conectar con el servidor');
+                            } finally {
+                                setLoading(false);
+                            }
+                        }}>
+                            {error && (
+                                <div className="error-message" style={{ color: 'red', marginBottom: '1rem' }}>
+                                    {error}
+                                </div>
+                            )}
+                            
                             <label htmlFor="email">Email</label>
-                            <input type="email" id="email" />
+                            <input 
+                                type="email" 
+                                id="email" 
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
                             
                             <label htmlFor="password">Contraseña</label>
                             <div className="password-container">
-                                <input type="password" id="password" />
+                                <input 
+                                    type="password" 
+                                    id="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
                             </div>
                             
-                            <button type="submit">Iniciar sesión</button>
+                            <button 
+                                type="submit" 
+                                disabled={loading}
+                            >
+                                {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+                            </button>
                         </form>
                         
                         <div className="or">o</div>
