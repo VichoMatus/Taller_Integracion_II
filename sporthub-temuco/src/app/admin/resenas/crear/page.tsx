@@ -1,74 +1,35 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { resenaService } from '@/services/resenaService';
-import { Resena, ResenaUpdateRequest } from '@/types/resena';
+import { ResenaCreateRequest } from '@/types/resena';
 import '../../dashboard.css';
 
-export default function EditResenaPage() {
-  const params = useParams();
+export default function CreateResenaPage() {
   const router = useRouter();
-  const resenaId = params.id as string;
   
   // Estados del componente
-  const [resena, setResena] = useState<Resena | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Estados del formulario
   const [formData, setFormData] = useState({
+    id_usuario: 1, // En producción se obtendrá del usuario autenticado
+    id_cancha: 1,
+    id_reserva: undefined as number | undefined,
     calificacion: 5,
     comentario: ''
   });
-
-  // Cargar datos de la reseña
-  useEffect(() => {
-    const loadResena = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        const data = await resenaService.obtenerResena(resenaId);
-        setResena(data);
-        setFormData({
-          calificacion: data.calificacion,
-          comentario: data.comentario || ''
-        });
-      } catch (err: any) {
-        console.warn('Backend no disponible, usando datos mock:', err);
-        setError('Conectando con datos de desarrollo (backend no disponible)');
-        // Datos mock para development
-        const mockResena: Resena = {
-          id_resena: parseInt(resenaId),
-          id_usuario: 1,
-          id_cancha: 1,
-          id_reserva: 1,
-          calificacion: 4,
-          comentario: 'Muy buena cancha, recomendada para jugar fútbol.',
-          fecha_creacion: new Date().toISOString(),
-          fecha_actualizacion: new Date().toISOString()
-        };
-        setResena(mockResena);
-        setFormData({
-          calificacion: mockResena.calificacion,
-          comentario: mockResena.comentario || ''
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadResena();
-  }, [resenaId]);
 
   // Manejar cambios en el formulario
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'calificacion' ? parseInt(value) : value
+      [name]: name === 'calificacion' || name === 'id_usuario' || name === 'id_cancha' || name === 'id_reserva'
+        ? value ? parseInt(value) : undefined
+        : value
     }));
   };
 
@@ -78,59 +39,45 @@ export default function EditResenaPage() {
     return emojis[calificacion - 1] || '❓';
   };
 
-  // Guardar cambios
+  // Validar formulario
+  const isFormValid = () => {
+    return formData.id_usuario > 0 && 
+           formData.id_cancha > 0 && 
+           formData.calificacion >= 1 && 
+           formData.calificacion <= 5 && 
+           formData.comentario && formData.comentario.trim().length > 0;
+  };
+
+  // Guardar nueva reseña
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.comentario.trim()) {
-      alert('El comentario es obligatorio');
+    if (!isFormValid()) {
+      alert('Por favor completa todos los campos obligatorios');
       return;
     }
 
     try {
-      setSaving(true);
-      await resenaService.actualizarResena(resenaId, formData);
-      alert('Reseña actualizada exitosamente');
+      setLoading(true);
+      setError(null);
+      
+      await resenaService.crearResena(formData as ResenaCreateRequest);
+      alert('Reseña creada exitosamente');
       router.push('/admin/resenas');
     } catch (err: any) {
-      console.warn('No se pudo actualizar (backend no disponible):', err);
-      alert('No se puede actualizar en modo desarrollo (backend no disponible)');
+      console.warn('No se pudo crear (backend no disponible):', err);
+      setError('No se puede crear en modo desarrollo (backend no disponible)');
+      alert('No se puede crear en modo desarrollo (backend no disponible)');
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="admin-dashboard-container">
-        <div className="loading-container">
-          <p>Cargando reseña...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!resena) {
-    return (
-      <div className="admin-dashboard-container">
-        <div className="error-container">
-          <p>Reseña no encontrada</p>
-          <button 
-            className="btn-volver"
-            onClick={() => router.push('/admin/resenas')}
-          >
-            Volver a la lista
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="admin-dashboard-container">
       {/* Header */}
       <div className="estadisticas-header">
-        <h1 className="text-2xl font-bold text-gray-900">Editar Reseña #{resena.id_resena}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Crear Nueva Reseña</h1>
         
         <div className="admin-controls">
           <button 
@@ -156,39 +103,61 @@ export default function EditResenaPage() {
       {/* Formulario */}
       <div className="admin-form-container">
         <form onSubmit={handleSubmit} className="admin-form">
-          {/* Información de la reseña */}
+          {/* Información básica */}
           <div className="form-section">
-            <h3 className="form-section-title">Información de la Reseña</h3>
+            <h3 className="form-section-title">Información Básica</h3>
             
             <div className="form-grid">
               <div className="form-group">
-                <label>ID de Reseña</label>
-                <input type="text" value={`#${resena.id_resena}`} disabled className="form-input-disabled" />
-              </div>
-              
-              <div className="form-group">
-                <label>Usuario</label>
-                <input type="text" value={`Usuario ${resena.id_usuario}`} disabled className="form-input-disabled" />
-              </div>
-              
-              <div className="form-group">
-                <label>Cancha</label>
-                <input type="text" value={`Cancha ${resena.id_cancha}`} disabled className="form-input-disabled" />
-              </div>
-              
-              <div className="form-group">
-                <label>Fecha de Creación</label>
-                <input 
-                  type="text" 
-                  value={new Date(resena.fecha_creacion).toLocaleDateString('es-CL')} 
-                  disabled 
-                  className="form-input-disabled" 
+                <label htmlFor="id_usuario">ID de Usuario *</label>
+                <input
+                  type="number"
+                  id="id_usuario"
+                  name="id_usuario"
+                  value={formData.id_usuario}
+                  onChange={handleInputChange}
+                  min={1}
+                  required
+                  className="form-input"
+                  placeholder="Ingresa el ID del usuario"
                 />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="id_cancha">ID de Cancha *</label>
+                <input
+                  type="number"
+                  id="id_cancha"
+                  name="id_cancha"
+                  value={formData.id_cancha}
+                  onChange={handleInputChange}
+                  min={1}
+                  required
+                  className="form-input"
+                  placeholder="Ingresa el ID de la cancha"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label htmlFor="id_reserva">ID de Reserva (Opcional)</label>
+                <input
+                  type="number"
+                  id="id_reserva"
+                  name="id_reserva"
+                  value={formData.id_reserva || ''}
+                  onChange={handleInputChange}
+                  min={1}
+                  className="form-input"
+                  placeholder="Ingresa el ID de la reserva (opcional)"
+                />
+                <small className="form-help">
+                  Si está asociada a una reserva específica
+                </small>
               </div>
             </div>
           </div>
 
-          {/* Datos editables */}
+          {/* Datos de la reseña */}
           <div className="form-section">
             <h3 className="form-section-title">Datos de la Reseña</h3>
             
@@ -221,20 +190,23 @@ export default function EditResenaPage() {
               <label htmlFor="comentario">
                 Comentario *
                 <span className="character-count">
-                  {formData.comentario.length}/500 caracteres
+                  {formData.comentario ? formData.comentario.length : 0}/500 caracteres
                 </span>
               </label>
               <textarea
                 id="comentario"
                 name="comentario"
-                value={formData.comentario}
+                value={formData.comentario || ''}
                 onChange={handleInputChange}
-                placeholder="Escribe aquí tu opinión sobre la cancha..."
+                placeholder="Escribe aquí la opinión sobre la cancha..."
                 required
                 maxLength={500}
                 rows={4}
                 className="form-textarea"
               />
+              <small className="form-help">
+                Describe la experiencia con la cancha, instalaciones, estado del césped, etc.
+              </small>
             </div>
           </div>
 
@@ -244,26 +216,26 @@ export default function EditResenaPage() {
               type="button"
               onClick={() => router.push('/admin/resenas')}
               className="btn-cancelar"
-              disabled={saving}
+              disabled={loading}
             >
               Cancelar
             </button>
             
             <button
               type="submit"
-              disabled={saving || !formData.comentario.trim()}
+              disabled={loading || !isFormValid()}
               className="btn-guardar"
             >
-              {saving ? (
+              {loading ? (
                 <>
                   <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Guardando...
+                  Creando...
                 </>
               ) : (
-                'Actualizar Reseña'
+                'Crear Reseña'
               )}
             </button>
           </div>

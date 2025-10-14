@@ -1,91 +1,74 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { canchaService } from '@/services/canchaService';
-import { Cancha, UpdateCanchaInput, TipoCancha, EstadoCancha } from '@/types/cancha';
+import { CreateCanchaInput } from '@/types/cancha';
 import '../../dashboard.css';
 
-export default function EditCourtPage() {
+export default function CreateCanchaPage() {
   const router = useRouter();
-  const params = useParams();
-  const courtId = params.id as string;
-
-  // Estados para el formulario
-  const [cancha, setCancha] = useState<Cancha | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Estados del formulario
-  const [formData, setFormData] = useState<UpdateCanchaInput>({
+  // Estado del formulario
+  const [formData, setFormData] = useState<CreateCanchaInput>({
     nombre: '',
     tipo: 'futbol',
-    estado: 'disponible',
     precioPorHora: 0,
     descripcion: '',
-    capacidad: 0,
+    capacidad: 1,
+    techada: false,
+    establecimientoId: 1, // Por ahora hardcodeado, después se puede obtener del usuario logueado
     imagenUrl: ''
   });
 
-  // Cargar datos de la cancha
-  useEffect(() => {
-    loadCanchaData();
-  }, [courtId]);
-
-  const loadCanchaData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await canchaService.getCanchaById(parseInt(courtId));
-      setCancha(data);
-      
-      // Llenar el formulario con los datos existentes
-      setFormData({
-        nombre: data.nombre,
-        tipo: data.tipo,
-        estado: data.estado,
-        precioPorHora: data.precioPorHora,
-        descripcion: data.descripcion || '',
-        capacidad: data.capacidad,
-        imagenUrl: data.imagenUrl || ''
-      });
-    } catch (err: any) {
-      console.error('Error cargando cancha:', err);
-      setError(err.message || 'Error al cargar los datos de la cancha');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Manejar cambios en el formulario
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
+    const { name, value, type, checked } = e.target as HTMLInputElement;
     
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? parseFloat(value) || 0 : value
+      [name]: type === 'number' ? parseFloat(value) || 0 : 
+               type === 'checkbox' ? checked : 
+               value
     }));
   };
 
-  // Guardar cambios
-  const handleSave = async (e: React.FormEvent) => {
+  // Crear nueva cancha
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     try {
-      setSaving(true);
+      setLoading(true);
       setError(null);
       
-      await canchaService.updateCancha(parseInt(courtId), formData);
+      // Validaciones básicas
+      if (!formData.nombre.trim()) {
+        setError('El nombre de la cancha es requerido');
+        return;
+      }
+      
+      if (formData.precioPorHora <= 0) {
+        setError('El precio por hora debe ser mayor a 0');
+        return;
+      }
+      
+      if (formData.capacidad <= 0) {
+        setError('La capacidad debe ser mayor a 0');
+        return;
+      }
+      
+      await canchaService.createCancha(formData);
       
       // Mostrar mensaje de éxito y redirigir
-      alert('Cancha actualizada exitosamente');
+      alert('Cancha creada exitosamente');
       router.push('/admin/canchas');
     } catch (err: any) {
-      console.error('Error guardando cancha:', err);
-      setError(err.message || 'Error al guardar los cambios');
+      console.error('Error creando cancha:', err);
+      setError(err.message || 'Error al crear la cancha');
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   };
 
@@ -93,32 +76,6 @@ export default function EditCourtPage() {
   const handleCancel = () => {
     router.push('/admin/canchas');
   };
-
-  if (loading) {
-    return (
-      <div className="admin-dashboard-container">
-        <div className="loading-container">
-          <p>Cargando datos de la cancha...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error && !cancha) {
-    return (
-      <div className="admin-dashboard-container">
-        <div className="error-container">
-          <h2>Error</h2>
-          <p>{error}</p>
-          <button onClick={handleCancel} className="btn-secondary">
-            Volver a Canchas
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-
 
   return (
     <div className="admin-page-layout">
@@ -131,20 +88,20 @@ export default function EditCourtPage() {
             </svg>
             Volver
           </button>
-          <h1 className="admin-page-title">Editar Cancha</h1>
+          <h1 className="admin-page-title">Crear Nueva Cancha</h1>
         </div>
         
         <div className="admin-header-buttons">
           <button 
             type="submit" 
-            form="edit-cancha-form"
+            form="create-cancha-form"
             className="btn-guardar" 
-            disabled={saving}
+            disabled={loading}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            {saving ? 'Guardando...' : 'Guardar Cambios'}
+            {loading ? 'Creando...' : 'Crear Cancha'}
           </button>
         </div>
       </div>
@@ -158,13 +115,13 @@ export default function EditCourtPage() {
 
       {/* Formulario Principal */}
       <div className="edit-court-container">
-        <form id="edit-cancha-form" onSubmit={handleSave} className="edit-court-card">
+        <form id="create-cancha-form" onSubmit={handleSubmit} className="edit-court-card">
           {/* Información Básica */}
           <div className="edit-section">
             <h3 className="edit-section-title">Información Básica</h3>
             <div className="edit-form-grid">
               <div className="edit-form-group">
-                <label htmlFor="nombre" className="edit-form-label">Nombre:</label>
+                <label htmlFor="nombre" className="edit-form-label">Nombre: *</label>
                 <input
                   type="text"
                   id="nombre"
@@ -172,12 +129,13 @@ export default function EditCourtPage() {
                   value={formData.nombre}
                   onChange={handleInputChange}
                   className="edit-form-input"
+                  placeholder="Ej: Cancha Principal"
                   required
                 />
               </div>
               
               <div className="edit-form-group">
-                <label htmlFor="tipo" className="edit-form-label">Tipo de Cancha:</label>
+                <label htmlFor="tipo" className="edit-form-label">Tipo de Cancha: *</label>
                 <select
                   id="tipo"
                   name="tipo"
@@ -195,7 +153,7 @@ export default function EditCourtPage() {
               </div>
 
               <div className="edit-form-group">
-                <label htmlFor="capacidad" className="edit-form-label">Capacidad:</label>
+                <label htmlFor="capacidad" className="edit-form-label">Capacidad: *</label>
                 <input
                   type="number"
                   id="capacidad"
@@ -204,12 +162,13 @@ export default function EditCourtPage() {
                   onChange={handleInputChange}
                   className="edit-form-input"
                   min="1"
+                  placeholder="Ej: 22"
                   required
                 />
               </div>
 
               <div className="edit-form-group">
-                <label htmlFor="precioPorHora" className="edit-form-label">Precio por hora:</label>
+                <label htmlFor="precioPorHora" className="edit-form-label">Precio por hora: *</label>
                 <input
                   type="number"
                   id="precioPorHora"
@@ -219,31 +178,28 @@ export default function EditCourtPage() {
                   className="edit-form-input"
                   min="0"
                   step="0.01"
+                  placeholder="Ej: 25000"
                   required
                 />
               </div>
             </div>
           </div>
 
-          {/* Estado */}
+          {/* Características */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Estado</h3>
+            <h3 className="edit-section-title">Características</h3>
             <div className="edit-form-grid">
               <div className="edit-form-group">
-                <label htmlFor="estado" className="edit-form-label">Estado:</label>
-                <select
-                  id="estado"
-                  name="estado"
-                  value={formData.estado}
-                  onChange={handleInputChange}
-                  className="edit-form-select"
-                  required
-                >
-                  <option value="disponible">Disponible</option>
-                  <option value="ocupada">Ocupada</option>
-                  <option value="mantenimiento">En Mantenimiento</option>
-                  <option value="inactiva">Inactiva</option>
-                </select>
+                <label className="edit-form-label">
+                  <input
+                    type="checkbox"
+                    name="techada"
+                    checked={formData.techada}
+                    onChange={handleInputChange}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Cancha techada/cubierta
+                </label>
               </div>
             </div>
           </div>
@@ -260,7 +216,7 @@ export default function EditCourtPage() {
                 onChange={handleInputChange}
                 className="edit-form-textarea"
                 rows={4}
-                placeholder="Descripción de la cancha..."
+                placeholder="Descripción detallada de la cancha, servicios, etc..."
               />
             </div>
           </div>
@@ -279,35 +235,22 @@ export default function EditCourtPage() {
                 className="edit-form-input"
                 placeholder="https://ejemplo.com/imagen.jpg"
               />
+              <small style={{ color: 'var(--text-gray)', fontSize: '0.8rem' }}>
+                Opcional: URL de una imagen para mostrar la cancha
+              </small>
             </div>
           </div>
 
-          {/* Información del Sistema */}
-          {cancha && (
-            <div className="edit-section">
-              <h3 className="edit-section-title">Información del Sistema</h3>
-              <div className="edit-form-grid">
-                <div className="edit-info-item">
-                  <span className="edit-info-label">ID:</span>
-                  <span className="edit-info-value">{cancha.id}</span>
-                </div>
-                <div className="edit-info-item">
-                  <span className="edit-info-label">Creado:</span>
-                  <span className="edit-info-value">
-                    {new Date(cancha.fechaCreacion).toLocaleDateString()}
-                  </span>
-                </div>
-                {cancha.fechaActualizacion && (
-                  <div className="edit-info-item">
-                    <span className="edit-info-label">Última actualización:</span>
-                    <span className="edit-info-value">
-                      {new Date(cancha.fechaActualizacion).toLocaleDateString()}
-                    </span>
-                  </div>
-                )}
-              </div>
+          {/* Información adicional */}
+          <div className="edit-section">
+            <h3 className="edit-section-title">Información</h3>
+            <div className="edit-info-item">
+              <p style={{ color: 'var(--text-gray)', fontSize: '0.9rem' }}>
+                Los campos marcados con (*) son obligatorios. La cancha será creada y estará disponible 
+                inmediatamente para reservas si el estado es "Activa".
+              </p>
             </div>
-          )}
+          </div>
         </form>
       </div>
     </div>
