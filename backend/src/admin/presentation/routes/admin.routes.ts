@@ -3,8 +3,21 @@ import { ENV } from "../../../config/env";
 import { buildHttpClient } from "../../../infra/http/client";
 import { getBearerFromReq } from "../../../interfaces/auth";
 import { AdminApiRepository } from "../../../admin/infraestructure/AdminApiRepository";
-import { AsignarRol } from "../../../admin/application/AsignarRol";
-import { ListUsers, GetUser, PatchUser, RemoveUser } from "../../../admin/application/UsersUseCases";
+import { 
+  GetMisRecursos, 
+  GetMisComplejos, 
+  GetMisCanchas, 
+  GetMisReservas, 
+  GetMisEstadisticas,
+  CreateComplejo,
+  GetComplejo,
+  UpdateComplejo,
+  DeleteComplejo,
+  CreateCancha,
+  GetCancha,
+  UpdateCancha,
+  DeleteCancha
+} from "../../../admin/application/UsersUseCases";
 import { AdminController } from "../../../admin/presentation/controllers/admin.controller";
 import { requireRole } from "../../../admin/presentation/guards/guards";
 
@@ -24,33 +37,69 @@ const ctrl = (req: any) => {
   const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
   const repo = new AdminApiRepository(http);
   return new AdminController(
-    new AsignarRol(repo),
-    new ListUsers(repo),
-    new GetUser(repo),
-    new PatchUser(repo),
-    new RemoveUser(repo)
+    new GetMisRecursos(repo),
+    new GetMisComplejos(repo),
+    new GetMisCanchas(repo),
+    new GetMisReservas(repo),
+    new GetMisEstadisticas(repo),
+    new CreateComplejo(repo),
+    new GetComplejo(repo),
+    new UpdateComplejo(repo),
+    new DeleteComplejo(repo),
+    new CreateCancha(repo),
+    new GetCancha(repo),
+    new UpdateCancha(repo),
+    new DeleteCancha(repo)
   );
 };
 
-// === Endpoints de Usuarios ===
-// Requieren rol admin o superadmin para acceso
+// === Endpoints del Panel del Dueño ===
+// Requieren ser dueño, admin o superadmin para acceso
 
-/** GET /admin/users - Lista usuarios con paginación y filtros */
-router.get("/users", requireRole("admin", "superadmin"), (req, res) => ctrl(req).list(req, res));
+/** GET /admin/panel - Obtiene resumen de recursos del dueño */
+router.get("/panel", requireRole("dueno", "admin", "superadmin"), (req, res) => ctrl(req).getMisRecursos(req, res));
 
-/** GET /admin/users/:id - Obtiene usuario específico */
-router.get("/users/:id", requireRole("admin", "superadmin"), (req, res) => ctrl(req).get(req, res));
+// === Endpoints de Complejos ===
 
-/** PATCH /admin/users/:id - Actualiza datos de usuario */
-router.patch("/users/:id", requireRole("admin", "superadmin"), (req, res) => ctrl(req).patch(req, res));
+/** GET /admin/complejos - Lista complejos del dueño */
+router.get("/complejos", requireRole("dueno", "admin", "superadmin"), (req, res) => ctrl(req).listComplejos(req, res));
 
-/** DELETE /admin/users/:id - Elimina usuario */
-router.delete("/users/:id", requireRole("admin", "superadmin"), (req, res) => ctrl(req).remove(req, res));
+/** POST /admin/complejos - Crea nuevo complejo */
+router.post("/complejos", requireRole("dueno", "admin", "superadmin"), (req, res) => ctrl(req).createComplejo(req, res));
 
-// === Endpoints de Roles ===
+/** GET /admin/complejos/:id - Obtiene complejo específico */
+router.get("/complejos/:id", requireRole("dueno", "admin", "superadmin"), (req, res) => ctrl(req).getComplejo(req, res));
 
-/** POST /admin/users/:id/role - Asigna rol a usuario (con validación de permisos) */
-router.post("/users/:id/role", requireRole("admin", "superadmin"), (req, res) => ctrl(req).asignarRol(req, res));
+/** PUT /admin/complejos/:id - Actualiza complejo */
+router.put("/complejos/:id", requireRole("dueno", "admin", "superadmin"), (req, res) => ctrl(req).updateComplejo(req, res));
+
+/** DELETE /admin/complejos/:id - Elimina complejo */
+router.delete("/complejos/:id", requireRole("dueno", "admin", "superadmin"), (req, res) => ctrl(req).deleteComplejo(req, res));
+
+// === Endpoints de Canchas ===
+
+/** GET /admin/canchas - Lista canchas del dueño */
+router.get("/canchas", requireRole("dueno", "admin", "superadmin"), (req, res) => ctrl(req).listCanchas(req, res));
+
+/** POST /admin/canchas - Crea nueva cancha */
+router.post("/canchas", requireRole("dueno", "admin", "superadmin"), (req, res) => ctrl(req).createCancha(req, res));
+
+/** GET /admin/canchas/:id - Obtiene cancha específica */
+router.get("/canchas/:id", requireRole("dueno", "admin", "superadmin"), (req, res) => ctrl(req).getCancha(req, res));
+
+/** PUT /admin/canchas/:id - Actualiza cancha */
+router.put("/canchas/:id", requireRole("dueno", "admin", "superadmin"), (req, res) => ctrl(req).updateCancha(req, res));
+
+/** DELETE /admin/canchas/:id - Elimina cancha */
+router.delete("/canchas/:id", requireRole("dueno", "admin", "superadmin"), (req, res) => ctrl(req).deleteCancha(req, res));
+
+// === Endpoints de Reservas y Estadísticas ===
+
+/** GET /admin/reservas - Lista reservas del dueño */
+router.get("/reservas", requireRole("dueno", "admin", "superadmin"), (req, res) => ctrl(req).getMisReservas(req, res));
+
+/** GET /admin/estadisticas - Obtiene estadísticas del dueño */
+router.get("/estadisticas", requireRole("dueno", "admin", "superadmin"), (req, res) => ctrl(req).getMisEstadisticas(req, res));
 
 /** GET /admin/status - Verifica estado y conectividad del módulo admin */
 router.get("/status", async (req, res) => {
@@ -62,11 +111,11 @@ router.get("/status", async (req, res) => {
     let endpoints_found = [];
     let success = false;
     
-    // Probar endpoints reales que existen en tu API
+    // Probar endpoints reales que usan los owners
     const endpointsToTest = [
-      '/api/v1/usuarios',
-      '/api/v1/healthz',
-      '/api/v1/version'
+      '/complejos',
+      '/canchas', 
+      '/reservas'
     ];
     
     for (const endpoint of endpointsToTest) {
@@ -89,19 +138,25 @@ router.get("/status", async (req, res) => {
     
     res.json({
       ok: success,
-      module: "admin",
-      message: success ? "Módulo admin funcionando correctamente" : "Algunos endpoints con errores",
+      module: "admin-owner",
+      message: success ? "Módulo admin owner funcionando correctamente" : "Algunos endpoints con errores",
       fastapi_url: ENV.FASTAPI_URL,
       endpoint_tested,
       status: response?.status || 0,
       endpoints_found,
       success,
       available_endpoints: [
-        "GET /api/v1/usuarios",
-        "GET /api/v1/usuarios/{id_usuario}",
-        "PATCH /api/v1/usuarios/{id_usuario}",
-        "DELETE /api/v1/usuarios/{id_usuario}",
-        "POST /api/v1/admin/usuarios/{id_usuario}/rol"
+        "GET /complejos - Lista complejos",
+        "POST /complejos - Crear complejo",
+        "GET /complejos/{id} - Ver complejo",
+        "PUT /complejos/{id} - Actualizar complejo", 
+        "DELETE /complejos/{id} - Eliminar complejo",
+        "GET /canchas - Lista canchas",
+        "POST /canchas - Crear cancha",
+        "GET /canchas/{id} - Ver cancha",
+        "PUT /canchas/{id} - Actualizar cancha",
+        "DELETE /canchas/{id} - Eliminar cancha",
+        "GET /reservas - Lista reservas"
       ],
       timestamp: new Date().toISOString()
     });
