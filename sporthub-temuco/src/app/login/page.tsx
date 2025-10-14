@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -9,11 +7,6 @@ import { authService } from '@/services/authService';
 import '../Login.css';
 
 export default function LoginPage() {
-    const router = useRouter();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -76,60 +69,28 @@ export default function LoginPage() {
                     <div className="login-left">
                         <h1>Inicio Sesión</h1>
                         <p>Inicie sesión para continuar con su cuenta</p>
-                        <form onSubmit={async (e) => {
-                            e.preventDefault();
-                            setLoading(true);
-                            setError('');
-
-                            try {
-                                const response = await fetch('http://localhost:3001/api/superadmin/auth/login', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify({ email, password }),
-                                });
-
-                                const data = await response.json();
-
-                                if (data.ok) {
-                                    // Guardar token y datos del usuario
-                                    localStorage.setItem('token', data.data.access_token);
-                                    localStorage.setItem('userData', JSON.stringify(data.data.user));
-
-                                    // Redirigir según el rol
-                                    switch (data.data.user.rol) {
-                                        case 'superadmin':
-                                            router.push('/superadmin');
-                                            break;
-                                        case 'admin':
-                                            router.push('/admin');
-                                            break;
-                                        default:
-                                            router.push('/');
-                                            break;
-                                    }
-                                } else {
-                                    setError(data.error || 'Error al iniciar sesión');
-                                }
-                            } catch (error) {
-                                setError('Error al conectar con el servidor');
-                            } finally {
-                                setLoading(false);
-                            }
-                        }}>
-                            {error && (
-                                <div className="error-message" style={{ color: 'red', marginBottom: '1rem' }}>
-                                    {error}
-                                </div>
-                            )}
-                            
+                        
+                        {error && (
+                            <div style={{ 
+                                backgroundColor: '#fee2e2', 
+                                border: '1px solid #fecaca', 
+                                color: '#dc2626', 
+                                padding: '0.75rem', 
+                                borderRadius: '0.5rem', 
+                                marginBottom: '1rem' 
+                            }}>
+                                {error}
+                            </div>
+                        )}
+                        
+                        <form onSubmit={handleSubmit}>
                             <label htmlFor="email">Email</label>
                             <input 
                                 type="email" 
                                 id="email" 
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                disabled={isLoading}
                                 required
                             />
                             
@@ -137,18 +98,23 @@ export default function LoginPage() {
                             <div className="password-container">
                                 <input 
                                     type="password" 
-                                    id="password"
+                                    id="password" 
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
+                                    disabled={isLoading}
                                     required
                                 />
                             </div>
                             
                             <button 
                                 type="submit" 
-                                disabled={loading}
+                                disabled={isLoading}
+                                style={{ 
+                                    opacity: isLoading ? 0.6 : 1,
+                                    cursor: isLoading ? 'not-allowed' : 'pointer'
+                                }}
                             >
-                                {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+                                {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
                             </button>
                         </form>
                         
