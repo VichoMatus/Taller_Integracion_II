@@ -38,4 +38,4 @@ Nube:
             http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/bloqueos/
 
  -API (integra 4) :
-            http://api-h1d7oi-6fc869-168-232-167-73.traefik.me/docs#/
+            http://api-h1d7oi-a881cc-168-232-167-73.traefik.me/docs#/
