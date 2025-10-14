@@ -3,6 +3,9 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { authService } from '@/services/authService';
 import '../Login.css';
 
 export default function LoginPage() {
@@ -11,6 +14,57 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const router = useRouter();
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        // Validaciones básicas
+        if (!email.trim() || !password.trim()) {
+            setError('Por favor, completa todos los campos');
+            return;
+        }
+
+        setIsLoading(true);
+        setError('');
+
+        try {
+            const response = await authService.login({
+                email: email.trim(),
+                contrasena: password
+            });
+
+            // Login exitoso - redireccionar según el rol
+            console.log('Login exitoso:', response);
+            
+            if (response.usuario && response.usuario.rol) {
+                switch (response.usuario.rol) {
+                    case 'admin':
+                        router.push('/admin');
+                        break;
+                    case 'super_admin':
+                        router.push('/superadmin');
+                        break;
+                    default:
+                        router.push('/sports');
+                        break;
+                }
+            } else {
+                // Fallback si no hay rol definido
+                router.push('/sports');
+            }
+        } catch (err: any) {
+            console.error('Error en login:', err);
+            setError(err.message || 'Error de conexión. Verifica tus credenciales.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <div style={{ minHeight: '100vh', position: 'relative' }}>
             <header style={{ backgroundColor: '#4F46E5', color: 'white', padding: '1rem', textAlign: 'center' }}>
@@ -100,7 +154,7 @@ export default function LoginPage() {
                         
                         <div className="or">o</div>
                         
-                        <button className="google-btn">
+                        <button className="google-btn" disabled={isLoading}>
                             <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" />
                             Iniciar sesión con Google
                         </button>
