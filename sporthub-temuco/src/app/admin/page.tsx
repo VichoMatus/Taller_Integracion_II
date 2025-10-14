@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useRouter } from 'next/navigation';
 import StatsCard from '@/components/charts/StatsCard';
 import './dashboard.css';

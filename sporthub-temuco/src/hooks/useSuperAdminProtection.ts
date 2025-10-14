@@ -18,8 +18,8 @@ export const useSuperAdminProtection = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Verificar si existe un token
-        const token = localStorage.getItem('token');
+        // Verificar si existe un token (buscar en ambas ubicaciones posibles)
+        const token = localStorage.getItem('access_token') || localStorage.getItem('token');
         if (!token) {
           router.push('/login');
           return;
@@ -33,6 +33,8 @@ export const useSuperAdminProtection = () => {
           if (!userData || userData.rol !== 'superadmin') {
             // Si no es superadmin o no hay datos, redirigir según el rol
             localStorage.removeItem('token');
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
             localStorage.removeItem('userData');
             if (userData?.rol === 'admin') {
               router.push('/admin');
@@ -47,6 +49,8 @@ export const useSuperAdminProtection = () => {
         } catch (error) {
           // Si hay error con el token, limpiar y redirigir al login
           localStorage.removeItem('token');
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
           localStorage.removeItem('userData');
           router.push('/login');
         }
