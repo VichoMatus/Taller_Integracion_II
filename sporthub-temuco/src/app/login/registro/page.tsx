@@ -10,23 +10,18 @@ export default function RegistroPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Función para verificar fortaleza de contraseña
+  // Función para verificar fortaleza de contraseña (simplificada)
   const checkPasswordStrength = (pass: string) => {
     if (pass.length === 0) return { strength: '', message: '' };
     
-    const hasMinLength = pass.length >= 8;
-    const hasUpperCase = /[A-Z]/.test(pass);
-    const hasLowerCase = /[a-z]/.test(pass);
-    const hasNumbers = /[0-9]/.test(pass);
+    const hasMinLength = pass.length >= 6;
     
-    const requirementsMet = [hasMinLength, hasUpperCase, hasLowerCase, hasNumbers].filter(Boolean).length;
-    
-    if (requirementsMet >= 3 && hasMinLength && hasUpperCase) {
+    if (pass.length >= 8) {
       return { strength: 'strong', message: 'Contraseña segura' };
-    } else if (requirementsMet >= 2 && hasMinLength) {
-      return { strength: 'medium', message: 'Contraseña moderada' };
+    } else if (pass.length >= 6) {
+      return { strength: 'medium', message: 'Contraseña aceptable' };
     } else {
-      return { strength: 'weak', message: 'Contraseña débil' };
+      return { strength: 'weak', message: 'Muy corta' };
     }
   };
 
@@ -38,14 +33,9 @@ export default function RegistroPage() {
     const passwordValue = formData.get('password') as string;
     const confirmPasswordValue = formData.get('confirmPassword') as string;
     
-    // Validaciones de contraseña
-    if (passwordValue.length < 8) {
-      alert('La contraseña debe tener al menos 8 caracteres');
-      return;
-    }
-    
-    if (!/[A-Z]/.test(passwordValue)) {
-      alert('La contraseña debe contener al menos una letra mayúscula');
+    // Validaciones de contraseña (solo longitud mínima)
+    if (passwordValue.length < 6) {
+      alert('La contraseña debe tener al menos 6 caracteres');
       return;
     }
     
@@ -160,7 +150,7 @@ export default function RegistroPage() {
                   type="password" 
                   id="password" 
                   name="password" 
-                  minLength={8}
+                  minLength={6}
                   required 
                   disabled={state.isLoading}
                   value={password}
@@ -176,7 +166,7 @@ export default function RegistroPage() {
               )}
               
               <div className="password-requirements">
-                La contraseña debe tener al menos 8 caracteres, incluyendo una mayúscula
+                La contraseña debe tener al menos 6 caracteres
               </div>
               
               <label htmlFor="confirm-password">Confirmar contraseña</label>

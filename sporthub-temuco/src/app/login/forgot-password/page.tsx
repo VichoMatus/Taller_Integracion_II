@@ -4,21 +4,26 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/services/authService';
-import '../Login.css';
+import '../../Login.css';
 
-export default function LoginPage() {
+export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
         // Validaciones básicas
-        if (!email.trim() || !password.trim()) {
-            setError('Por favor, completa todos los campos');
+        if (!email.trim()) {
+            setError('Por favor, ingresa tu email');
+            return;
+        }
+
+        if (!isValidEmail(email)) {
+            setError('Por favor, ingresa un email válido');
             return;
         }
 
@@ -26,36 +31,24 @@ export default function LoginPage() {
         setError('');
 
         try {
-            const response = await authService.login({
-                email: email.trim(),
-                contrasena: password
+            await authService.forgotPassword({
+                email: email.trim()
             });
 
-            // Login exitoso - redireccionar según el rol
-            console.log('Login exitoso:', response);
+            // Éxito - redirigir a la página de verificación con el email
+            router.push(`/login/verificar?email=${encodeURIComponent(email)}&type=password`);
             
-            if (response.usuario && response.usuario.rol) {
-                switch (response.usuario.rol) {
-                    case 'admin':
-                        router.push('/admin');
-                        break;
-                    case 'super_admin':
-                        router.push('/superadmin');
-                        break;
-                    default:
-                        router.push('/sports');
-                        break;
-                }
-            } else {
-                // Fallback si no hay rol definido
-                router.push('/sports');
-            }
         } catch (err: any) {
-            console.error('Error en login:', err);
-            setError(err.message || 'Error de conexión. Verifica tus credenciales.');
+            console.error('Error en recuperación de contraseña:', err);
+            setError(err.message || 'Error al procesar la solicitud. Intenta nuevamente.');
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const isValidEmail = (email: string) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
     };
 
     return (
@@ -67,8 +60,8 @@ export default function LoginPage() {
             <div className="login-container">
                 <div className="login-form">
                     <div className="login-left">
-                        <h1>Inicio Sesión</h1>
-                        <p>Inicie sesión para continuar con su cuenta</p>
+                        <h1>Recuperar Contraseña</h1>
+                        <p>Ingresa tu email para recibir un código de verificación</p>
                         
                         {error && (
                             <div style={{ 
@@ -82,7 +75,7 @@ export default function LoginPage() {
                                 {error}
                             </div>
                         )}
-                        
+
                         <form onSubmit={handleSubmit}>
                             <label htmlFor="email">Email</label>
                             <input 
@@ -92,24 +85,8 @@ export default function LoginPage() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 disabled={isLoading}
                                 required
+                                placeholder="tu@email.com"
                             />
-                            
-                            <label htmlFor="password">Contraseña</label>
-                            <div className="password-container">
-                                <input 
-                                    type="password" 
-                                    id="password" 
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    disabled={isLoading}
-                                    required
-                                />
-                            </div>
-                            <div className="forgot-password" style={{ textAlign: 'center', marginTop: '15px' }}>
-                                <Link href="/login/forgot-password" style={{ color: '#4F46E5', textDecoration: 'none', fontSize: '14px' }}>
-                                    ¿Olvidaste tu contraseña?
-                                </Link>
-                            </div>
                             
                             <button 
                                 type="submit" 
@@ -119,19 +96,18 @@ export default function LoginPage() {
                                     cursor: isLoading ? 'not-allowed' : 'pointer'
                                 }}
                             >
-                                {isLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+                                {isLoading ? 'Enviando código...' : 'Enviar código de verificación'}
                             </button>
                         </form>
                         
-                        <div className="or">o</div>
-                        
-                        <button className="google-btn" disabled={isLoading}>
-                            <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" />
-                            Iniciar sesión con Google
-                        </button>
-                        
-                        <div className="signup">
-                            No tienes una cuenta? <Link href="/login/registro">Crea una</Link>
+                        <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                            <Link href="/login" style={{ 
+                                color: '#4F46E5', 
+                                textDecoration: 'none', 
+                                fontSize: '14px' 
+                            }}>
+                                ← Volver al inicio de sesión
+                            </Link>
                         </div>
                     </div>
                     
@@ -140,7 +116,6 @@ export default function LoginPage() {
                     </div>
                 </div>
             </div>
-            
         </div>
     );
 }

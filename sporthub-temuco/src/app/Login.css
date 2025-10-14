@@ -344,3 +344,25 @@ body {
     margin: 10px;
   }
 }
+/* Estilos para la página de recuperación de contraseña */
+.login-left .back-to-login {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.login-left .back-to-login a {
+    color: #4F46E5;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.login-left .back-to-login a:hover {
+    text-decoration: underline;
+}
+
+/* Ajustes para formularios de recuperación */
+.login-form .login-left {
+    justify-content: flex-start;
+    padding-top: 50px;
+}

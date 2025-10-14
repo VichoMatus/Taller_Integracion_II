@@ -25,7 +25,11 @@ const Footer: React.FC<FooterProps> = ({
     const isFromSportsPage = pathname?.startsWith('/sports');
     
     // 🔥 DETECTAR SI ES PÁGINA DE LOGIN O REGISTRO
-    const isLoginPage = pathname === '/login' || pathname === '/login/registro' || pathname === '/login/verificar';
+    const isLoginPage = pathname === '/login' || 
+                   pathname === '/login/registro' || 
+                   pathname === '/login/verificar' ||
+                   pathname === '/login/forgot-password' ||
+                   pathname === '/login/reset-password';
 
     // 🔥 USA MODULE.CSS SI VIENE DE SPORTS O SI SE ESPECIFICA MANUALMENTE
     const shouldUseModuleCSS = useModuleCSS ?? isFromSportsPage;
