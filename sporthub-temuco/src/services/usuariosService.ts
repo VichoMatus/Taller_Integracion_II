@@ -18,6 +18,20 @@ export const usuariosService = {
     }
   },
 
+  // Crear un nuevo administrador
+  async createAdministrador(payload: UsuarioCreateRequest): Promise<Usuario> {
+    try {
+      const adminPayload = {
+        ...payload,
+        rol: 'admin'
+      };
+      const { data } = await apiBackend.post<Usuario>("/usuarios", adminPayload);
+      return data;
+    } catch (e) {
+      handleApiError(e);
+    }
+  },
+
   // Obtener usuario por ID
   async obtener(id: string | number): Promise<Usuario> {
     try {
@@ -88,3 +102,5 @@ export const usuariosService = {
     }
   },
 };
+
+export const createAdministrador = usuariosService.createAdministrador;
