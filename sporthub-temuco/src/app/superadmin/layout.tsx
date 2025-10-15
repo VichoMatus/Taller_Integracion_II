@@ -19,9 +19,13 @@ export default function SuperadminLayout({
       setUserName(userData.nombre);
     }
   }, []);
+  // Mapear super_admin a superadmin para mantener consistencia en la UI
+  const storedRole = localStorage.getItem('user_role');
+  const userRole = (storedRole === 'super_admin' ? 'superadmin' : storedRole) || 'superadmin';
+  
   return (
     <AdminsLayout 
-      userRole="superadmin" 
+      userRole={userRole as 'admin' | 'superadmin'} 
       userName={userName}
       notificationCount={3}
     >

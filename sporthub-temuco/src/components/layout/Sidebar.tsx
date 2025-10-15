@@ -28,9 +28,8 @@ import rugbyStyles from './StylesSportsSideBar/RugbySideBar.module.css';
 import mountainbikeStyles from './StylesSportsSideBar/MountainBikeSideBar.module.css';
 
 interface SidebarProps {
-  userRole: 'admin' | 'superadmin' | 'usuario';
+  userRole: 'admin' | 'superadmin' | 'super_admin' | 'usuario';
   sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje'| 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | 'escalada' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
-
 }
 
 const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado a undefined por defecto
@@ -38,8 +37,8 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
 
   // Función para obtener los estilos según el rol Y deporte
   const getSportStyles = () => {
-    // 🔥 Si es admin o superadmin, devolver null (usará las clases CSS normales)
-    if (userRole === 'admin' || userRole === 'superadmin') {
+    // 🔥 Si es admin o superadmin (cualquier variante), devolver null (usará las clases CSS normales)
+    if (userRole === 'admin' || userRole === 'superadmin' || userRole === 'super_admin') {
       return null; 
     }
 
