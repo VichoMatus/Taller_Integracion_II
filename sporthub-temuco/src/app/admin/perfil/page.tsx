@@ -35,55 +35,22 @@ export default function PerfilAdministrador() {
   const [hoveredDia, setHoveredDia] = useState<string | null>(null);
 
   useEffect(() => {
-    // Debug: Ver qué hay en localStorage
-    console.log('=== DEBUG AUTH ===');
-    console.log('Token en localStorage:', localStorage.getItem('token'));
-    console.log('Access token en localStorage:', localStorage.getItem('access_token'));
-    console.log('Refresh token en localStorage:', localStorage.getItem('refresh_token'));
-    console.log('¿Está autenticado según authService?:', authService.isAuthenticated());
-    console.log('Token obtenido con getToken():', authService.getToken());
-    console.log('==================');
-
     const fetchUserData = async () => {
       try {
         setLoading(true);
         
-        // PRIMERO: Verificar si hay autenticación
         if (!authService.isAuthenticated()) {
-          console.log('❌ No hay usuario autenticado, redirigiendo al login...');
           router.push('/login');
           return;
         }
 
-        console.log('✅ Usuario autenticado, obteniendo datos...');
-
-        // SEGUNDO: Obtener datos del usuario
         const userData = await authService.me() as UserProfile;
-        console.log('📊 Datos del usuario obtenidos:', userData);
+        console.log('Datos del usuario desde auth/me:', userData);
         
-        // TERCERO: Verificar que el usuario sea admin
-        if (userData.rol !== 'admin') {
-          console.log('🚫 Usuario no es admin, rol actual:', userData.rol);
-          router.push('/acceso-denegado');
-          return;
-        }
-
-        console.log('✅ Usuario es admin, mostrando datos...');
         setUserData(userData);
-        
-      } catch (err: any) {
-        console.error('❌ Error fetching user data:', err);
-        console.error('Mensaje de error:', err.message);
-        console.error('Stack trace:', err.stack);
-        
-        // Si hay error, probablemente el token es inválido
-        authService.clearSession();
-        setError('Sesión expirada. Por favor, inicia sesión nuevamente.');
-        
-        // Redirigir al login después de un tiempo
-        setTimeout(() => {
-          router.push('/login');
-        }, 3000);
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        setError('Error al cargar los datos del perfil');
       } finally {
         setLoading(false);
       }
@@ -96,16 +63,16 @@ export default function PerfilAdministrador() {
     return name.charAt(0).toUpperCase();
   };
 
+  // 🔥 NUEVA FUNCIÓN: Redirigir a editar perfil
+  const handleEditProfile = () => {
+    router.push('/admin/editarperfil');
+  };
+
   if (loading) {
     return (
       <AdminLayout userRole="admin" userName="Admin" notificationCount={3}>
         <div className="admin-container">
-          <div className="loading-message">
-            <div>Verificando autenticación...</div>
-            <div style={{ fontSize: '12px', marginTop: '10px', color: '#666' }}>
-              Revisa la consola del navegador para ver el debug
-            </div>
-          </div>
+          <div className="loading-message">Cargando perfil...</div>
         </div>
       </AdminLayout>
     );
@@ -115,12 +82,7 @@ export default function PerfilAdministrador() {
     return (
       <AdminLayout userRole="admin" userName="Admin" notificationCount={3}>
         <div className="admin-container">
-          <div className="error-message">
-            {error}
-            <div style={{ fontSize: '12px', marginTop: '10px' }}>
-              Redirigiendo al login...
-            </div>
-          </div>
+          <div className="error-message">{error}</div>
         </div>
       </AdminLayout>
     );
@@ -191,7 +153,11 @@ export default function PerfilAdministrador() {
             </div>
           </div>
 
-          <button className="edit-button">
+          {/* 🔥 BOTÓN EDITAR PERFIL - ACTUALIZADO */}
+          <button 
+            className="edit-button" 
+            onClick={handleEditProfile} // 🔥 Usa la nueva función
+          >
             Editar Perfil
           </button>
         </div>
@@ -200,9 +166,7 @@ export default function PerfilAdministrador() {
         <div className="content-panel">
           <div className="dashboard-header">
             <h1 className="dashboard-title">Panel del Administrador</h1>
-            <p className="dashboard-subtitle">
-              Bienvenido de vuelta, {userData?.nombre || 'Administrador'}. Aquí tienes tu resumen semanal
-            </p>
+            <p className="dashboard-subtitle">Bienvenido de vuelta, aquí tienes tu resumen semanal</p>
           </div>
 
           <div className="chart-container">
