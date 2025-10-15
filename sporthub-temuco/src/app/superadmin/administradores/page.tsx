@@ -1,47 +1,100 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import '@/app/admin/dashboard.css';
-
-interface Administrator {
-  id: string;
-  name: string;
-  email: string;
-  status: 'Activo' | 'Inactivo' | 'Por revisar';
-  registrationDate: string;
-}
+import { usuariosService } from '@/services/usuariosService';
+import { Usuario } from '@/types/usuarios';
 
 export default function AdministradoresPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
   const itemsPerPage = 4;
 
+  // Estado para almacenar todos los usuarios sin filtrar
+  const [todosUsuarios, setTodosUsuarios] = useState<Usuario[]>([]);
+
+  // Función para cargar usuarios
+  const cargarUsuarios = async () => {
+    setIsLoading(true);
+    try {
+      // Verificar autenticación
+      const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+      if (!token) {
+        router.push('/login');
+        return;
+      }
+
+      const data = await usuariosService.listar({
+        rol: 'admin'
+      });
+      setTodosUsuarios(data || []);
+    } catch (error: any) {
+      if (error?.response?.status === 403) {
+        setError('No tienes permisos para ver esta información. Debes ser superadmin.');
+        setTimeout(() => {
+          router.push('/');
+        }, 3000);
+      } else {
+        setError(error.message || 'Error al cargar usuarios');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Filtrar usuarios basado en el término de búsqueda
+  const filtrarUsuarios = () => {
+    if (!searchTerm.trim()) {
+      setUsuarios(todosUsuarios);
+      return;
+    }
+
+    const searchLower = searchTerm.toLowerCase().trim();
+    const usuariosFiltrados = todosUsuarios.filter(usuario => 
+      usuario.nombre.toLowerCase().includes(searchLower) ||
+      usuario.apellido.toLowerCase().includes(searchLower) ||
+      usuario.email.toLowerCase().includes(searchLower)
+    );
+    setUsuarios(usuariosFiltrados);
+  };
+
+  // Cargar usuarios al montar el componente
+  useEffect(() => {
+    cargarUsuarios();
+  }, []);
+
+  // Filtrar usuarios cuando cambie el término de búsqueda o la lista completa
+  useEffect(() => {
+    filtrarUsuarios();
+  }, [searchTerm, todosUsuarios]);
+
   // Función para navegar a editar administrador
-  const editAdmin = (adminId: string) => {
+  const editAdmin = (adminId: string | number) => {
     router.push(`/superadmin/administradores/${adminId}`);
   };
 
-  // Datos de ejemplo
-  const administrators: Administrator[] = [
-    { id: '1', name: 'Ana Lopez', email: 'ana.lopez@gmail.com', status: 'Activo', registrationDate: '30-08-2025' },
-    { id: '2', name: 'Admin123', email: 'admin123@gmail.com', status: 'Inactivo', registrationDate: '28-08-2025' },
-    { id: '3', name: 'Juan Carlos', email: 'carlosjuan@gmail.com', status: 'Por revisar', registrationDate: '20-08-2025' },
-    { id: '4', name: 'María Gonzales', email: 'maria.gonzal@gmail.com', status: 'Activo', registrationDate: '15-07-2025' },
-  ];
+  // Función para desactivar administrador
+  const desactivarAdmin = async (adminId: string | number) => {
+    if (window.confirm('¿Estás seguro de que deseas desactivar este administrador?')) {
+      try {
+        await usuariosService.actualizar(adminId, { esta_activo: false });
+        cargarUsuarios(); // Recargar la lista
+      } catch (error: any) {
+        setError(error.message || 'Error al desactivar administrador');
+      }
+    }
+  };
 
-  // Filtrar administradores basado en búsqueda
-  const filteredAdmins = administrators.filter(admin => {
-    const matchesSearch = admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         admin.email.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
-
-  // Paginación
-  const totalPages = Math.ceil(filteredAdmins.length / itemsPerPage);
+  // Calcular paginación
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedAdmins = filteredAdmins.slice(startIndex, startIndex + itemsPerPage);
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedUsers = usuarios.slice(startIndex, endIndex);
+  const totalPages = Math.ceil(usuarios.length / itemsPerPage);
 
   return (
     <div className="admin-dashboard-container">
@@ -57,7 +110,10 @@ export default function AdministradoresPage() {
             Exportar informe
           </button>
           
-          <button className="export-button">
+          <button 
+            onClick={() => router.push('/superadmin/administradores/nuevo')}
+            className="export-button"
+          >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
@@ -77,129 +133,150 @@ export default function AdministradoresPage() {
             <div className="admin-search-container">
               <input
                 type="text"
-                placeholder="Buscar"
+                placeholder="Buscar por nombre, apellido o email"
                 value={searchTerm}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                  const value = e.target.value;
+                  setSearchTerm(value);
+                  // Resetear la página cuando se realiza una nueva búsqueda
+                  if (currentPage !== 1) setCurrentPage(1);
+                }}
                 className="admin-search-input"
+                aria-label="Buscar administradores"
               />
-              <svg className="admin-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="admin-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-            </div>
-            
-            {/* Filtro */}
-            <button className="btn-filtrar">
-              Filtrar
-            </button>
-          </div>
-        </div>
-        
-        {/* Tabla Principal */}
-        <div className="overflow-x-auto">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Administrador</th>
-                <th>Email</th>
-                <th>Estado</th>
-                <th>Fecha de registro</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedAdmins.map((admin) => (
-                <tr key={admin.id}>
-                  <td>
-                    <div className="admin-cell-title">
-                      <div className="admin-avatar">{admin.name[0].toUpperCase()}</div>
-                      {admin.name}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="admin-cell-subtitle">{admin.email}</div>
-                  </td>
-                  <td>
-                    <span className={`status-badge ${
-                      admin.status === 'Activo' ? 'status-activo' :
-                      admin.status === 'Inactivo' ? 'status-inactivo' :
-                      'status-por-revisar'
-                    }`}>
-                      {admin.status}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="admin-cell-text">{admin.registrationDate}</div>
-                  </td>
-                  <td>
-                    <div className="admin-actions-container">
-                      {/* Botón Editar */}
-                      <button 
-                        className="btn-action btn-editar" 
-                        title="Editar"
-                        onClick={() => editAdmin(admin.id)}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                      </button>
-                      
-                      {/* Botón Aprobar/Check */}
-                      <button className="btn-action btn-aprobar" title="Aprobar">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </button>
-                      
-                      {/* Botón Eliminar */}
-                      <button className="btn-action btn-eliminar" title="Eliminar">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        {/* Paginación */}
-        <div className="admin-pagination-container">
-          <div className="admin-pagination-info">
-            mostrando {startIndex + 1} de {Math.min(startIndex + itemsPerPage, filteredAdmins.length)} administradores
-          </div>
-          
-          <div className="admin-pagination-controls">
-            <button
-              onClick={() => setCurrentPage((prev:number) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="btn-pagination"
-            >
-              Anterior
-            </button>
-            
-            <div className="admin-pagination-numbers">
-              {[...Array(totalPages)].map((_, i) => (
+              {searchTerm && (
                 <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`btn-pagination ${currentPage === i + 1 ? 'active' : ''}`}
+                  onClick={() => setSearchTerm('')}
+                  className="admin-search-clear"
+                  title="Limpiar búsqueda"
                 >
-                  {i + 1}
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
-              ))}
+              )}
             </div>
-            
-            <button
-              onClick={() => setCurrentPage((prev: number) => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="btn-pagination"
-            >
-              Siguiente
-            </button>
           </div>
         </div>
+
+        {/* Mensaje de Error */}
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
+
+        {/* Estado de Carga */}
+        {isLoading ? (
+          <div className="loading-spinner">Cargando...</div>
+        ) : (
+          /* Tabla Principal */
+          <div className="overflow-x-auto">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Email</th>
+                  <th>Estado</th>
+                  <th>Fecha de Registro</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedUsers.map((usuario) => (
+                  <tr key={usuario.id_usuario}>
+                    <td>
+                      <div className="admin-cell-title">
+                        <div className="admin-avatar">{usuario.nombre[0].toUpperCase()}</div>
+                        {`${usuario.nombre} ${usuario.apellido}`}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="admin-cell-subtitle">{usuario.email}</div>
+                    </td>
+                    <td>
+                      <span className={`status-badge ${usuario.esta_activo ? 'status-activo' : 'status-inactivo'}`}>
+                        {usuario.esta_activo ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="admin-cell-text">
+                        {new Date(usuario.fecha_creacion).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                      </div>
+                    </td>
+                    <td>
+                      <div className="admin-actions-container">
+                        <button 
+                          className="btn-action btn-editar" 
+                          title="Editar"
+                          onClick={() => editAdmin(usuario.id_usuario)}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                          </svg>
+                        </button>
+                        
+                        {usuario.esta_activo && (
+                          <button 
+                            className="btn-action btn-eliminar" 
+                            title="Desactivar"
+                            onClick={() => desactivarAdmin(usuario.id_usuario)}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Paginación */}
+            {totalPages > 1 && (
+              <div className="admin-pagination-container">
+                <div className="admin-pagination-info">
+                  Mostrando {startIndex + 1} a {Math.min(endIndex, usuarios.length)} de {usuarios.length} administradores
+                </div>
+                
+                <div className="admin-pagination-controls">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="btn-pagination"
+                  >
+                    Anterior
+                  </button>
+                  
+                  <div className="admin-pagination-numbers">
+                    {[...Array(totalPages)].map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentPage(i + 1)}
+                        className={`btn-pagination ${currentPage === i + 1 ? 'active' : ''}`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                  </div>
+                  
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="btn-pagination"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
