@@ -12,7 +12,7 @@ services:
     environment:
       - NODE_ENV=development
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-    command: npm run dev:local
+    command: npm run dev
     restart: unless-stopped
 
   backend:
@@ -24,7 +24,11 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
-      - ./.env:/app/.env  # Montar el archivo .env de la raíz
+      #- ./.env:/app/.env  # Montar el archivo .env de la raíz
+    
+    env_file: 
+      - .env
+
     environment:
       # Variables para el BFF Node.js
       - NODE_ENV=${NODE_ENV:-development}
