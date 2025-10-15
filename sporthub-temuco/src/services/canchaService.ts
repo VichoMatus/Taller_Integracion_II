@@ -5,7 +5,13 @@
  */
 
 import { apiBackend } from '../config/backend';
-import { CreateCanchaInput, UpdateCanchaInput } from '../types/cancha';
+import { 
+  CreateCanchaInput, 
+  UpdateCanchaInput, 
+  FotoCancha, 
+  AddFotoInput,
+  CanchaBackendResponse 
+} from '../types/cancha';
 
 export const canchaService = {
   /**
@@ -72,6 +78,42 @@ export const canchaService = {
       return response.data;
     } catch (error: any) {
       throw new Error('Error al eliminar la cancha: ' + (error.response?.data?.message || error.message));
+    }
+  },
+
+  /**
+   * Obtener fotos de una cancha
+   */
+  async getFotosCancha(id: number): Promise<FotoCancha[]> {
+    try {
+      const response = await apiBackend.get(`/api/canchas/${id}/fotos`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error('Error al obtener las fotos: ' + (error.response?.data?.message || error.message));
+    }
+  },
+
+  /**
+   * Agregar foto a una cancha
+   */
+  async addFotoCancha(id: number, fotoData: AddFotoInput): Promise<FotoCancha> {
+    try {
+      const response = await apiBackend.post(`/api/canchas/${id}/fotos`, fotoData);
+      return response.data;
+    } catch (error: any) {
+      throw new Error('Error al agregar la foto: ' + (error.response?.data?.message || error.message));
+    }
+  },
+
+  /**
+   * Eliminar foto de una cancha
+   */
+  async deleteFotoCancha(canchaId: number, mediaId: number): Promise<void> {
+    try {
+      const response = await apiBackend.delete(`/api/canchas/${canchaId}/fotos/${mediaId}`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error('Error al eliminar la foto: ' + (error.response?.data?.message || error.message));
     }
   }
 };

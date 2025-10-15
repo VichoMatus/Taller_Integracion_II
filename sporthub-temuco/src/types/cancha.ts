@@ -54,3 +54,35 @@ export interface UpdateCanchaInput {
   activa?: boolean;
   imagenUrl?: string;
 }
+
+// Tipos para gestión de fotos de canchas
+export interface FotoCancha {
+  id: number;
+  url: string;
+  nombre?: string;
+  descripcion?: string;
+  fechaSubida: string;
+  canchaId: number;
+}
+
+export interface AddFotoInput {
+  url?: string;
+  file?: File;
+  nombre?: string;
+  descripcion?: string;
+}
+
+// Respuesta del backend (basado en los datos reales)
+export interface CanchaBackendResponse {
+  id_cancha: number;
+  id_complejo: number;
+  nombre: string;
+  deporte: string;
+  cubierta: boolean;
+  activo: boolean;
+  precio_desde: number;
+  rating_promedio: number;
+  total_reviews: number;
+  disponible_hoy: boolean;
+  foto_principal?: string;
+}
