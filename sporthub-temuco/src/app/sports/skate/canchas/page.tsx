@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
 import { useRouter } from 'next/navigation';
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
@@ -51,6 +52,7 @@ const canchas = [
 
 export default function Page() {
   const router = useRouter();
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCanchas, setFilteredCanchas] = useState(canchas);
 
@@ -63,6 +65,28 @@ export default function Page() {
   const handleBackToSkate = () => router.push('/sports/skate');
 
   const availableNow = filteredCanchas.filter(c => c.nextAvailable !== "No disponible hoy" && !c.nextAvailable.includes("Mañana")).length;
+
+  const handleUserButtonClick = () => {
+
+
+    if (isAuthenticated) {
+
+
+      router.push('/usuario/EditarPerfil');
+
+
+    } else {
+
+
+      router.push('/login');
+
+
+    }
+
+
+  };
+
+
 
   return (
     <div className={styles.pageContainer}>

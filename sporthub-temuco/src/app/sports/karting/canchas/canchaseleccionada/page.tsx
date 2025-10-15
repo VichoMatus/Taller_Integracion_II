@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Sidebar from '../../../../../components/layout/Sidebar';
 import styles from './canchaseleccionada.module.css';
 
+import { useAuthStatus } from '@/hooks/useAuthStatus';
 // Datos mock de la pista específica
 const trackData = {
   id: 1,
@@ -82,6 +83,7 @@ const availableSlots = [
 
 export default function CanchaSeleccionadaPage() {
   const router = useRouter();
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
@@ -123,6 +125,8 @@ export default function CanchaSeleccionadaPage() {
   const handleWriteReview = () => {
     alert('Función de escribir reseña próximamente...');
   };
+
+  
 
   return (
     <div className={styles.pageContainer}>

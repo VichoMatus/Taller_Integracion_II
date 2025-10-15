@@ -6,6 +6,7 @@ import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import StatsCard from '../../../components/charts/StatsCard';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
 import styles from './page.module.css';
 
 // Datos de ejemplo para las canchas mejor calificadas (6 tarjetas)
@@ -105,6 +106,7 @@ const basketballStats = [
 ];
 
 export default function BasquetbolPage() {
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
@@ -171,6 +173,14 @@ export default function BasquetbolPage() {
     alert('¿Necesitas ayuda con reservas de basquetbol? Contáctanos al (45) 555-0000 o envía un email a basquet@sporthub.cl');
   };
 
+  const handleUserButtonClick = () => {
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
+  };
+
   if (!isClient) {
     return (
       <div className={styles.pageContainer}>
@@ -202,9 +212,13 @@ export default function BasquetbolPage() {
               placeholder="Nombre de la cancha..."
               sport="basquetbol" 
             />
-            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
+            <button 
+              className={styles.userButton} 
+              onClick={handleUserButtonClick}
+              disabled={buttonProps.disabled}
+            >
               <span>👤</span>
-              <span>usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>

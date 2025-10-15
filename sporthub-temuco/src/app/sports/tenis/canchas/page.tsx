@@ -5,6 +5,7 @@ import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
 
 
 const canchas = [
@@ -72,6 +73,7 @@ const canchas = [
 
 export default function Page() {
   const router = useRouter();
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCanchas, setFilteredCanchas] = useState(canchas);
   const [modalOpen, setModalOpen] = useState(false);
@@ -94,6 +96,14 @@ export default function Page() {
 
   const handleBackToTenis = () => {
     router.push('/sports/tenis');
+  };
+
+  const handleUserButtonClick = () => {
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
   };
 
   const availableNow = filteredCanchas.filter(cancha => 
@@ -122,9 +132,13 @@ export default function Page() {
               placeholder="Nombre de la cancha de tenis"
               sport="tenis" 
             />
-            <button className={styles.userButton}>
+            <button 
+              {...buttonProps}
+              onClick={handleUserButtonClick}
+              className={styles.userButton}
+            >
               <span>👤</span>
-              <span>Usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>

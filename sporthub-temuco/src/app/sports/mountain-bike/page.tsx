@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStatus } from '../../../hooks/useAuthStatus';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
@@ -74,6 +75,7 @@ const mountainBikeStats = [
 ];
 
 export default function MountainBikePage() {
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
@@ -132,10 +134,17 @@ export default function MountainBikePage() {
   };
 
   const handleRutaClick = (court: any) => {
-    console.log('Test navigation...');
+    console.log('Navegando a ruta...');
     router.push('/sports/mountain-bike/rutas/rutaseleccionada');
   };
 
+  const handleUserButtonClick = () => {
+    if (!buttonProps.disabled) {
+      router.push(buttonProps.href);
+    }
+  };
+
+  // 🔥 SOLO UNA declaración de isClient check
   if (!isClient) {
     return (
       <div className={styles.pageContainer}>
@@ -167,9 +176,13 @@ export default function MountainBikePage() {
               placeholder="Nombre de la ruta..."
               sport="mountain-bike" 
             />
-            <button className={styles.userButton}>
+            <button 
+              className={styles.userButton}
+              onClick={handleUserButtonClick}
+              disabled={buttonProps.disabled}
+            >
               <span>👤</span>
-              <span>usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>

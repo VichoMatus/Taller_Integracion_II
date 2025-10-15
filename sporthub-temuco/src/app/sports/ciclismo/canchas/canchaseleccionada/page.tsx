@@ -5,8 +5,10 @@ import Sidebar from '../../../../../components/layout/Sidebar';
 import SearchBar from '../../../../../components/SearchBar';
 import styles from './page.module.css';
 
+import { useAuthStatus } from '@/hooks/useAuthStatus';
 export default function CanchaSeleccionadaPage() {
   const router = useRouter();
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [duration, setDuration] = useState('1');
@@ -113,6 +115,8 @@ export default function CanchaSeleccionadaPage() {
   const handleWriteReview = () => {
     alert('Función de escribir reseña próximamente...');
   };
+
+  
 
   return (
     <div className={styles.pageContainer}>

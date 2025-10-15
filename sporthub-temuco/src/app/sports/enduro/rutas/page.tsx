@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
 import { useRouter } from 'next/navigation';
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
@@ -51,6 +52,7 @@ const rutas = [
 
 export default function Page() {
   const router = useRouter();
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredRutas, setFilteredRutas] = useState(rutas);
   const [modalOpen, setModalOpen] = useState(false);
@@ -80,6 +82,28 @@ export default function Page() {
     ruta.nextAvailable.includes("Hoy")
   ).length;
 
+  const handleUserButtonClick = () => {
+
+
+    if (isAuthenticated) {
+
+
+      router.push('/usuario/EditarPerfil');
+
+
+    } else {
+
+
+      router.push('/login');
+
+
+    }
+
+
+  };
+
+
+
   return (
     <div className={styles.pageContainer}>
       <Sidebar userRole="usuario" sport="enduro" />
@@ -98,9 +122,13 @@ export default function Page() {
               placeholder="Nombre de la ruta o ubicación..."
               sport="enduro" 
             />
-            <button className={styles.userButton}>
+            <button 
+              {...buttonProps}
+              onClick={handleUserButtonClick}
+              className={styles.userButton}
+            >
               <span>👤</span>
-              <span>usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>

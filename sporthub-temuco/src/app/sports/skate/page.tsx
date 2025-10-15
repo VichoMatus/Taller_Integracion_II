@@ -1,13 +1,13 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStatus } from '../../../hooks/useAuthStatus';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import styles from './page.module.css';
 import StatsCard from '../../../components/charts/StatsCard';
-
 
 const topRatedCourts = [
   {
@@ -53,6 +53,7 @@ const topRatedCourts = [
 ];
 
 export default function SkatePage() {
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
@@ -99,6 +100,12 @@ export default function SkatePage() {
   const handleSearch = () => console.log('Buscando:', searchTerm);
   const handleLocationSearch = () => console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
 
+  const handleUserButtonClick = () => {
+    if (!buttonProps.disabled) {
+      router.push(buttonProps.href);
+    }
+  };
+
   if (!isClient) {
     return (
       <div className={styles.pageContainer}>
@@ -112,7 +119,7 @@ export default function SkatePage() {
     );
   }
 
-    return (
+  return (
     <div className={styles.pageContainer}>
       <Sidebar userRole="usuario" sport="skate" />
       <div className={styles.mainContent}>
@@ -131,9 +138,13 @@ export default function SkatePage() {
               placeholder="Nombre del skatepark o ubicación..."
               sport="skate"
             />
-            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
+            <button 
+              className={styles.userButton} 
+              onClick={handleUserButtonClick}
+              disabled={buttonProps.disabled}
+            >
               <span>👤</span>
-              <span>usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>
@@ -222,7 +233,7 @@ export default function SkatePage() {
 
         <div className={styles.mapSection}>
           <h2 className={styles.sectionTitle}>Ubicación en el mapa de los skateparks</h2>
-            <div className={styles.locationSearch}>
+          <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>
               <span className={styles.locationIcon}>📍</span>
               <input type="text" placeholder="Dirección, barrio o ciudad" value={locationSearch} onChange={(e) => setLocationSearch(e.target.value)} className={styles.locationInput} />
@@ -240,10 +251,11 @@ export default function SkatePage() {
           </div>
 
           <LocationMap sport="skate" latitude={-38.7359} longitude={-72.5904} address="Temuco, Chile" zoom={13} height="400px" />
-          <div className={styles.mapActions}><button className={styles.helpButton}>❓ Ayuda</button></div>
+          <div className={styles.mapActions}>
+            <button className={styles.helpButton}>❓ Ayuda</button>
+          </div>
         </div>
       </div>
     </div>
   );
 }
-

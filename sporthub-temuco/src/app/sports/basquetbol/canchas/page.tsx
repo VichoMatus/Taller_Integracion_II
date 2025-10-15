@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStatus } from '../../../../hooks/useAuthStatus';
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
 import Sidebar from '../../../../components/layout/Sidebar';
@@ -50,6 +51,7 @@ const canchas = [
 ];
 
 export default function Page() {
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCanchas, setFilteredCanchas] = useState(canchas);
@@ -79,6 +81,14 @@ export default function Page() {
     !cancha.nextAvailable.includes("Mañana")
   ).length;
 
+  const handleUserButtonClick = () => {
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
+  };
+
   return (
     <div className={styles.pageContainer}>
       {/* 🔥 Reemplazar placeholder con Sidebar real */}
@@ -100,9 +110,13 @@ export default function Page() {
             placeholder="Nombre de la cancha"
             sport="basquetbol" 
             />
-            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
+            <button 
+              {...buttonProps}
+              onClick={handleUserButtonClick}
+              className={styles.userButton}
+            >
               <span>👤</span>
-              <span>Usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStatus } from '../../../hooks/useAuthStatus';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
@@ -62,6 +63,7 @@ const stats = {
 };
 
 export default function CiclismoPage() {
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
@@ -131,8 +133,12 @@ export default function CiclismoPage() {
   }, [locationSearch, radiusKm]);
 
   const handleUserClick = useCallback(() => {
-    router.push('/usuario/perfil');
-  }, [router]);
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
+  }, [router, isAuthenticated]);
 
   return (
     <div className={styles.pageContainer}>
@@ -154,9 +160,13 @@ export default function CiclismoPage() {
               placeholder="Nombre de la ruta o ubicación..."
               sport="ciclismo"
             />
-            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
+            <button 
+              className={styles.userButton} 
+              onClick={handleUserClick}
+              disabled={buttonProps.disabled}
+            >
               <span>👤</span>
-              <span>usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>

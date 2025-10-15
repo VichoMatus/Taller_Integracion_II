@@ -6,6 +6,7 @@ import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import StatsCard from '../../../components/charts/StatsCard';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
 import styles from './page.module.css';
 
 // Datos de ejemplo para las canchas mejor calificadas (6 tarjetas)
@@ -113,6 +114,9 @@ export default function FutbolPage() {
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
+  // 🔥 Hook de autenticación
+  const { buttonProps } = useAuthStatus();
+
   useEffect(() => {
     setIsClient(true);
     
@@ -167,6 +171,13 @@ export default function FutbolPage() {
     router.push('/sports/futbol/canchas/canchaseleccionada');
   };
 
+  // 🔥 Manejador del botón de usuario
+  const handleUserButtonClick = () => {
+    if (!buttonProps.disabled) {
+      router.push(buttonProps.href);
+    }
+  };
+
   if (!isClient) {
     return (
       <div className={styles.pageContainer}>
@@ -198,9 +209,13 @@ export default function FutbolPage() {
               placeholder="Nombre de la cancha..."
               sport="futbol" 
             />
-            <button className={styles.userButton}>
+            <button 
+              className={styles.userButton}
+              onClick={handleUserButtonClick}
+              disabled={buttonProps.disabled}
+            >
               <span>👤</span>
-              <span>usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>
