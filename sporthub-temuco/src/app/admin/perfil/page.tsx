@@ -1,10 +1,27 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './perfiladmin.css';
 import AdminLayout from '@/components/layout/AdminsLayout';
+import { authService } from '@/services/authService';
+import { useRouter } from 'next/navigation';
+
+interface UserProfile {
+  id_usuario: number;
+  nombre: string;
+  apellido: string;
+  email: string;
+  telefono?: string;
+  avatar_url?: string;
+  rol: string;
+}
 
 export default function PerfilAdministrador() {
+  const [userData, setUserData] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
   const horasPorDia = [
     { dia: 'Lunes', horas: 6 },
     { dia: 'Martes', horas: 7 },
@@ -16,17 +33,112 @@ export default function PerfilAdministrador() {
   ];
 
   const [hoveredDia, setHoveredDia] = useState<string | null>(null);
-  
-  // Simulamos que no hay imagen para mostrar el avatar con inicial
-  const userImage = null;
-  const userName = "Administrador";
-  
+
+  useEffect(() => {
+    // Debug: Ver qué hay en localStorage
+    console.log('=== DEBUG AUTH ===');
+    console.log('Token en localStorage:', localStorage.getItem('token'));
+    console.log('Access token en localStorage:', localStorage.getItem('access_token'));
+    console.log('Refresh token en localStorage:', localStorage.getItem('refresh_token'));
+    console.log('¿Está autenticado según authService?:', authService.isAuthenticated());
+    console.log('Token obtenido con getToken():', authService.getToken());
+    console.log('==================');
+
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        
+        // PRIMERO: Verificar si hay autenticación
+        if (!authService.isAuthenticated()) {
+          console.log('❌ No hay usuario autenticado, redirigiendo al login...');
+          router.push('/login');
+          return;
+        }
+
+        console.log('✅ Usuario autenticado, obteniendo datos...');
+
+        // SEGUNDO: Obtener datos del usuario
+        const userData = await authService.me() as UserProfile;
+        console.log('📊 Datos del usuario obtenidos:', userData);
+        
+        // TERCERO: Verificar que el usuario sea admin
+        if (userData.rol !== 'admin') {
+          console.log('🚫 Usuario no es admin, rol actual:', userData.rol);
+          router.push('/acceso-denegado');
+          return;
+        }
+
+        console.log('✅ Usuario es admin, mostrando datos...');
+        setUserData(userData);
+        
+      } catch (err: any) {
+        console.error('❌ Error fetching user data:', err);
+        console.error('Mensaje de error:', err.message);
+        console.error('Stack trace:', err.stack);
+        
+        // Si hay error, probablemente el token es inválido
+        authService.clearSession();
+        setError('Sesión expirada. Por favor, inicia sesión nuevamente.');
+        
+        // Redirigir al login después de un tiempo
+        setTimeout(() => {
+          router.push('/login');
+        }, 3000);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [router]);
+
   const getInitial = (name: string) => {
     return name.charAt(0).toUpperCase();
   };
 
+  if (loading) {
+    return (
+      <AdminLayout userRole="admin" userName="Admin" notificationCount={3}>
+        <div className="admin-container">
+          <div className="loading-message">
+            <div>Verificando autenticación...</div>
+            <div style={{ fontSize: '12px', marginTop: '10px', color: '#666' }}>
+              Revisa la consola del navegador para ver el debug
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout userRole="admin" userName="Admin" notificationCount={3}>
+        <div className="admin-container">
+          <div className="error-message">
+            {error}
+            <div style={{ fontSize: '12px', marginTop: '10px' }}>
+              Redirigiendo al login...
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  // Datos del usuario desde la API
+  const userName = userData ? `${userData.nombre} ${userData.apellido}`.trim() : "Administrador";
+  const userEmail = userData?.email || "Admin@gmail.com";
+  const userPhone = userData?.telefono || "No especificado";
+  const userRole = userData?.rol || "admin";
+  const userImage = userData?.avatar_url || null;
+
   return (
-    <AdminLayout userRole="admin" userName="Admin" notificationCount={3}>
+    <AdminLayout 
+      userRole={ "admin"} 
+      userName={userData?.nombre || "Admin"} 
+      notificationCount={3}
+    >
       <div className="admin-container">
         
         {/* Panel Izquierdo - Perfil */}
@@ -47,26 +159,27 @@ export default function PerfilAdministrador() {
           </div>
 
           <h2 className="profile-name">{userName}</h2>
+          <div className="profile-role">{userRole.toUpperCase()}</div>
 
           <div className="profile-details">
             <div className="detail-item">
               <div className="detail-content">
                 <span className="detail-label">Teléfono</span>
-                <span className="detail-value">+569 12098456</span>
+                <span className="detail-value">{userPhone}</span>
               </div>
             </div>
             
             <div className="detail-item">
               <div className="detail-content">
                 <span className="detail-label">Correo</span>
-                <span className="detail-value">Admin@gmail.com</span>
+                <span className="detail-value">{userEmail}</span>
               </div>
             </div>
             
             <div className="detail-item">
               <div className="detail-content">
-                <span className="detail-label">Edad</span>
-                <span className="detail-value">41 años</span>
+                <span className="detail-label">ID Usuario</span>
+                <span className="detail-value">#{userData?.id_usuario}</span>
               </div>
             </div>
             
@@ -87,7 +200,9 @@ export default function PerfilAdministrador() {
         <div className="content-panel">
           <div className="dashboard-header">
             <h1 className="dashboard-title">Panel del Administrador</h1>
-            <p className="dashboard-subtitle">Bienvenido de vuelta, aquí tienes tu resumen semanal</p>
+            <p className="dashboard-subtitle">
+              Bienvenido de vuelta, {userData?.nombre || 'Administrador'}. Aquí tienes tu resumen semanal
+            </p>
           </div>
 
           <div className="chart-container">
