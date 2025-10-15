@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/services/authService';
+import { ForgotPasswordRequest } from '@/types/auth';
 import '../../Login.css';
 
 export default function ForgotPasswordPage() {
@@ -29,18 +30,41 @@ export default function ForgotPasswordPage() {
 
         setIsLoading(true);
         setError('');
+        setSuccess(false);
 
         try {
+            console.log('Enviando solicitud de recuperación para:', email.trim());
             await authService.forgotPassword({
                 email: email.trim()
             });
+            console.log('✅ Solicitud enviada exitosamente');
 
-            // Éxito - redirigir a la página de verificación con el email
-            router.push(`/login/verificar?email=${encodeURIComponent(email)}&type=password`);
+            // Éxito - mostrar mensaje y limpiar formulario
+            setSuccess(true);
+            setEmail('');
             
         } catch (err: any) {
             console.error('Error en recuperación de contraseña:', err);
-            setError(err.message || 'Error al procesar la solicitud. Intenta nuevamente.');
+            
+            let errorMessage = 'Error al procesar la solicitud. Intenta nuevamente.';
+            
+            // Extraer mensaje de error más específico
+            if (err.response?.data?.error) {
+                errorMessage = err.response.data.error;
+            } else if (err.response?.data?.message) {
+                errorMessage = err.response.data.message;
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            
+            // Mensajes más amigables para errores comunes
+            if (errorMessage.includes('User not found') || errorMessage.includes('usuario no encontrado')) {
+                errorMessage = 'No se encontró una cuenta con este email.';
+            } else if (errorMessage.includes('Network Error') || errorMessage.includes('timeout')) {
+                errorMessage = 'Error de conexión. Verifica tu conexión a internet.';
+            }
+            
+            setError(errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -73,6 +97,19 @@ export default function ForgotPasswordPage() {
                                 marginBottom: '1rem' 
                             }}>
                                 {error}
+                            </div>
+                        )}
+
+                        {success && (
+                            <div style={{ 
+                                backgroundColor: '#dcfce7', 
+                                border: '1px solid #bbf7d0', 
+                                color: '#16a34a', 
+                                padding: '0.75rem', 
+                                borderRadius: '0.5rem', 
+                                marginBottom: '1rem' 
+                            }}>
+                                ✅ Se ha enviado un enlace de recuperación a tu email. Revisa también la carpeta de spam.
                             </div>
                         )}
 
