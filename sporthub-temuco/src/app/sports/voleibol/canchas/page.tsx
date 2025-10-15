@@ -1,16 +1,10 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStatus } from '..            <button 
-              className={styles.userButton}
-              onClick={handleUserButtonClick}
-              disabled={buttonProps.disabled}
-            >
-              <span>👤</span>
-              <span>{buttonProps.text}</span>
-            </button>../../hooks/useAuthStatus';
+import { useAuthStatus } from '../../../../hooks/useAuthStatus';
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
+import LocationMap from '../../../../components/LocationMap';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
 

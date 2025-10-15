@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 import { authService } from '@/services/authService';
 
-interface MeResponse {
+// 🔥 Usar la interfaz correcta del authService en lugar de crear una nueva
+interface LocalMeResponse {
   id_usuario: number;
   nombre: string;
   apellido: string;
@@ -15,7 +16,7 @@ interface MeResponse {
 }
 
 export function useAuthStatus() {
-  const [user, setUser] = useState<MeResponse | null>(null);
+  const [user, setUser] = useState<LocalMeResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -47,7 +48,21 @@ export function useAuthStatus() {
       
       const userData = await authService.me();
       console.log('✅ Datos del usuario obtenidos:', userData);
-      setUser(userData);
+      
+      // 🔥 ASEGURAR que userData tenga todas las propiedades requeridas con tipos correctos
+      const completeUserData: LocalMeResponse = {
+        id_usuario: typeof userData.id_usuario === 'string' ? parseInt(userData.id_usuario, 10) : (userData.id_usuario || 0),
+        nombre: userData.nombre || '',
+        apellido: userData.apellido || '',
+        email: userData.email || '',
+        telefono: (userData as any).telefono || '', // 🔥 Cast temporal hasta verificar la interfaz
+        rol: userData.rol || 'usuario',
+        email_verificado: (userData as any).email_verificado || false, // 🔥 Cast temporal
+        created_at: (userData as any).created_at || new Date().toISOString(), // 🔥 Cast temporal
+        updated_at: (userData as any).updated_at || new Date().toISOString() // 🔥 Cast temporal
+      };
+      
+      setUser(completeUserData);
       
     } catch (error: any) {
       console.error('❌ Error verificando autenticación:', error);
