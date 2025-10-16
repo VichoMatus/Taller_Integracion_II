@@ -6,7 +6,7 @@ import '@/app/admin/dashboard.css';
 import { usuariosService } from '@/services/usuariosService';
 import { Usuario } from '@/types/usuarios';
 
-import { useAuthProtection } from '@/hooks/useAuthProtection';
+//import { useAuthProtection } from '@/hooks/useAuthProtection';
 
 export default function AdministradoresPage() {
   const router = useRouter();
@@ -17,9 +17,19 @@ export default function AdministradoresPage() {
   const [error, setError] = useState('');
   const itemsPerPage = 4;
   const [isAuthed, setIsAuthed] = useState(false);
+  
+  // 🔥 AGREGAR VERIFICACIÓN DE CLIENTE
+  const [mounted, setMounted] = useState(false);
 
-  // Verificar la autenticación primero
+  // 🔥 PRIMER useEffect: Solo marcar como montado
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 🔥 SEGUNDO useEffect: Verificar autenticación solo cuando esté montado
+  useEffect(() => {
+    if (!mounted) return; // No ejecutar hasta que esté montado
+
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem('access_token') || localStorage.getItem('token');
@@ -45,13 +55,15 @@ export default function AdministradoresPage() {
     };
 
     checkAuth();
-  }, [router]);
+  }, [router, mounted]); // 🔥 Agregar mounted como dependencia
 
   // Estado para almacenar todos los usuarios sin filtrar
   const [todosUsuarios, setTodosUsuarios] = useState<Usuario[]>([]);
 
   // Función para cargar usuarios
   const cargarUsuarios = async () => {
+    if (!mounted) return; // 🔥 No ejecutar si no está montado
+    
     setIsLoading(true);
     setError('');
     
@@ -103,12 +115,12 @@ export default function AdministradoresPage() {
     setUsuarios(usuariosFiltrados);
   };
 
-  // Cargar usuarios solo cuando la autenticación esté confirmada
+  // Cargar usuarios solo cuando la autenticación esté confirmada Y esté montado
   useEffect(() => {
-    if (isAuthed) {
+    if (isAuthed && mounted) {
       cargarUsuarios();
     }
-  }, [isAuthed]);
+  }, [isAuthed, mounted]); // 🔥 Agregar mounted como dependencia
 
   // Filtrar usuarios cuando cambie el término de búsqueda o la lista completa
   useEffect(() => {
@@ -137,6 +149,17 @@ export default function AdministradoresPage() {
   const endIndex = startIndex + itemsPerPage;
   const paginatedUsers = usuarios.slice(startIndex, endIndex);
   const totalPages = Math.ceil(usuarios.length / itemsPerPage);
+
+  // 🔥 MOSTRAR LOADING HASTA QUE ESTÉ MONTADO
+  if (!mounted) {
+    return (
+      <div className="admin-dashboard-container">
+        <div className="text-center p-8">
+          <p>Cargando panel de administradores...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthed) {
     return (

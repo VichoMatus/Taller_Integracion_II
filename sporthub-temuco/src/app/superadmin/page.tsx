@@ -1,8 +1,31 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import "./dashboard.css";
 
 export default function SuperAdminDashboard() {
+  // 🔥 AGREGAR VERIFICACIÓN DE CLIENTE
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 🔥 MOSTRAR LOADING HASTA QUE ESTÉ MONTADO EN EL CLIENTE
+  if (!mounted) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center', 
+        height: '100vh',
+        fontSize: '18px'
+      }}>
+        Cargando panel de administración...
+      </div>
+    );
+  }
+
   return (
     <div className="admin-dashboard-container">
       
