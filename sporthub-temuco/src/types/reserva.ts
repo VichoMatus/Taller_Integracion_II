@@ -68,3 +68,43 @@ export interface UpdateReservaInput {
   fechaInicio?: string; // ISO string
   fechaFin?: string;   // ISO string
 }
+
+// Tipos para cotización de reservas
+export interface CotizacionInput {
+  canchaId: number;
+  fechaInicio: string;
+  fechaFin: string;
+}
+
+export interface CotizacionResponse {
+  precioBase: number;
+  descuentos: number;
+  impuestos: number;
+  total: number;
+  disponible: boolean;
+  mensaje?: string;
+  holdId?: string; // Para mantener temporal la reserva
+}
+
+// Tipos para acciones específicas de reserva
+export interface ConfirmarReservaResponse {
+  id: number;
+  estado: EstadoReserva;
+  codigoConfirmacion: string;
+  mensaje: string;
+}
+
+export interface CheckInResponse {
+  id: number;
+  estado: EstadoReserva;
+  horaCheckIn: string;
+  mensaje: string;
+}
+
+export interface NoShowResponse {
+  id: number;
+  estado: EstadoReserva;
+  horaNoShow: string;
+  penalizacion?: number;
+  mensaje: string;
+}
