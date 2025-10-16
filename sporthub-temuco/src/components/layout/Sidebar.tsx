@@ -218,7 +218,7 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
     {
       name: 'Reservas',
       icon: '📅',
-      href: '/reservas',
+      href: '/usuario/reservas',
       active: pathname === '/reservas'
     },
     {

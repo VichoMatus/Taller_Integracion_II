@@ -4,6 +4,7 @@ import './seguridad.css';
 import React, { useState } from 'react';
 import { Input, Button } from '../componentes/compUser';
 import UserLayout from '../UsuarioLayout';
+import authService from '@/services/authService';
 
 export default function SeguridadPage() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -11,19 +12,40 @@ export default function SeguridadPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [allowEmails, setAllowEmails] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSuccess(null);
+    setError(null);
+
     if (newPassword !== confirmPassword) {
-      alert("Las contraseñas no coinciden.");
+      setError("Las contraseñas no coinciden.");
       return;
     }
     if (newPassword.length < 8) {
-      alert("La contraseña debe tener al menos 8 caracteres.");
+      setError("La contraseña debe tener al menos 8 caracteres.");
       return;
     }
-    console.log("Nueva contraseña guardada:", newPassword);
-    alert("Contraseña cambiada exitosamente");
+
+    try {
+      await authService.changePassword({
+        current_password: currentPassword,
+        new_password: newPassword,
+      });
+            setSuccess("Contraseña cambiada exitosamente");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordStrength(0);
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.detail ||
+        err?.message ||
+        "No se pudo cambiar la contraseña. Intente nuevamente."
+      );
+    }
   };
 
   const checkPasswordStrength = (password: string) => {
@@ -56,7 +78,6 @@ export default function SeguridadPage() {
       notificationCount={2}
     >
       <div className="seguridad-wrapper">
-        {/* Header de seguridad simplificado */}
         <div className="seguridad-header">
           <h1 className="seguridad-titulo">Seguridad de la Cuenta</h1>
           <p className="seguridad-subtitulo">Gestiona la seguridad de tu cuenta</p>
@@ -65,9 +86,7 @@ export default function SeguridadPage() {
         <div className="bloque-principal">
           <div className="contenedor-flex">
 
-            {/* Sección izquierda - Formulario y contacto */}
             <div className="seccion-izquierda">
-              {/* Tarjeta de cambio de contraseña */}
               <div className="security-card">
                 <h2 className="titulo-seccion">Cambiar Contraseña</h2>
                 
@@ -75,6 +94,9 @@ export default function SeguridadPage() {
                   <p className="texto-secundario">
                     Protege tu cuenta con una contraseña segura y única.
                   </p>
+
+                  {error && <div className="error-message">{error}</div>}
+                  {success && <div className="success-message">{success}</div>}
 
                   <div className="input-group">
                     <label>Contraseña Actual</label>
@@ -139,7 +161,6 @@ export default function SeguridadPage() {
                 </form>
               </div>
 
-              {/* Contactar administrador debajo del formulario */}
               <div className="security-card contact-admin">
                 <h2 className="titulo-seccion">¿Necesitas Ayuda?</h2>
                 <div className="contact-content">
@@ -153,16 +174,12 @@ export default function SeguridadPage() {
               </div>
             </div>
 
-            {/* Sección derecha - Actividad y notificaciones */}
             <div className="seccion-derecha">
-              {/* Actividad de seguridad */}
               <div className="security-card">
                 <h2 className="titulo-seccion">Actividad Reciente</h2>
-                
                 <p className="texto-secundario">
                   Registro de inicios de sesión en tu cuenta.
                 </p>
-
                 <div className="activity-log">
                   {seguridadLogs.map((log) => (
                     <div key={log.id} className="log-entry">
@@ -176,10 +193,8 @@ export default function SeguridadPage() {
                 </div>
               </div>
 
-              {/* Notificaciones por correo debajo de la actividad */}
               <div className="security-card">
                 <h2 className="titulo-seccion">Notificaciones por Correo</h2>
-                
                 <div className="email-preferences">
                   <div className="preference-item">
                     <div className="preference-info">
@@ -195,11 +210,9 @@ export default function SeguridadPage() {
                       <span className="toggle-slider"></span>
                     </label>
                   </div>
-                  
                   <p className="preference-note">
                     Recibirás correos importantes sobre la seguridad de tu cuenta.
                   </p>
-                  
                   <Button variant="secondary" className="btn-security-outline">
                     Guardar Preferencias
                   </Button>
