@@ -1,92 +1,116 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { canchaService } from '@/services/canchaService';
+import { Cancha, UpdateCanchaInput, TipoCancha, EstadoCancha } from '@/types/cancha';
 import '../../dashboard.css';
-
-interface Court {
-  id: string;
-  name: string;
-  location: string;
-  status: 'Activo' | 'Inactivo' | 'Por revisar';
-  lastAccess: string;
-  description: string;
-  capacity: number;
-  price: number;
-  amenities: string[];
-  contactInfo: string;
-  operatingHours: string;
-}
 
 export default function EditCourtPage() {
   const router = useRouter();
   const params = useParams();
   const courtId = params.id as string;
 
-  // Datos de ejemplo para la cancha
-  const getCourtData = (id: string): Court | null => {
-    const courtsData: { [key: string]: Court } = {
-      '1': {
-        id: '1',
-        name: 'Cancha Central',
-        location: 'Av. Principal 123',
-        status: 'Activo',
-        lastAccess: 'Hoy, 19:03',
-        description: 'Cancha principal de fútbol con césped sintético de última generación.',
-        capacity: 22,
-        price: 25000,
-        amenities: ['Césped sintético', 'Iluminación LED', 'Vestuarios'],
-        contactInfo: 'Administrador: Juan Pérez - Teléfono: +56 9 1234 5678',
-        operatingHours: 'Lunes a Domingo: 08:00 - 22:00'
-      },
-      '2': {
-        id: '2',
-        name: 'Cancha Norte',
-        location: 'Av. Norte 456',
-        status: 'Inactivo',
-        lastAccess: '28-08-2025',
-        description: 'Cancha de básquetbol techada con piso de madera.',
-        capacity: 10,
-        price: 18000,
-        amenities: ['Piso de madera', 'Canastas reglamentarias', 'Vestuarios'],
-        contactInfo: 'Administrador: María González - Teléfono: +56 9 8765 4321',
-        operatingHours: 'Lunes a Viernes: 09:00 - 21:00'
-      },
-      '3': {
-        id: '3',
-        name: 'Cancha Sur',
-        location: 'Av. Sur 789',
-        status: 'Por revisar',
-        lastAccess: 'Ayer, 16:45',
-        description: 'Cancha multiuso para tenis y pádel.',
-        capacity: 4,
-        price: 15000,
-        amenities: ['Superficie de arcilla', 'Red profesional', 'Iluminación'],
-        contactInfo: 'Administrador: Carlos Rodríguez - Teléfono: +56 9 5555 6666',
-        operatingHours: 'Lunes a Domingo: 07:00 - 20:00'
-      }
-    };
-    return courtsData[id] || null;
+  // Estados para el formulario
+  const [cancha, setCancha] = useState<Cancha | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Estados del formulario
+  const [formData, setFormData] = useState<UpdateCanchaInput>({
+    nombre: '',
+    tipo: 'futbol',
+    estado: 'disponible',
+    precioPorHora: 0,
+    descripcion: '',
+    capacidad: 0,
+    imagenUrl: ''
+  });
+
+  // Cargar datos de la cancha
+  useEffect(() => {
+    loadCanchaData();
+  }, [courtId]);
+
+  const loadCanchaData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await canchaService.getCanchaById(parseInt(courtId));
+      setCancha(data);
+      
+      // Llenar el formulario con los datos existentes
+      setFormData({
+        nombre: data.nombre,
+        tipo: data.tipo,
+        estado: data.estado,
+        precioPorHora: data.precioPorHora,
+        descripcion: data.descripcion || '',
+        capacidad: data.capacidad,
+        imagenUrl: data.imagenUrl || ''
+      });
+    } catch (err: any) {
+      console.error('Error cargando cancha:', err);
+      setError(err.message || 'Error al cargar los datos de la cancha');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const court = getCourtData(courtId);
+  // Manejar cambios en el formulario
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'number' ? parseFloat(value) || 0 : value
+    }));
+  };
 
-  const goBack = () => {
+  // Guardar cambios
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      setSaving(true);
+      setError(null);
+      
+      await canchaService.updateCancha(parseInt(courtId), formData);
+      
+      // Mostrar mensaje de éxito y redirigir
+      alert('Cancha actualizada exitosamente');
+      router.push('/admin/canchas');
+    } catch (err: any) {
+      console.error('Error guardando cancha:', err);
+      setError(err.message || 'Error al guardar los cambios');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Cancelar y volver
+  const handleCancel = () => {
     router.push('/admin/canchas');
   };
 
-  const handleSave = () => {
-    console.log('Guardando cambios para cancha:', courtId);
-    router.push('/admin/canchas');
-  };
-
-  if (!court) {
+  if (loading) {
     return (
-      <div className="admin-page-layout">
+      <div className="admin-dashboard-container">
+        <div className="loading-container">
+          <p>Cargando datos de la cancha...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !cancha) {
+    return (
+      <div className="admin-dashboard-container">
         <div className="error-container">
-          <h2>Cancha no encontrada</h2>
-          <p>No se pudo encontrar la información de la cancha solicitada.</p>
-          <button onClick={goBack} className="btn-volver">
+          <h2>Error</h2>
+          <p>{error}</p>
+          <button onClick={handleCancel} className="btn-secondary">
             Volver a Canchas
           </button>
         </div>
@@ -94,77 +118,132 @@ export default function EditCourtPage() {
     );
   }
 
+
+
   return (
     <div className="admin-page-layout">
       {/* Header */}
       <div className="admin-main-header">
         <div className="admin-header-nav">
-          <button onClick={goBack} className="btn-volver">
+          <button onClick={handleCancel} className="btn-volver">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Volver
           </button>
-          <h1 className="admin-page-title">Información de Cancha</h1>
+          <h1 className="admin-page-title">Editar Cancha</h1>
         </div>
         
         <div className="admin-header-buttons">
-          <button className="btn-guardar" onClick={handleSave}>
+          <button 
+            type="submit" 
+            form="edit-cancha-form"
+            className="btn-guardar" 
+            disabled={saving}
+          >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            Editar Cancha
+            {saving ? 'Guardando...' : 'Guardar Cambios'}
           </button>
         </div>
       </div>
 
-      {/* Contenido Principal */}
+      {/* Error Message */}
+      {error && (
+        <div className="error-container">
+          <p>{error}</p>
+        </div>
+      )}
+
+      {/* Formulario Principal */}
       <div className="edit-court-container">
-        <div className="edit-court-card">
+        <form id="edit-cancha-form" onSubmit={handleSave} className="edit-court-card">
           {/* Información Básica */}
           <div className="edit-section">
             <h3 className="edit-section-title">Información Básica</h3>
             <div className="edit-form-grid">
-              <div className="edit-info-item">
-                <span className="edit-info-label">Nombre:</span>
-                <span className="edit-info-value">{court.name}</span>
+              <div className="edit-form-group">
+                <label htmlFor="nombre" className="edit-form-label">Nombre:</label>
+                <input
+                  type="text"
+                  id="nombre"
+                  name="nombre"
+                  value={formData.nombre}
+                  onChange={handleInputChange}
+                  className="edit-form-input"
+                  required
+                />
               </div>
               
-              <div className="edit-info-item">
-                <span className="edit-info-label">Ubicación:</span>
-                <span className="edit-info-value">{court.location}</span>
+              <div className="edit-form-group">
+                <label htmlFor="tipo" className="edit-form-label">Tipo de Cancha:</label>
+                <select
+                  id="tipo"
+                  name="tipo"
+                  value={formData.tipo}
+                  onChange={handleInputChange}
+                  className="edit-form-select"
+                  required
+                >
+                  <option value="futbol">Fútbol</option>
+                  <option value="basquet">Básquet</option>
+                  <option value="tenis">Tenis</option>
+                  <option value="padel">Padel</option>
+                  <option value="volley">Volley</option>
+                </select>
               </div>
 
-              <div className="edit-info-item">
-                <span className="edit-info-label">Capacidad:</span>
-                <span className="edit-info-value">{court.capacity} personas</span>
+              <div className="edit-form-group">
+                <label htmlFor="capacidad" className="edit-form-label">Capacidad:</label>
+                <input
+                  type="number"
+                  id="capacidad"
+                  name="capacidad"
+                  value={formData.capacidad}
+                  onChange={handleInputChange}
+                  className="edit-form-input"
+                  min="1"
+                  required
+                />
               </div>
 
-              <div className="edit-info-item">
-                <span className="edit-info-label">Precio por hora:</span>
-                <span className="edit-info-value">${court.price.toLocaleString()}</span>
+              <div className="edit-form-group">
+                <label htmlFor="precioPorHora" className="edit-form-label">Precio por hora:</label>
+                <input
+                  type="number"
+                  id="precioPorHora"
+                  name="precioPorHora"
+                  value={formData.precioPorHora}
+                  onChange={handleInputChange}
+                  className="edit-form-input"
+                  min="0"
+                  step="0.01"
+                  required
+                />
               </div>
             </div>
           </div>
 
-          {/* Estado y Operación */}
+          {/* Estado */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Estado y Operación</h3>
+            <h3 className="edit-section-title">Estado</h3>
             <div className="edit-form-grid">
-              <div className="edit-info-item">
-                <span className="edit-info-label">Estado:</span>
-                <span className={`status-badge ${
-                  court.status === 'Activo' ? 'status-activo' :
-                  court.status === 'Inactivo' ? 'status-inactivo' :
-                  'status-por-revisar'
-                }`}>
-                  {court.status}
-                </span>
-              </div>
-
-              <div className="edit-info-item">
-                <span className="edit-info-label">Horarios de Operación:</span>
-                <span className="edit-info-value">{court.operatingHours}</span>
+              <div className="edit-form-group">
+                <label htmlFor="estado" className="edit-form-label">Estado:</label>
+                <select
+                  id="estado"
+                  name="estado"
+                  value={formData.estado}
+                  onChange={handleInputChange}
+                  className="edit-form-select"
+                  required
+                >
+                  <option value="disponible">Disponible</option>
+                  <option value="ocupada">Ocupada</option>
+                  <option value="mantenimiento">En Mantenimiento</option>
+                  <option value="inactiva">Inactiva</option>
+                </select>
               </div>
             </div>
           </div>
@@ -172,44 +251,64 @@ export default function EditCourtPage() {
           {/* Descripción */}
           <div className="edit-section">
             <h3 className="edit-section-title">Descripción</h3>
-            <div className="edit-info-item">
-              <p className="edit-description-text">{court.description}</p>
+            <div className="edit-form-group">
+              <label htmlFor="descripcion" className="edit-form-label">Descripción:</label>
+              <textarea
+                id="descripcion"
+                name="descripcion"
+                value={formData.descripcion}
+                onChange={handleInputChange}
+                className="edit-form-textarea"
+                rows={4}
+                placeholder="Descripción de la cancha..."
+              />
             </div>
           </div>
 
-          {/* Servicios y Comodidades */}
+          {/* Imagen */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Servicios y Comodidades</h3>
-            <div className="amenities-container">
-              {court.amenities.map((amenity: string, index: number) => (
-                <span key={index} className="amenity-tag-readonly">
-                  {amenity}
-                </span>
-              ))}
+            <h3 className="edit-section-title">Imagen</h3>
+            <div className="edit-form-group">
+              <label htmlFor="imagenUrl" className="edit-form-label">URL de la Imagen:</label>
+              <input
+                type="url"
+                id="imagenUrl"
+                name="imagenUrl"
+                value={formData.imagenUrl}
+                onChange={handleInputChange}
+                className="edit-form-input"
+                placeholder="https://ejemplo.com/imagen.jpg"
+              />
             </div>
           </div>
 
-          {/* Información de Contacto */}
-          <div className="edit-section">
-            <h3 className="edit-section-title">Información de Contacto</h3>
-            <div className="edit-info-item">
-              <p className="edit-contact-text">{court.contactInfo}</p>
+          {/* Información del Sistema */}
+          {cancha && (
+            <div className="edit-section">
+              <h3 className="edit-section-title">Información del Sistema</h3>
+              <div className="edit-form-grid">
+                <div className="edit-info-item">
+                  <span className="edit-info-label">ID:</span>
+                  <span className="edit-info-value">{cancha.id}</span>
+                </div>
+                <div className="edit-info-item">
+                  <span className="edit-info-label">Creado:</span>
+                  <span className="edit-info-value">
+                    {new Date(cancha.fechaCreacion).toLocaleDateString()}
+                  </span>
+                </div>
+                {cancha.fechaActualizacion && (
+                  <div className="edit-info-item">
+                    <span className="edit-info-label">Última actualización:</span>
+                    <span className="edit-info-value">
+                      {new Date(cancha.fechaActualizacion).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-
-          {/* Información de Acceso */}
-          <div className="edit-section">
-            <h3 className="edit-section-title">Información de Acceso</h3>
-            <div className="edit-info-item">
-              <span className="edit-info-label">Último acceso:</span>
-              <span className="edit-info-value">{court.lastAccess}</span>
-            </div>
-            <div className="edit-info-item">
-              <span className="edit-info-label">ID de la cancha:</span>
-              <span className="edit-info-value">{court.id}</span>
-            </div>
-          </div>
-        </div>
+          )}
+        </form>
       </div>
     </div>
   );

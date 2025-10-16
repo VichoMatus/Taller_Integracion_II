@@ -5,6 +5,7 @@ import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
 
 const rutas = [
   {
@@ -41,6 +42,7 @@ const rutas = [
 
 export default function Page() {
   const router = useRouter();
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredRutas, setFilteredRutas] = useState(rutas);
   const [modalOpen, setModalOpen] = useState(false);
@@ -62,6 +64,14 @@ export default function Page() {
 
   const handleBackToMountainBike = () => {
     router.push('/sports/mountain-bike');
+  };
+
+  const handleUserButtonClick = () => {
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
   };
 
   const availableNow = filteredRutas.filter(ruta => 
@@ -87,9 +97,13 @@ export default function Page() {
             placeholder="Nombre de la ruta"
             sport = "mountain-bike" 
             />
-            <button className={styles.userButton}>
+            <button 
+              {...buttonProps}
+              onClick={handleUserButtonClick}
+              className={styles.userButton}
+            >
               <span>👤</span>
-              <span>Usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>

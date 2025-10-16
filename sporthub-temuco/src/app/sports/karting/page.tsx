@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStatus } from '../../../hooks/useAuthStatus';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
@@ -43,6 +44,7 @@ const topRatedCourts = [
 ];
 
 export default function KartingPage() {
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
 
@@ -100,6 +102,14 @@ export default function KartingPage() {
   const handleSearch = () => console.log('Buscando:', searchTerm);
   const handleLocationSearch = () => console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
 
+  const handleUserButtonClick = () => {
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
+  };
+
   if (!isClient) {
     return (
       <div className={kartingCommon.pageContainer}>
@@ -131,9 +141,13 @@ export default function KartingPage() {
               placeholder="Nombre de la pista o ubicación..."
               sport="karting"
             />
-            <button className={kartingCommon.userButton} onClick={() => router.push('/usuario/perfil')}>
+            <button 
+              className={kartingCommon.userButton} 
+              onClick={handleUserButtonClick}
+              disabled={buttonProps.disabled}
+            >
               <span>👤</span>
-              <span>usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>

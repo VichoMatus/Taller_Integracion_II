@@ -5,6 +5,7 @@ import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
 
 const canchas = [
   {
@@ -71,6 +72,7 @@ const canchas = [
 
 export default function Page() {
   const router = useRouter();
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCanchas, setFilteredCanchas] = useState(canchas);
   const [modalOpen, setModalOpen] = useState(false);
@@ -100,6 +102,28 @@ export default function Page() {
     !cancha.nextAvailable.includes("Mañana")
   ).length;
 
+  const handleUserButtonClick = () => {
+
+
+    if (isAuthenticated) {
+
+
+      router.push('/usuario/EditarPerfil');
+
+
+    } else {
+
+
+      router.push('/login');
+
+
+    }
+
+
+  };
+
+
+
   return (
     <div className={styles.pageContainer}>
       {/* 🔥 Sidebar específico para patinaje */}
@@ -121,9 +145,13 @@ export default function Page() {
               placeholder="Nombre de la pista de patinaje"
               sport="patinaje" 
             />
-            <button className={styles.userButton}>
+            <button 
+              {...buttonProps}
+              onClick={handleUserButtonClick}
+              className={styles.userButton}
+            >
               <span>👤</span>
-              <span>Usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>

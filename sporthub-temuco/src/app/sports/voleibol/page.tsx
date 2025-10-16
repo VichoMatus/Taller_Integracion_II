@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStatus } from '../../../hooks/useAuthStatus';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import StatsCard from '../../../components/charts/StatsCard';
@@ -104,6 +105,7 @@ const volleyballStats = [
 ];
 
 export default function VoleibolPage() {
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCourts, setFilteredCourts] = useState(topRatedCourts);
   const router = useRouter();
@@ -171,6 +173,14 @@ export default function VoleibolPage() {
     console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
   };
 
+  const handleUserButtonClick = () => {
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
+  };
+
   if (!isClient) {
     return (
       <div className={styles.pageContainer}>
@@ -202,9 +212,13 @@ export default function VoleibolPage() {
               placeholder="Nombre de la cancha..."
               sport="voleibol" 
             />
-            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
+            <button 
+              className={styles.userButton} 
+              onClick={handleUserButtonClick}
+              disabled={buttonProps.disabled}
+            >
               <span>👤</span>
-              <span>usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>

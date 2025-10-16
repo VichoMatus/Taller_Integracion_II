@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStatus } from '../../../hooks/useAuthStatus';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
@@ -105,6 +106,7 @@ const climbingStats = [
 ];
 
 export default function EscaladaPage() {
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
@@ -167,6 +169,14 @@ export default function EscaladaPage() {
     router.push('/sports/escalada/centros/centroseleccionado');
   };
 
+  const handleUserButtonClick = () => {
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
+  };
+
   if (!isClient) {
     return (
       <div className={styles.pageContainer}>
@@ -198,9 +208,13 @@ export default function EscaladaPage() {
               placeholder="Nombre del centro o ruta..."
               sport="escalada" 
             />
-            <button className={styles.userButton}>
+            <button 
+              className={styles.userButton}
+              onClick={handleUserButtonClick}
+              disabled={buttonProps.disabled}
+            >
               <span>👤</span>
-              <span>usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>

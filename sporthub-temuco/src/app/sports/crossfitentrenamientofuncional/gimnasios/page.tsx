@@ -1,5 +1,6 @@
 'use client';
 import React, { useState } from 'react';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
 import { useRouter } from 'next/navigation';
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
@@ -91,6 +92,7 @@ const gimnasios = [
 
 export default function Page() {
   const router = useRouter();
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredGimnasios, setFilteredGimnasios] = useState(gimnasios);
   const [modalOpen, setModalOpen] = useState(false);
@@ -120,6 +122,28 @@ export default function Page() {
     !gimnasio.nextAvailable.includes("Mañana")
   ).length;
 
+  const handleUserButtonClick = () => {
+
+
+    if (isAuthenticated) {
+
+
+      router.push('/usuario/EditarPerfil');
+
+
+    } else {
+
+
+      router.push('/login');
+
+
+    }
+
+
+  };
+
+
+
   return (
     <div className={styles.pageContainer}>
       {/* 🔥 Sidebar específico para crossfit */}
@@ -141,9 +165,13 @@ export default function Page() {
               placeholder="Nombre del gimnasio"
               sport="crossfitentrenamientofuncional" 
             />
-            <button className={styles.userButton}>
+            <button 
+              {...buttonProps}
+              onClick={handleUserButtonClick}
+              className={styles.userButton}
+            >
               <span>👤</span>
-              <span>Usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>

@@ -23,6 +23,11 @@ export default function CanchasPage() {
     router.push(`/admin/canchas/${courtId}`);
   };
 
+  // Función para navegar a crear cancha
+  const createCourt = () => {
+    router.push('/admin/canchas/crear');
+  };
+
   // Datos de ejemplo basados en la imagen
   const courts: Court[] = [
     { id: '1', name: 'Cancha Central', location: 'Av. Principal 123', status: 'Activo', lastAccess: 'Hoy, 19:03' },
@@ -72,7 +77,7 @@ export default function CanchasPage() {
             Exportar informe
           </button>
           
-          <button className="export-button">
+          <button className="export-button" onClick={createCourt}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>

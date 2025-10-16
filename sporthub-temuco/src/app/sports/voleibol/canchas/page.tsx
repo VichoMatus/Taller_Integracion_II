@@ -1,8 +1,10 @@
 'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStatus } from '../../../../hooks/useAuthStatus';
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
+import LocationMap from '../../../../components/LocationMap';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
 
@@ -70,6 +72,7 @@ const canchas = [
 ];
 
 export default function Page() {
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCanchas, setFilteredCanchas] = useState(canchas);
@@ -100,6 +103,14 @@ export default function Page() {
     !cancha.nextAvailable.includes("Mañana")
   ).length;
 
+  const handleUserButtonClick = () => {
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
+  };
+
   return (
     <div className={styles.pageContainer}>
       {/* 🔥 Sidebar específico para voleibol */}
@@ -121,9 +132,13 @@ export default function Page() {
               placeholder="Nombre de la cancha de voleibol"
               sport="voleibol" 
             />
-            <button className={styles.userButton}>
+            <button 
+              {...buttonProps}
+              onClick={handleUserButtonClick}
+              className={styles.userButton}
+            >
               <span>👤</span>
-              <span>Usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>

@@ -10,18 +10,24 @@ import { fail } from "../../../interfaces/apiEnvelope";
  *
  * @example
  * ```typescript
- * router.get("/admin-only", requireRole("admin", "superadmin"), handler);
+ * router.get("/owner-only", requireRole("dueno", "admin"), handler);
  * ```
  */
 export const requireRole =
-  (...roles: Array<"admin" | "superadmin">) =>
+  (...roles: Array<"dueno" | "admin" | "superadmin">) =>
   (req: Request, res: Response, next: NextFunction) => {
     // Obtiene el rol del usuario autenticado o header de prueba
     const role =
       (req as any)?.user?.rol || (req.headers["x-user-role"] as string | undefined);
 
     if (!role) return res.status(401).json(fail(401, "No autenticado"));
-    if (!roles.includes(role as any)) return res.status(403).json(fail(403, "Permisos insuficientes"));
+    if (!roles.includes(role as any)) return res.status(403).json(fail(403, "Permisos insuficientes - requiere rol de dueño"));
 
     next();
   };
+
+/**
+ * Middleware específico para owners de complejos.
+ * Verifica que el usuario sea dueño o admin.
+ */
+export const requireOwner = requireRole("dueno", "admin", "superadmin");

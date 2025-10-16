@@ -1,49 +1,143 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { reservaService } from '@/services/reservaService';
+import { Reserva, EstadoReserva } from '@/types/reserva';
 import '../dashboard.css';
-
-interface Reservation {
-  id: string;
-  nombre: string;
-  cancha: string;
-  status: 'Activo' | 'Inactivo' | 'Por revisar';
-  fecha: string;
-}
 
 export default function ReservasPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4;
+  const [reservas, setReservas] = useState<Reserva[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedEstado, setSelectedEstado] = useState<EstadoReserva | ''>('');
+  const itemsPerPage = 10;
+
+  // Cargar reservas desde el backend
+  const loadReservas = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const filters = {
+        page: currentPage,
+        pageSize: itemsPerPage,
+        ...(searchTerm && { q: searchTerm }),
+        ...(selectedEstado && { estado: selectedEstado })
+      };
+      const data = await reservaService.getReservas(filters);
+      setReservas(data);
+    } catch (err: any) {
+      console.warn('Backend no disponible, usando datos mock:', err);
+      setError('Conectando con datos de desarrollo (backend no disponible)');
+      // Usar datos mock en caso de error para development
+      setReservas([
+        {
+          id: 1,
+          usuarioId: 1,
+          canchaId: 1,
+          complejoId: 1,
+          fechaInicio: new Date().toISOString(),
+          fechaFin: new Date(Date.now() + 3600000).toISOString(),
+          estado: 'confirmada' as EstadoReserva,
+          precioTotal: 25000,
+          pagado: true,
+          fechaCreacion: new Date().toISOString(),
+          fechaActualizacion: new Date().toISOString(),
+          usuario: { id: 1, email: 'miguel.chamo@email.com', nombre: 'Miguel', apellido: 'Chamo' },
+          cancha: { id: 1, nombre: 'Cancha Central', tipo: 'futbol', precioPorHora: 25000 }
+        },
+        {
+          id: 2,
+          usuarioId: 2,
+          canchaId: 2,
+          complejoId: 1,
+          fechaInicio: new Date(Date.now() + 86400000).toISOString(),
+          fechaFin: new Date(Date.now() + 86400000 + 3600000).toISOString(),
+          estado: 'pendiente' as EstadoReserva,
+          precioTotal: 20000,
+          pagado: false,
+          fechaCreacion: new Date().toISOString(),
+          fechaActualizacion: new Date().toISOString(),
+          usuario: { id: 2, email: 'ana.garcia@email.com', nombre: 'Ana', apellido: 'García' },
+          cancha: { id: 2, nombre: 'Cancha Norte', tipo: 'basquet', precioPorHora: 20000 }
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar datos al inicio y cuando cambien los filtros
+  useEffect(() => {
+    loadReservas();
+  }, [currentPage, searchTerm, selectedEstado]);
 
   // Función para navegar a editar reserva
-  const editReservation = (reservationId: string) => {
+  const editReservation = (reservationId: number) => {
     router.push(`/admin/reservas/${reservationId}`);
   };
 
-  // Datos de ejemplo basados en la imagen
-  const reservations: Reservation[] = [
-    { id: '1', nombre: 'Miguel Chamo', cancha: 'Cancha Central', status: 'Activo', fecha: 'Hoy, 19:03' },
-    { id: '2', nombre: 'Miguel Chamo', cancha: 'Cancha Central', status: 'Inactivo', fecha: '28-08-2025' },
-    { id: '3', nombre: 'Miguel Chamo', cancha: 'Cancha Central', status: 'Por revisar', fecha: 'Ayer, 16:45' },
-    { id: '4', nombre: 'Miguel Chamo', cancha: 'Cancha Central', status: 'Activo', fecha: 'Hoy, 11:35' },
-    { id: '5', nombre: 'Ana García', cancha: 'Cancha Norte', status: 'Activo', fecha: 'Hoy, 08:20' },
-    { id: '6', nombre: 'Carlos López', cancha: 'Cancha Sur', status: 'Inactivo', fecha: '25-08-2025' },
-  ];
+  // Función para navegar a crear reserva
+  const createReservation = () => {
+    router.push('/admin/reservas/crear');
+  };
 
-  // Filtrar reservas basado en búsqueda
-  const filteredReservations = reservations.filter(reservation => {
-    const matchesSearch = reservation.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         reservation.cancha.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
+  // Función para eliminar reserva
+  const deleteReservation = async (reservationId: number) => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar esta reserva?')) {
+      try {
+        await reservaService.deleteReserva(reservationId);
+        alert('Reserva eliminada exitosamente');
+        loadReservas(); // Recargar la lista
+      } catch (err: any) {
+        console.warn('No se pudo eliminar (backend no disponible):', err);
+        alert('No se puede eliminar en modo desarrollo (backend no disponible)');
+      }
+    }
+  };
 
-  // Paginación
-  const totalPages = Math.ceil(filteredReservations.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedReservations = filteredReservations.slice(startIndex, startIndex + itemsPerPage);
+  // Función para obtener el badge de estado
+  const getStatusBadge = (estado: EstadoReserva) => {
+    switch (estado) {
+      case 'confirmada':
+        return <span className="status-badge status-activo">Confirmada</span>;
+      case 'pendiente':
+        return <span className="status-badge status-por-revisar">Pendiente</span>;
+      case 'cancelada':
+        return <span className="status-badge status-inactivo">Cancelada</span>;
+      case 'completada':
+        return <span className="status-badge status-activo">Completada</span>;
+      case 'no_show':
+        return <span className="status-badge status-inactivo">No Show</span>;
+      default:
+        return <span className="status-badge">{estado}</span>;
+    }
+  };
+
+  // Función para formatear fecha
+  const formatFecha = (fechaISO: string) => {
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleDateString('es-CL', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="admin-dashboard-container">
+        <div className="loading-container">
+          <p>Cargando reservas...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-dashboard-container">
@@ -59,14 +153,22 @@ export default function ReservasPage() {
             Exportar informe
           </button>
           
-          <button className="export-button">
+          <button className="export-button" onClick={createReservation}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            Crear Reserva Manual
+            Crear Reserva
           </button>
         </div>
-      </div>      {/* Contenedor Principal de la Tabla */}
+      </div>
+
+      {/* Mensaje Informativo */}
+      {error && (
+        <div className="info-container">
+          <div className="info-icon">ℹ️</div>
+          <p>{error}</p>
+        </div>
+      )}      {/* Contenedor Principal de la Tabla */}
       <div className="admin-table-container">
         {/* Header de la Tabla */}
         <div className="admin-table-header">
@@ -77,9 +179,9 @@ export default function ReservasPage() {
             <div className="admin-search-container">
               <input
                 type="text"
-                placeholder="Buscar"
+                placeholder="Buscar por usuario o cancha..."
                 value={searchTerm}
-                onChange={(e: any) => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="admin-search-input"
               />
               <svg className="admin-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,10 +189,20 @@ export default function ReservasPage() {
               </svg>
             </div>
             
-            {/* Filtro */}
-            <button className="btn-filtrar">
-              Filtrar
-            </button>
+            {/* Filtro por estado */}
+            <select
+              value={selectedEstado}
+              onChange={(e) => setSelectedEstado(e.target.value as EstadoReserva | '')}
+              className="btn-filtrar"
+              style={{ maxWidth: '150px' }}
+            >
+              <option value="">Todos los estados</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="confirmada">Confirmada</option>
+              <option value="cancelada">Cancelada</option>
+              <option value="completada">Completada</option>
+              <option value="no_show">No Show</option>
+            </select>
           </div>
         </div>
         
@@ -99,33 +211,55 @@ export default function ReservasPage() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Nombre</th>
+                <th>Usuario</th>
                 <th>Cancha</th>
                 <th>Estado</th>
-                <th>Fecha</th>
+                <th>Fecha/Hora</th>
+                <th>Precio</th>
+                <th>Pagado</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {paginatedReservations.map((reservation) => (
-                <tr key={reservation.id}>
+              {reservas.map((reserva) => (
+                <tr key={reserva.id}>
                   <td>
-                    <div className="admin-cell-title">{reservation.nombre}</div>
+                    <div className="admin-cell-title">
+                      {reserva.usuario ? 
+                        `${reserva.usuario.nombre || ''} ${reserva.usuario.apellido || ''}`.trim() || reserva.usuario.email 
+                        : `Usuario ${reserva.usuarioId}`
+                      }
+                    </div>
+                    {reserva.usuario?.email && (
+                      <div className="admin-cell-subtitle">{reserva.usuario.email}</div>
+                    )}
                   </td>
                   <td>
-                    <div className="admin-cell-subtitle">{reservation.cancha}</div>
+                    <div className="admin-cell-subtitle">
+                      {reserva.cancha?.nombre || `Cancha ${reserva.canchaId}`}
+                    </div>
+                    {reserva.cancha?.tipo && (
+                      <div className="admin-cell-text" style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>
+                        {reserva.cancha.tipo}
+                      </div>
+                    )}
                   </td>
                   <td>
-                    <span className={`status-badge ${
-                      reservation.status === 'Activo' ? 'status-activo' :
-                      reservation.status === 'Inactivo' ? 'status-inactivo' :
-                      'status-por-revisar'
-                    }`}>
-                      {reservation.status}
+                    {getStatusBadge(reserva.estado)}
+                  </td>
+                  <td>
+                    <div className="admin-cell-text">{formatFecha(reserva.fechaInicio)}</div>
+                    <div className="admin-cell-text" style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>
+                      hasta {formatFecha(reserva.fechaFin)}
+                    </div>
+                  </td>
+                  <td>
+                    <div className="admin-cell-text">${reserva.precioTotal.toLocaleString()}</div>
+                  </td>
+                  <td>
+                    <span className={`status-badge ${reserva.pagado ? 'status-activo' : 'status-por-revisar'}`}>
+                      {reserva.pagado ? 'Pagado' : 'Pendiente'}
                     </span>
-                  </td>
-                  <td>
-                    <div className="admin-cell-text">{reservation.fecha}</div>
                   </td>
                   <td>
                     <div className="admin-actions-container">
@@ -133,22 +267,19 @@ export default function ReservasPage() {
                       <button 
                         className="btn-action btn-editar" 
                         title="Editar"
-                        onClick={() => editReservation(reservation.id)}
+                        onClick={() => editReservation(reserva.id)}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                         </svg>
                       </button>
                       
-                      {/* Botón Aprobar/Check */}
-                      <button className="btn-action btn-aprobar" title="Aprobar">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </button>
-                      
                       {/* Botón Eliminar */}
-                      <button className="btn-action btn-eliminar" title="Eliminar">
+                      <button 
+                        className="btn-action btn-eliminar" 
+                        title="Eliminar"
+                        onClick={() => deleteReservation(reserva.id)}
+                      >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -160,38 +291,32 @@ export default function ReservasPage() {
             </tbody>
           </table>
         </div>
-        
+
         {/* Paginación */}
-        <div className="admin-pagination-container">
+        <div className="admin-table-footer">
           <div className="admin-pagination-info">
-            mostrando {startIndex + 1} de {Math.min(startIndex + itemsPerPage, filteredReservations.length)} reservas
+            <span>
+              Mostrando {Math.min(reservas.length, itemsPerPage)} de {reservas.length} reservas
+            </span>
           </div>
           
-          <div className="admin-pagination-controls">
-            <button
-              onClick={() => setCurrentPage((prev: number) => Math.max(prev - 1, 1))}
+          <div className="admin-pagination">
+            <button 
+              className="btn-pagination" 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="btn-pagination"
             >
               Anterior
             </button>
             
-            <div className="admin-pagination-numbers">
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`btn-pagination ${currentPage === i + 1 ? 'active' : ''}`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
+            <span className="pagination-current">
+              Página {currentPage}
+            </span>
             
-            <button
-              onClick={() => setCurrentPage((prev: number) => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="btn-pagination"
+            <button 
+              className="btn-pagination" 
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              disabled={reservas.length < itemsPerPage}
             >
               Siguiente
             </button>

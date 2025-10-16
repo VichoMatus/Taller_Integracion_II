@@ -1,86 +1,264 @@
 import { Request, Response } from "express";
 import { ok, fail } from "../../../interfaces/apiEnvelope";
-import { AsignarRol } from "../../application/AsignarRol";
-import { ListUsers, GetUser, PatchUser, RemoveUser } from "../../application/UsersUseCases";
-import { canAssignRole } from "../guards/policies";
+import { 
+  GetMisRecursos, GetMisComplejos, GetMisCanchas, GetMisReservas, GetMisEstadisticas,
+  CreateComplejo, GetComplejo, UpdateComplejo, DeleteComplejo,
+  CreateCancha, GetCancha, UpdateCancha, DeleteCancha
+} from "../../application/UsersUseCases";
 
 /**
- * Controlador para operaciones administrativas.
- * Maneja las peticiones HTTP para gestión de usuarios y roles.
+ * Controlador para operaciones del owner de complejos deportivos.
+ * Maneja las peticiones HTTP para gestión de complejos, canchas y reservas.
  */
 export class AdminController {
   constructor(
-    private asignarRolUC: AsignarRol,
-    private listUsersUC: ListUsers,
-    private getUserUC: GetUser,
-    private patchUserUC: PatchUser,
-    private removeUserUC: RemoveUser
+    private getMisRecursosUC: GetMisRecursos,
+    private getMisComplejosUC: GetMisComplejos,
+    private getMisCanchasUC: GetMisCanchas,
+    private getMisReservasUC: GetMisReservas,
+    private getMisEstadisticasUC: GetMisEstadisticas,
+    private createComplejoUC: CreateComplejo,
+    private getComplejoUC: GetComplejo,
+    private updateComplejoUC: UpdateComplejo,
+    private deleteComplejoUC: DeleteComplejo,
+    private createCanchaUC: CreateCancha,
+    private getCanchaUC: GetCancha,
+    private updateCanchaUC: UpdateCancha,
+    private deleteCanchaUC: DeleteCancha
   ) {}
 
+  // === HELPER PARA OBTENER OWNER ID ===
+  private getOwnerId(req: Request): number {
+    // Obtener del JWT o header de prueba
+    const ownerId = (req as any)?.user?.id || Number(req.headers["x-user-id"]);
+    if (!ownerId) throw new Error("Owner ID no encontrado en el token");
+    return ownerId;
+  }
+
+  // === PANEL OWNER ===
+  
   /**
-   * Lista usuarios con paginación y filtros.
-   * GET /admin/users
+   * Obtiene resumen de recursos del owner.
+   * GET /admin/mis/recursos
    */
-  list = async (req: Request, res: Response) => {
+  getMisRecursos = async (req: Request, res: Response) => {
     try {
-      const out = await this.listUsersUC.execute({
-        page: req.query.page ? Number(req.query.page) : undefined,
-        pageSize: req.query.pageSize ? Number(req.query.pageSize) : undefined,
-        q: req.query.q as string | undefined,
-        rol: req.query.rol as any,
-      });
-      res.json(ok(out));
-    } catch (e: any) { res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); }
+      const ownerId = this.getOwnerId(req);
+      const recursos = await this.getMisRecursosUC.execute(ownerId);
+      res.json(ok(recursos));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
+    }
   };
 
   /**
-   * Obtiene un usuario específico.
-   * GET /admin/users/:id
+   * Obtiene complejos del owner.
+   * GET /admin/mis/complejos
    */
-  get = async (req: Request, res: Response) => {
-    try { res.json(ok(await this.getUserUC.execute(Number(req.params.id)))); }
-    catch (e: any) { res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); }
-  };
-
-  /**
-   * Actualiza un usuario.
-   * PATCH /admin/users/:id
-   */
-  patch = async (req: Request, res: Response) => {
-    try { res.json(ok(await this.patchUserUC.execute(Number(req.params.id), req.body))); }
-    catch (e: any) { res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); }
-  };
-
-  /**
-   * Elimina un usuario.
-   * DELETE /admin/users/:id
-   */
-  remove = async (req: Request, res: Response) => {
-    try { await this.removeUserUC.execute(Number(req.params.id)); res.json(ok({ removed: true })); }
-    catch (e: any) { res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); }
-  };
-
-  /**
-   * Asigna un rol a un usuario.
-   * POST /admin/users/:id/role
-   * Incluye validación de permisos según políticas de seguridad.
-   */
-  asignarRol = async (req: Request, res: Response) => {
+  getMisComplejos = async (req: Request, res: Response) => {
     try {
-      const userId = Number(req.params.id);
-      const rol = req.body?.rol as string;
-      if (!userId || !rol) return res.status(400).json(fail(400, "userId y rol son requeridos"));
+      const ownerId = this.getOwnerId(req);
+      const complejos = await this.getMisComplejosUC.execute(ownerId);
+      res.json(ok(complejos));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
+    }
+  };
 
-      const current = (req as any)?.user?.rol as "admin" | "superadmin" | undefined
-        || (req.headers["x-user-role"] as any);
-      if (current && !canAssignRole(current, rol)) {
-        return res.status(403).json(fail(403, "Solo superadmin puede asignar admin/superadmin"));
-      }
+  /**
+   * Obtiene canchas del owner.
+   * GET /admin/mis/canchas
+   */
+  getMisCanchas = async (req: Request, res: Response) => {
+    try {
+      const ownerId = this.getOwnerId(req);
+      const canchas = await this.getMisCanchasUC.execute(ownerId);
+      res.json(ok(canchas));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
+    }
+  };
 
-      const out = await this.asignarRolUC.execute(userId, { rol } as any);
-      res.json(ok(out));
-    } catch (e: any) {
-      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details));
+  /**
+   * Obtiene reservas del owner.
+   * GET /admin/mis/reservas
+   */
+  getMisReservas = async (req: Request, res: Response) => {
+    try {
+      const ownerId = this.getOwnerId(req);
+      const filtros = {
+        fecha_desde: req.query.fecha_desde as string,
+        fecha_hasta: req.query.fecha_hasta as string,
+        estado: req.query.estado as string
+      };
+      const reservas = await this.getMisReservasUC.execute(ownerId, filtros);
+      res.json(ok(reservas));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
+    }
+  };
+
+  /**
+   * Obtiene estadísticas del owner.
+   * GET /admin/mis/estadisticas
+   */
+  getMisEstadisticas = async (req: Request, res: Response) => {
+    try {
+      const ownerId = this.getOwnerId(req);
+      const estadisticas = await this.getMisEstadisticasUC.execute(ownerId);
+      res.json(ok(estadisticas));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
+    }
+  };
+
+  // === GESTIÓN DE COMPLEJOS ===
+
+  /**
+   * Lista complejos del owner.
+   * GET /admin/complejos
+   */
+  listComplejos = async (req: Request, res: Response) => {
+    try {
+      const ownerId = this.getOwnerId(req);
+      const complejos = await this.getMisComplejosUC.execute(ownerId);
+      res.json(ok(complejos));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
+    }
+  };
+
+  /**
+   * Crea un complejo.
+   * POST /admin/complejos
+   */
+  createComplejo = async (req: Request, res: Response) => {
+    try {
+      const ownerId = this.getOwnerId(req);
+      const complejo = await this.createComplejoUC.execute(ownerId, req.body);
+      res.status(201).json(ok(complejo));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
+    }
+  };
+
+  /**
+   * Obtiene un complejo específico.
+   * GET /admin/complejos/:id
+   */
+  getComplejo = async (req: Request, res: Response) => {
+    try {
+      const ownerId = this.getOwnerId(req);
+      const complejoId = Number(req.params.id);
+      const complejo = await this.getComplejoUC.execute(ownerId, complejoId);
+      res.json(ok(complejo));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
+    }
+  };
+
+  /**
+   * Actualiza un complejo.
+   * PATCH /admin/complejos/:id
+   */
+  updateComplejo = async (req: Request, res: Response) => {
+    try {
+      const ownerId = this.getOwnerId(req);
+      const complejoId = Number(req.params.id);
+      const complejo = await this.updateComplejoUC.execute(ownerId, complejoId, req.body);
+      res.json(ok(complejo));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
+    }
+  };
+
+  /**
+   * Elimina un complejo.
+   * DELETE /admin/complejos/:id
+   */
+  deleteComplejo = async (req: Request, res: Response) => {
+    try {
+      const ownerId = this.getOwnerId(req);
+      const complejoId = Number(req.params.id);
+      await this.deleteComplejoUC.execute(ownerId, complejoId);
+      res.json(ok({ deleted: true }));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
+    }
+  };
+
+  // === GESTIÓN DE CANCHAS ===
+
+  /**
+   * Lista canchas del owner.
+   * GET /admin/canchas
+   */
+  listCanchas = async (req: Request, res: Response) => {
+    try {
+      const ownerId = this.getOwnerId(req);
+      const canchas = await this.getMisCanchasUC.execute(ownerId);
+      res.json(ok(canchas));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
+    }
+  };
+
+  /**
+   * Crea una cancha.
+   * POST /admin/canchas
+   */
+  createCancha = async (req: Request, res: Response) => {
+    try {
+      const ownerId = this.getOwnerId(req);
+      const cancha = await this.createCanchaUC.execute(ownerId, req.body);
+      res.status(201).json(ok(cancha));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
+    }
+  };
+
+  /**
+   * Obtiene una cancha específica.
+   * GET /admin/canchas/:id
+   */
+  getCancha = async (req: Request, res: Response) => {
+    try {
+      const ownerId = this.getOwnerId(req);
+      const canchaId = Number(req.params.id);
+      const cancha = await this.getCanchaUC.execute(ownerId, canchaId);
+      res.json(ok(cancha));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
+    }
+  };
+
+  /**
+   * Actualiza una cancha.
+   * PATCH /admin/canchas/:id
+   */
+  updateCancha = async (req: Request, res: Response) => {
+    try {
+      const ownerId = this.getOwnerId(req);
+      const canchaId = Number(req.params.id);
+      const cancha = await this.updateCanchaUC.execute(ownerId, canchaId, req.body);
+      res.json(ok(cancha));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
+    }
+  };
+
+  /**
+   * Elimina una cancha.
+   * DELETE /admin/canchas/:id
+   */
+  deleteCancha = async (req: Request, res: Response) => {
+    try {
+      const ownerId = this.getOwnerId(req);
+      const canchaId = Number(req.params.id);
+      await this.deleteCanchaUC.execute(ownerId, canchaId);
+      res.json(ok({ deleted: true }));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
     }
   };
 }

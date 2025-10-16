@@ -1,9 +1,10 @@
- 'use client';
+'use client';
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image'
 import Sidebar from '../../components/layout/Sidebar';
 import SearchBar from '../../components/SearchBar';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
 import styles from './page.module.css';
 
 // Datos de los deportes disponibles
@@ -170,6 +171,9 @@ export default function SportsPage() {
   const [sortBy, setSortBy] = useState('competitivo');
   const [filteredSports, setFilteredSports] = useState(sportsData);
 
+  // 🔥 SOLO AGREGAR ESTA LÍNEA
+  const { buttonProps } = useAuthStatus();
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
@@ -191,6 +195,13 @@ export default function SportsPage() {
     }
   };
 
+  // 🔥 SOLO AGREGAR ESTA FUNCIÓN
+  const handleUserButtonClick = () => {
+    if (!buttonProps.disabled) {
+      router.push(buttonProps.href);
+    }
+  };
+
   return (
     <div className={styles.pageContainer}>
       {/* Sidebar */}
@@ -202,9 +213,14 @@ export default function SportsPage() {
         <div className={styles.header}>
           <h1 className={styles.pageTitle}>Explora Deportes</h1>
           <div className={styles.headerRight}>
-            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
+            {/* 🔥 SOLO CAMBIAR ESTA LÍNEA - mantener el mismo className y estructura */}
+            <button 
+              className={styles.userButton} 
+              onClick={handleUserButtonClick}
+              disabled={buttonProps.disabled}
+            >
               <span>👤</span>
-              <span>Usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>

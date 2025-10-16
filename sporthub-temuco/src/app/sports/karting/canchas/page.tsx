@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
 import { useRouter } from 'next/navigation';
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
@@ -97,6 +98,7 @@ const allTracks = [
 
 export default function KartingCanchasPage() {
   const router = useRouter();
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
@@ -131,6 +133,28 @@ export default function KartingCanchasPage() {
         return 0;
     }
   });
+
+  const handleUserButtonClick = () => {
+
+
+    if (isAuthenticated) {
+
+
+      router.push('/usuario/EditarPerfil');
+
+
+    } else {
+
+
+      router.push('/login');
+
+
+    }
+
+
+  };
+
+
 
   return (
     <div className={styles.pageContainer}>

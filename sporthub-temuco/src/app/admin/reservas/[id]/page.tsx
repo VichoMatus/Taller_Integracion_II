@@ -1,152 +1,148 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import { reservaService } from '@/services/reservaService';
+import { canchaService } from '@/services/canchaService';
+import { Reserva, UpdateReservaInput, EstadoReserva, MetodoPago } from '@/types/reserva';
+import { Cancha } from '@/types/cancha';
 import '../../dashboard.css';
 
-interface Reservation {
-  id: string;
-  nombre: string;
-  cancha: string;
-  status: 'Activo' | 'Inactivo' | 'Por revisar';
-  fecha: string;
-  horaInicio: string;
-  horaFin: string;
-  telefono: string;
-  email: string;
-  tipoReserva: string;
-  precioTotal: number;
-  metodoPago: string;
-  notas: string;
-  fechaCreacion: string;
-}
-
-export default function EditReservationPage() {
+export default function EditReservaPage() {
   const router = useRouter();
   const params = useParams();
-  const reservationId = params.id as string;
+  const reservaId = params.id as string;
 
-  // Datos de ejemplo para las reservas
-  const getReservationData = (id: string): Reservation | null => {
-    const reservationsData: { [key: string]: Reservation } = {
-      '1': {
-        id: '1',
-        nombre: 'Miguel Chamo',
-        cancha: 'Cancha Central',
-        status: 'Activo',
-        fecha: 'Hoy, 19:03',
-        horaInicio: '14:00',
-        horaFin: '16:00',
-        telefono: '+56 9 1234 5678',
-        email: 'miguel.chamo@email.com',
-        tipoReserva: 'Partido Amistoso',
-        precioTotal: 50000,
-        metodoPago: 'Transferencia',
-        notas: 'Reserva para partido de fútbol entre amigos. Solicita pelotas adicionales.',
-        fechaCreacion: '15-09-2025'
-      },
-      '2': {
-        id: '2',
-        nombre: 'Ana García',
-        cancha: 'Cancha Norte',
-        status: 'Inactivo',
-        fecha: '28-08-2025',
-        horaInicio: '10:00',
-        horaFin: '12:00',
-        telefono: '+56 9 8765 4321',
-        email: 'ana.garcia@email.com',
-        tipoReserva: 'Entrenamiento',
-        precioTotal: 36000,
-        metodoPago: 'Efectivo',
-        notas: 'Entrenamiento de básquetbol para equipo juvenil. Requiere red en buenas condiciones.',
-        fechaCreacion: '20-08-2025'
-      },
-      '3': {
-        id: '3',
-        nombre: 'Carlos López',
-        cancha: 'Cancha Sur',
-        status: 'Por revisar',
-        fecha: 'Ayer, 16:45',
-        horaInicio: '18:00',
-        horaFin: '20:00',
-        telefono: '+56 9 5555 6666',
-        email: 'carlos.lopez@email.com',
-        tipoReserva: 'Torneo',
-        precioTotal: 30000,
-        metodoPago: 'Tarjeta',
-        notas: 'Partido de tenis para torneo local. Verificar estado de la superficie.',
-        fechaCreacion: '18-09-2025'
-      },
-      '4': {
-        id: '4',
-        nombre: 'Laura Martínez',
-        cancha: 'Cancha Central',
-        status: 'Activo',
-        fecha: 'Hoy, 11:35',
-        horaInicio: '09:00',
-        horaFin: '11:00',
-        telefono: '+56 9 7777 8888',
-        email: 'laura.martinez@email.com',
-        tipoReserva: 'Clase Particular',
-        precioTotal: 40000,
-        metodoPago: 'Transferencia',
-        notas: 'Clase de fútbol para niños. Solicita conos y material de entrenamiento.',
-        fechaCreacion: '19-09-2025'
-      },
-      '5': {
-        id: '5',
-        nombre: 'Pedro Sánchez',
-        cancha: 'Cancha Norte',
-        status: 'Activo',
-        fecha: 'Hoy, 08:20',
-        horaInicio: '07:00',
-        horaFin: '09:00',
-        telefono: '+56 9 9999 0000',
-        email: 'pedro.sanchez@email.com',
-        tipoReserva: 'Partido Liga',
-        precioTotal: 60000,
-        metodoPago: 'Transferencia',
-        notas: 'Partido oficial de liga. Requiere árbitro y cronometraje oficial.',
-        fechaCreacion: '16-09-2025'
-      },
-      '6': {
-        id: '6',
-        nombre: 'Isabella Torres',
-        cancha: 'Cancha Sur',
-        status: 'Inactivo',
-        fecha: '25-08-2025',
-        horaInicio: '16:00',
-        horaFin: '18:00',
-        telefono: '+56 9 1111 2222',
-        email: 'isabella.torres@email.com',
-        tipoReserva: 'Evento Corporativo',
-        precioTotal: 80000,
-        metodoPago: 'Transferencia',
-        notas: 'Evento de empresa. Incluye catering y equipamiento especial.',
-        fechaCreacion: '20-08-2025'
+  const [reserva, setReserva] = useState<Reserva | null>(null);
+  const [canchas, setCanchas] = useState<Cancha[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Estado del formulario
+  const [formData, setFormData] = useState<UpdateReservaInput>({
+    estado: 'pendiente',
+    metodoPago: 'efectivo',
+    pagado: false,
+    notas: '',
+    fechaInicio: '',
+    fechaFin: ''
+  });
+
+  // Cargar datos de la reserva
+  const loadReservaData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Cargar reserva específica
+      const reservaData = await reservaService.getReservaById(parseInt(reservaId));
+      setReserva(reservaData);
+      
+      // Llenar el formulario con los datos existentes
+      setFormData({
+        estado: reservaData.estado,
+        metodoPago: reservaData.metodoPago || 'efectivo',
+        pagado: reservaData.pagado,
+        notas: reservaData.notas || '',
+        fechaInicio: reservaData.fechaInicio.slice(0, 16), // Para datetime-local
+        fechaFin: reservaData.fechaFin.slice(0, 16)
+      });
+      
+      // Cargar lista de canchas para el selector
+      try {
+        const canchasData = await canchaService.getCanchas();
+        setCanchas(canchasData);
+      } catch (err) {
+        console.warn('No se pudieron cargar las canchas:', err);
+        setCanchas([]);
       }
-    };
-    return reservationsData[id] || null;
+      
+    } catch (err: any) {
+      console.warn('No se pudo cargar la reserva (backend no disponible):', err);
+      setError('Modo desarrollo: No se puede conectar al backend para cargar los datos de la reserva');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const reservation = getReservationData(reservationId);
+  useEffect(() => {
+    loadReservaData();
+  }, [reservaId]);
 
-  const goBack = () => {
+  // Manejar cambios en el formulario
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  // Guardar cambios
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      setSaving(true);
+      setError(null);
+      
+      // Convertir fechas de datetime-local a ISO
+      const updateData = {
+        ...formData,
+        fechaInicio: formData.fechaInicio ? new Date(formData.fechaInicio).toISOString() : undefined,
+        fechaFin: formData.fechaFin ? new Date(formData.fechaFin).toISOString() : undefined
+      };
+      
+      await reservaService.updateReserva(parseInt(reservaId), updateData);
+      
+      // Mostrar mensaje de éxito y redirigir
+      alert('Reserva actualizada exitosamente');
+      router.push('/admin/reservas');
+    } catch (err: any) {
+      console.warn('No se pudo guardar la reserva (backend no disponible):', err);
+      setError('Modo desarrollo: No se puede guardar los cambios sin conexión al backend');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Cancelar y volver
+  const handleCancel = () => {
     router.push('/admin/reservas');
   };
 
-  const handleSave = () => {
-    console.log('Guardando cambios para reserva:', reservationId);
-    router.push('/admin/reservas');
+  // Función para formatear fecha para mostrar
+  const formatFecha = (fechaISO: string) => {
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleDateString('es-CL', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
-  if (!reservation) {
+  if (loading) {
     return (
-      <div className="admin-page-layout">
+      <div className="admin-dashboard-container">
+        <div className="loading-container">
+          <p>Cargando datos de la reserva...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !reserva) {
+    return (
+      <div className="admin-dashboard-container">
         <div className="error-container">
-          <h2>Reserva no encontrada</h2>
-          <p>No se pudo encontrar la información de la reserva solicitada.</p>
-          <button onClick={goBack} className="btn-volver">
+          <h2>Error</h2>
+          <p>{error}</p>
+          <button onClick={handleCancel} className="btn-secondary">
             Volver a Reservas
           </button>
         </div>
@@ -159,123 +155,198 @@ export default function EditReservationPage() {
       {/* Header */}
       <div className="admin-main-header">
         <div className="admin-header-nav">
-          <button onClick={goBack} className="btn-volver">
+          <button onClick={handleCancel} className="btn-volver">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             Volver
           </button>
-          <h1 className="admin-page-title">Información de Reserva</h1>
+          <h1 className="admin-page-title">Editar Reserva</h1>
         </div>
         
         <div className="admin-header-buttons">
-          <button className="btn-guardar" onClick={handleSave}>
+          <button 
+            type="submit" 
+            form="edit-reserva-form"
+            className="btn-guardar" 
+            disabled={saving}
+          >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
             </svg>
-            Editar Reserva
+            {saving ? 'Guardando...' : 'Guardar Cambios'}
           </button>
         </div>
       </div>
 
-      {/* Contenido Principal */}
+      {/* Error Message */}
+      {error && (
+        <div className="error-container">
+          <p>{error}</p>
+        </div>
+      )}
+
+      {/* Formulario Principal */}
       <div className="edit-court-container">
-        <div className="edit-court-card">
-          {/* Información del Cliente */}
+        <form id="edit-reserva-form" onSubmit={handleSave} className="edit-court-card">
+          {/* Información de la Reserva */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Información del Cliente</h3>
+            <h3 className="edit-section-title">Información de la Reserva</h3>
             <div className="edit-form-grid">
-              <div className="edit-info-item">
-                <span className="edit-info-label">Nombre Completo:</span>
-                <span className="edit-info-value">{reservation.nombre}</span>
-              </div>
-              
-              <div className="edit-info-item">
-                <span className="edit-info-label">Teléfono:</span>
-                <span className="edit-info-value">{reservation.telefono}</span>
+              <div className="edit-form-group">
+                <label htmlFor="estado" className="edit-form-label">Estado:</label>
+                <select
+                  id="estado"
+                  name="estado"
+                  value={formData.estado}
+                  onChange={handleInputChange}
+                  className="edit-form-select"
+                  required
+                >
+                  <option value="pendiente">Pendiente</option>
+                  <option value="confirmada">Confirmada</option>
+                  <option value="cancelada">Cancelada</option>
+                  <option value="completada">Completada</option>
+                  <option value="no_show">No Show</option>
+                </select>
               </div>
 
-              <div className="edit-info-item">
-                <span className="edit-info-label">Email:</span>
-                <span className="edit-info-value">{reservation.email}</span>
+              <div className="edit-form-group">
+                <label htmlFor="metodoPago" className="edit-form-label">Método de Pago:</label>
+                <select
+                  id="metodoPago"
+                  name="metodoPago"
+                  value={formData.metodoPago}
+                  onChange={handleInputChange}
+                  className="edit-form-select"
+                >
+                  <option value="efectivo">Efectivo</option>
+                  <option value="tarjeta">Tarjeta</option>
+                  <option value="transferencia">Transferencia</option>
+                  <option value="online">Online</option>
+                </select>
+              </div>
+
+              <div className="edit-form-group">
+                <label className="edit-form-label">
+                  <input
+                    type="checkbox"
+                    name="pagado"
+                    checked={formData.pagado}
+                    onChange={handleInputChange}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Reserva pagada
+                </label>
               </div>
             </div>
           </div>
 
-          {/* Detalles de la Reserva */}
+          {/* Fechas y Horarios */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Detalles de la Reserva</h3>
+            <h3 className="edit-section-title">Fechas y Horarios</h3>
             <div className="edit-form-grid">
-              <div className="edit-info-item">
-                <span className="edit-info-label">Cancha:</span>
-                <span className="edit-info-value">{reservation.cancha}</span>
+              <div className="edit-form-group">
+                <label htmlFor="fechaInicio" className="edit-form-label">Fecha y Hora de Inicio:</label>
+                <input
+                  type="datetime-local"
+                  id="fechaInicio"
+                  name="fechaInicio"
+                  value={formData.fechaInicio}
+                  onChange={handleInputChange}
+                  className="edit-form-input"
+                />
               </div>
 
-              <div className="edit-info-item">
-                <span className="edit-info-label">Tipo de Reserva:</span>
-                <span className="edit-info-value">{reservation.tipoReserva}</span>
-              </div>
-
-              <div className="edit-info-item">
-                <span className="edit-info-label">Fecha:</span>
-                <span className="edit-info-value">{reservation.fecha}</span>
-              </div>
-
-              <div className="edit-info-item">
-                <span className="edit-info-label">Horario:</span>
-                <span className="edit-info-value">{reservation.horaInicio} - {reservation.horaFin}</span>
-              </div>
-
-              <div className="edit-info-item">
-                <span className="edit-info-label">Estado:</span>
-                <span className={`status-badge ${
-                  reservation.status === 'Activo' ? 'status-activo' :
-                  reservation.status === 'Inactivo' ? 'status-inactivo' :
-                  'status-por-revisar'
-                }`}>
-                  {reservation.status}
-                </span>
+              <div className="edit-form-group">
+                <label htmlFor="fechaFin" className="edit-form-label">Fecha y Hora de Fin:</label>
+                <input
+                  type="datetime-local"
+                  id="fechaFin"
+                  name="fechaFin"
+                  value={formData.fechaFin}
+                  onChange={handleInputChange}
+                  className="edit-form-input"
+                />
               </div>
             </div>
           </div>
 
-          {/* Información Financiera */}
+          {/* Notas */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Información Financiera</h3>
-            <div className="edit-form-grid">
-              <div className="edit-info-item">
-                <span className="edit-info-label">Precio Total:</span>
-                <span className="edit-info-value">${reservation.precioTotal.toLocaleString()}</span>
-              </div>
-
-              <div className="edit-info-item">
-                <span className="edit-info-label">Método de Pago:</span>
-                <span className="edit-info-value">{reservation.metodoPago}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Notas Adicionales */}
-          <div className="edit-section">
-            <h3 className="edit-section-title">Notas y Observaciones</h3>
-            <div className="edit-info-item">
-              <p className="edit-description-text">{reservation.notas}</p>
+            <h3 className="edit-section-title">Notas Adicionales</h3>
+            <div className="edit-form-group">
+              <label htmlFor="notas" className="edit-form-label">Notas:</label>
+              <textarea
+                id="notas"
+                name="notas"
+                value={formData.notas}
+                onChange={handleInputChange}
+                className="edit-form-textarea"
+                rows={4}
+                placeholder="Notas adicionales sobre la reserva..."
+              />
             </div>
           </div>
 
           {/* Información del Sistema */}
-          <div className="edit-section">
-            <h3 className="edit-section-title">Información del Sistema</h3>
-            <div className="edit-info-item">
-              <span className="edit-info-label">Fecha de Creación:</span>
-              <span className="edit-info-value">{reservation.fechaCreacion}</span>
+          {reserva && (
+            <div className="edit-section">
+              <h3 className="edit-section-title">Información del Sistema</h3>
+              <div className="edit-form-grid">
+                <div className="edit-info-item">
+                  <span className="edit-info-label">ID de Reserva:</span>
+                  <span className="edit-info-value">{reserva.id}</span>
+                </div>
+                
+                <div className="edit-info-item">
+                  <span className="edit-info-label">Usuario:</span>
+                  <span className="edit-info-value">
+                    {reserva.usuario ? 
+                      `${reserva.usuario.nombre || ''} ${reserva.usuario.apellido || ''}`.trim() || reserva.usuario.email 
+                      : `Usuario ${reserva.usuarioId}`
+                    }
+                  </span>
+                </div>
+                
+                <div className="edit-info-item">
+                  <span className="edit-info-label">Cancha:</span>
+                  <span className="edit-info-value">
+                    {reserva.cancha?.nombre || `Cancha ${reserva.canchaId}`}
+                  </span>
+                </div>
+                
+                <div className="edit-info-item">
+                  <span className="edit-info-label">Precio Total:</span>
+                  <span className="edit-info-value">${reserva.precioTotal.toLocaleString()}</span>
+                </div>
+                
+                <div className="edit-info-item">
+                  <span className="edit-info-label">Creada:</span>
+                  <span className="edit-info-value">
+                    {formatFecha(reserva.fechaCreacion)}
+                  </span>
+                </div>
+                
+                {reserva.fechaActualizacion && (
+                  <div className="edit-info-item">
+                    <span className="edit-info-label">Última actualización:</span>
+                    <span className="edit-info-value">
+                      {formatFecha(reserva.fechaActualizacion)}
+                    </span>
+                  </div>
+                )}
+                
+                {reserva.codigoConfirmacion && (
+                  <div className="edit-info-item">
+                    <span className="edit-info-label">Código de Confirmación:</span>
+                    <span className="edit-info-value">{reserva.codigoConfirmacion}</span>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="edit-info-item">
-              <span className="edit-info-label">ID de la Reserva:</span>
-              <span className="edit-info-value">{reservation.id}</span>
-            </div>
-          </div>
-        </div>
+          )}
+        </form>
       </div>
     </div>
   );

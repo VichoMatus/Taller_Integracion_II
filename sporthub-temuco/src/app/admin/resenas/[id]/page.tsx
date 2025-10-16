@@ -1,179 +1,273 @@
 'use client';
 
-import React from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { resenaService } from '@/services/resenaService';
+import { Resena, ResenaUpdateRequest } from '@/types/resena';
 import '../../dashboard.css';
 
-interface Review {
-  id: string;
-  cancha: string;
-  usuario: string;
-  comentario: string;
-  fecha: string;
-  estado: 'Activo' | 'Inactivo' | 'Reportada';
-}
-
-export default function ReviewDetailPage() {
-  const router = useRouter();
+export default function EditResenaPage() {
   const params = useParams();
-  const id = params.id as string;
+  const router = useRouter();
+  const resenaId = params.id as string;
+  
+  // Estados del componente
+  const [resena, setResena] = useState<Resena | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
+  // Estados del formulario
+  const [formData, setFormData] = useState({
+    calificacion: 5,
+    comentario: ''
+  });
 
-  // Datos de ejemplo (deben coincidir con la página principal)
-  const reviews: Review[] = [
-    { 
-      id: '1', 
-      cancha: 'Cancha Central', 
-      usuario: 'Miguel Chamo', 
-      comentario: 'Hola soy miguel y soy lindo', 
-      fecha: 'Hoy, 19:03', 
-      estado: 'Activo' 
-    },
-    { 
-      id: '2', 
-      cancha: 'Cancha Central', 
-      usuario: 'Miguel Chamo', 
-      comentario: 'Hola soy miguel y patapico es bonito', 
-      fecha: '28-08-2025', 
-      estado: 'Inactivo' 
-    },
-    { 
-      id: '3', 
-      cancha: 'Cancha Central', 
-      usuario: 'Miguel Chamo', 
-      comentario: 'Hola soy miguel y soy lindo para la venta. Esta es una reseña mucho más larga que necesita ser truncada en la tabla pero se puede leer completa en el modal. Aquí puedo escribir todo lo que quiera sobre mi experiencia en la cancha.', 
-      fecha: 'Ayer, 16:45', 
-      estado: 'Reportada' 
-    },
-    { 
-      id: '4', 
-      cancha: 'Cancha Central', 
-      usuario: 'Miguel Chamo', 
-      comentario: 'Hola soy miguel y soy lindo', 
-      fecha: 'Hoy, 11:35', 
-      estado: 'Activo' 
-    },
-    { 
-      id: '5', 
-      cancha: 'Cancha Norte', 
-      usuario: 'Ana García', 
-      comentario: 'Excelente cancha, muy bien mantenida. Las instalaciones están en perfecto estado y el césped se ve muy bien cuidado. Definitivamente volvería a reservar aquí.', 
-      fecha: 'Hoy, 08:20', 
-      estado: 'Activo' 
-    },
-    { 
-      id: '6', 
-      cancha: 'Cancha Sur', 
-      usuario: 'Carlos López', 
-      comentario: 'Necesita mejoras en la iluminación, especialmente en las esquinas donde se ve muy oscuro durante la noche.', 
-      fecha: '25-08-2025', 
-      estado: 'Reportada' 
+  // Cargar datos de la reseña
+  useEffect(() => {
+    const loadResena = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const data = await resenaService.obtenerResena(resenaId);
+        setResena(data);
+        setFormData({
+          calificacion: data.calificacion,
+          comentario: data.comentario || ''
+        });
+      } catch (err: any) {
+        console.warn('Backend no disponible, usando datos mock:', err);
+        setError('Conectando con datos de desarrollo (backend no disponible)');
+        // Datos mock para development
+        const mockResena: Resena = {
+          id_resena: parseInt(resenaId),
+          id_usuario: 1,
+          id_cancha: 1,
+          id_reserva: 1,
+          calificacion: 4,
+          comentario: 'Muy buena cancha, recomendada para jugar fútbol.',
+          fecha_creacion: new Date().toISOString(),
+          fecha_actualizacion: new Date().toISOString()
+        };
+        setResena(mockResena);
+        setFormData({
+          calificacion: mockResena.calificacion,
+          comentario: mockResena.comentario || ''
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadResena();
+  }, [resenaId]);
+
+  // Manejar cambios en el formulario
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'calificacion' ? parseInt(value) : value
+    }));
+  };
+
+  // Función para obtener el emoji de calificación
+  const getCalificacionEmoji = (calificacion: number) => {
+    const emojis = ['😡', '😞', '😐', '😊', '🤩'];
+    return emojis[calificacion - 1] || '❓';
+  };
+
+  // Guardar cambios
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.comentario.trim()) {
+      alert('El comentario es obligatorio');
+      return;
     }
-  ];
 
-  // Encontrar la reseña por ID
-  const review = reviews.find(r => r.id === id);
+    try {
+      setSaving(true);
+      await resenaService.actualizarResena(resenaId, formData);
+      alert('Reseña actualizada exitosamente');
+      router.push('/admin/resenas');
+    } catch (err: any) {
+      console.warn('No se pudo actualizar (backend no disponible):', err);
+      alert('No se puede actualizar en modo desarrollo (backend no disponible)');
+    } finally {
+      setSaving(false);
+    }
+  };
 
-  if (!review) {
+  if (loading) {
     return (
-      <div className="admin-page-layout">
-        <div className="admin-header">
-          <h1 className="admin-title">Reseña no encontrada</h1>
+      <div className="admin-dashboard-container">
+        <div className="loading-container">
+          <p>Cargando reseña...</p>
         </div>
-        <div className="admin-content">
-          <p>No se pudo encontrar la reseña solicitada.</p>
+      </div>
+    );
+  }
+
+  if (!resena) {
+    return (
+      <div className="admin-dashboard-container">
+        <div className="error-container">
+          <p>Reseña no encontrada</p>
           <button 
-            className="btn-primary" 
-            onClick={() => router.back()}
+            className="btn-volver"
+            onClick={() => router.push('/admin/resenas')}
           >
-            Volver
+            Volver a la lista
           </button>
         </div>
       </div>
     );
   }
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, index) => (
-      <span
-        key={index}
-        className={`star ${index < rating ? 'star-filled' : 'star-empty'}`}
-      >
-        ★
-      </span>
-    ));
-  };
-
   return (
-    <div className="admin-page-layout">
+    <div className="admin-dashboard-container">
       {/* Header */}
-      <div className="admin-header">
-        <div className="admin-header-main">
+      <div className="estadisticas-header">
+        <h1 className="text-2xl font-bold text-gray-900">Editar Reseña #{resena.id_resena}</h1>
+        
+        <div className="admin-controls">
           <button 
-            className="btn-back"
-            onClick={() => router.back()}
-            title="Volver a la lista"
+            className="btn-volver"
+            onClick={() => router.push('/admin/resenas')}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
+            Volver a la lista
           </button>
-          <h1 className="admin-title">Detalle de Reseña</h1>
-        </div>
-        <div className="admin-header-actions">
-          <span className={`status-badge ${
-            review.estado === 'Activo' ? 'status-activo' :
-            review.estado === 'Inactivo' ? 'status-inactivo' :
-            'status-reportada'
-          }`}>
-            {review.estado}
-          </span>
         </div>
       </div>
 
-      {/* Contenido Principal */}
-      <div className="admin-content">
-        <div className="review-detail-container">
-          
-          {/* Información del Usuario */}
-          <div className="review-detail-section">
-            <h2 className="review-detail-section-title">Información del Usuario</h2>
-            <div className="review-detail-grid">
-              <div className="review-detail-item">
-                <span className="review-detail-label">Usuario</span>
-                <span className="review-detail-value">{review.usuario}</span>
-              </div>
-              <div className="review-detail-item">
-                <span className="review-detail-label">Cancha</span>
-                <span className="review-detail-value">{review.cancha}</span>
-              </div>
-              <div className="review-detail-item">
-                <span className="review-detail-label">Fecha</span>
-                <span className="review-detail-value">{review.fecha}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Comentario Completo */}
-          <div className="review-detail-section">
-            <h2 className="review-detail-section-title">Comentario Completo</h2>
-            <div className="review-comment-full">
-              {review.comentario}
-            </div>
-          </div>
-
-          {/* Acciones */}
-          <div className="review-detail-section">
-            <h2 className="review-detail-section-title">Acciones de Moderación</h2>
-            <div className="review-detail-actions">
-              <button className="btn-action-detail btn-aprobar">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                Aprobar Reseña
-              </button>
-            </div>
-          </div>
+      {/* Mensaje Informativo */}
+      {error && (
+        <div className="info-container">
+          <div className="info-icon">ℹ️</div>
+          <p>{error}</p>
         </div>
+      )}
+
+      {/* Formulario */}
+      <div className="admin-form-container">
+        <form onSubmit={handleSubmit} className="admin-form">
+          {/* Información de la reseña */}
+          <div className="form-section">
+            <h3 className="form-section-title">Información de la Reseña</h3>
+            
+            <div className="form-grid">
+              <div className="form-group">
+                <label>ID de Reseña</label>
+                <input type="text" value={`#${resena.id_resena}`} disabled className="form-input-disabled" />
+              </div>
+              
+              <div className="form-group">
+                <label>Usuario</label>
+                <input type="text" value={`Usuario ${resena.id_usuario}`} disabled className="form-input-disabled" />
+              </div>
+              
+              <div className="form-group">
+                <label>Cancha</label>
+                <input type="text" value={`Cancha ${resena.id_cancha}`} disabled className="form-input-disabled" />
+              </div>
+              
+              <div className="form-group">
+                <label>Fecha de Creación</label>
+                <input 
+                  type="text" 
+                  value={new Date(resena.fecha_creacion).toLocaleDateString('es-CL')} 
+                  disabled 
+                  className="form-input-disabled" 
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Datos editables */}
+          <div className="form-section">
+            <h3 className="form-section-title">Datos de la Reseña</h3>
+            
+            <div className="form-grid">
+              <div className="form-group">
+                <label htmlFor="calificacion">
+                  Calificación *
+                  <span className="calificacion-preview">
+                    {getCalificacionEmoji(formData.calificacion)} ({formData.calificacion}/5)
+                  </span>
+                </label>
+                <select
+                  id="calificacion"
+                  name="calificacion"
+                  value={formData.calificacion}
+                  onChange={handleInputChange}
+                  required
+                  className="form-select"
+                >
+                  <option value={1}>😡 1 - Muy malo</option>
+                  <option value={2}>😞 2 - Malo</option>
+                  <option value={3}>😐 3 - Regular</option>
+                  <option value={4}>😊 4 - Bueno</option>
+                  <option value={5}>🤩 5 - Excelente</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="comentario">
+                Comentario *
+                <span className="character-count">
+                  {formData.comentario.length}/500 caracteres
+                </span>
+              </label>
+              <textarea
+                id="comentario"
+                name="comentario"
+                value={formData.comentario}
+                onChange={handleInputChange}
+                placeholder="Escribe aquí tu opinión sobre la cancha..."
+                required
+                maxLength={500}
+                rows={4}
+                className="form-textarea"
+              />
+            </div>
+          </div>
+
+          {/* Botones de acción */}
+          <div className="form-actions">
+            <button
+              type="button"
+              onClick={() => router.push('/admin/resenas')}
+              className="btn-cancelar"
+              disabled={saving}
+            >
+              Cancelar
+            </button>
+            
+            <button
+              type="submit"
+              disabled={saving || !formData.comentario.trim()}
+              className="btn-guardar"
+            >
+              {saving ? (
+                <>
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Guardando...
+                </>
+              ) : (
+                'Actualizar Reseña'
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
