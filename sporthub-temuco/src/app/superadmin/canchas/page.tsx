@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { canchaService } from '@/services/canchaService';
 import '@/app/admin/dashboard.css';
 
 interface Court {
@@ -16,20 +17,50 @@ export default function CanchasPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [courts, setCourts] = useState<Court[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const itemsPerPage = 4;
 
-  // Función para navegar a editar cancha
+  // 🔥 NUEVO: Cargar canchas reales de la API
+  useEffect(() => {
+    const loadCourts = async () => {
+      try {
+        setIsLoading(true);
+        console.log('🔍 Cargando canchas desde la API...');
+        
+        const canchasFromApi = await canchaService.getCanchas();
+        console.log('✅ Canchas cargadas:', canchasFromApi);
+        
+        // Adaptar datos de la API al formato del frontend
+        const adaptedCourts: Court[] = canchasFromApi.map(cancha => ({
+          id: cancha.id.toString(),
+          name: cancha.nombre,
+          location: `Establecimiento ${cancha.establecimientoId}`,
+          status: cancha.activa ? 'Activo' : 'Inactivo',
+          type: cancha.tipo
+        }));
+        
+        setCourts(adaptedCourts);
+      } catch (error: any) {
+        console.error('❌ Error cargando canchas:', error);
+        // Mantener datos de ejemplo como fallback
+        setCourts([
+          { id: '1', name: 'Cancha Central', location: 'Av. Principal 123', status: 'Activo', type: 'Futbol' },
+          { id: '2', name: 'Cancha Sur', location: 'Av. Sur 456', status: 'Inactivo', type: 'Futbol' },
+          { id: '3', name: 'Cancha Norte', location: 'Av. Norte 789', status: 'Por revisar', type: 'Tenis' },
+          { id: '4', name: 'Cancha Este', location: 'Av. Este 321', status: 'Activo', type: 'Voleibol' },
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadCourts();
+  }, []);
+
   const editCourt = (courtId: string) => {
     router.push(`/superadmin/canchas/${courtId}`);
   };
-
-  // Datos de ejemplo, luego vendrian de la API
-  const courts: Court[] = [
-    { id: '1', name: 'Cancha Central', location: 'Av. Principal 123', status: 'Activo', type: 'Futbol' },
-    { id: '2', name: 'Cancha Central', location: 'Av. Principal 123', status: 'Inactivo', type: 'Futbol' },
-    { id: '3', name: 'Cancha Central', location: 'Av. Principal 123', status: 'Por revisar', type: 'Tenis' },
-    { id: '4', name: 'Cancha Central', location: 'Av. Principal 123', status: 'Activo', type: 'Voleibol' },
-  ];
 
   // Filtrar canchas basado en búsqueda
   const filteredCourts = courts.filter(court => {
@@ -42,6 +73,22 @@ export default function CanchasPage() {
   const totalPages = Math.ceil(filteredCourts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedCourts = filteredCourts.slice(startIndex, startIndex + itemsPerPage);
+
+  if (isLoading) {
+    return (
+      <div className="admin-dashboard-container">
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '200px',
+          fontSize: '18px'
+        }}>
+          Cargando canchas...
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-dashboard-container">
@@ -57,7 +104,7 @@ export default function CanchasPage() {
             Exportar informe
           </button>
           
-          <button className="export-button">
+          <button className="export-button" onClick={() => router.push('/superadmin/canchas/nueva')}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
@@ -70,14 +117,14 @@ export default function CanchasPage() {
       <div className="admin-table-container">
         {/* Header de la Tabla */}
         <div className="admin-table-header">
-          <h2 className="admin-table-title">Lista de Canchas</h2>
+          <h2 className="admin-table-title">Lista de Canchas ({filteredCourts.length})</h2>
           
           <div className="admin-search-filter">
             {/* Búsqueda */}
             <div className="admin-search-container">
               <input
                 type="text"
-                placeholder="Buscar"
+                placeholder="Buscar por nombre o ubicación"
                 value={searchTerm}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
                 className="admin-search-input"
@@ -125,11 +172,12 @@ export default function CanchasPage() {
                     </span>
                   </td>
                   <td>
-                    <div className="admin-cell-text">{court.type}</div>
+                    <div className="admin-cell-text">
+                      {court.type.charAt(0).toUpperCase() + court.type.slice(1)}
+                    </div>
                   </td>
                   <td>
                     <div className="admin-actions-container">
-                      {/* Botón Editar */}
                       <button 
                         className="btn-action btn-editar" 
                         title="Editar"
@@ -140,14 +188,12 @@ export default function CanchasPage() {
                         </svg>
                       </button>
                       
-                      {/* Botón Aprobar/Check */}
                       <button className="btn-action btn-aprobar" title="Aprobar">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       </button>
                       
-                      {/* Botón Eliminar */}
                       <button className="btn-action btn-eliminar" title="Eliminar">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

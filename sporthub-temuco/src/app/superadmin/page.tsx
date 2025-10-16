@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import StatsCard from '@/components/charts/StatsCard';
 import "./dashboard.css";
 
 export default function SuperAdminDashboard() {

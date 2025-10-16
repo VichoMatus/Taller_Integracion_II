@@ -1,10 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { apiBackend } from '@/config/backend';
 
-// Tipo para los roles permitidos
 type UserRole = 'admin' | 'superadmin' | 'super_admin' | 'usuario';
 
 interface UserData {
@@ -19,7 +18,6 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
   const pathname = usePathname();
   const isCheckingRef = useRef(false);
   const hasCheckedRef = useRef(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     // Reset hasChecked when pathname changes
@@ -38,7 +36,6 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
       console.log('🔍 [useAuthProtection] Iniciando verificación...', { pathname, allowedRoles });
       
       try {
-        // Verificar token
         const token = localStorage.getItem('access_token') || localStorage.getItem('token');
         if (!token) {
           console.log('❌ [useAuthProtection] No hay token');
@@ -46,7 +43,6 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
           return;
         }
 
-        // Verificar datos almacenados
         const storedRole = localStorage.getItem('user_role');
         const storedUserData = localStorage.getItem('userData');
         
@@ -55,16 +51,16 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
           hasStoredData: !!storedUserData 
         });
 
-        // Si tenemos datos almacenados y el rol es válido, no hacer petición
         if (storedRole && storedUserData) {
-          const isRoleAllowed = allowedRoles.includes(storedRole as UserRole);
+          // 🔥 CORREGIDO: Normalizar roles ('super_admin' → 'superadmin')
+          const normalizedStoredRole = storedRole === 'super_admin' ? 'superadmin' : storedRole;
+          const isRoleAllowed = allowedRoles.includes(normalizedStoredRole as UserRole);
           if (isRoleAllowed) {
             console.log('✅ [useAuthProtection] Usando datos almacenados');
             return;
           }
         }
 
-        // Verificar con el backend
         console.log('🔍 [useAuthProtection] Verificando con /auth/me...');
         const response = await apiBackend.get('/auth/me');
         const userData = response.data?.data || response.data;
@@ -75,8 +71,8 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
 
         console.log('📦 [useAuthProtection] Datos recibidos:', userData);
 
-        // Normalizar el rol para la comparación
-        const normalizedRole = userData.rol.toLowerCase();
+        // 🔥 CORREGIDO: Normalizar rol del backend
+        const normalizedRole = userData.rol === 'super_admin' ? 'superadmin' : userData.rol.toLowerCase();
         const isRoleAllowed = allowedRoles.includes(normalizedRole as UserRole);
 
         if (!isRoleAllowed) {
@@ -85,7 +81,6 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
             rolesPermitidos: allowedRoles
           });
 
-          // Limpiar datos y redirigir según el rol
           localStorage.removeItem('token');
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
@@ -102,7 +97,7 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
           return;
         }
 
-        // Actualizar datos en localStorage
+        // 🔥 CORREGIDO: Guardar rol normalizado
         localStorage.setItem('userData', JSON.stringify(userData));
         localStorage.setItem('user_role', normalizedRole);
 
