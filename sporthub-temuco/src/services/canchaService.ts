@@ -38,7 +38,7 @@ export const canchaService = {
    */
   async getCanchaById(id: number) {
     try {
-      const response = await apiBackend.get(`/api/canchas/${id}`);
+      const response = await apiBackend.get(`/canchas/${id}`);
       return response.data;
     } catch (error: any) {
       throw new Error('Error al obtener la cancha: ' + (error.response?.data?.message || error.message));

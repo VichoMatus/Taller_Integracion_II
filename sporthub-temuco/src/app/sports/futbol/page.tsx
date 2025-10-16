@@ -7,71 +7,8 @@ import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import StatsCard from '../../../components/charts/StatsCard';
 import { useAuthStatus } from '@/hooks/useAuthStatus';
+import { canchaService } from '@/services/canchaService';
 import styles from './page.module.css';
-
-// Datos de ejemplo para las canchas mejor calificadas (6 tarjetas)
-const topRatedCourts = [
-  {
-    imageUrl: "/sports/futbol/canchas/Cancha1.png",
-    name: "Fútbol - Centro",
-    address: "Norte, Centro, Sur",
-    rating: 4.3,
-    tags: ["Cancha de Césped", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Cancha de fútbol ubicada en el centro con implementos deportivos (Balones, conos y petos)",
-    price: "25",
-    nextAvailable: "20:00-21:00", 
-  },
-  {
-    imageUrl: "/sports/futbol/canchas/Cancha2.png",
-    name: "Fútbol - Norte",
-    address: "Sector Norte",
-    rating: 4.5,
-    tags: ["Cancha Sintética", "Estacionamiento"],
-    description: "Cancha de fútbol con césped sintético ubicada en el sector norte con vestuarios incluidos",
-    price: "22",
-    nextAvailable: "14:30-15:30", 
-  },
-  {
-    imageUrl: "/sports/futbol/canchas/Cancha3.png",
-    name: "Fútbol - Sur",
-    address: "Sector Sur",
-    rating: 4.1,
-    tags: ["Cancha Natural", "Estacionamiento", "Iluminación"],
-    description: "Cancha de fútbol con césped natural ubicada en el sur, ideal para partidos de fin de semana",
-    price: "28",
-    nextAvailable: "Mañana 09:00-10:00",
-  },
-  {
-    imageUrl: "/sports/futbol/canchas/Cancha4.png",
-    name: "Fútbol Premium",
-    address: "Centro Premium", 
-    rating: 4.7,
-    tags: ["Cancha Profesional", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Cancha de fútbol profesional con césped híbrido y todas las comodidades para equipos",
-    price: "35",
-    nextAvailable: "Disponible ahora",
-  },
-  {
-    imageUrl: "/sports/futbol/canchas/Cancha5.png",
-    name: "Fútbol - Elite",
-    address: "Zona Elite", 
-    rating: 4.8,
-    tags: ["Cancha Profesional", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Cancha premium de fútbol con estándar FIFA y equipamiento profesional completo",
-    price: "40",
-    nextAvailable: "18:00-19:00",
-  },
-  {
-    imageUrl: "/sports/futbol/canchas/Cancha6.png",
-    name: "Fútbol - Deportivo",
-    address: "Centro Deportivo", 
-    rating: 4.4,
-    tags: ["Cancha Sintética", "Estacionamiento", "Iluminación"],
-    description: "Cancha de fútbol en complejo deportivo con múltiples servicios y torneos regulares",
-    price: "30",
-    nextAvailable: "16:30-17:30",
-  }
-];
 
 // 🔥 DATOS PARA LAS ESTADÍSTICAS DE FÚTBOL
 const footballStats = [
@@ -114,8 +51,106 @@ export default function FutbolPage() {
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
+  // 🔥 ESTADOS PARA CANCHAS DEL BACKEND
+  const [canchas, setCanchas] = useState<any[]>([]);
+  const [loadingCanchas, setLoadingCanchas] = useState(true);
+  const [errorCanchas, setErrorCanchas] = useState<string | null>(null);
+
   // 🔥 Hook de autenticación
   const { buttonProps } = useAuthStatus();
+
+  // 🔥 CARGAR CANCHAS DEL BACKEND
+useEffect(() => {
+  const loadCanchas = async () => {
+    try {
+      setLoadingCanchas(true);
+      setErrorCanchas(null);
+      
+      console.log('🔄 Cargando canchas individuales del backend...');
+      
+      // 🔥 IDs de las canchas de fútbol que quieres mostrar
+      const futbolCanchaIds = [1, 2, 3, 4, 5, 6]; // Ajusta estos IDs según las canchas de fútbol que tengas
+      
+      const canchasPromises = futbolCanchaIds.map(async (id) => {
+        try {
+          console.log(`🔍 Cargando cancha ID: ${id}`);
+          const cancha = await canchaService.getCanchaById(id);
+          console.log(`✅ Cancha ${id} obtenida:`, cancha);
+          
+          // Verificar si es una cancha de fútbol
+          if (cancha.deporte !== 'futbol') {
+            console.log(`⚠️ Cancha ${id} no es de fútbol (${cancha.deporte}), saltando...`);
+            return null;
+          }
+          
+          // Mapear al formato requerido por CourtCard
+          const mappedCancha = {
+            id: cancha.id_cancha,
+            imageUrl: `/sports/futbol/canchas/Cancha${cancha.id_cancha}.png`,
+            name: cancha.nombre,
+            address: `Complejo ${cancha.id_complejo}`,
+            rating: cancha.rating_promedio || 4.5,
+            tags: [
+              cancha.cubierta ? "Techada" : "Al aire libre",
+              cancha.activo ? "Disponible" : "No disponible",
+              "Estacionamiento",
+              "Iluminación"
+            ],
+            description: `Cancha de fútbol ${cancha.nombre} - ID: ${cancha.id_cancha}`,
+            price: cancha.precio_desde?.toString() || "25",
+            nextAvailable: cancha.activo ? "Disponible ahora" : "No disponible",
+            sport: cancha.deporte
+          };
+          
+          console.log('🗺️ Cancha mapeada:', mappedCancha);
+          return mappedCancha;
+          
+        } catch (error) {
+          console.log(`❌ Error cargando cancha ${id}:`, error);
+          return null; // Retornar null si la cancha no existe
+        }
+      });
+      
+      // Esperar a que todas las promesas se resuelvan
+      const canchasResults = await Promise.all(canchasPromises);
+      
+      // Filtrar las canchas null (que no existen o no son de fútbol)
+      const canchasValidas = canchasResults.filter(cancha => cancha !== null);
+      
+      console.log('🎉 Canchas de fútbol cargadas exitosamente:', canchasValidas.length);
+      console.log('📋 Canchas finales:', canchasValidas);
+      
+      setCanchas(canchasValidas);
+      
+    } catch (error: any) {
+      console.error('❌ ERROR DETALLADO cargando canchas:');
+      console.error('- Message:', error.message);
+      console.error('- Full error:', error);
+      
+      setErrorCanchas(`Error: ${error.message}`);
+      
+      // 🔥 Fallback
+      console.log('🚨 USANDO FALLBACK - Error en el API');
+      setCanchas([
+        {
+          id: 1,
+          imageUrl: "/sports/futbol/canchas/Cancha1.png",
+          name: "🚨 FALLBACK - Fútbol Centro",
+          address: "Norte, Centro, Sur",
+          rating: 4.3,
+          tags: ["DATOS OFFLINE", "Estacionamiento", "Iluminación", "Cafetería"],
+          description: "🚨 Estos son datos de fallback - API no disponible",
+          price: "25",
+          nextAvailable: "20:00-21:00",
+        }
+      ]);
+    } finally {
+      setLoadingCanchas(false);
+    }
+  };
+
+  loadCanchas();
+}, []);
 
   useEffect(() => {
     setIsClient(true);
@@ -144,6 +179,8 @@ export default function FutbolPage() {
     };
   }, []);
 
+  // 🔥 USAR CANCHAS REALES PARA EL CARRUSEL
+  const topRatedCourts = canchas.slice(0, 6); // Máximo 6 canchas para el carrusel
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -167,8 +204,8 @@ export default function FutbolPage() {
   };
 
   const handleCanchaClick = (court: any) => {
-    console.log('Test navigation...');
-    router.push('/sports/futbol/canchas/canchaseleccionada');
+    console.log('Navegando a cancha:', court);
+    router.push(`/sports/futbol/canchas/canchaseleccionada?id=${court.id}`);
   };
 
   // 🔥 Manejador del botón de usuario
@@ -177,6 +214,20 @@ export default function FutbolPage() {
       router.push(buttonProps.href);
     }
   };
+
+  // 🔥 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
+  const updatedStats = [
+    {
+      ...footballStats[0],
+      value: canchas.filter(c => c.nextAvailable !== "No disponible").length.toString()
+    },
+    footballStats[1], // Mantener precio por defecto
+    {
+      ...footballStats[2],
+      value: `${(canchas.reduce((acc, c) => acc + c.rating, 0) / canchas.length || 4.5).toFixed(1)}⭐`
+    },
+    footballStats[3] // Mantener jugadores por defecto
+  ];
 
   if (!isClient) {
     return (
@@ -220,14 +271,14 @@ export default function FutbolPage() {
           </div>
         </div>
 
-        {/* 🔥 STATS CARDS MEJORADAS CON STATSCARD */}
+        {/* 🔥 STATS CARDS CON DATOS ACTUALIZADOS */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
             <span className={styles.statsTitleIcon}>📊</span>
             Estadísticas del Fútbol en Temuco
           </h2>
           <div className={styles.statsContainer}>
-            {footballStats.map((stat, index) => (
+            {updatedStats.map((stat, index) => (
               <StatsCard
                 key={index}
                 title={stat.title}
@@ -238,7 +289,6 @@ export default function FutbolPage() {
                 sport="futbol"
                 onClick={() => {
                   console.log(`Clicked on ${stat.title} stat`);
-                  // Agregar navegación específica si es necesario
                   if (stat.title.includes("Canchas")) {
                     router.push('/sports/futbol/canchas');
                   }
@@ -262,19 +312,21 @@ export default function FutbolPage() {
           </button>
         </div>
 
-        {/* Canchas mejor calificadas con carrusel */}
+        {/* 🔥 CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>⭐</span>
               Canchas mejor calificadas
+              {loadingCanchas && <span style={{ fontSize: '14px', marginLeft: '10px' }}>Cargando...</span>}
+              {errorCanchas && <span style={{ fontSize: '14px', marginLeft: '10px', color: 'red' }}>⚠️ Usando datos offline</span>}
             </h2>
             <div className={styles.carouselControls}>
               <button 
                 onClick={prevSlide} 
                 className={styles.carouselButton}
-                disabled={currentSlide === 0}
-                style={{ opacity: currentSlide === 0 ? 0.5 : 1 }}
+                disabled={currentSlide === 0 || loadingCanchas}
+                style={{ opacity: currentSlide === 0 || loadingCanchas ? 0.5 : 1 }}
               >
                 ←
               </button>
@@ -284,8 +336,8 @@ export default function FutbolPage() {
               <button 
                 onClick={nextSlide} 
                 className={styles.carouselButton}
-                disabled={currentSlide === totalSlides - 1}
-                style={{ opacity: currentSlide === totalSlides - 1 ? 0.5 : 1 }}
+                disabled={currentSlide === totalSlides - 1 || loadingCanchas}
+                style={{ opacity: currentSlide === totalSlides - 1 || loadingCanchas ? 0.5 : 1 }}
               >
                 →
               </button>
@@ -293,21 +345,27 @@ export default function FutbolPage() {
           </div>
           
           <div className={styles.carouselContainer}>
-            <div 
-              className={styles.courtsGrid}
-              style={{
-                transform: `translateX(-${currentSlide * (320 + 20)}px)`,
-              }}
-            >
-              {topRatedCourts.map((court, index) => (
-                <CourtCard 
-                  key={index} 
-                  {...court} 
-                  sport="futbol"
-                  onClick={() => router.push('/sports/futbol/canchas/canchaseleccionada')}
-                />
-              ))}
-            </div>
+            {loadingCanchas ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                <p>Cargando canchas...</p>
+              </div>
+            ) : (
+              <div 
+                className={styles.courtsGrid}
+                style={{
+                  transform: `translateX(-${currentSlide * (320 + 20)}px)`,
+                }}
+              >
+                {topRatedCourts.map((court, index) => (
+                  <CourtCard 
+                    key={court.id || index} 
+                    {...court} 
+                    sport="futbol"
+                    onClick={() => handleCanchaClick(court)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
