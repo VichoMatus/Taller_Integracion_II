@@ -17,15 +17,12 @@ export default function EditCourtPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Estados del formulario
+  // Estados del formulario - SOLO campos que acepta FastAPI UPDATE
   const [formData, setFormData] = useState<UpdateCanchaInput>({
     nombre: '',
     tipo: 'futbol',
-    estado: 'disponible',
-    precioPorHora: 0,
-    descripcion: '',
-    capacidad: 0,
-    imagenUrl: ''
+    techada: false,
+    activa: true
   });
 
   // Cargar datos de la cancha
@@ -40,15 +37,12 @@ export default function EditCourtPage() {
       const data = await canchaService.getCanchaById(parseInt(courtId));
       setCancha(data);
       
-      // Llenar el formulario con los datos existentes
+      // Llenar el formulario con los datos existentes - SOLO campos editables
       setFormData({
         nombre: data.nombre,
         tipo: data.tipo,
-        estado: data.estado,
-        precioPorHora: data.precioPorHora,
-        descripcion: data.descripcion || '',
-        capacidad: data.capacidad,
-        imagenUrl: data.imagenUrl || ''
+        techada: data.techada,
+        activa: data.activa
       });
     } catch (err: any) {
       console.error('Error cargando cancha:', err);
@@ -60,11 +54,11 @@ export default function EditCourtPage() {
 
   // Manejar cambios en el formulario
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
+    const { name, value, type, checked } = e.target as HTMLInputElement;
     
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? parseFloat(value) || 0 : value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
@@ -195,92 +189,73 @@ export default function EditCourtPage() {
               </div>
 
               <div className="edit-form-group">
-                <label htmlFor="capacidad" className="edit-form-label">Capacidad:</label>
-                <input
-                  type="number"
-                  id="capacidad"
-                  name="capacidad"
-                  value={formData.capacidad}
-                  onChange={handleInputChange}
-                  className="edit-form-input"
-                  min="1"
-                  required
-                />
-              </div>
-
-              <div className="edit-form-group">
-                <label htmlFor="precioPorHora" className="edit-form-label">Precio por hora:</label>
-                <input
-                  type="number"
-                  id="precioPorHora"
-                  name="precioPorHora"
-                  value={formData.precioPorHora}
-                  onChange={handleInputChange}
-                  className="edit-form-input"
-                  min="0"
-                  step="0.01"
-                  required
-                />
+                <label className="edit-form-label">
+                  <input
+                    type="checkbox"
+                    name="techada"
+                    checked={formData.techada}
+                    onChange={handleInputChange}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Cancha techada/cubierta
+                </label>
               </div>
             </div>
           </div>
 
-          {/* Estado */}
+          {/* Estado Activo/Inactivo */}
           <div className="edit-section">
             <h3 className="edit-section-title">Estado</h3>
             <div className="edit-form-grid">
               <div className="edit-form-group">
-                <label htmlFor="estado" className="edit-form-label">Estado:</label>
-                <select
-                  id="estado"
-                  name="estado"
-                  value={formData.estado}
-                  onChange={handleInputChange}
-                  className="edit-form-select"
-                  required
-                >
-                  <option value="disponible">Disponible</option>
-                  <option value="ocupada">Ocupada</option>
-                  <option value="mantenimiento">En Mantenimiento</option>
-                  <option value="inactiva">Inactiva</option>
-                </select>
+                <label className="edit-form-label">
+                  <input
+                    type="checkbox"
+                    name="activa"
+                    checked={formData.activa}
+                    onChange={handleInputChange}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Cancha activa (disponible para reservas)
+                </label>
+                <small style={{ color: 'var(--text-gray)', fontSize: '0.8rem', display: 'block', marginTop: '0.5rem' }}>
+                  Si está desactivada, no aparecerá disponible para nuevas reservas
+                </small>
               </div>
             </div>
           </div>
 
-          {/* Descripción */}
-          <div className="edit-section">
-            <h3 className="edit-section-title">Descripción</h3>
-            <div className="edit-form-group">
-              <label htmlFor="descripcion" className="edit-form-label">Descripción:</label>
-              <textarea
-                id="descripcion"
-                name="descripcion"
-                value={formData.descripcion}
-                onChange={handleInputChange}
-                className="edit-form-textarea"
-                rows={4}
-                placeholder="Descripción de la cancha..."
-              />
+          {/* Información de solo lectura */}
+          {cancha && (
+            <div className="edit-section">
+              <h3 className="edit-section-title">Información de Solo Lectura</h3>
+              <div className="edit-form-grid">
+                {cancha.precioPorHora && (
+                  <div className="edit-info-item">
+                    <span className="edit-info-label">Precio por hora:</span>
+                    <span className="edit-info-value">
+                      {new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(cancha.precioPorHora)}
+                    </span>
+                  </div>
+                )}
+                {cancha.capacidad && (
+                  <div className="edit-info-item">
+                    <span className="edit-info-label">Capacidad:</span>
+                    <span className="edit-info-value">{cancha.capacidad} personas</span>
+                  </div>
+                )}
+                {cancha.descripcion && (
+                  <div className="edit-info-item">
+                    <span className="edit-info-label">Descripción:</span>
+                    <span className="edit-info-value">{cancha.descripcion}</span>
+                  </div>
+                )}
+                <p style={{ color: 'var(--text-gray)', fontSize: '0.8rem', marginTop: '1rem' }}>
+                  Estos campos son de solo lectura y se configuran desde otros módulos del sistema.
+                </p>
+              </div>
             </div>
-          </div>
-
-          {/* Imagen */}
-          <div className="edit-section">
-            <h3 className="edit-section-title">Imagen</h3>
-            <div className="edit-form-group">
-              <label htmlFor="imagenUrl" className="edit-form-label">URL de la Imagen:</label>
-              <input
-                type="url"
-                id="imagenUrl"
-                name="imagenUrl"
-                value={formData.imagenUrl}
-                onChange={handleInputChange}
-                className="edit-form-input"
-                placeholder="https://ejemplo.com/imagen.jpg"
-              />
-            </div>
-          </div>
+          )}
 
           {/* Información del Sistema */}
           {cancha && (
@@ -291,12 +266,14 @@ export default function EditCourtPage() {
                   <span className="edit-info-label">ID:</span>
                   <span className="edit-info-value">{cancha.id}</span>
                 </div>
-                <div className="edit-info-item">
-                  <span className="edit-info-label">Creado:</span>
-                  <span className="edit-info-value">
-                    {new Date(cancha.fechaCreacion).toLocaleDateString()}
-                  </span>
-                </div>
+                {cancha.fechaCreacion && (
+                  <div className="edit-info-item">
+                    <span className="edit-info-label">Creado:</span>
+                    <span className="edit-info-value">
+                      {new Date(cancha.fechaCreacion).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
                 {cancha.fechaActualizacion && (
                   <div className="edit-info-item">
                     <span className="edit-info-label">Última actualización:</span>

@@ -4,20 +4,25 @@ export type EstadoCancha = "disponible" | "ocupada" | "mantenimiento" | "inactiv
 
 export type TipoCancha = "futbol" | "basquet" | "tenis" | "padel" | "volley";
 
+// Tipo basado en lo que realmente devuelve FastAPI (CanchaOut)
 export interface Cancha {
   id: number;
   nombre: string;
   tipo: TipoCancha;
-  estado: EstadoCancha;
-  precioPorHora: number;
-  descripcion?: string;
-  capacidad: number;
   techada: boolean;
   activa: boolean;
   establecimientoId: number;
-  fechaCreacion: string; // ISO string
-  fechaActualizacion: string; // ISO string
+  // Campos opcionales de solo lectura que FastAPI puede devolver:
+  precioPorHora?: number; // precio_desde en el backend
+  rating?: number; // rating_promedio
+  totalResenas?: number; // total_reviews
+  descripcion?: string;
+  capacidad?: number;
   imagenUrl?: string;
+  fechaCreacion?: string; // ISO string
+  fechaActualizacion?: string; // ISO string
+  // Campo calculado para UI
+  estado?: EstadoCancha;
 }
 
 export interface CanchaFilters {
@@ -43,16 +48,12 @@ export interface CreateCanchaInput {
   imagenUrl?: string;
 }
 
+// SOLO campos que FastAPI acepta en UPDATE (CanchaUpdateIn)
 export interface UpdateCanchaInput {
   nombre?: string;
   tipo?: TipoCancha;
-  estado?: EstadoCancha;
-  precioPorHora?: number;
-  descripcion?: string;
-  capacidad?: number;
   techada?: boolean;
   activa?: boolean;
-  imagenUrl?: string;
 }
 
 // Tipos para gestión de fotos de canchas
