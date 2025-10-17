@@ -42,8 +42,19 @@ apiBackend.interceptors.request.use(
   (config) => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+      
+      // Log para debugging
+      console.log('🔐 [apiBackend] Interceptor request:', {
+        url: config.url,
+        method: config.method,
+        hasToken: !!token,
+        tokenPreview: token ? `${token.substring(0, 20)}...` : 'No token'
+      });
+      
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+      } else {
+        console.warn('⚠️ [apiBackend] No se encontró token en localStorage para:', config.url);
       }
     }
     return config;
@@ -68,19 +79,42 @@ apiBackend.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Manejar errores de auth
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('token');
-      localStorage.removeItem('refresh_token');
+    // NO limpiar localStorage aquí - eso lo maneja useAdminProtection
+    // Solo loguear el error para debugging
+    if (error.response?.status === 401) {
+      console.warn('⚠️ [apiBackend] Error 401 - No autenticado');
     }
     
     // Extraer mensaje de error del BFF
     if (error.response?.data && typeof error.response.data === 'object') {
       const errorData = error.response.data;
-      if ('error' in errorData) {
-        throw new Error(errorData.error);
+      
+      // Intentar obtener el mensaje de error de varias formas
+      let errorMessage = 'Error del servidor';
+      
+      if (typeof errorData.error === 'string') {
+        errorMessage = errorData.error;
+      } else if (typeof errorData.message === 'string') {
+        errorMessage = errorData.message;
+      } else if (typeof errorData.detail === 'string') {
+        errorMessage = errorData.detail;
+      } else if (errorData.error && typeof errorData.error === 'object') {
+        // Si error es un objeto, intentar extraer el mensaje
+        errorMessage = JSON.stringify(errorData.error);
       }
+      
+      // Para errores 401, no lanzar error visible al usuario
+      if (error.response?.status === 401) {
+        const authError = new Error(errorMessage);
+        authError.name = 'AuthenticationError';
+        return Promise.reject(authError);
+      }
+      
+      // Crear un nuevo error con el mensaje extraído
+      const customError = new Error(errorMessage);
+      (customError as any).response = error.response;
+      (customError as any).statusCode = error.response?.status;
+      return Promise.reject(customError);
     }
     
     return Promise.reject(error);

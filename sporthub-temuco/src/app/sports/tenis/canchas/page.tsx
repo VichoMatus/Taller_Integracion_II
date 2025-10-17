@@ -1,82 +1,129 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStatus } from '../../../../hooks/useAuthStatus';
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
+import LocationMap from '../../../../components/LocationMap';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
-import { useAuthStatus } from '@/hooks/useAuthStatus';
 
-
-const canchas = [
-  {
-    imageUrl: "/sports/tenis/canchas/Cancha1.png",
-    name: "Tenis - Centro",
-    address: "Norte, Centro, Sur",
-    rating: 4.8,
-    tags: ["Cancha de Arcilla", "Estacionamiento", "Iluminación LED", "Vestuarios"],
-    description: "Cancha de tenis profesional con superficie de arcilla ubicada en el centro con raquetas y pelotas incluidas",
-    price: "45",
-    nextAvailable: "19:00-20:30", 
-  },
-  {
-    imageUrl: "/sports/tenis/canchas/Cancha2.png",
-    name: "Tenis - Norte",
-    address: "Sector Norte",
-    rating: 4.5,
-    tags: ["Cancha Dura", "Estacionamiento", "Climatizada"],
-    description: "Cancha de tenis premium con superficie dura de última generación ubicada en el sector norte",
-    price: "38",
-    nextAvailable: "15:00-16:30", 
-  },
-  {
-    imageUrl: "/sports/tenis/canchas/Cancha3.png",
-    name: "Tenis - Sur",
-    address: "Sector Sur",
-    rating: 4.3,
-    tags: ["Cancha Césped", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Cancha de tenis de césped ubicada en el sur, ideal para jugar en cualquier clima",
-    price: "42",
-    nextAvailable: "Mañana 10:00-11:30",
-  },
-  {
-    imageUrl: "/sports/tenis/canchas/Cancha4.png",
-    name: "Tenis Premium",
-    address: "Centro Premium", 
-    rating: 4.9,
-    tags: ["Cancha Profesional", "Estacionamiento", "Iluminación LED", "Bar"],
-    description: "Cancha de tenis profesional con estándar internacional y todas las comodidades VIP",
-    price: "55",
-    nextAvailable: "Disponible ahora",
-  },
-  {
-    imageUrl: "/sports/tenis/canchas/Cancha5.png",
-    name: "Tenis - Elite",
-    address: "Zona Elite",
-    rating: 4.7,
-    tags: ["Cancha Internacional", "Estacionamiento", "Climatizada", "Spa"],
-    description: "Cancha de tenis de élite con superficie sintética de competición y servicios exclusivos",
-    price: "60",
-    nextAvailable: "17:30-19:00",
-  },
-  {
-    imageUrl: "/sports/tenis/canchas/Cancha6.png",
-    name: "Tenis - Club",
-    address: "Club Deportivo",
-    rating: 4.6,
-    tags: ["Cancha de Club", "Estacionamiento", "Iluminación", "Torneos"],
-    description: "Cancha de tenis en club deportivo con torneos regulares y ambiente competitivo",
-    price: "48",
-    nextAvailable: "16:00-17:30",
-  }
-];
+// 🔥 IMPORTAR SERVICIO
+import { canchaService } from '../../../../services/canchaService';
 
 export default function Page() {
-  const router = useRouter();
   const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredCanchas, setFilteredCanchas] = useState(canchas);
+  
+  // 🔥 ESTADOS PARA LA API
+  const [canchas, setCanchas] = useState<any[]>([]);
+  const [filteredCanchas, setFilteredCanchas] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [isLoadingCanchas, setIsLoadingCanchas] = useState(true);
+  const [error, setError] = useState<string>('');
+
+  // 🔥 FUNCIÓN PARA CARGAR CANCHAS DE TENIS
+  const cargarCanchas = async () => {
+    try {
+      setIsLoadingCanchas(true);
+      setError('');
+      
+      console.log('🔄 [CanchasTenis] Cargando canchas individuales del backend...');
+      
+      // 🔥 IDs de las canchas de tenis que quieres mostrar
+      const tenisCanchaIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+      
+      const canchasPromises = tenisCanchaIds.map(async (id) => {
+        try {
+          console.log(`🔍 [CanchasTenis] Cargando cancha ID: ${id}`);
+          const cancha = await canchaService.getCanchaById(id);
+          console.log(`✅ [CanchasTenis] Cancha ${id} obtenida:`, cancha);
+          
+          // 🔥 FILTRAR SOLO CANCHAS DE TENIS
+          if (cancha.tipo !== 'tenis') {
+            console.log(`⚠️ [CanchasTenis] Cancha ${id} no es de tenis (${cancha.tipo}), saltando...`);
+            return null;
+          }
+          
+          // Mapear al formato requerido por CourtCard
+          const mappedCancha = {
+            id: cancha.id,
+            imageUrl: `/sports/tenis/canchas/Cancha${cancha.id}.png`,
+            name: cancha.nombre,
+            address: `Complejo ${cancha.establecimientoId}`,
+            rating: cancha.rating || 4.7,
+            tags: [
+              cancha.techada ? "Cancha cubierta" : "Cancha al aire libre",
+              cancha.activa ? "Disponible" : "No disponible",
+              "Raquetas disponibles",
+              "Iluminación nocturna"
+            ],
+            description: `Cancha de tenis ${cancha.nombre} - ID: ${cancha.id}`,
+            price: cancha.precioPorHora?.toString() || "30",
+            nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
+            sport: "tenis"
+          };
+          
+          console.log('🗺️ [CanchasTenis] Cancha mapeada:', mappedCancha);
+          return mappedCancha;
+          
+        } catch (error) {
+          console.log(`❌ [CanchasTenis] Error cargando cancha ${id}:`, error);
+          return null;
+        }
+      });
+      
+      const canchasResults = await Promise.all(canchasPromises);
+      const canchasValidas = canchasResults.filter(cancha => cancha !== null);
+      
+      console.log('🎉 [CanchasTenis] Canchas de tenis cargadas exitosamente:', canchasValidas.length);
+      console.log('📋 [CanchasTenis] Canchas finales:', canchasValidas);
+      
+      setCanchas(canchasValidas);
+      setFilteredCanchas(canchasValidas);
+      
+    } catch (error: any) {
+      console.error('❌ [CanchasTenis] ERROR DETALLADO cargando canchas:', error);
+      setError(`Error: ${error.message}`);
+      
+      // 🔥 FALLBACK
+      console.log('🚨 [CanchasTenis] USANDO FALLBACK - Error en el API');
+      const canchasEstaticas = [
+        {
+          id: 1,
+          imageUrl: "/sports/tenis/canchas/Cancha1.png",
+          name: "🚨 FALLBACK - Club Tenis Temuco",
+          address: "Norte, Centro, Sur",
+          rating: 4.8,
+          tags: ["DATOS OFFLINE", "Cancha cubierta", "Raquetas disponibles"],
+          description: "🚨 Estos son datos de fallback - API no disponible",
+          price: "30",
+          nextAvailable: "14:00-16:00",
+        },
+        {
+          id: 2,
+          imageUrl: "/sports/tenis/canchas/Cancha2.png",
+          name: "🚨 FALLBACK - Tennis Center",
+          address: "Sector Norte",
+          rating: 4.6,
+          tags: ["DATOS OFFLINE", "Cancha al aire libre", "Torneos"],
+          description: "🚨 Estos son datos de fallback - API no disponible",
+          price: "25",
+          nextAvailable: "18:00-20:00",
+        }
+      ];
+      
+      setCanchas(canchasEstaticas);
+      setFilteredCanchas(canchasEstaticas);
+    } finally {
+      setIsLoadingCanchas(false);
+    }
+  };
+
+  useEffect(() => {
+    cargarCanchas();
+  }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -98,6 +145,11 @@ export default function Page() {
     router.push('/sports/tenis');
   };
 
+  const availableNow = filteredCanchas.filter(cancha => 
+    cancha.nextAvailable !== "No disponible hoy" && 
+    !cancha.nextAvailable.includes("Mañana")
+  ).length;
+
   const handleUserButtonClick = () => {
     if (isAuthenticated) {
       router.push('/usuario/EditarPerfil');
@@ -106,17 +158,19 @@ export default function Page() {
     }
   };
 
-  const availableNow = filteredCanchas.filter(cancha => 
-    cancha.nextAvailable !== "No disponible hoy" && 
-    !cancha.nextAvailable.includes("Mañana")
-  ).length;
+  const handleRefresh = () => {
+    cargarCanchas();
+  };
+
+  const handleCanchaClick = (court: any) => {
+    console.log('Navegando a cancha:', court);
+    router.push(`/sports/tenis/canchas/canchaseleccionada?id=${court.id}`);
+  };
 
   return (
     <div className={styles.pageContainer}>
-      {/* 🔥 Sidebar específico para tenis */}
       <Sidebar userRole="usuario" sport="tenis" />
 
-      {/* Contenido principal */}
       <div className={styles.mainContent}>
         {/* Header */}
         <div className={styles.header}>
@@ -129,7 +183,7 @@ export default function Page() {
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre de la cancha de tenis"
+              placeholder="Nombre de la cancha"
               sport="tenis" 
             />
             <button 
@@ -143,7 +197,7 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Breadcrumb con navegación */}
+        {/* Breadcrumb */}
         <div className={styles.breadcrumb}>
           <button 
             className={styles.breadcrumbButton}
@@ -154,24 +208,40 @@ export default function Page() {
           </button>
         </div>
 
-        {/* Filtros específicos para tenis */}
+        {/* Mensajes de estado */}
+        {error && (
+          <div className={styles.errorMessage}>
+            <span>⚠️</span>
+            <span>Error: {error} - Mostrando datos offline</span>
+            <button onClick={handleRefresh}>Reintentar</button>
+          </div>
+        )}
+
+        {isLoadingCanchas && (
+          <div className={styles.loadingMessage}>
+            <span>🎾</span>
+            <span>Cargando canchas de tenis...</span>
+          </div>
+        )}
+
+        {/* Filtros */}
         <div className={styles.filtersContainer}>
           <h3 className={styles.filtersTitle}>Filtrar canchas de tenis</h3>
           <div className={styles.filtersGrid}>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#3b82f6'}}>📍</span>
+                <span style={{color: '#22c55e'}}>📍</span>
                 <span>Ubicación o barrio</span>
               </label>
               <input
                 type="text"
-                placeholder="Norte, Centro, Sur, Club..."
+                placeholder="Norte, Centro, Sur, Oeste..."
                 className={styles.filterInput}
               />
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#3b82f6'}}>📅</span>
+                <span style={{color: '#22c55e'}}>📅</span>
                 <span>Fecha</span>
               </label>
               <input
@@ -182,28 +252,27 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#2563eb'}}>💰</span>
-                <span>Precio (max $hr)</span>
+                <span style={{color: '#16a34a'}}>💰</span>
+                <span>Precio (max por hora)</span>
               </label>
               <input
                 type="range"
-                min="30"
-                max="80"
+                min="0"
+                max="60"
                 className={styles.priceSlider}
               />
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#22c55e'}}>🏟️</span>
-                <span>Tipo de superficie</span>
+                <span style={{color: '#15803d'}}>🎾</span>
+                <span>Superficie</span>
               </label>
               <select className={styles.filterSelect}>
-                <option>Tipo de superficie</option>
+                <option>Todas las superficies</option>
                 <option>Arcilla</option>
                 <option>Césped</option>
                 <option>Dura</option>
                 <option>Sintética</option>
-                <option>Premium</option>
               </select>
             </div>
           </div>
@@ -215,38 +284,40 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Mostrar mensaje si no hay resultados */}
-        {filteredCanchas.length === 0 && searchTerm && (
+        {/* Mensajes de no resultados */}
+        {filteredCanchas.length === 0 && searchTerm && !isLoadingCanchas && (
           <div className={styles.noResults}>
             <h3>No se encontraron canchas de tenis para &quot;{searchTerm}&quot;</h3>
-            <p>Intenta con otros términos de búsqueda o ubicaciones específicas de tenis</p>
+            <p>Intenta con otros términos de búsqueda o ubicaciones</p>
             <button onClick={() => {setSearchTerm(''); setFilteredCanchas(canchas);}}>
               Ver todas las canchas de tenis
             </button>
           </div>
         )}
 
-        {/* Contenedor de tarjetas */}
-        <div className={styles.cardsContainer}>
-          <div className={styles.cardsGrid}>
-            {filteredCanchas.map((cancha, idx) => (
-              <CourtCard 
-                key={idx} 
-                {...cancha} 
-                sport="tenis" // 🔥 ESPECIFICAR DEPORTE TENIS
-              />
-            ))}
+        {filteredCanchas.length === 0 && !searchTerm && !isLoadingCanchas && !error && (
+          <div className={styles.noData}>
+            <h3>🎾 No hay canchas de tenis registradas</h3>
+            <p>Aún no se han registrado canchas de tenis en el sistema</p>
+            <button onClick={handleRefresh}>Actualizar</button>
           </div>
-          
-          {/* Mensaje de disponibilidad */}
-          <div className={styles.availabilityMessage}>
-            <div className={styles.availabilityCard}>
-              <span className={styles.availabilityText}>
-                Canchas de Tenis Disponibles ahora: <span className={styles.availabilityNumber}> {availableNow}</span>
-              </span>
+        )}
+
+        {/* Contenedor de tarjetas */}
+        {!isLoadingCanchas && filteredCanchas.length > 0 && (
+          <div className={styles.cardsContainer}>
+            <div className={styles.cardsGrid}>
+              {filteredCanchas.map((cancha, idx) => (
+                <CourtCard 
+                  key={cancha.id || idx} 
+                  {...cancha} 
+                  sport="tenis"
+                  onClick={() => handleCanchaClick(cancha)}
+                />
+              ))}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

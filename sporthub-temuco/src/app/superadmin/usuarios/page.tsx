@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { usuariosService } from '@/services/usuariosService';
+import { Usuario } from '@/types/usuarios';
 import '@/app/admin/dashboard.css';
 
 interface User {
@@ -17,20 +19,84 @@ export default function UsuariosPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
   const itemsPerPage = 4;
+
+  // Cargar usuarios reales desde la API
+  useEffect(() => {
+    const cargarUsuariosReales = async () => {
+      try {
+        setIsLoading(true);
+        setError('');
+        console.log('🔍 Cargando usuarios reales desde la API...');
+        
+        const usuariosReales = await usuariosService.listar();
+        console.log('✅ Usuarios reales obtenidos:', usuariosReales);
+        
+        // Mapear usuarios reales al formato de la interfaz User
+        const usersMapeados: User[] = usuariosReales.map(usuario => {
+          // Determinar el tipo basado en el rol
+          let type: 'Regular' | 'Premium' | 'Básico' | 'Empresa' = 'Regular';
+          if (usuario.rol === 'admin' || usuario.rol === 'super_admin') {
+            type = 'Premium';
+          } else if (usuario.rol === 'usuario') {
+            type = 'Regular';
+          }
+
+          // Determinar estado
+          let status: 'Activo' | 'Inactivo' | 'Por revisar' = 'Activo';
+          if (!usuario.esta_activo) {
+            status = 'Inactivo';
+          } else if (!usuario.verificado) {
+            status = 'Por revisar';
+          }
+
+          // Formatear última actualización como "lastAccess"
+          const lastAccess = new Date(usuario.fecha_actualizacion).toLocaleDateString('es-CL', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+          });
+
+          return {
+            id: usuario.id_usuario.toString(),
+            name: `${usuario.nombre} ${usuario.apellido || ''}`.trim(),
+            email: usuario.email,
+            type: type,
+            status: status,
+            lastAccess: lastAccess
+          };
+        });
+
+        setUsers(usersMapeados);
+        
+      } catch (err: any) {
+        console.error('❌ Error cargando usuarios reales:', err);
+        setError(err.message || 'Error al cargar los usuarios');
+        
+        // Mantener datos de ejemplo como fallback
+        const usersEjemplo: User[] = [
+          { id: '1', name: 'Ana Lopez', email: 'ana.lopez@gmail.com', type: 'Regular', status: 'Activo', lastAccess: 'Hoy, 19:03' },
+          { id: '2', name: 'Admin123', email: 'admin123@gmail.com', type: 'Premium', status: 'Inactivo', lastAccess: '28-08-2025' },
+          { id: '3', name: 'Juan Carlos', email: 'carlosjuan@gmail.com', type: 'Básico', status: 'Por revisar', lastAccess: 'Ayer, 16:45' },
+          { id: '4', name: 'Monica Vega', email: 'monicavega@gmail.com', type: 'Empresa', status: 'Activo', lastAccess: 'Hoy, 11:35' },
+        ];
+        
+        setUsers(usersEjemplo);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    cargarUsuariosReales();
+  }, []);
 
   // Función para navegar a editar usuario
   const editUser = (userId: string) => {
     router.push(`/superadmin/usuarios/${userId}`);
   };
-
-  // Datos de ejemplo basados en la imagen
-  const users: User[] = [
-    { id: '1', name: 'Ana Lopez', email: 'ana.lopez@gmail.com', type: 'Regular', status: 'Activo', lastAccess: 'Hoy, 19:03' },
-    { id: '2', name: 'Admin123', email: 'admin123@gmail.com', type: 'Premium', status: 'Inactivo', lastAccess: '28-08-2025' },
-    { id: '3', name: 'Juan Carlos', email: 'carlosjuan@gmail.com', type: 'Básico', status: 'Por revisar', lastAccess: 'Ayer, 16:45' },
-    { id: '4', name: 'Monica Vega', email: 'monicavega@gmail.com', type: 'Empresa', status: 'Activo', lastAccess: 'Hoy, 11:35' },
-  ];
 
   // Filtrar usuarios basado en búsqueda
   const filteredUsers = users.filter(user => {
@@ -60,6 +126,22 @@ export default function UsuariosPage() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="admin-dashboard-container">
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '200px',
+          fontSize: '18px'
+        }}>
+          Cargando usuarios...
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="admin-dashboard-container">
       {/* Header Principal */}
@@ -83,11 +165,20 @@ export default function UsuariosPage() {
         </div>
       </div>
 
+      {/* Mensaje de error */}
+      {error && (
+        <div className="error-message">
+          <strong>Error:</strong> {error}
+          <br />
+          <small>Se muestran datos de ejemplo para desarrollo</small>
+        </div>
+      )}
+
       {/* Contenedor Principal de la Tabla */}
       <div className="admin-table-container">
         {/* Header de la Tabla */}
         <div className="admin-table-header">
-          <h2 className="admin-table-title">Lista de Usuarios</h2>
+          <h2 className="admin-table-title">Lista de Usuarios ({filteredUsers.length})</h2>
           
           <div className="admin-search-filter">
             {/* Búsqueda */}

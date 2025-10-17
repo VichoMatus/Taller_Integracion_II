@@ -30,10 +30,12 @@ export interface MeResponse {
   nombre: string;
   apellido: string;
   email: string;
+  telefono?: string | null;
   rol: string;
   esta_activo: boolean;
   verificado: boolean;
   avatar_url?: string | null;
+  bio?: string | null;
 }
 
 // ========================================

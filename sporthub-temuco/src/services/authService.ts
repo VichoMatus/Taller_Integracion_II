@@ -27,10 +27,18 @@ export const authService = {
     
     const data = await api.post<BFFTokenResponse>("/auth/login", bffPayload).then(r => r.data);
     
-    // Guardar tokens en el formato que espera el código existente
-    if (data?.access_token) {
+    // Guardar tokens, rol y datos del usuario en localStorage
+    if (data?.access_token && data?.user) {
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("user_role", data.user.rol);
+      localStorage.setItem("userData", JSON.stringify({
+        id_usuario: data.user.id_usuario,
+        nombre: data.user.nombre || '',
+        apellido: data.user.apellido || '',
+        email: data.user.email,
+        rol: data.user.rol
+      }));
     }
     
     // Retornar en el formato legacy esperado

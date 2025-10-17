@@ -4,13 +4,13 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/services/authService';
+import { ForgotPasswordRequest } from '@/types/auth';
 import '../../Login.css';
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState(false);
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -31,16 +31,37 @@ export default function ForgotPasswordPage() {
         setError('');
 
         try {
+            console.log('Enviando solicitud de recuperación para:', email.trim());
             await authService.forgotPassword({
                 email: email.trim()
             });
+            console.log('✅ Solicitud enviada exitosamente');
 
-            // Éxito - redirigir a la página de verificación con el email
-            router.push(`/login/verificar?email=${encodeURIComponent(email)}&type=password`);
+            // Éxito - redirigir a reset-password con el email
+            router.push(`/login/reset-password?email=${encodeURIComponent(email.trim())}`);
             
         } catch (err: any) {
             console.error('Error en recuperación de contraseña:', err);
-            setError(err.message || 'Error al procesar la solicitud. Intenta nuevamente.');
+            
+            let errorMessage = 'Error al procesar la solicitud. Intenta nuevamente.';
+            
+            // Extraer mensaje de error más específico
+            if (err.response?.data?.error) {
+                errorMessage = err.response.data.error;
+            } else if (err.response?.data?.message) {
+                errorMessage = err.response.data.message;
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            
+            // Mensajes más amigables para errores comunes
+            if (errorMessage.includes('User not found') || errorMessage.includes('usuario no encontrado')) {
+                errorMessage = 'No se encontró una cuenta con este email.';
+            } else if (errorMessage.includes('Network Error') || errorMessage.includes('timeout')) {
+                errorMessage = 'Error de conexión. Verifica tu conexión a internet.';
+            }
+            
+            setError(errorMessage);
         } finally {
             setIsLoading(false);
         }
@@ -75,6 +96,8 @@ export default function ForgotPasswordPage() {
                                 {error}
                             </div>
                         )}
+
+
 
                         <form onSubmit={handleSubmit}>
                             <label htmlFor="email">Email</label>
