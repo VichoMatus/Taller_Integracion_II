@@ -14,6 +14,13 @@ interface ChangePasswordData {
   confirmPassword: string;
 }
 
+interface FormErrors {
+  currentPassword?: string;
+  newPassword?: string;
+  confirmPassword?: string;
+  general?: string;
+}
+
 export default function NuevaContrasenaPage() {
   const router = useRouter();
   const [formData, setFormData] = useState<ChangePasswordData>({
@@ -22,57 +29,109 @@ export default function NuevaContrasenaPage() {
     confirmPassword: ""
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({});
   const [success, setSuccess] = useState<string | null>(null);
+  const [currentPasswordValid, setCurrentPasswordValid] = useState(false);
 
   const handleInputChange = (field: keyof ChangePasswordData, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
     }));
-    setError(null);
+    
+    // Limpiar error específico del campo cuando el usuario empiece a escribir
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: undefined
+      }));
+    }
+    if (errors.general) {
+      setErrors(prev => ({
+        ...prev,
+        general: undefined
+      }));
+    }
+    
+    // Si el usuario modifica la contraseña actual, resetear la validación
+    if (field === 'currentPassword') {
+      setCurrentPasswordValid(false);
+    }
+    
     setSuccess(null);
+  };
+
+  // Validaciones en tiempo real
+  const validateField = (field: keyof ChangePasswordData, value: string): string | undefined => {
+    switch (field) {
+      case 'currentPassword':
+        if (!value.trim()) return "La contraseña actual es requerida";
+        return undefined;
+      
+      case 'newPassword':
+        if (!value.trim()) return "La nueva contraseña es requerida";
+        if (value.length < 8) return "La contraseña debe tener al menos 8 caracteres";
+        return undefined;
+      
+      case 'confirmPassword':
+        if (!value.trim()) return "Confirma tu nueva contraseña";
+        if (value !== formData.newPassword) return "Las contraseñas no coinciden";
+        return undefined;
+      
+      default:
+        return undefined;
+    }
+  };
+
+  const handleBlur = (field: keyof ChangePasswordData) => {
+    const error = validateField(field, formData[field]);
+    setErrors(prev => ({
+      ...prev,
+      [field]: error
+    }));
   };
 
   const handleGuardar = async () => {
     try {
       setLoading(true);
-      setError(null);
+      setErrors({});
       setSuccess(null);
 
-      // Validaciones básicas
-      if (!formData.currentPassword || !formData.newPassword || !formData.confirmPassword) {
-        setError("Debes completar todos los campos.");
-        return;
+      // Validar todos los campos antes de enviar
+      const newErrors: FormErrors = {};
+      
+      if (!formData.currentPassword.trim()) {
+        newErrors.currentPassword = "La contraseña actual es requerida";
+      }
+      
+      if (!formData.newPassword.trim()) {
+        newErrors.newPassword = "La nueva contraseña es requerida";
+      } else if (formData.newPassword.length < 8) {
+        newErrors.newPassword = "La contraseña debe tener al menos 8 caracteres";
+      }
+      
+      if (!formData.confirmPassword.trim()) {
+        newErrors.confirmPassword = "Confirma tu nueva contraseña";
+      } else if (formData.confirmPassword !== formData.newPassword) {
+        newErrors.confirmPassword = "Las contraseñas no coinciden";
       }
 
-      if (formData.newPassword !== formData.confirmPassword) {
-        setError("Las nuevas contraseñas no coinciden.");
-        return;
-      }
-
-      if (formData.currentPassword === formData.newPassword) {
-        setError("La nueva contraseña debe ser diferente a la actual.");
-        return;
-      }
-
-      // Validar fortaleza de contraseña
-      const strength = checkPasswordStrength(formData.newPassword);
-      if (strength < 3) {
-        setError("La contraseña no cumple con los requisitos de seguridad.");
+      if (Object.keys(newErrors).length > 0) {
+        setErrors(newErrors);
+        setLoading(false);
         return;
       }
 
       console.log('Enviando cambio de contraseña...');
 
-      // ✅ CORREGIDO: Solo enviar los campos que espera el backend
       await authService.changePassword({
         current_password: formData.currentPassword,
         new_password: formData.newPassword
-        // confirm_password se valida solo en frontend, no se envía al backend
       });
 
+      // ÉXITO: Contraseña cambiada correctamente
       setSuccess("✅ Contraseña actualizada correctamente");
+      setCurrentPasswordValid(true);
       
       // Limpiar formulario
       setFormData({
@@ -88,7 +147,37 @@ export default function NuevaContrasenaPage() {
 
     } catch (err: any) {
       console.error('Error cambiando contraseña:', err);
-      setError(err.message || "Error al cambiar la contraseña. Verifica tu contraseña actual.");
+      
+      const errorStatus = err?.response?.status;
+      const errorDetail = err?.response?.data?.detail;
+      
+      if (errorStatus === 400) {
+        // ERROR ESPECÍFICO: Contraseña actual incorrecta
+        setErrors({
+          currentPassword: "La contraseña actual es incorrecta"
+        });
+        setCurrentPasswordValid(false);
+      } 
+      else if (errorStatus === 401) {
+        setErrors({
+          general: "Tu sesión ha expirado. Por favor inicia sesión nuevamente."
+        });
+      } 
+      else if (errorDetail) {
+        setErrors({
+          general: errorDetail
+        });
+      } 
+      else if (err?.message) {
+        setErrors({
+          general: err.message
+        });
+      } 
+      else {
+        setErrors({
+          general: "Error al cambiar la contraseña. Intenta nuevamente."
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -97,25 +186,42 @@ export default function NuevaContrasenaPage() {
   const checkPasswordStrength = (pass: string) => {
     if (pass.length === 0) return 0;
     let strength = 0;
-    if (pass.length >= 8) strength++;
-    if (/[A-Z]/.test(pass)) strength++;
-    if (/[a-z]/.test(pass)) strength++;
-    if (/[0-9]/.test(pass)) strength++;
-    if (/[^A-Za-z0-9]/.test(pass)) strength++;
+    if (pass.length >= 8) strength += 40;
+    if (/[A-Z]/.test(pass) && /[a-z]/.test(pass)) strength += 20;
+    if (/[0-9]/.test(pass)) strength += 20;
+    if (/[^A-Za-z0-9]/.test(pass)) strength += 20;
     return strength;
   };
 
   const passwordStrength = checkPasswordStrength(formData.newPassword);
-  const strengthLabels = ["Muy Débil", "Débil", "Regular", "Fuerte", "Muy Fuerte"];
-  const strengthColors = ["#ff4444", "#ff8800", "#ffbb33", "#00C851", "#007E33"];
+  
+  const getStrengthLabel = (strength: number) => {
+    if (strength >= 60) return "Fuerte";
+    if (strength >= 40) return "Media";
+    return "Débil";
+  };
 
+  const getStrengthColor = (strength: number) => {
+    if (strength >= 60) return "#00C851";
+    if (strength >= 40) return "#ffbb33";
+    return "#ff4444";
+  };
+
+  // El botón se habilita solo cuando:
+  // 1. Todos los campos tienen contenido
+  // 2. No hay errores de validación frontend
+  // 3. Las contraseñas coinciden
+  // 4. Tiene al menos 8 caracteres
+  // 5. NO hay error de contraseña actual incorrecta (después de un intento fallido)
   const isFormValid = 
-    formData.currentPassword && 
-    formData.newPassword && 
-    formData.confirmPassword && 
+    formData.currentPassword.trim() && 
+    formData.newPassword.trim() && 
+    formData.confirmPassword.trim() &&
     formData.newPassword === formData.confirmPassword &&
-    passwordStrength >= 3 &&
-    formData.currentPassword !== formData.newPassword;
+    formData.newPassword.length >= 8 &&
+    !errors.currentPassword && // Esto incluye el error de "contraseña actual incorrecta"
+    !errors.newPassword &&
+    !errors.confirmPassword;
 
   return (
     <AdminLayout userRole="admin" userName="Admin" notificationCount={3}>
@@ -136,9 +242,9 @@ export default function NuevaContrasenaPage() {
             <p className="subtitle">Actualiza tu contraseña de administrador</p>
           </div>
 
-          {error && (
+          {errors.general && (
             <div className="error-message">
-              {error}
+              {errors.general}
             </div>
           )}
           
@@ -158,37 +264,45 @@ export default function NuevaContrasenaPage() {
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
                   handleInputChange('currentPassword', e.target.value)
                 }
-                className="password-input"
+                onBlur={() => handleBlur('currentPassword')}
+                className={`password-input ${errors.currentPassword ? 'input-error' : ''}`}
                 disabled={loading}
               />
+              {errors.currentPassword && (
+                <span className="error-text">{errors.currentPassword}</span>
+              )}
             </div>
 
             <div className="input-group">
               <label className="input-label">Nueva Contraseña</label>
               <Input
                 type="password"
-                placeholder="Introduce tu nueva contraseña"
+                placeholder="Introduce tu nueva contraseña (mínimo 8 caracteres)"
                 value={formData.newPassword}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
                   handleInputChange('newPassword', e.target.value)
                 }
-                className="password-input"
+                onBlur={() => handleBlur('newPassword')}
+                className={`password-input ${errors.newPassword ? 'input-error' : ''}`}
                 disabled={loading}
               />
+              {errors.newPassword && (
+                <span className="error-text">{errors.newPassword}</span>
+              )}
               
-              {formData.newPassword && (
+              {formData.newPassword && !errors.newPassword && (
                 <div className="password-strength">
                   <div className="strength-bar">
                     <div 
                       className="strength-fill"
                       style={{
-                        width: `${(passwordStrength / 5) * 100}%`,
-                        backgroundColor: strengthColors[passwordStrength - 1] || '#ccc'
+                        width: `${passwordStrength}%`,
+                        backgroundColor: getStrengthColor(passwordStrength)
                       }}
                     ></div>
                   </div>
                   <span className="strength-text">
-                    Fortaleza: {strengthLabels[passwordStrength - 1] || 'Muy Débil'}
+                    Fortaleza: {getStrengthLabel(passwordStrength)}
                   </span>
                 </div>
               )}
@@ -203,13 +317,13 @@ export default function NuevaContrasenaPage() {
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
                   handleInputChange('confirmPassword', e.target.value)
                 }
-                className="password-input"
+                onBlur={() => handleBlur('confirmPassword')}
+                className={`password-input ${errors.confirmPassword ? 'input-error' : ''}`}
                 disabled={loading}
               />
-              {formData.confirmPassword && formData.newPassword !== formData.confirmPassword && (
-                <span className="error-text">Las contraseñas no coinciden</span>
-              )}
-              {formData.confirmPassword && formData.newPassword === formData.confirmPassword && formData.newPassword.length > 0 && (
+              {errors.confirmPassword ? (
+                <span className="error-text">{errors.confirmPassword}</span>
+              ) : formData.confirmPassword && formData.newPassword === formData.confirmPassword && formData.newPassword.length > 0 && (
                 <span className="success-text">Las contraseñas coinciden ✓</span>
               )}
             </div>
@@ -226,7 +340,7 @@ export default function NuevaContrasenaPage() {
                     {formData.newPassword.length >= 8 ? '✓' : '•'}
                   </span>
                   <span className={`requirement-text ${formData.newPassword.length >= 8 ? 'valid' : ''}`}>
-                    Mínimo 8-12 caracteres (ideal 12+)
+                    Mínimo 8 caracteres *
                   </span>
                 </div>
                 
@@ -235,7 +349,7 @@ export default function NuevaContrasenaPage() {
                     {/[A-Z]/.test(formData.newPassword) && /[a-z]/.test(formData.newPassword) ? '✓' : '•'}
                   </span>
                   <span className={`requirement-text ${/[A-Z]/.test(formData.newPassword) && /[a-z]/.test(formData.newPassword) ? 'valid' : ''}`}>
-                    Mayúsculas y minúsculas
+                    Mayúsculas y minúsculas (recomendado)
                   </span>
                 </div>
                 
@@ -244,7 +358,7 @@ export default function NuevaContrasenaPage() {
                     {/[0-9]/.test(formData.newPassword) ? '✓' : '•'}
                   </span>
                   <span className={`requirement-text ${/[0-9]/.test(formData.newPassword) ? 'valid' : ''}`}>
-                    Al menos un número
+                    Al menos un número (recomendado)
                   </span>
                 </div>
                 
@@ -253,24 +367,17 @@ export default function NuevaContrasenaPage() {
                     {/[^A-Za-z0-9]/.test(formData.newPassword) ? '✓' : '•'}
                   </span>
                   <span className={`requirement-text ${/[^A-Za-z0-9]/.test(formData.newPassword) ? 'valid' : ''}`}>
-                    Al menos un símbolo especial
-                  </span>
-                </div>
-
-                <div className="requirement-item">
-                  <span className={`requirement-icon ${formData.currentPassword && formData.newPassword && formData.currentPassword !== formData.newPassword ? 'valid' : ''}`}>
-                    {formData.currentPassword && formData.newPassword && formData.currentPassword !== formData.newPassword ? '✓' : '•'}
-                  </span>
-                  <span className={`requirement-text ${formData.currentPassword && formData.newPassword && formData.currentPassword !== formData.newPassword ? 'valid' : ''}`}>
-                    Diferente a la contraseña actual
+                    Al menos un símbolo especial (recomendado)
                   </span>
                 </div>
               </div>
               
               <div className="security-notice">
+                <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '8px', fontStyle: 'italic' }}>
+                  * Campo obligatorio
+                </p>
                 <p>
                   <strong>Importante:</strong> Como administrador, tu contraseña es crítica para la seguridad del sistema. 
-                  No uses datos personales ni contraseñas anteriores.
                 </p>
               </div>
             </div>
