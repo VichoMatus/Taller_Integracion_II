@@ -19,6 +19,7 @@ import {
 } from "../../application/UploadsUseCases";
 import { UploadsController } from "../controllers/uploads.controller";
 import { requireRole } from "../../../admin/presentation/guards/guards";
+import { authMiddleware } from "../../../auth/middlewares/authMiddleware";
 
 /**
  * Configuración de multer para manejo de archivos.
@@ -178,8 +179,8 @@ router.delete("/:id", (req, res) => ctrl(req).delete(req, res));
 router.post("/:id/processed", (req, res) => ctrl(req).markProcessed(req, res));
 
 // === Endpoints Administrativos ===
-router.get("/", requireRole("admin", "superadmin"), (req, res) => ctrl(req).list(req, res));
-router.get("/stats", requireRole("admin", "superadmin"), (req, res) => ctrl(req).getStats(req, res));
-router.post("/cleanup", requireRole("admin", "superadmin"), (req, res) => ctrl(req).cleanup(req, res));
+router.get("/", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).list(req, res));
+router.get("/stats", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).getStats(req, res));
+router.post("/cleanup", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).cleanup(req, res));
 
 export default router;

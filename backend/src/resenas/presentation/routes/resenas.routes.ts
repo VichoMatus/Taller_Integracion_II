@@ -19,6 +19,7 @@ import {
 } from "../../application/ResenasUseCases";
 import { ResenasController } from "../controllers/resenas.controller";
 import { requireRole } from "../../../admin/presentation/guards/guards";
+import { authMiddleware } from "../../../auth/middlewares/authMiddleware";
 
 /**
  * Router para endpoints de reseñas.
@@ -155,9 +156,9 @@ router.post("/:id/responder", (req, res) => ctrl(req).responder(req, res));
 // Requieren rol admin o superadmin
 
 /** GET /resenas - Lista todas las reseñas con filtros */
-router.get("/", requireRole("admin", "superadmin"), (req, res) => ctrl(req).list(req, res));
+router.get("/", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).list(req, res));
 
 /** DELETE /resenas/:id - Elimina reseña */
-router.delete("/:id", requireRole("admin", "superadmin"), (req, res) => ctrl(req).delete(req, res));
+router.delete("/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).delete(req, res));
 
 export default router;

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { ENV } from "@config/env";
+import { ENV } from "../../../config/env";
 import { buildHttpClient } from "../../../infra/http/client";
 import { getBearerFromReq } from "../../../interfaces/auth";
 import { CanchaApiRepository } from "../../infrastructure/CanchaApiRepository";
@@ -14,6 +14,7 @@ import {
 } from "../../application/CanchasUseCases";
 import { CanchasController } from "../controllers/canchas.controller";
 import { requireRole } from "../../../admin/presentation/guards/guards";
+import { authMiddleware } from "../../../auth/middlewares/authMiddleware";
 
 /**
  * Router para endpoints de canchas.
@@ -54,15 +55,15 @@ router.get("/:id", (req, res) => ctrl(req).get(req, res));
 // Requieren rol admin, superadmin o dueno
 
 /** POST /canchas - Crea nueva cancha */
-router.post("/", requireRole("admin", "superadmin"), (req, res) => ctrl(req).create(req, res));
+router.post("/", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).create(req, res));
 
 /** PATCH /canchas/:id - Actualiza cancha */
-router.patch("/:id", requireRole("admin", "superadmin"), (req, res) => ctrl(req).update(req, res));
+router.patch("/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).update(req, res));
 
 /** DELETE /canchas/:id - Elimina cancha */
-router.delete("/:id", requireRole("admin", "superadmin"), (req, res) => ctrl(req).delete(req, res));
+router.delete("/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).delete(req, res));
 
 /** PATCH /canchas/:id/estado - Cambia estado de cancha */
-router.patch("/:id/estado", requireRole("admin", "superadmin"), (req, res) => ctrl(req).cambiarEstado(req, res));
+router.patch("/:id/estado", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).cambiarEstado(req, res));
 
 export default router;

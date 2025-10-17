@@ -16,6 +16,7 @@ import {
 } from "../../application/ReservasUseCases";
 import { ReservasController } from "../controllers/reservas.controller";
 import { requireRole } from "../../../admin/presentation/guards/guards";
+import { authMiddleware } from "../../../auth/middlewares/authMiddleware";
 
 /**
  * Router para endpoints de reservas.
@@ -149,9 +150,9 @@ router.post("/:id/cancelar", (req, res) => ctrl(req).cancelar(req, res));
 // Requieren rol admin o superadmin
 
 /** GET /reservas - Lista todas las reservas con filtros */
-router.get("/", requireRole("admin", "superadmin"), (req, res) => ctrl(req).list(req, res));
+router.get("/", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).list(req, res));
 
 /** DELETE /reservas/:id - Elimina reserva */
-router.delete("/:id", requireRole("admin", "superadmin"), (req, res) => ctrl(req).delete(req, res));
+router.delete("/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).delete(req, res));
 
 export default router;

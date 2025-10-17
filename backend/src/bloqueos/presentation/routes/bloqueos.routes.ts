@@ -17,6 +17,7 @@ import {
 } from "../../application/BloqueosUseCases";
 import { BloqueosController } from "../controllers/bloqueos.controller";
 import { requireRole } from "../../../admin/presentation/guards/guards";
+import { authMiddleware } from "../../../auth/middlewares/authMiddleware";
 
 /**
  * Router para endpoints de bloqueos.
@@ -154,9 +155,9 @@ router.post("/:id/desactivar", (req, res) => ctrl(req).desactivar(req, res));
 // Requieren rol admin o superadmin
 
 /** GET /bloqueos - Lista todos los bloqueos con filtros */
-router.get("/", requireRole("admin", "superadmin"), (req, res) => ctrl(req).list(req, res));
+router.get("/", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).list(req, res));
 
 /** DELETE /bloqueos/:id - Elimina bloqueo */
-router.delete("/:id", requireRole("admin", "superadmin"), (req, res) => ctrl(req).delete(req, res));
+router.delete("/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).delete(req, res));
 
 export default router;
