@@ -11,7 +11,6 @@ export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
-    const [success, setSuccess] = useState(false);
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -30,7 +29,6 @@ export default function ForgotPasswordPage() {
 
         setIsLoading(true);
         setError('');
-        setSuccess(false);
 
         try {
             console.log('Enviando solicitud de recuperación para:', email.trim());
@@ -39,9 +37,8 @@ export default function ForgotPasswordPage() {
             });
             console.log('✅ Solicitud enviada exitosamente');
 
-            // Éxito - mostrar mensaje y limpiar formulario
-            setSuccess(true);
-            setEmail('');
+            // Éxito - redirigir a reset-password con el email
+            router.push(`/login/reset-password?email=${encodeURIComponent(email.trim())}`);
             
         } catch (err: any) {
             console.error('Error en recuperación de contraseña:', err);
@@ -100,18 +97,7 @@ export default function ForgotPasswordPage() {
                             </div>
                         )}
 
-                        {success && (
-                            <div style={{ 
-                                backgroundColor: '#dcfce7', 
-                                border: '1px solid #bbf7d0', 
-                                color: '#16a34a', 
-                                padding: '0.75rem', 
-                                borderRadius: '0.5rem', 
-                                marginBottom: '1rem' 
-                            }}>
-                                ✅ Se ha enviado un enlace de recuperación a tu email. Revisa también la carpeta de spam.
-                            </div>
-                        )}
+
 
                         <form onSubmit={handleSubmit}>
                             <label htmlFor="email">Email</label>
