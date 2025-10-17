@@ -6,7 +6,7 @@ import Header from './Header';
 import './Sidebar.css';
 
 interface LayoutProps {
-  userRole: 'admin' | 'superadmin';
+  userRole: 'admin' | 'usuario' | 'superadmin';
   userName: string;
   notificationCount?: number;
   children: React.ReactNode;

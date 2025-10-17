@@ -6,6 +6,8 @@ import '@/app/admin/dashboard.css';
 import { usuariosService } from '@/services/usuariosService';
 import { Usuario } from '@/types/usuarios';
 
+//import { useAuthProtection } from '@/hooks/useAuthProtection';
+
 export default function AdministradoresPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,34 +16,84 @@ export default function AdministradoresPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const itemsPerPage = 4;
+  const [isAuthed, setIsAuthed] = useState(false);
+  
+  // 🔥 AGREGAR VERIFICACIÓN DE CLIENTE
+  const [mounted, setMounted] = useState(false);
+
+  // 🔥 PRIMER useEffect: Solo marcar como montado
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // 🔥 SEGUNDO useEffect: Verificar autenticación solo cuando esté montado
+  useEffect(() => {
+    if (!mounted) return; // No ejecutar hasta que esté montado
+
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+        const userRole = localStorage.getItem('user_role');
+        
+        if (!token || !userRole) {
+          router.push('/login');
+          return;
+        }
+
+        if (userRole !== 'superadmin' && userRole !== 'super_admin') {
+          setError('Acceso denegado. Se requiere rol de superadmin.');
+          setTimeout(() => router.push('/'), 2000);
+          return;
+        }
+
+        // Si llegamos aquí, la autenticación es correcta
+        setIsAuthed(true);
+      } catch (error) {
+        console.error('Error de autenticación:', error);
+        router.push('/login');
+      }
+    };
+
+    checkAuth();
+  }, [router, mounted]); // 🔥 Agregar mounted como dependencia
 
   // Estado para almacenar todos los usuarios sin filtrar
   const [todosUsuarios, setTodosUsuarios] = useState<Usuario[]>([]);
 
   // Función para cargar usuarios
   const cargarUsuarios = async () => {
+    if (!mounted) return; // 🔥 No ejecutar si no está montado
+    
     setIsLoading(true);
+    setError('');
+    
     try {
-      // Verificar autenticación
-      const token = localStorage.getItem('access_token') || localStorage.getItem('token');
-      if (!token) {
-        router.push('/login');
-        return;
-      }
+      console.log('🔍 [AdministradoresPage] Iniciando carga de usuarios...');
+      const userRole = localStorage.getItem('user_role');
+      console.log('👤 [AdministradoresPage] Rol actual:', userRole);
 
       const data = await usuariosService.listar({
         rol: 'admin'
       });
-      setTodosUsuarios(data || []);
+      
+      console.log('✅ [AdministradoresPage] Usuarios cargados:', data);
+      setTodosUsuarios(Array.isArray(data) ? data : []);
     } catch (error: any) {
+      console.error('❌ [AdministradoresPage] Error:', error);
+      
+      // Manejar diferentes tipos de errores
       if (error?.response?.status === 403) {
-        setError('No tienes permisos para ver esta información. Debes ser superadmin.');
-        setTimeout(() => {
-          router.push('/');
-        }, 3000);
+        console.error('🚫 [AdministradoresPage] Error de permisos');
+        setError('No tienes permisos para ver esta información');
+      } else if (error?.response?.status === 401) {
+        console.error('🔒 [AdministradoresPage] Error de autenticación');
+        setError('Sesión expirada. Por favor, inicia sesión nuevamente.');
+        setTimeout(() => router.push('/login'), 2000);
       } else {
         setError(error.message || 'Error al cargar usuarios');
       }
+      
+      setTodosUsuarios([]); // Limpiar la lista en caso de error
     } finally {
       setIsLoading(false);
     }
@@ -63,10 +115,12 @@ export default function AdministradoresPage() {
     setUsuarios(usuariosFiltrados);
   };
 
-  // Cargar usuarios al montar el componente
+  // Cargar usuarios solo cuando la autenticación esté confirmada Y esté montado
   useEffect(() => {
-    cargarUsuarios();
-  }, []);
+    if (isAuthed && mounted) {
+      cargarUsuarios();
+    }
+  }, [isAuthed, mounted]); // 🔥 Agregar mounted como dependencia
 
   // Filtrar usuarios cuando cambie el término de búsqueda o la lista completa
   useEffect(() => {
@@ -95,6 +149,27 @@ export default function AdministradoresPage() {
   const endIndex = startIndex + itemsPerPage;
   const paginatedUsers = usuarios.slice(startIndex, endIndex);
   const totalPages = Math.ceil(usuarios.length / itemsPerPage);
+
+  // 🔥 MOSTRAR LOADING HASTA QUE ESTÉ MONTADO
+  if (!mounted) {
+    return (
+      <div className="admin-dashboard-container">
+        <div className="text-center p-8">
+          <p>Cargando panel de administradores...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthed) {
+    return (
+      <div className="admin-dashboard-container">
+        <div className="text-center p-8">
+          <p>Verificando acceso...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-dashboard-container">

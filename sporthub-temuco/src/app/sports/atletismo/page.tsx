@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStatus } from '../../../hooks/useAuthStatus';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
@@ -8,71 +9,10 @@ import Sidebar from '../../../components/layout/Sidebar';
 import StatsCard from '../../../components/charts/StatsCard';
 import styles from './page.module.css';
 
-// Datos de ejemplo para las pistas mejor calificadas (6 tarjetas)
-const topRatedCourts = [
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha1.png",
-    name: "Atletismo - Centro",
-    address: "Norte, Centro, Sur",
-    rating: 4.3,
-    tags: ["Pista al aire libre", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Pista de atletismo ubicada en el centro con áreas para salto y lanzamiento",
-    price: "21",
-    nextAvailable: "20:00-21:00",
-  },
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha2.png",
-    name: "Atletismo - Norte",
-    address: "Sector Norte",
-    rating: 4.5,
-    tags: ["Pista al aire libre", "Estacionamiento"],
-    description: "Pista de atletismo con cronometraje y carriles reglamentarios",
-    price: "19",
-    nextAvailable: "14:30-15:30",
-  },
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha1.png",
-    name: "Atletismo - Sur",
-    address: "Sector Sur",
-    rating: 4.8,
-    tags: ["Pista techada", "Vestuarios", "Entrenadores", "Áreas de salto"],
-    description: "Pista de atletismo con instalaciones completas y zona de entrenamiento",
-    price: "23",
-    nextAvailable: "10:30-11:30",
-  },
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha2.png",
-    name: "Atletismo - Premium",
-    address: "Centro Premium",
-    rating: 4.7,
-    tags: ["Pista Profesional", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Pista de atletismo profesional con césped híbrido y todas las comodidades",
-    price: "28",
-    nextAvailable: "Disponible ahora",
-  },
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha1.png",
-    name: "Atletismo - Elite",
-    address: "Zona Elite",
-    rating: 4.8,
-    tags: ["Pista Profesional", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Pista premium de atletismo con estándar internacional y equipamiento completo",
-    price: "32",
-    nextAvailable: "18:00-19:00",
-  },
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha2.png",
-    name: "Atletismo - Deportivo",
-    address: "Centro Deportivo",
-    rating: 4.4,
-    tags: ["Pista Sintética", "Estacionamiento", "Iluminación"],
-    description: "Pista de atletismo en complejo deportivo con múltiples servicios y torneos",
-    price: "25",
-    nextAvailable: "16:30-17:30",
-  }
-];
+// 🔥 IMPORTAR SERVICIO
+import { canchaService } from '../../../services/canchaService';
 
-// 🏃 DATOS PARA LAS ESTADÍSTICAS DE ATLETISMO
+// 🏃 DATOS PARA LAS ESTADÍSTICAS DE ATLETISMO (SERÁN ACTUALIZADOS CON DATOS REALES)
 const atletismoStats = [
   {
     title: "Pistas Disponibles Hoy",
@@ -105,6 +45,7 @@ const atletismoStats = [
 ];
 
 export default function AtletismoPage() {
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
@@ -112,6 +53,109 @@ export default function AtletismoPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
+
+  // 🔥 ESTADOS PARA CANCHAS DEL BACKEND
+  const [canchas, setCanchas] = useState<any[]>([]);
+  const [loadingCanchas, setLoadingCanchas] = useState(true);
+  const [errorCanchas, setErrorCanchas] = useState<string | null>(null);
+
+  // 🔥 CARGAR CANCHAS DEL BACKEND
+  useEffect(() => {
+    const loadCanchas = async () => {
+      try {
+        setLoadingCanchas(true);
+        setErrorCanchas(null);
+        
+        console.log('🔄 [Atletismo] Cargando canchas individuales del backend...');
+        
+        // 🔥 IDs de las canchas de atletismo que quieres mostrar
+        const atletismoCanchaIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // Ajusta estos IDs según las canchas de atletismo que tengas
+        
+        const canchasPromises = atletismoCanchaIds.map(async (id) => {
+          try {
+            console.log(`🔍 [Atletismo] Cargando cancha ID: ${id}`);
+            const cancha = await canchaService.getCanchaById(id);
+            console.log(`✅ [Atletismo] Cancha ${id} obtenida:`, cancha);
+            
+            // 🔥 FILTRAR SOLO CANCHAS DE ATLETISMO
+            if (cancha.tipo !== 'atletismo') {
+              console.log(`⚠️ [Atletismo] Cancha ${id} no es de atletismo (${cancha.tipo}), saltando...`);
+              return null;
+            }
+            
+            // Mapear al formato requerido por CourtCard
+            const mappedCancha = {
+              id: cancha.id,
+              imageUrl: `/sports/atletismo/canchas/Cancha${cancha.id}.png`,
+              name: cancha.nombre,
+              address: `Complejo ${cancha.establecimientoId}`,
+              rating: cancha.rating || 4.5,
+              tags: [
+                cancha.techada ? "Pista techada" : "Pista al aire libre",
+                cancha.activa ? "Disponible" : "No disponible",
+                "Estacionamiento",
+                "Cronometraje"
+              ],
+              description: `Pista de atletismo ${cancha.nombre} - ID: ${cancha.id}`,
+              price: cancha.precioPorHora?.toString() || "21",
+              nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
+              sport: cancha.tipo
+            };
+            
+            console.log('🗺️ [Atletismo] Cancha mapeada:', mappedCancha);
+            return mappedCancha;
+            
+          } catch (error) {
+            console.log(`❌ [Atletismo] Error cargando cancha ${id}:`, error);
+            return null;
+          }
+        });
+        
+        const canchasResults = await Promise.all(canchasPromises);
+        const canchasValidas = canchasResults.filter(cancha => cancha !== null);
+        
+        console.log('🎉 [Atletismo] Pistas de atletismo cargadas exitosamente:', canchasValidas.length);
+        console.log('📋 [Atletismo] Pistas finales:', canchasValidas);
+        
+        setCanchas(canchasValidas);
+        
+      } catch (error: any) {
+        console.error('❌ [Atletismo] ERROR DETALLADO cargando pistas:', error);
+        setErrorCanchas(`Error: ${error.message}`);
+        
+        // 🔥 FALLBACK
+        console.log('🚨 [Atletismo] USANDO FALLBACK - Error en el API');
+        setCanchas([
+          {
+            id: 1,
+            imageUrl: "/sports/atletismo/canchas/Cancha1.png",
+            name: "🚨 FALLBACK - Atletismo Centro",
+            address: "Norte, Centro, Sur",
+            rating: 4.3,
+            tags: ["DATOS OFFLINE", "Estacionamiento", "Iluminación", "Cafetería"],
+            description: "🚨 Estos son datos de fallback - API no disponible",
+            price: "21",
+            nextAvailable: "20:00-21:00",
+          },
+          {
+            id: 2,
+            imageUrl: "/sports/atletismo/canchas/Cancha2.png",
+            name: "🚨 FALLBACK - Atletismo Norte",
+            address: "Sector Norte",
+            rating: 4.5,
+            tags: ["DATOS OFFLINE", "Estacionamiento"],
+            description: "🚨 Estos son datos de fallback - API no disponible",
+            price: "19",
+            nextAvailable: "14:30-15:30",
+          }
+        ]);
+      } finally {
+        setLoadingCanchas(false);
+      }
+    };
+
+    loadCanchas();
+  }, []);
 
   useEffect(() => {
     setIsClient(true);
@@ -140,6 +184,8 @@ export default function AtletismoPage() {
     };
   }, []);
 
+  // 🔥 USAR CANCHAS REALES PARA EL CARRUSEL
+  const topRatedCourts = canchas.slice(0, 6); // Máximo 6 canchas para el carrusel
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -163,9 +209,31 @@ export default function AtletismoPage() {
   };
 
   const handleCanchaClick = (court: any) => {
-    console.log('Test navigation...');
-    router.push('/sports/atletismo/canchas/canchaseleccionada');
+    console.log('Navegando a pista:', court);
+    router.push(`/sports/atletismo/canchas/canchaseleccionada?id=${court.id}`);
   };
+
+  const handleUserButtonClick = () => {
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
+  };
+
+  // 🔥 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
+  const updatedStats = [
+    {
+      ...atletismoStats[0],
+      value: canchas.filter(c => c.nextAvailable !== "No disponible").length.toString()
+    },
+    atletismoStats[1], // Mantener precio por defecto
+    {
+      ...atletismoStats[2],
+      value: `${(canchas.reduce((acc, c) => acc + c.rating, 0) / canchas.length || 4.5).toFixed(1)}⭐`
+    },
+    atletismoStats[3] // Mantener atletas por defecto
+  ];
 
   if (!isClient) {
     return (
@@ -198,21 +266,25 @@ export default function AtletismoPage() {
               placeholder="Nombre de la pista..."
               sport="atletismo"
             />
-            <button className={styles.userButton}>
+            <button 
+              className={styles.userButton}
+              onClick={handleUserButtonClick}
+              disabled={buttonProps.disabled}
+            >
               <span>👤</span>
-              <span>usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>
 
-        {/* 🏃 STATS CARDS MEJORADAS CON STATSCARD */}
+        {/* 🔥 STATS CARDS CON DATOS ACTUALIZADOS */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
             <span className={styles.statsTitleIcon}>📊</span>
             Estadísticas del Atletismo en Temuco
           </h2>
           <div className={styles.statsContainer}>
-            {atletismoStats.map((stat, index) => (
+            {updatedStats.map((stat, index) => (
               <StatsCard
                 key={index}
                 title={stat.title}
@@ -223,7 +295,6 @@ export default function AtletismoPage() {
                 sport="atletismo"
                 onClick={() => {
                   console.log(`Clicked on ${stat.title} stat`);
-                  // Agregar navegación específica si es necesario
                   if (stat.title.includes("Pistas")) {
                     router.push('/sports/atletismo/canchas');
                   }
@@ -247,19 +318,21 @@ export default function AtletismoPage() {
           </button>
         </div>
 
-        {/* Pistas mejor calificadas con carrusel */}
+        {/* 🔥 CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>⭐</span>
               Pistas mejor calificadas
+              {loadingCanchas && <span style={{ fontSize: '14px', marginLeft: '10px' }}>Cargando...</span>}
+              {errorCanchas && <span style={{ fontSize: '14px', marginLeft: '10px', color: 'red' }}>⚠️ Usando datos offline</span>}
             </h2>
             <div className={styles.carouselControls}>
               <button
                 onClick={prevSlide}
                 className={styles.carouselButton}
-                disabled={currentSlide === 0}
-                style={{ opacity: currentSlide === 0 ? 0.5 : 1 }}
+                disabled={currentSlide === 0 || loadingCanchas}
+                style={{ opacity: currentSlide === 0 || loadingCanchas ? 0.5 : 1 }}
               >
                 ←
               </button>
@@ -269,8 +342,8 @@ export default function AtletismoPage() {
               <button
                 onClick={nextSlide}
                 className={styles.carouselButton}
-                disabled={currentSlide === totalSlides - 1}
-                style={{ opacity: currentSlide === totalSlides - 1 ? 0.5 : 1 }}
+                disabled={currentSlide === totalSlides - 1 || loadingCanchas}
+                style={{ opacity: currentSlide === totalSlides - 1 || loadingCanchas ? 0.5 : 1 }}
               >
                 →
               </button>
@@ -278,21 +351,27 @@ export default function AtletismoPage() {
           </div>
 
           <div className={styles.carouselContainer}>
-            <div
-              className={styles.courtsGrid}
-              style={{
-                transform: `translateX(-${currentSlide * (320 + 20)}px)`,
-              }}
-            >
-              {topRatedCourts.map((court, index) => (
-                <CourtCard
-                  key={index}
-                  {...court}
-                  sport="atletismo"
-                  onClick={() => router.push('/sports/atletismo/canchas/canchaseleccionada')}
-                />
-              ))}
-            </div>
+            {loadingCanchas ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                <p>Cargando pistas...</p>
+              </div>
+            ) : (
+              <div
+                className={styles.courtsGrid}
+                style={{
+                  transform: `translateX(-${currentSlide * (320 + 20)}px)`,
+                }}
+              >
+                {topRatedCourts.map((court, index) => (
+                  <CourtCard
+                    key={court.id || index}
+                    {...court}
+                    sport="atletismo"
+                    onClick={() => handleCanchaClick(court)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -348,4 +427,3 @@ export default function AtletismoPage() {
     </div>
   );
 }
-

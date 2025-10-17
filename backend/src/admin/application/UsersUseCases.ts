@@ -1,64 +1,168 @@
 import { AdminRepository } from "../domain/AdminRepository";
-import { Rol, User } from "../../domain/user/User";
-import { Paginated } from "../../app/common/pagination";
+import { Complejo } from "../../domain/complejo/Complejo";
+import { Cancha } from "../../domain/cancha/Cancha";
+import { ReservaOwner, EstadisticasOwner } from "../../domain/admin/Owner";
+import { CreateComplejoIn, UpdateComplejoIn, CreateCanchaIn, UpdateCanchaIn, FiltrosReservasIn, MisRecursosOut, mapCreateComplejoToEntity, mapCreateCanchaToEntity } from "./dtos";
+
+// === CASOS DE USO PANEL OWNER ===
 
 /**
- * Caso de uso para listar usuarios con paginación y filtros.
+ * Caso de uso para obtener resumen de recursos del owner.
  */
-export class ListUsers {
+export class GetMisRecursos {
   constructor(private repo: AdminRepository) {}
   
-  /**
-   * Obtiene una lista paginada de usuarios.
-   * @param p - Parámetros de consulta (página, tamaño, búsqueda, rol)
-   * @returns Promise con resultado paginado
-   */
-  execute(p: { page?: number; pageSize?: number; q?: string; rol?: Rol }): Promise<Paginated<User>> {
-    return this.repo.listUsers(p);
+  async execute(ownerId: number): Promise<MisRecursosOut> {
+    const [complejos, canchas, reservas, estadisticas] = await Promise.all([
+      this.repo.getMisComplejos(ownerId),
+      this.repo.getMisCanchas(ownerId),
+      this.repo.getMisReservas(ownerId, {}),
+      this.repo.getMisEstadisticas(ownerId)
+    ]);
+    
+    return {
+      complejos,
+      canchas,
+      total_reservas: reservas.length,
+      ingresos_mes: estadisticas.ingresos_totales
+    };
   }
 }
 
 /**
- * Caso de uso para obtener un usuario específico.
+ * Caso de uso para obtener complejos del owner.
  */
-export class GetUser {
+export class GetMisComplejos {
   constructor(private repo: AdminRepository) {}
   
-  /**
-   * Obtiene un usuario por su ID.
-   * @param id - ID del usuario
-   * @returns Promise con los datos del usuario
-   */
-  execute(id: number): Promise<User> { return this.repo.getUser(id); }
-}
-
-/**
- * Caso de uso para actualizar datos de un usuario.
- */
-export class PatchUser {
-  constructor(private repo: AdminRepository) {}
-  
-  /**
-   * Actualiza parcialmente un usuario.
-   * @param id - ID del usuario
-   * @param input - Datos a actualizar
-   * @returns Promise con el usuario actualizado
-   */
-  execute(id: number, input: Partial<Omit<User,"id"|"rol">> & { rol?: Rol }): Promise<User> {
-    return this.repo.patchUser(id, input);
+  execute(ownerId: number): Promise<Complejo[]> {
+    return this.repo.getMisComplejos(ownerId);
   }
 }
 
 /**
- * Caso de uso para eliminar un usuario.
+ * Caso de uso para obtener canchas del owner.
  */
-export class RemoveUser {
+export class GetMisCanchas {
   constructor(private repo: AdminRepository) {}
   
-  /**
-   * Elimina un usuario del sistema.
-   * @param id - ID del usuario a eliminar
-   * @returns Promise que se resuelve cuando se completa la eliminación
-   */
-  execute(id: number): Promise<void> { return this.repo.removeUser(id); }
+  execute(ownerId: number): Promise<Cancha[]> {
+    return this.repo.getMisCanchas(ownerId);
+  }
+}
+
+/**
+ * Caso de uso para obtener reservas del owner.
+ */
+export class GetMisReservas {
+  constructor(private repo: AdminRepository) {}
+  
+  execute(ownerId: number, filtros: FiltrosReservasIn): Promise<ReservaOwner[]> {
+    return this.repo.getMisReservas(ownerId, filtros);
+  }
+}
+
+/**
+ * Caso de uso para obtener estadísticas del owner.
+ */
+export class GetMisEstadisticas {
+  constructor(private repo: AdminRepository) {}
+  
+  execute(ownerId: number): Promise<EstadisticasOwner> {
+    return this.repo.getMisEstadisticas(ownerId);
+  }
+}
+
+// === CASOS DE USO GESTIÓN COMPLEJOS ===
+
+/**
+ * Caso de uso para crear complejo.
+ */
+export class CreateComplejo {
+  constructor(private repo: AdminRepository) {}
+  
+  execute(ownerId: number, data: CreateComplejoIn): Promise<Complejo> {
+    const complejoData = mapCreateComplejoToEntity(data, ownerId);
+    return this.repo.createComplejo(ownerId, complejoData);
+  }
+}
+
+/**
+ * Caso de uso para obtener complejo específico.
+ */
+export class GetComplejo {
+  constructor(private repo: AdminRepository) {}
+  
+  execute(ownerId: number, complejoId: number): Promise<Complejo> {
+    return this.repo.getComplejo(ownerId, complejoId);
+  }
+}
+
+/**
+ * Caso de uso para actualizar complejo.
+ */
+export class UpdateComplejo {
+  constructor(private repo: AdminRepository) {}
+  
+  execute(ownerId: number, complejoId: number, data: UpdateComplejoIn): Promise<Complejo> {
+    return this.repo.updateComplejo(ownerId, complejoId, data);
+  }
+}
+
+/**
+ * Caso de uso para eliminar complejo.
+ */
+export class DeleteComplejo {
+  constructor(private repo: AdminRepository) {}
+  
+  execute(ownerId: number, complejoId: number): Promise<void> {
+    return this.repo.deleteComplejo(ownerId, complejoId);
+  }
+}
+
+// === CASOS DE USO GESTIÓN CANCHAS ===
+
+/**
+ * Caso de uso para crear cancha.
+ */
+export class CreateCancha {
+  constructor(private repo: AdminRepository) {}
+  
+  execute(ownerId: number, data: CreateCanchaIn): Promise<Cancha> {
+    const canchaData = mapCreateCanchaToEntity(data, ownerId);
+    return this.repo.createCancha(ownerId, canchaData);
+  }
+}
+
+/**
+ * Caso de uso para obtener cancha específica.
+ */
+export class GetCancha {
+  constructor(private repo: AdminRepository) {}
+  
+  execute(ownerId: number, canchaId: number): Promise<Cancha> {
+    return this.repo.getCancha(ownerId, canchaId);
+  }
+}
+
+/**
+ * Caso de uso para actualizar cancha.
+ */
+export class UpdateCancha {
+  constructor(private repo: AdminRepository) {}
+  
+  execute(ownerId: number, canchaId: number, data: UpdateCanchaIn): Promise<Cancha> {
+    return this.repo.updateCancha(ownerId, canchaId, data);
+  }
+}
+
+/**
+ * Caso de uso para eliminar cancha.
+ */
+export class DeleteCancha {
+  constructor(private repo: AdminRepository) {}
+  
+  execute(ownerId: number, canchaId: number): Promise<void> {
+    return this.repo.deleteCancha(ownerId, canchaId);
+  }
 }

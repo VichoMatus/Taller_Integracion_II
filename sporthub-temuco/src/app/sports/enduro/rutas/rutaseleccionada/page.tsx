@@ -7,10 +7,12 @@ import SearchBar from '../../../../../components/SearchBar';
 import LocationMap from '../../../../../components/LocationMap'; 
 import styles from './page.module.css';
 
+import { useAuthStatus } from '@/hooks/useAuthStatus';
 export default function RutaSeleccionadaPage() {
   const router = useRouter();
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   
   // 🔥 DATOS ESTÁTICOS PARA ENDURO
@@ -61,9 +63,18 @@ export default function RutaSeleccionadaPage() {
   
   useEffect(() => {
     // Simular carga
-    const timer = setTimeout(() => setIsLoading(false), 1200);
+    const timer = setTimeout(() => setDataLoading(false), 1200);
+    
+
     return () => clearTimeout(timer);
   }, []);
+  const handleUserButtonClick = () => {
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
+  };
 
   const handleBackToRutas = () => {
     router.push('/sports/enduro/rutas');
@@ -129,7 +140,7 @@ export default function RutaSeleccionadaPage() {
     alert('Función de escribir reseña próximamente...');
   };
 
-  if (isLoading) {
+  if (dataLoading) {
     return (
       <div className={styles.pageContainer}>
         <Sidebar userRole="usuario" sport="enduro" />
@@ -140,6 +151,8 @@ export default function RutaSeleccionadaPage() {
       </div>
     );
   }
+
+  
 
   return (
     <div className={styles.pageContainer}>
@@ -158,9 +171,13 @@ export default function RutaSeleccionadaPage() {
             sport="enduro"
             onSearch={(term) => router.push(`/sports/enduro/rutas?search=${encodeURIComponent(term)}`)}
             />
-            <button className={styles.userButton}>
+            <button 
+              {...buttonProps}
+              onClick={handleUserButtonClick}
+              className={styles.userButton}
+            >
               <span>👤</span>
-              <span>Usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>

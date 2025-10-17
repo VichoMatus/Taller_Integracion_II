@@ -1,104 +1,139 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { resenaService } from '@/services/resenaService';
+import { Resena, ResenaListQuery } from '@/types/resena';
 import '../dashboard.css';
-
-interface Review {
-  id: string;
-  cancha: string;
-  usuario: string;
-  comentario: string;
-  fecha: string;
-  estado: 'Activo' | 'Inactivo' | 'Reportada';
-}
 
 export default function ResenasPage() {
   const router = useRouter();
+  
+  // Estados del componente
+  const [resenas, setResenas] = useState<Resena[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 4;
+  const [selectedCalificacion, setSelectedCalificacion] = useState<number | ''>('');
+  const itemsPerPage = 10;
 
-  // Datos de ejemplo basados en la imagen
-  const reviews: Review[] = [
-    { 
-      id: '1', 
-      cancha: 'Cancha Central', 
-      usuario: 'Miguel Chamo', 
-      comentario: 'Hola soy miguel y soy lindo', 
-      fecha: 'Hoy, 19:03', 
-      estado: 'Activo' 
-    },
-    { 
-      id: '2', 
-      cancha: 'Cancha Central', 
-      usuario: 'Miguel Chamo', 
-      comentario: 'Hola soy miguel y patapico es bonito', 
-      fecha: '28-08-2025', 
-      estado: 'Inactivo' 
-    },
-    { 
-      id: '3', 
-      cancha: 'Cancha Central', 
-      usuario: 'Miguel Chamo', 
-      comentario: 'Hola soy miguel y soy lindo para la venta. Esta es una reseña mucho más larga que necesita ser truncada en la tabla pero se puede leer completa en el modal. Aquí puedo escribir todo lo que quiera sobre mi experiencia en la cancha.', 
-      fecha: 'Ayer, 16:45', 
-      estado: 'Reportada' 
-    },
-    { 
-      id: '4', 
-      cancha: 'Cancha Central', 
-      usuario: 'Miguel Chamo', 
-      comentario: 'Hola soy miguel y soy lindo', 
-      fecha: 'Hoy, 11:35', 
-      estado: 'Activo' 
-    },
-    { 
-      id: '5', 
-      cancha: 'Cancha Norte', 
-      usuario: 'Ana García', 
-      comentario: 'Excelente cancha, muy bien mantenida. Las instalaciones están en perfecto estado y el césped se ve muy bien cuidado. Definitivamente volvería a reservar aquí.', 
-      fecha: 'Hoy, 08:20', 
-      estado: 'Activo' 
-    },
-    { 
-      id: '6', 
-      cancha: 'Cancha Sur', 
-      usuario: 'Carlos López', 
-      comentario: 'Necesita mejoras en la iluminación, especialmente en las esquinas donde se ve muy oscuro durante la noche.', 
-      fecha: '25-08-2025', 
-      estado: 'Reportada' 
-    },
-  ];
-
-  // Función para navegar al detalle de la reseña
-  const viewReviewDetail = (reviewId: string) => {
-    router.push(`/admin/resenas/${reviewId}`);
+  // Cargar resenas
+  const loadResenas = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const filters: ResenaListQuery = {
+        page: currentPage,
+        size: itemsPerPage,
+        ...(selectedCalificacion && { 
+          calificacion_min: selectedCalificacion, 
+          calificacion_max: selectedCalificacion 
+        })
+      };
+      
+      const data = await resenaService.listarResenas(filters);
+      setResenas(data);
+    } catch (err: any) {
+      console.warn('Backend no disponible, usando datos mock:', err);
+      setError('Conectando con datos de desarrollo (backend no disponible)');
+      // Usar datos mock en caso de error para development
+      setResenas([
+        {
+          id_resena: 1,
+          id_usuario: 1,
+          id_cancha: 1,
+          id_reserva: 1,
+          calificacion: 5,
+          comentario: 'Excelente cancha, muy bien mantenida y con buen cesped.',
+          fecha_creacion: new Date().toISOString(),
+          fecha_actualizacion: new Date().toISOString()
+        },
+        {
+          id_resena: 2,
+          id_usuario: 2,
+          id_cancha: 1,
+          id_reserva: 2,
+          calificacion: 4,
+          comentario: 'Muy buena experiencia, solo faltaba un poco mas de iluminacion.',
+          fecha_creacion: new Date(Date.now() - 86400000).toISOString(),
+          fecha_actualizacion: new Date(Date.now() - 86400000).toISOString()
+        }
+      ]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Función para navegar a las reseñas del usuario
-  const viewUserReviews = (userName: string) => {
-    router.push(`/admin/resenas/usuario/${encodeURIComponent(userName)}`);
+  useEffect(() => {
+    loadResenas();
+  }, [currentPage, selectedCalificacion]);
+
+  // Filtrar resenas por termino de busqueda
+  const filteredResenas = resenas.filter(resena =>
+    resena.comentario?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    resena.id_usuario.toString().includes(searchTerm) ||
+    resena.id_cancha.toString().includes(searchTerm)
+  );
+
+  // Funcion para navegar a editar resena
+  const editResena = (resenaId: number | string) => {
+    router.push(`/admin/resenas/${resenaId}`);
   };
 
-  // Filtrar reseñas basado en búsqueda
-  const filteredReviews = reviews.filter(review => {
-    const matchesSearch = review.usuario.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         review.cancha.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         review.comentario.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
+  // Funcion para navegar a crear resena
+  const createResena = () => {
+    router.push('/admin/resenas/crear');
+  };
 
-  // Paginación
-  const totalPages = Math.ceil(filteredReviews.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedReviews = filteredReviews.slice(startIndex, startIndex + itemsPerPage);
+  // Funcion para eliminar resena
+  const deleteResena = async (resenaId: number | string) => {
+    if (window.confirm('¿Estas seguro de que deseas eliminar esta resena?')) {
+      try {
+        await resenaService.eliminarResena(resenaId);
+        alert('Resena eliminada exitosamente');
+        loadResenas(); // Recargar la lista
+      } catch (err: any) {
+        console.warn('No se pudo eliminar (backend no disponible):', err);
+        alert('No se puede eliminar en modo desarrollo (backend no disponible)');
+      }
+    }
+  };
+
+  // Funcion para obtener el emoji de calificacion
+  const getCalificacionEmoji = (calificacion: number) => {
+    const emojis = ['😡', '😞', '😐', '😊', '🤩'];
+    return emojis[calificacion - 1] || '❓';
+  };
+
+  // Funcion para formatear fecha
+  const formatFecha = (fechaISO: string) => {
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleDateString('es-CL', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="admin-dashboard-container">
+        <div className="loading-container">
+          <p>Cargando resenas...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-dashboard-container">
       {/* Header Principal */}
       <div className="estadisticas-header">
-        <h1 className="text-2xl font-bold text-gray-900">Panel de Gestión de Reseñas</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Panel de Gestion de Resenas</h1>
         
         <div className="admin-controls">
           <button className="export-button">
@@ -108,29 +143,37 @@ export default function ResenasPage() {
             Exportar informe
           </button>
           
-          <button className="export-button">
+          <button className="export-button" onClick={createResena}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            Crear Reseña Manual
+            Crear Resena
           </button>
         </div>
       </div>
+
+      {/* Mensaje Informativo */}
+      {error && (
+        <div className="info-container">
+          <div className="info-icon">ℹ️</div>
+          <p>{error}</p>
+        </div>
+      )}
 
       {/* Contenedor Principal de la Tabla */}
       <div className="admin-table-container">
         {/* Header de la Tabla */}
         <div className="admin-table-header">
-          <h2 className="admin-table-title">Lista de Reseñas</h2>
+          <h2 className="admin-table-title">Lista de Resenas</h2>
           
           <div className="admin-search-filter">
-            {/* Búsqueda */}
+            {/* Busqueda */}
             <div className="admin-search-container">
               <input
                 type="text"
-                placeholder="Buscar"
+                placeholder="Buscar por comentario, usuario o cancha..."
                 value={searchTerm}
-                onChange={(e: any) => setSearchTerm(e.target.value)}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 className="admin-search-input"
               />
               <svg className="admin-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,86 +181,85 @@ export default function ResenasPage() {
               </svg>
             </div>
             
-            {/* Filtro */}
-            <button className="btn-filtrar">
-              Filtrar
-            </button>
-            
-            {/* Botón Buscar adicional como en la imagen */}
-            <button className="btn-buscar">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              Buscar
-            </button>
+            {/* Filtro por Calificacion */}
+            <div className="admin-filter-container">
+              <select
+                value={selectedCalificacion}
+                onChange={(e) => setSelectedCalificacion(e.target.value ? parseInt(e.target.value) : '')}
+                className="admin-filter-select"
+              >
+                <option value="">Todas las calificaciones</option>
+                <option value={5}>⭐⭐⭐⭐⭐ (5 estrellas)</option>
+                <option value={4}>⭐⭐⭐⭐ (4 estrellas)</option>
+                <option value={3}>⭐⭐⭐ (3 estrellas)</option>
+                <option value={2}>⭐⭐ (2 estrellas)</option>
+                <option value={1}>⭐ (1 estrella)</option>
+              </select>
+            </div>
           </div>
         </div>
-        
-        {/* Tabla Principal */}
-        <div className="overflow-x-auto">
+
+        {/* Tabla */}
+        <div className="admin-table-wrapper">
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Cancha</th>
+                <th>ID</th>
                 <th>Usuario</th>
+                <th>Cancha</th>
+                <th>Calificacion</th>
                 <th>Comentario</th>
                 <th>Fecha</th>
-                <th>Estado</th>
                 <th>Acciones</th>
               </tr>
             </thead>
             <tbody>
-              {paginatedReviews.map((review) => (
-                <tr key={review.id}>
+              {filteredResenas.map((resena) => (
+                <tr key={resena.id_resena}>
+                  <td>#{resena.id_resena}</td>
+                  <td>Usuario {resena.id_usuario}</td>
+                  <td>Cancha {resena.id_cancha}</td>
                   <td>
-                    <div className="admin-cell-title">{review.cancha}</div>
-                  </td>
-                  <td>
-                    <button 
-                      className="admin-user-link"
-                      onClick={() => viewUserReviews(review.usuario)}
-                      title={`Ver todas las reseñas de ${review.usuario}`}
-                    >
-                      {review.usuario}
-                    </button>
-                  </td>
-                  <td>
-                    <div className="admin-cell-comment">
-                      {review.comentario.length > 40 
-                        ? `${review.comentario.substring(0, 40)}...` 
-                        : review.comentario}
+                    <div className="calificacion-cell">
+                      <span className="calificacion-emoji">
+                        {getCalificacionEmoji(resena.calificacion)}
+                      </span>
+                      <span className="calificacion-numero">
+                        {resena.calificacion}/5
+                      </span>
                     </div>
                   </td>
                   <td>
-                    <div className="admin-cell-text">{review.fecha}</div>
+                    <div className="comentario-cell">
+                      {resena.comentario ? (
+                        resena.comentario.length > 50 
+                          ? `${resena.comentario.substring(0, 50)}...`
+                          : resena.comentario
+                      ) : 'Sin comentario'}
+                    </div>
                   </td>
-                  <td>
-                    <span className={`status-badge ${
-                      review.estado === 'Activo' ? 'status-activo' :
-                      review.estado === 'Inactivo' ? 'status-inactivo' :
-                      'status-reportada'
-                    }`}>
-                      {review.estado}
-                    </span>
-                  </td>
+                  <td>{formatFecha(resena.fecha_creacion)}</td>
                   <td>
                     <div className="admin-actions-container">
-                      {/* Botón Ver/Leer - Abre modal */}
+                      {/* Boton Editar */}
                       <button 
-                        className="btn-action btn-ver" 
-                        title="Ver comentario completo"
-                        onClick={() => viewReviewDetail(review.id)}
+                        className="btn-action btn-editar" 
+                        title="Editar"
+                        onClick={() => editResena(resena.id_resena)}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                         </svg>
                       </button>
                       
-                      {/* Botón Aprobar/Check */}
-                      <button className="btn-action btn-aprobar" title="Aprobar">
+                      {/* Boton Eliminar */}
+                      <button 
+                        className="btn-action btn-eliminar" 
+                        title="Eliminar"
+                        onClick={() => deleteResena(resena.id_resena)}
+                      >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                       </button>
                     </div>
@@ -227,38 +269,32 @@ export default function ResenasPage() {
             </tbody>
           </table>
         </div>
-        
-        {/* Paginación */}
-        <div className="admin-pagination-container">
+
+        {/* Paginacion */}
+        <div className="admin-table-footer">
           <div className="admin-pagination-info">
-            mostrando {startIndex + 1} de {Math.min(startIndex + itemsPerPage, filteredReviews.length)} reseñas
+            <span>
+              Mostrando {Math.min(filteredResenas.length, itemsPerPage)} de {filteredResenas.length} resenas
+            </span>
           </div>
           
-          <div className="admin-pagination-controls">
-            <button
-              onClick={() => setCurrentPage((prev: number) => Math.max(prev - 1, 1))}
+          <div className="admin-pagination">
+            <button 
+              className="btn-pagination" 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="btn-pagination"
             >
               Anterior
             </button>
             
-            <div className="admin-pagination-numbers">
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`btn-pagination ${currentPage === i + 1 ? 'active' : ''}`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
+            <span className="pagination-current">
+              Pagina {currentPage}
+            </span>
             
-            <button
-              onClick={() => setCurrentPage((prev: number) => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="btn-pagination"
+            <button 
+              className="btn-pagination" 
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              disabled={filteredResenas.length < itemsPerPage}
             >
               Siguiente
             </button>

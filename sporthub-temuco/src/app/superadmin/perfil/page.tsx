@@ -1,17 +1,33 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from "next/navigation";
 import './perfilsuperadmin.css';
 import AdminLayout from '@/components/layout/AdminsLayout';
+import authService from '@/services/authService';
 
 export default function PerfilSuperAdministrador() {
   const [activeTab, setActiveTab] = useState('personal');
-  
-  const userImage = null;
-  const userName = "Super Administrador";
-  
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const data = await authService.me();
+        setUser(data);
+      } catch (e) {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchUser();
+  }, []);
+
   const getInitial = (name: string) => {
-    return name.charAt(0).toUpperCase();
+    return name ? name.charAt(0).toUpperCase() : '';
   };
 
   const actividadReciente = [
@@ -20,46 +36,69 @@ export default function PerfilSuperAdministrador() {
     { id: 3, accion: "Actualización de sistema", fecha: "05 Ene 2024", dispositivo: "Chrome - Windows" },
   ];
 
-  return (
+  if (loading) return (
     <AdminLayout userRole="superadmin" userName="Super Admin" notificationCount={3}>
       <div className="superadmin-container">
-        
+        <div className="profile-card">
+          <div>Cargando perfil...</div>
+        </div>
+      </div>
+    </AdminLayout>
+  );
+
+  if (!user) return (
+    <AdminLayout userRole="superadmin" userName="Super Admin" notificationCount={3}>
+      <div className="superadmin-container">
+        <div className="profile-card">
+          <div>No se pudo cargar el perfil.</div>
+        </div>
+      </div>
+    </AdminLayout>
+  );
+
+  return (
+    <AdminLayout userRole="superadmin" userName={user.nombre || "Super Admin"} notificationCount={3}>
+      <div className="superadmin-container">
+        {/* Panel Izquierdo - Perfil */}
         <div className="profile-card">
           <div className="avatar-container">
-            {userImage ? (
+            {user.imagen ? (
               <img 
-                src={userImage} 
+                src={user.imagen} 
                 alt="Foto de perfil" 
                 className="avatar-image"
               />
             ) : (
               <div className="avatar-default superadmin-avatar">
-                <span className="avatar-initial">{getInitial(userName)}</span>
+                <span className="avatar-initial">{getInitial(user.nombre || "S")}</span>
               </div>
             )}
             <div className="online-status"></div>
           </div>
 
-          <h2 className="profile-name">{userName}</h2>
+          <h2 className="profile-name">{user.nombre} {user.apellido}</h2>
 
           <div className="profile-details">
             <div className="detail-item">
               <div className="detail-content">
                 <span className="detail-label">Teléfono</span>
-                <span className="detail-value">+569 12098456</span>
+                <span className="detail-value">{user.telefono || "No registrado"}</span>
               </div>
             </div>
             
             <div className="detail-item">
               <div className="detail-content">
                 <span className="detail-label">Correo</span>
-                <span className="detail-value">superadmin@empresa.com</span>
+                <span className="detail-value">{user.email}</span>
               </div>
             </div>
           </div>
 
           <div className="superadmin-actions">
-            <button className="action-button secondary">
+            <button
+              className="action-button secondary"
+              onClick={() => router.push("/superadmin/cambiocontra")}
+            >
               <span className="action-icon">🔑</span>
               Cambiar Contraseña
             </button>
@@ -103,27 +142,27 @@ export default function PerfilSuperAdministrador() {
                 <div className="info-grid">
                   <div className="info-item">
                     <span className="info-label">Nombre Completo</span>
-                    <span className="info-value">Super Administrador</span>
+                    <span className="info-value">{user.nombre} {user.apellido}</span>
                   </div>
                   
                   <div className="info-item">
                     <span className="info-label">Correo Electrónico</span>
-                    <span className="info-value">superadmin@empresa.com</span>
+                    <span className="info-value">{user.email}</span>
                   </div>
                   
                   <div className="info-item">
                     <span className="info-label">Teléfono</span>
-                    <span className="info-value">+569 12098456</span>
+                    <span className="info-value">{user.telefono || "No registrado"}</span>
                   </div>
                   
                   <div className="info-item">
                     <span className="info-label">Rol</span>
-                    <span className="info-value highlight">Super Administrador</span>
+                    <span className="info-value highlight">{user.rol || "Super Administrador"}</span>
                   </div>
                   
                   <div className="info-item">
                     <span className="info-label">Estado de Cuenta</span>
-                    <span className="info-value status-active">Activa</span>
+                    <span className="info-value status-active">{user.estado || "Activa"}</span>
                   </div>
                 </div>
                 
@@ -142,9 +181,12 @@ export default function PerfilSuperAdministrador() {
                 <div className="security-item">
                   <div className="security-info">
                     <h4>Contraseña</h4>
-                    <p>Último cambio: 15 Dic 2023</p>
+                    <p>Último cambio: {user.ultimaActualizacionContrasena || "No disponible"}</p>
                   </div>
-                  <button className="security-action-btn">
+                  <button
+                    className="security-action-btn"
+                    onClick={() => router.push("/superadmin/cambiocontra")}
+                  >
                     Cambiar Contraseña
                   </button>
                 </div>
@@ -152,7 +194,7 @@ export default function PerfilSuperAdministrador() {
                 <div className="security-item">
                   <div className="security-info">
                     <h4>Sesiones Activas</h4>
-                    <p>2 dispositivos conectados</p>
+                    <p>{user.sesionesActivas ? `${user.sesionesActivas} dispositivos conectados` : "No disponible"}</p>
                   </div>
                   <button className="security-action-btn">
                     Gestionar Sesiones

@@ -5,6 +5,9 @@ Nube:
             Hasta ahora lo que se puede hacer es ingresar a Basquetball -> Explorar Canchas -> Basquetball Centro o en rutas seria:
             /sports - /sports/basquetbol - /sports/basquetbol/canchas - /sports/basquetbol/canchas/canchaseleccionada
 
+            https://frontend-develop-msocdn-e268a6-168-232-167-73.traefik.me
+            link de la rama develop de frontend para ir testeando nuevas funcionalidades en el servidor de produccion
+
             https://frontend-cdrhos-0246e7-168-232-167-73.traefik.me/admin
             Hasta ahora esta con datos estaticos pero el diseño esta listo
 
@@ -16,9 +19,13 @@ Nube:
 
             https://frontend-cdrhos-0246e7-168-232-167-73.traefik.me/usuario/perfil
             Aqui falta pulir detalles
+
     
  -Backend  : http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/
             Hasta ahora los endpoint ya estan configurados para recibir los datos de la api y pasarselos al frontend, esto se puede verificar en los siguientes enlaces
+
+            https://backend-develop-0kbdnu-ec3ee3-168-232-167-73.traefik.me
+            link de la rama develop de backend para ir testeando nuevas funcionalidades en el servidor de produccion
 
             http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/auth/status
             http://backend-mn66n6-82bd05-168-232-167-73.traefik.me/api/admin/status

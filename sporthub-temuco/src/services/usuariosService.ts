@@ -11,9 +11,32 @@ export const usuariosService = {
   // Listar usuarios
   async listar(params?: UsuarioListQuery): Promise<Usuario[]> {
     try {
-      const { data } = await apiBackend.get<Usuario[]>("/usuarios", { params });
-      return data;
+      console.log('🔍 [usuariosService] Listando usuarios con params:', params);
+      
+      // Agregar el token en los headers de la petición
+      const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No hay token disponible');
+      }
+      
+      // Asegurarse de que el rol esté en minúsculas para consistencia
+      if (params?.rol) {
+        params.rol = params.rol.toLowerCase();
+      }
+
+      const { data } = await apiBackend.get<Usuario[]>("/usuarios", { 
+        params,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('✅ [usuariosService] Usuarios obtenidos:', data);
+      return Array.isArray(data) ? data : [];
+      
     } catch (e) {
+      console.error('❌ [usuariosService] Error al listar usuarios:', e);
       handleApiError(e);
     }
   },

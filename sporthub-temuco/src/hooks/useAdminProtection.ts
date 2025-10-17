@@ -84,6 +84,12 @@ export const useAdminProtection = () => {
             nombre: userData?.nombre,
             id: userData?.id_usuario
           });
+          
+          // Si no hay datos de usuario, token inválido
+          if (!userData) {
+            console.log('⚠️ [useAdminProtection] No se obtuvieron datos de usuario');
+            throw new Error('Token inválido o expirado');
+          }
 
           if (!userData || (userData.rol !== 'admin' && userData.rol !== 'super_admin')) {
             console.log('❌ [useAdminProtection] Acceso denegado:', {
@@ -129,13 +135,15 @@ export const useAdminProtection = () => {
           localStorage.setItem('userData', JSON.stringify(userData));
           isCheckingRef.current = false;
           hasCheckedRef.current = true;
-        } catch (error) {
-          console.error('❌ useAdminProtection - Error al verificar token:', error);
-          // Si hay error con el token, limpiar y redirigir al login
+        } catch (error: any) {
+          console.warn('⚠️ useAdminProtection - Error al verificar token (esto es normal si no hay sesión activa):', error.message);
+          // Si hay error con el token, limpiar y redirigir al login sin mostrar error
           localStorage.removeItem('token');
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
           localStorage.removeItem('userData');
+          isCheckingRef.current = false;
+          hasCheckedRef.current = true;
           router.push('/login');
         }
       } catch (error) {

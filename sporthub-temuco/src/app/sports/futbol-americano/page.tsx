@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStatus } from '../../../hooks/useAuthStatus';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
@@ -8,62 +9,43 @@ import Sidebar from '../../../components/layout/Sidebar';
 import StatsCard from '../../../components/charts/StatsCard';
 import styles from './page.module.css';
 
-const topRatedCourts = [
-  {
-    imageUrl: "/sports/futbol-americano/estadios/estadio1.png",
-    name: "Estadio Los Titanes",
-    address: "Zona Deportiva Norte",
-    rating: 4.8,
-    tags: ["Estadio Profesional", "Cesped Natural", "Gradas", "Vestuarios"],
-    description: "Estadio profesional con medidas oficiales NFL. Cesped natural y sistema de iluminación para partidos nocturnos.",
-    price: "120",
-    nextAvailable: "Sábado 15:00-18:00", 
-  },
-  {
-    imageUrl: "/sports/futbol-americano/estadios/estadio2.png",
-    name: "Coliseo del Fútbol",
-    address: "Complejo Deportivo Central", 
-    rating: 4.6,
-    tags: ["Estadio Semi-Profesional", "Cesped Sintético", "Torres de Iluminación", "Cabinas"],
-    description: "Estadio semi-profesional con cesped sintético de última generación. Ideal para equipos universitarios y semi-profesionales.",
-    price: "85",
-    nextAvailable: "Domingo 10:00-13:00",
-  }
-];
+// 🔥 IMPORTAR SERVICIO
+import { canchaService } from '../../../services/canchaService';
 
-// 🔥 DATOS PARA LAS ESTADÍSTICAS DE FÚTBOL AMERICANO - ACTUALIZADOS
-const footballStats = [
+// 🏈 DATOS PARA LAS ESTADÍSTICAS DE FÚTBOL AMERICANO (SERÁN ACTUALIZADOS CON DATOS REALES)
+const futbolAmericanoStats = [
   {
     title: "Estadios Disponibles Hoy",
-    value: "2",
+    value: "3",
     icon: "🏈",
-    subtitle: "Listos para partidos",
-    trend: { value: 2, isPositive: true }
+    subtitle: "Listos para jugar",
+    trend: { value: 1, isPositive: true }
   },
   {
     title: "Rango de Precios",
-    value: "$85-150",
+    value: "$40-80",
     icon: "💰",
     subtitle: "Por hora",
-    trend: { value: 10, isPositive: false }
+    trend: { value: 5, isPositive: true }
   },
   {
     title: "Calificación Promedio",
-    value: "4.7⭐",
+    value: "4.8⭐",
     icon: "🏆",
     subtitle: "De nuestros estadios",
-    trend: { value: 0.3, isPositive: true }
+    trend: { value: 0.2, isPositive: true }
   },
   {
-    title: "Capacidad por Equipo",
-    value: "22 jugadores",
+    title: "Jugadores Activos",
+    value: "22",
     icon: "👥",
-    subtitle: "En promedio",
-    trend: { value: 4, isPositive: true }
+    subtitle: "Ahora mismo",
+    trend: { value: 3, isPositive: true }
   }
 ];
 
 export default function FutbolAmericanoPage() {
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
@@ -72,16 +54,119 @@ export default function FutbolAmericanoPage() {
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
+  // 🔥 ESTADOS PARA ESTADIOS DEL BACKEND
+  const [estadios, setEstadios] = useState<any[]>([]);
+  const [loadingEstadios, setLoadingEstadios] = useState(true);
+  const [errorEstadios, setErrorEstadios] = useState<string | null>(null);
+
+  // 🔥 CARGAR ESTADIOS DEL BACKEND
+  useEffect(() => {
+    const loadEstadios = async () => {
+      try {
+        setLoadingEstadios(true);
+        setErrorEstadios(null);
+        
+        console.log('🔄 [FutbolAmericano] Cargando estadios individuales del backend...');
+        
+        // 🔥 IDs de los estadios de fútbol americano que quieres mostrar
+        const futbolAmericanoEstadioIds = [1, 2, 3, 4, 5, 6];
+        
+        const estadiosPromises = futbolAmericanoEstadioIds.map(async (id) => {
+          try {
+            console.log(`🔍 [FutbolAmericano] Cargando estadio ID: ${id}`);
+            const estadio = await canchaService.getCanchaById(id);
+            console.log(`✅ [FutbolAmericano] Estadio ${id} obtenido:`, estadio);
+            
+            // 🔥 FILTRAR SOLO ESTADIOS DE FÚTBOL AMERICANO
+            if (estadio.tipo !== 'futbol_americano') {
+              console.log(`⚠️ [FutbolAmericano] Estadio ${id} no es de fútbol americano (${estadio.tipo}), saltando...`);
+              return null;
+            }
+            
+            // Mapear al formato requerido por CourtCard
+            const mappedEstadio = {
+              id: estadio.id,
+              imageUrl: `/sports/futbol-americano/estadios/Estadio${estadio.id}.png`,
+              name: estadio.nombre,
+              address: `Complejo ${estadio.establecimientoId}`,
+              rating: estadio.rating || 4.8,
+              tags: [
+                estadio.techada ? "Estadio techado" : "Estadio al aire libre",
+                estadio.activa ? "Disponible" : "No disponible",
+                "Césped artificial",
+                "Marcador electrónico"
+              ],
+              description: `Estadio de fútbol americano ${estadio.nombre} - ID: ${estadio.id}`,
+              price: estadio.precioPorHora?.toString() || "60",
+              nextAvailable: estadio.activa ? "Disponible ahora" : "No disponible",
+              sport: "futbol-americano"
+            };
+            
+            console.log('🗺️ [FutbolAmericano] Estadio mapeado:', mappedEstadio);
+            return mappedEstadio;
+            
+          } catch (error) {
+            console.log(`❌ [FutbolAmericano] Error cargando estadio ${id}:`, error);
+            return null;
+          }
+        });
+        
+        const estadiosResults = await Promise.all(estadiosPromises);
+        const estadiosValidos = estadiosResults.filter(estadio => estadio !== null);
+        
+        console.log('🎉 [FutbolAmericano] Estadios de fútbol americano cargados exitosamente:', estadiosValidos.length);
+        console.log('📋 [FutbolAmericano] Estadios finales:', estadiosValidos);
+        
+        setEstadios(estadiosValidos);
+        
+      } catch (error: any) {
+        console.error('❌ [FutbolAmericano] ERROR DETALLADO cargando estadios:', error);
+        setErrorEstadios(`Error: ${error.message}`);
+        
+        // 🔥 FALLBACK
+        console.log('🚨 [FutbolAmericano] USANDO FALLBACK - Error en el API');
+        setEstadios([
+          {
+            id: 1,
+            imageUrl: "/sports/futbol-americano/estadios/Estadio1.png",
+            name: "🚨 FALLBACK - Estadio Champions",
+            address: "Norte, Centro, Sur",
+            rating: 4.9,
+            tags: ["DATOS OFFLINE", "Césped artificial", "Marcador electrónico", "Vestuarios"],
+            description: "🚨 Estos son datos de fallback - API no disponible",
+            price: "60",
+            nextAvailable: "20:00-22:00",
+          },
+          {
+            id: 2,
+            imageUrl: "/sports/futbol-americano/estadios/Estadio2.png",
+            name: "🚨 FALLBACK - Arena Temuco",
+            address: "Sector Norte",
+            rating: 4.7,
+            tags: ["DATOS OFFLINE", "Estadio techado", "Graderías"],
+            description: "🚨 Estos son datos de fallback - API no disponible",
+            price: "45",
+            nextAvailable: "16:00-18:00",
+          }
+        ]);
+      } finally {
+        setLoadingEstadios(false);
+      }
+    };
+
+    loadEstadios();
+  }, []);
+
   useEffect(() => {
     setIsClient(true);
-    
+
     const calculateCardsToShow = () => {
       const screenWidth = window.innerWidth;
       const cardWidth = 320;
       const gap = 20;
       const sidebarWidth = 240;
       const padding = 40;
-      
+
       const availableWidth = screenWidth - sidebarWidth - padding;
       return Math.max(1, Math.min(4, Math.floor(availableWidth / (cardWidth + gap))));
     };
@@ -99,7 +184,9 @@ export default function FutbolAmericanoPage() {
     };
   }, []);
 
-  const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
+  // 🔥 USAR ESTADIOS REALES PARA EL CARRUSEL
+  const topRatedStadiums = estadios.slice(0, 6);
+  const totalSlides = Math.max(1, topRatedStadiums.length - cardsToShow + 1);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => Math.min(prev + 1, totalSlides - 1));
@@ -121,10 +208,32 @@ export default function FutbolAmericanoPage() {
     console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
   };
 
-  const handleCanchaClick = (court: any) => {
-    console.log('Navegando a estadio...');
-    router.push('/sports/futbol-americano/estadios/estadioseleccionado');
+  const handleEstadioClick = (stadium: any) => {
+    console.log('Navegando a estadio:', stadium);
+    router.push(`/sports/futbol-americano/estadios/estadioseleccionado?id=${stadium.id}`);
   };
+
+  const handleUserButtonClick = () => {
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
+  };
+
+  // 🔥 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
+  const updatedStats = [
+    {
+      ...futbolAmericanoStats[0],
+      value: estadios.filter(e => e.nextAvailable !== "No disponible").length.toString()
+    },
+    futbolAmericanoStats[1], // Mantener precio por defecto
+    {
+      ...futbolAmericanoStats[2],
+      value: `${(estadios.reduce((acc, e) => acc + e.rating, 0) / estadios.length || 4.8).toFixed(1)}⭐`
+    },
+    futbolAmericanoStats[3] // Mantener jugadores por defecto
+  ];
 
   if (!isClient) {
     return (
@@ -155,23 +264,27 @@ export default function FutbolAmericanoPage() {
               onChange={handleSearchChange}
               onSearch={handleSearch}
               placeholder="Nombre del estadio..."
-              sport="futbol-americano" 
+              sport="futbol-americano"
             />
-            <button className={styles.userButton}>
+            <button 
+              className={styles.userButton}
+              onClick={handleUserButtonClick}
+              disabled={buttonProps.disabled}
+            >
               <span>👤</span>
-              <span>usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>
 
-        {/* Stats Cards para Futbol-Americano - USANDO EL COMPONENTE StatsCard*/}
+        {/* 🔥 STATS CARDS CON DATOS ACTUALIZADOS */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
             <span className={styles.statsTitleIcon}>📊</span>
             Estadísticas del Fútbol Americano en Temuco
           </h2>
           <div className={styles.statsContainer}>
-            {footballStats.map((stat, index) => (
+            {updatedStats.map((stat, index) => (
               <StatsCard
                 key={index}
                 title={stat.title}
@@ -182,7 +295,6 @@ export default function FutbolAmericanoPage() {
                 sport="futbol-americano"
                 onClick={() => {
                   console.log(`Clicked on ${stat.title} stat`);
-                  // Agregar navegación específica si es necesario
                   if (stat.title.includes("Estadios")) {
                     router.push('/sports/futbol-americano/estadios');
                   }
@@ -193,9 +305,9 @@ export default function FutbolAmericanoPage() {
         </div>
 
         <div className={styles.quickAccessSection}>
-          <button 
+          <button
             className={styles.mainCourtButton}
-            onClick={() => window.location.href = '/sports/futbol-americano/estadios'}
+            onClick={() => window.location.href = '/sports/futbol-americano/estadios/'}
           >
             <div className={styles.courtButtonIcon}>🏈</div>
             <div className={styles.courtButtonText}>
@@ -206,59 +318,67 @@ export default function FutbolAmericanoPage() {
           </button>
         </div>
 
-        {/* Estadios mejor calificados con carrusel */}
+        {/* 🔥 CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>⭐</span>
               Estadios mejor calificados
+              {loadingEstadios && <span style={{ fontSize: '14px', marginLeft: '10px' }}>Cargando...</span>}
+              {errorEstadios && <span style={{ fontSize: '14px', marginLeft: '10px', color: 'red' }}>⚠️ Usando datos offline</span>}
             </h2>
             <div className={styles.carouselControls}>
-              <button 
-                onClick={prevSlide} 
+              <button
+                onClick={prevSlide}
                 className={styles.carouselButton}
-                disabled={currentSlide === 0}
-                style={{ opacity: currentSlide === 0 ? 0.5 : 1 }}
+                disabled={currentSlide === 0 || loadingEstadios}
+                style={{ opacity: currentSlide === 0 || loadingEstadios ? 0.5 : 1 }}
               >
                 ←
               </button>
               <span className={styles.slideIndicator}>
                 {currentSlide + 1} / {totalSlides}
               </span>
-              <button 
-                onClick={nextSlide} 
+              <button
+                onClick={nextSlide}
                 className={styles.carouselButton}
-                disabled={currentSlide === totalSlides - 1}
-                style={{ opacity: currentSlide === totalSlides - 1 ? 0.5 : 1 }}
+                disabled={currentSlide === totalSlides - 1 || loadingEstadios}
+                style={{ opacity: currentSlide === totalSlides - 1 || loadingEstadios ? 0.5 : 1 }}
               >
                 →
               </button>
             </div>
           </div>
-          
+
           <div className={styles.carouselContainer}>
-            <div 
-              className={styles.courtsGrid}
-              style={{
-                transform: `translateX(-${currentSlide * (320 + 20)}px)`,
-              }}
-            >
-              {topRatedCourts.map((court, index) => (
-                <CourtCard 
-                  key={index} 
-                  {...court} 
-                  sport="futbol-americano"
-                  onClick={() => router.push('/sports/futbol-americano/estadios/estadioseleccionado')}
-                />
-              ))}
-            </div>
+            {loadingEstadios ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                <p>Cargando estadios...</p>
+              </div>
+            ) : (
+              <div
+                className={styles.courtsGrid}
+                style={{
+                  transform: `translateX(-${currentSlide * (320 + 20)}px)`,
+                }}
+              >
+                {topRatedStadiums.map((stadium, index) => (
+                  <CourtCard
+                    key={stadium.id || index}
+                    {...stadium}
+                    sport="futbol-americano"
+                    onClick={() => handleEstadioClick(stadium)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Ubicación en el mapa */}
         <div className={styles.mapSection}>
           <h2 className={styles.sectionTitle}>Ubicación en el mapa de los estadios</h2>
-          
+
           <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>
               <span className={styles.locationIcon}>📍</span>
@@ -272,8 +392,8 @@ export default function FutbolAmericanoPage() {
             </div>
             <div className={styles.radiusContainer}>
               <span className={styles.radiusIcon}>📏</span>
-              <select 
-                value={radiusKm} 
+              <select
+                value={radiusKm}
                 onChange={(e) => setRadiusKm(e.target.value)}
                 className={styles.radiusSelect}
               >
@@ -288,13 +408,13 @@ export default function FutbolAmericanoPage() {
             </button>
           </div>
 
-          <LocationMap 
+          <LocationMap
             latitude={-38.7359}
             longitude={-72.5904}
             address="Temuco, Chile"
             zoom={13}
             height="400px"
-            sport="futbol-americano" 
+            sport="futbol-americano"
           />
 
           <div className={styles.mapActions}>

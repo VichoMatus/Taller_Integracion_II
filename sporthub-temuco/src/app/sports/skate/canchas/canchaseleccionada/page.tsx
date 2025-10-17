@@ -7,10 +7,12 @@ import SearchBar from '../../../../../components/SearchBar';
 import LocationMap from '../../../../../components/LocationMap';
 import styles from './page.module.css';
 
+import { useAuthStatus } from '@/hooks/useAuthStatus';
 export default function CanchaSeleccionadaPage() {
   const router = useRouter();
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -60,7 +62,9 @@ export default function CanchaSeleccionadaPage() {
 
   useEffect(() => {
     // Simular carga
-    const timer = setTimeout(() => setIsLoading(false), 1200);
+    const timer = setTimeout(() => setDataLoading(false), 1200);
+    
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -138,7 +142,7 @@ export default function CanchaSeleccionadaPage() {
     alert('Función de escribir reseña próximamente...');
   };
 
-  if (isLoading) {
+  if (dataLoading) {
     return (
       <div className={styles.pageContainer}>
         <Sidebar userRole="usuario" sport="skate" />
@@ -149,6 +153,8 @@ export default function CanchaSeleccionadaPage() {
       </div>
     );
   }
+
+  
 
   return (
     <div className={styles.pageContainer}>
