@@ -12,7 +12,11 @@ import {
   VerificarDisponibilidad,
   GetReservasByUsuario,
   ConfirmarPago,
-  CancelarReserva
+  CancelarReserva,
+  CreateReservaAdmin,
+  CancelarReservaAdmin,
+  GetReservasByCancha,
+  GetReservasByUsuarioAdmin
 } from "../../application/ReservasUseCases";
 import { ReservasController } from "../controllers/reservas.controller";
 import { requireRole } from "../../../admin/presentation/guards/guards";
@@ -40,7 +44,12 @@ const ctrl = (req: any) => {
     new VerificarDisponibilidad(repo),
     new GetReservasByUsuario(repo),
     new ConfirmarPago(repo),
-    new CancelarReserva(repo)
+    new CancelarReserva(repo),
+    // Casos de uso administrativos
+    new CreateReservaAdmin(repo),
+    new CancelarReservaAdmin(repo),
+    new GetReservasByCancha(repo),
+    new GetReservasByUsuarioAdmin(repo)
   );
 };
 
@@ -145,6 +154,21 @@ router.post("/:id/confirmar-pago", (req, res) => ctrl(req).confirmarPago(req, re
 
 /** POST /reservas/:id/cancelar - Cancela reserva */
 router.post("/:id/cancelar", (req, res) => ctrl(req).cancelar(req, res));
+
+// === Endpoints para Admin/Dueño ===
+// Permiten gestión avanzada de reservas
+
+/** POST /reservas/admin/crear - Crear reserva como administrador (para cualquier usuario) */
+router.post("/admin/crear", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).createAdmin(req, res));
+
+/** POST /reservas/admin/:id/cancelar - Cancelar reserva como administrador (forzar cancelación) */
+router.post("/admin/:id/cancelar", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).cancelarAdmin(req, res));
+
+/** GET /reservas/admin/cancha/:canchaId - Obtener reservas de una cancha específica (administrador) */
+router.get("/admin/cancha/:canchaId", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).getByCancha(req, res));
+
+/** GET /reservas/admin/usuario/:usuarioId - Obtener reservas de un usuario específico (administrador) */
+router.get("/admin/usuario/:usuarioId", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).getByUsuarioAdmin(req, res));
 
 // === Endpoints Administrativos ===
 // Requieren rol admin o superadmin

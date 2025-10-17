@@ -91,7 +91,7 @@ export interface UserPublic {
   email: string;                                               // Email del usuario
   telefono?: string;                                           // Teléfono (opcional)
   avatar_url?: string;                                         // URL del avatar (opcional)
-  rol: 'usuario' | 'admin' | 'super_admin';                   // Rol en el sistema
+  rol: 'usuario' | 'admin' | 'superadmin';                   // Rol en el sistema
 }
 
 /**

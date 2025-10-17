@@ -97,7 +97,7 @@ const normalizeRole = (role: string): string => {
     'super_admin': 'superadmin',  // Auth module → SuperAdmin module
     'superadmin': 'superadmin',   // Ya normalizado
     'admin': 'admin',             // Admin regular (NO es superadmin)
-    'dueno': 'dueno',            // Dueño de complejo (NO es superadmin)
+    // 'dueno' rol eliminado - ahora se usa 'admin'
     'usuario': 'usuario'         // Usuario regular (NO es superadmin)
   };
 

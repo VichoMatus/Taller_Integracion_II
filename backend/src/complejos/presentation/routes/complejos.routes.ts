@@ -48,11 +48,11 @@ router.get("/", (req, res) => ctrl(req).list(req, res));
 /** GET /complejos/:id - Obtiene complejo específico (público) */
 router.get("/:id", (req, res) => ctrl(req).get(req, res));
 
-// === Endpoints para Dueños ===
-// Requieren autenticación pero permiten a dueños gestionar sus propios complejos
+// === Endpoints para Administradores ===
+// Requieren rol admin o superadmin
 
-/** GET /complejos/duenio/:duenioId - Obtiene complejos de un dueño */
-router.get("/duenio/:duenioId", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).getByDuenio(req, res));
+/** GET /complejos/admin/:adminId - Obtiene complejos de un administrador */
+router.get("/admin/:adminId", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).getByDuenio(req, res));
 
 // === Endpoints Administrativos ===
 // Requieren rol admin o superadmin

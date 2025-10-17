@@ -52,7 +52,7 @@ router.get("/disponibles", (req, res) => ctrl(req).getDisponibles(req, res));
 router.get("/:id", (req, res) => ctrl(req).get(req, res));
 
 // === Endpoints Administrativos ===
-// Requieren rol admin, superadmin o dueno
+// Requieren rol admin o superadmin
 
 /** POST /canchas - Crea nueva cancha */
 router.post("/", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).create(req, res));
