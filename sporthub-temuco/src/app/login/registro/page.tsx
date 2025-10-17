@@ -1,11 +1,11 @@
 'use client';
 import Link from 'next/link';
 import '../../Login.css';
-import { useRegistro } from '../../../hooks/useRegistro';
+import { useRegistroLegacy } from '../../../hooks/useRegistroLegacy';
 import { MessageDisplay } from '../../../components/ui/MessageDisplay';
 
 export default function RegistroPage() {
-  const { state, handleSubmit } = useRegistro();
+  const { state, handleSubmit } = useRegistroLegacy();
 
   // Si se muestra el mensaje de verificación, mostrar solo ese mensaje
   if (state.showVerificationMessage) {

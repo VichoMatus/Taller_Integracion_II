@@ -9,43 +9,55 @@
  * 
  * Flujos de usuario implementados:
  * 
- * 🆕 REGISTRO COMPLETO:
- * 1. POST /register → Usuario se registra
- * 2. POST /resend-verification → Reenviar email (opcional)
- * 3. POST /verify-email → Verificar cuenta con token
+ * REGISTRO POR PASOS (2-STEP REGISTRATION):
+ * 1. POST /register/init → Envía datos completos y recibe OTP por email
+ * 2. POST /register/verify → Valida OTP + action_token y crea usuario verificado
  * 
- * 🔐 AUTENTICACIÓN COMPLETA:
+ * AUTENTICACIÓN COMPLETA:
  * 1. POST /login → Iniciar sesión (obtiene access + refresh token)
  * 2. GET /me → Verificar sesión activa
  * 3. POST /refresh → Renovar access token cuando expire
  * 4. POST /logout → Cerrar sesión (revoca tokens)
  * 
- * 👤 GESTIÓN DE PERFIL:
+ * GESTIÓN DE PERFIL:
  * 1. GET /me → Obtener datos del usuario
  * 2. PATCH /me → Actualizar perfil
  * 3. PATCH /me/password → Cambiar contraseña
  * 4. POST /me/push-token → Registrar notificaciones
  * 
- * 🔄 RECUPERACIÓN DE CONTRASEÑA:
+ * RECUPERACIÓN DE CONTRASEÑA:
  * 1. POST /forgot-password → Solicitar reset (envía email)
  * 2. POST /reset-password → Establecer nueva contraseña
  * 
  * Uso desde el frontend:
  * ```typescript
- * // Ejemplo de registro completo
- * const registerUser = async (userData) => {
- *   // 1. Registrar
- *   const response = await fetch('/api/auth/register', {
+ * // Ejemplo de registro por pasos
+ * const registerUserSteps = async (userData) => {
+ *   // 1. Iniciar registro
+ *   const initResponse = await fetch('/api/auth/register/init', {
  *     method: 'POST',
  *     headers: { 'Content-Type': 'application/json' },
  *     body: JSON.stringify(userData)
  *   });
  *   
- *   // 2. Si es exitoso, obtener tokens
- *   const result = await response.json();
+ *   const { action_token } = await initResponse.json();
+ *   
+ *   // 2. Usuario recibe OTP por email y lo ingresa
+ *   
+ *   // 3. Verificar y completar registro
+ *   const verifyResponse = await fetch('/api/auth/register/verify', {
+ *     method: 'POST',
+ *     headers: { 'Content-Type': 'application/json' },
+ *     body: JSON.stringify({
+ *       email: userData.email,
+ *       code: userInputCode,
+ *       action_token: action_token
+ *     })
+ *   });
+ *   
+ *   const result = await verifyResponse.json();
  *   if (result.ok) {
  *     localStorage.setItem('access_token', result.data.access_token);
- *     localStorage.setItem('refresh_token', result.data.refresh_token);
  *   }
  * };
  * 
@@ -90,10 +102,15 @@ const controller = new AuthController();
  * =================================
  */
 
-// POST /api/auth/register - Registrar nuevo usuario
-// Body: { nombre?, apellido?, email, password, telefono? }
+// POST /api/auth/register/init - Iniciar proceso de registro (envía OTP, no crea usuario)
+// Body: { nombre, apellido, email, password, telefono }
+// Response: { action_token: string, message: string }
+router.post('/register/init', controller.registerInit);
+
+// POST /api/auth/register/verify - Completar registro (valida OTP y crea usuario)
+// Body: { email, code, action_token }
 // Response: TokenResponse con access_token y user data
-router.post('/register', controller.register);
+router.post('/register/verify', controller.registerVerify);
 
 // POST /api/auth/login - Iniciar sesión
 // Body: { email, password }
@@ -182,8 +199,11 @@ router.post('/reset-password', controller.resetPassword);
 // Response: Estado del servicio y lista de endpoints disponibles
 router.get('/status', controller.getStatus);
 
-// GET /api/auth/register/status - Verificar conectividad del endpoint de registro
-router.get('/register/status', controller.getRegisterStatus);
+// GET /api/auth/register/init/status - Verificar conectividad del endpoint de inicio de registro
+router.get('/register/init/status', controller.getRegisterInitStatus);
+
+// GET /api/auth/register/verify/status - Verificar conectividad del endpoint de verificación de registro
+router.get('/register/verify/status', controller.getRegisterVerifyStatus);
 
 // GET /api/auth/login/status - Verificar conectividad del endpoint de login
 router.get('/login/status', controller.getLoginStatus);

@@ -4,7 +4,8 @@ import {
   BFFTokenResponse, BFFAccessTokenOnly, UserUpdateRequest, ChangePasswordRequest,
   VerifyEmailRequest, ResendVerificationRequest, SendVerificationRequest,
   ForgotPasswordRequest, ResetPasswordRequest, RefreshTokenRequest,
-  LogoutRequest, PushTokenRequest, SimpleMessage
+  LogoutRequest, PushTokenRequest, SimpleMessage,
+  RegisterInitRequest, RegisterInitResponse, RegisterVerifyRequest
 } from "@/types/auth";
 
 
@@ -127,6 +128,56 @@ export const authService = {
   },
 
   // ========================================
+  // REGISTRO DE 2 PASOS (NUEVO SISTEMA)
+  // ========================================
+
+  /**
+   * Paso 1: Iniciar proceso de registro (método auxiliar)
+   * Envía datos del usuario y genera OTP
+   */
+  async registerInit(payload: RegisterInitRequest): Promise<RegisterInitResponse> {
+    try {
+      const response = await api.post("/auth/register/init", payload);
+      return response.data as RegisterInitResponse;
+    } catch (error) {
+      console.error('Error en registerInit:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Paso 2: Verificar OTP y completar registro (método auxiliar)
+   * Valida el código y crea el usuario
+   */
+  async registerVerify(payload: RegisterVerifyRequest): Promise<LoginResponse> {
+    try {
+      const response = await api.post("/auth/register/verify", payload);
+      const data = response.data as BFFTokenResponse;
+      
+      // Guardar tokens si el registro es exitoso
+      if (data?.access_token) {
+        localStorage.setItem("token", data.access_token);
+        localStorage.setItem("access_token", data.access_token);
+      }
+      
+      // Retornar en formato compatible
+      return {
+        token: data.access_token,
+        usuario: {
+          id_usuario: data.user.id_usuario,
+          nombre: data.user.nombre || '',
+          apellido: data.user.apellido || '',
+          email: data.user.email,
+          rol: data.user.rol
+        }
+      } as LoginResponse;
+    } catch (error) {
+      console.error('Error en registerVerify:', error);
+      throw error;
+    }
+  },
+
+  // ========================================
   // NUEVOS MÉTODOS DEL BFF
   // ========================================
 
@@ -241,6 +292,103 @@ export const authService = {
   // ========================================
   // MÉTODOS LEGACY ADICIONALES PARA COMPATIBILIDAD
   // ========================================
+
+  /**
+   * Registrar usuario con flujo de 2 pasos (método de alto nivel)
+   * Para compatibilidad con hooks legacy mientras migramos
+   */
+  async registrarUsuarioConOTP(data: RegistroData): Promise<RegistroInitResponse> {
+    try {
+      // Validar datos antes de enviar
+      const validationError = this.validateRegistroData(data);
+      if (validationError) {
+        return {
+          ok: false,
+          error: validationError
+        };
+      }
+
+      // Adaptar al formato del nuevo endpoint
+      const initPayload: RegisterInitRequest = {
+        nombre: data.nombre.trim(),
+        apellido: data.apellido.trim(),
+        email: data.email.trim().toLowerCase(),
+        password: data.password,
+        telefono: data.telefono?.trim() || ''
+      };
+
+      // Llamar al nuevo endpoint de inicio
+      const result = await this.registerInit(initPayload);
+      
+      // Adaptar la respuesta
+      return {
+        ok: true,
+        data: {
+          action_token: result.action_token,
+          message: result.message,
+          email: data.email.trim().toLowerCase()
+        }
+      };
+    } catch (error: any) {
+      console.error('Error en registro con OTP:', error);
+      return {
+        ok: false,
+        error: error.message || 'Error de conexión. Verifica que el servidor esté funcionando.'
+      };
+    }
+  },
+
+  /**
+   * Verificar OTP y completar registro
+   */
+  async verificarOTPyCompletarRegistro(data: VerificationData): Promise<RegistroResponse> {
+    try {
+      // Validar datos de verificación
+      if (!data.email || !data.code || !data.action_token) {
+        return {
+          ok: false,
+          error: 'Faltan datos para completar la verificación'
+        };
+      }
+
+      // Validar formato del código
+      if (!/^\d{6}$/.test(data.code)) {
+        return {
+          ok: false,
+          error: 'El código debe tener exactamente 6 dígitos'
+        };
+      }
+
+      // Verificar con el nuevo endpoint
+      const verifyPayload: RegisterVerifyRequest = {
+        email: data.email,
+        code: data.code,
+        action_token: data.action_token
+      };
+
+      const result = await this.registerVerify(verifyPayload);
+
+      // Adaptar la respuesta al formato legacy
+      return {
+        ok: true,
+        data: {
+          access_token: result.token,
+          user: {
+            id: result.usuario.id_usuario.toString(),
+            nombre: result.usuario.nombre,
+            apellido: result.usuario.apellido,
+            email: result.usuario.email
+          }
+        }
+      };
+    } catch (error: any) {
+      console.error('Error en verificación de OTP:', error);
+      return {
+        ok: false,
+        error: error.message || 'Error al verificar el código. Inténtalo nuevamente.'
+      };
+    }
+  },
 
   /**
    * Registrar usuario (versión anterior)
@@ -376,6 +524,28 @@ export interface RegistroData {
   password: string;
   confirmPassword: string;
   telefono: string | null;
+}
+
+/**
+ * Respuesta del paso 1 del registro (init)
+ */
+export interface RegistroInitResponse {
+  ok: boolean;
+  data?: {
+    action_token: string;
+    message: string;
+    email: string;
+  };
+  error?: string;
+}
+
+/**
+ * Datos para verificar OTP en el paso 2
+ */
+export interface VerificationData {
+  email: string;
+  code: string;
+  action_token: string;
 }
 
 /**
