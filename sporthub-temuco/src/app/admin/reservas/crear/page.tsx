@@ -112,11 +112,11 @@ export default function CreateReservaPage() {
         const horas = (fin.getTime() - inicio.getTime()) / (1000 * 60 * 60);
         
         if (horas > 0) {
-          const precio = Math.round(horas * cancha.precioPorHora);
-          setPrecioCalculado(precio);
-        } else {
-          setPrecioCalculado(0);
-        }
+          const precio = Math.round(horas * (cancha.precioPorHora || 0));
+  setPrecioCalculado(precio);
+} else {
+  setPrecioCalculado(0);
+}
       }
     } else {
       setPrecioCalculado(0);
@@ -283,7 +283,7 @@ export default function CreateReservaPage() {
                   <option value={0}>Seleccionar cancha</option>
                   {canchas.map(cancha => (
                     <option key={cancha.id} value={cancha.id}>
-                      {cancha.nombre} - ${cancha.precioPorHora.toLocaleString()}/hora
+                      {cancha.nombre} - ${(cancha.precioPorHora || 0).toLocaleString()}/hora
                     </option>
                   ))}
                 </select>
