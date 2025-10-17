@@ -38,7 +38,8 @@ const adaptCanchaFromBackend = (backendCancha: any) => {
       // Campos opcionales de solo lectura:
       precioPorHora: backendCancha.precio_desde,
       rating: backendCancha.rating_promedio,
-      totalResenas: backendCancha.total_reviews,
+      totalResenas: backendCancha.total_resenas,
+      distanciaKm: backendCancha.distancia_km,
       descripcion: backendCancha.descripcion,
       capacidad: backendCancha.capacidad,
       imagenUrl: backendCancha.foto_principal,
@@ -101,6 +102,11 @@ const adaptCanchaToBackend = (frontendCancha: CreateCanchaInput | UpdateCanchaIn
 
   if ((frontendCancha as any).techada !== undefined) {
     payload.cubierta = (frontendCancha as any).techada;
+  }
+
+  // id_deporte (común para CREATE y UPDATE si está presente)
+  if ((frontendCancha as any).id_deporte !== undefined) {
+    payload.id_deporte = (frontendCancha as any).id_deporte;
   }
 
   // Campo SOLO para CREATE
@@ -225,7 +231,8 @@ export const canchaService = {
       const backendData = adaptCanchaToBackend(input, true); // true = UPDATE
       console.log(`📤 [canchaService] Enviando datos para actualizar cancha ${id}:`, backendData);
       // Usar endpoint /admin/canchas que tiene control de permisos
-      const response = await apiBackend.patch(`/admin/canchas/${id}`, backendData);
+      // Cambio de PATCH a PUT para coincidir con la ruta definida en el backend
+      const response = await apiBackend.put(`/admin/canchas/${id}`, backendData);
       
       // Adaptar la respuesta
       let canchaData = response.data;

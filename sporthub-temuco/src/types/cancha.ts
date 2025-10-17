@@ -15,7 +15,8 @@ export interface Cancha {
   // Campos opcionales de solo lectura que FastAPI puede devolver:
   precioPorHora?: number; // precio_desde en el backend
   rating?: number; // rating_promedio
-  totalResenas?: number; // total_reviews
+  totalResenas?: number; // total_resenas
+  distanciaKm?: number; // distancia_km
   descripcion?: string;
   capacidad?: number;
   imagenUrl?: string;
@@ -40,6 +41,7 @@ export interface CanchaFilters {
 export interface CreateCanchaInput {
   nombre: string;
   tipo: TipoCancha;
+  id_deporte?: number; // ID numérico del deporte (requerido por API)
   precioPorHora: number;
   descripcion?: string;
   capacidad: number;
@@ -52,6 +54,7 @@ export interface CreateCanchaInput {
 export interface UpdateCanchaInput {
   nombre?: string;
   tipo?: TipoCancha;
+  id_deporte?: number; // ID numérico del deporte
   techada?: boolean;
   activa?: boolean;
 }

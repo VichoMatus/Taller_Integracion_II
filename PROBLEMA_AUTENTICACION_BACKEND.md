@@ -1,126 +1,222 @@
-# 🚨 Problema de Autenticación Backend - Módulo Canchas
+# 🚨 BUG CRÍTICO: Falta authMiddleware en Rutas Admin
 
-> **⚠️ IMPORTANTE**: Este documento describe un problema REAL del backend que **debe ser corregido por el equipo de backend**. No hay soluciones alternativas válidas desde el frontend.
+> **⚠️ PARA EL EQUIPO DE BACKEND**: Bug confirmado que causa 403 Forbidden en todas las rutas `/api/admin/*`. Requiere agregar `authMiddleware` antes de `requireRole`.
 
-## Descripción del Problema
+## 🐛 Descripción del Problema
 
-El frontend está intentando crear/editar/eliminar canchas pero recibe **401 Unauthorized** del backend, a pesar de:
-- ✅ Token JWT válido presente en localStorage
-- ✅ Token enviado correctamente en header Authorization
-- ✅ Usuario `dueno.cancha@gmail.com` con rol "dueno" en el JWT
-- ✅ Token no expirado (exp: 1760595381 = año 2025)
-
-## Causa Raíz
-
-El **backend FastAPI** está rechazando las peticiones porque:
-1. El endpoint `/api/admin/canchas` requiere validación JWT en el backend
-2. El BFF Node.js NO está aplicando el middleware `authMiddleware` antes de `requireRole`
-3. Por lo tanto, `req.user` nunca se popula, y `requireRole` siempre encuentra `role = undefined`
-4. **NO PODEMOS MODIFICAR EL BACKEND** (restricción del proyecto)
-
-## Estado Actual del Código Backend (READ ONLY)
-
-```typescript
-// backend/src/index.ts - LÍNEA 110
-app.use('/api/admin', adminRoutes); // ❌ Falta authMiddleware
-
-// backend/src/admin/presentation/routes/admin.routes.ts
-router.post("/canchas", requireRole("dueno", "admin", "superadmin"), ...);
-
-// backend/src/admin/presentation/guards/guards.ts
-export const requireRole = (...roles) => (req, res, next) => {
-  const role = req?.user?.rol;  // ⚠️ req.user está undefined
-  if (!role) return res.status(401).json(fail(401, "No autenticado"));
-  ...
-};
-```
-
-## Soluciones Posibles
-
-### ✅ Opción 1: Contactar al equipo Backend (RECOMENDADO)
-
-**Pedir que agreguen:**
-```typescript
-// backend/src/index.ts
-import { authMiddleware } from './auth/middlewares/authMiddleware';
-app.use('/api/admin', authMiddleware, adminRoutes);
-```
-
-Este cambio hace que el flujo sea:
-1. Request → `/api/admin/canchas` con `Authorization: Bearer <token>`
-2. `authMiddleware` → Decodifica JWT, extrae `{sub: "34", role: "dueno"}`, lo coloca en `req.user`
-3. `requireRole("dueno", ...)` → Lee `req.user.rol`, verifica que sea "dueno" ✅
-4. Controller → Procesa la petición
-
-### ⚠️ Opción 2: Investigar Endpoint Alternativo
-
-Verificar con el equipo de backend si existe un endpoint alternativo que sí funcione, o si el usuario necesita permisos adicionales en la base de datos.
-
-## Verificación del Problema
+El frontend recibe **403 Forbidden** en TODAS las peticiones a `/api/admin/*` (canchas, complejos, reservas, etc.):
 
 ```bash
-# 1. Verificar que el token es válido:
-localStorage.getItem('access_token')
-# Resultado: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
-
-# 2. Decodificar el token en jwt.io:
-{
-  "sub": "34",
-  "role": "dueno",
-  "exp": 1760595381
-}
-
-# 3. Verificar logs del navegador:
-🔐 [canchaService] Estado de autenticación: {hasToken: true, tokenLength: 140}
-🔐 [apiBackend] Interceptor request: {hasToken: true}
-❌ POST http://localhost:4000/api/admin/canchas 401 (Unauthorized)
-⚠️ [apiBackend] Error 401 - No autenticado
+❌ GET /api/admin/canchas → 403 Forbidden
+❌ POST /api/admin/canchas → 403 Forbidden  
+❌ PUT /api/admin/canchas/:id → 403 Forbidden
+❌ GET /api/admin/complejos → 403 Forbidden
+❌ GET /api/admin/reservas → 403 Forbidden
 ```
 
-## Recomendación Final
+## 🔍 Causa Raíz Confirmada
 
-### ✅ SOLUCIÓN CORRECTA (Requiere cambio en Backend)
+Las rutas `/api/admin/*` tienen `requireRole` pero **NO tienen `authMiddleware`** antes:
 
-**Contactar al equipo de backend** y pedirles que:
+```typescript
+// backend/src/admin/presentation/routes/admin.routes.ts
+// LÍNEAS: 60, 65, 68, 71, 74, 77, 82, 85, 88, 91, 94, 99, 102
 
-1. **Agreguen `authMiddleware` antes de montar las rutas `/api/admin`**:
-   ```typescript
-   // backend/src/index.ts - LÍNEA 110
-   import { authMiddleware } from './auth/middlewares/authMiddleware';
-   app.use('/api/admin', authMiddleware, adminRoutes); // ← AGREGAR authMiddleware
-   ```
+❌ ACTUAL (INCORRECTO):
+router.get("/canchas", requireRole("dueno", "admin", "superadmin"), handler);
+router.post("/canchas", requireRole("dueno", "admin", "superadmin"), handler);
+router.put("/canchas/:id", requireRole("dueno", "admin", "superadmin"), handler);
+// ... etc
 
-2. **Verifiquen que el usuario `dueno.cancha@gmail.com` (ID 34) tenga rol "dueno" en la base de datos**
+✅ DEBERÍA SER:
+router.get("/canchas", authMiddleware, requireRole("dueno", "admin", "superadmin"), handler);
+router.post("/canchas", authMiddleware, requireRole("dueno", "admin", "superadmin"), handler);
+router.put("/canchas/:id", authMiddleware, requireRole("dueno", "admin", "superadmin"), handler);
+// ... etc
+```
 
-3. **Prueben el endpoint con curl**:
-   ```bash
-   curl -X POST http://localhost:4000/api/admin/canchas \
-     -H "Content-Type: application/json" \
-     -H "Authorization: Bearer <TOKEN>" \
-     -d '{"nombre":"Test","deporte":"futbol","capacidad":10,"precio_desde":5000,"cubierta":false,"activo":true,"id_complejo":1}'
-   ```
+### 📊 Flujo del Error:
 
-### ⚠️ NO HACER (Soluciones incorrectas)
+1. **Frontend envía**: `GET /api/admin/canchas` con `Authorization: Bearer eyJ...`
+2. **Backend ejecuta**: `requireRole("dueno", "admin", "superadmin")`
+3. **requireRole intenta leer**: `req.user.rol`
+4. **Pero `req.user` es undefined** porque nunca se ejecutó `authMiddleware`
+5. **requireRole retorna**: `401 No autenticado` (línea 22 de guards.ts)
+6. **Frontend recibe**: 403 Forbidden
 
-- ❌ NO modificar el frontend para saltarse la autenticación
-- ❌ NO usar datos simulados/mock en producción
-- ❌ NO remover validaciones de seguridad
-- ❌ NO hardcodear tokens de acceso
-- ❌ NO desactivar middleware de autenticación
+## 🔧 Solución Requerida (Backend)
 
-### 📋 Para el Equipo de Backend
+## 🔧 Solución Requerida (Backend)
 
-Este es un bug de configuración donde:
-- El middleware `authMiddleware` **existe** en `backend/src/auth/middlewares/authMiddleware.ts`
-- El guard `requireRole` **existe** en `backend/src/admin/presentation/guards/guards.ts`
-- Pero `authMiddleware` **NO está aplicado** antes de las rutas `/api/admin`
-- Resultado: `req.user` nunca se popula → `requireRole` siempre retorna 401
+### ✅ **Fix Principal**: Agregar `authMiddleware` en TODAS las rutas admin
 
-**Fix necesario**: 1 línea de código en `backend/src/index.ts` línea 110
+**Archivo**: `backend/src/admin/presentation/routes/admin.routes.ts`
 
-## Enlaces Útiles
+**Paso 1**: Importar authMiddleware (agregar al inicio del archivo):
 
-- JWT Debugger: https://jwt.io
-- Código authMiddleware: `backend/src/auth/middlewares/authMiddleware.ts`
-- Código requireRole: `backend/src/admin/presentation/guards/guards.ts`
-- Rutas admin: `backend/src/admin/presentation/routes/admin.routes.ts`
+```typescript
+import { authMiddleware } from "../../../auth/middlewares/authMiddleware";
+```
+
+**Paso 2**: Agregar `authMiddleware` antes de `requireRole` en TODAS las rutas:
+
+```typescript
+// === Endpoints del Panel del Dueño === (línea 60)
+router.get("/panel", authMiddleware, requireRole("dueno", "admin", "superadmin"), ...);
+
+// === Endpoints de Complejos === (líneas 65-77)
+router.get("/complejos", authMiddleware, requireRole("dueno", "admin", "superadmin"), ...);
+router.post("/complejos", authMiddleware, requireRole("dueno", "admin", "superadmin"), ...);
+router.get("/complejos/:id", authMiddleware, requireRole("dueno", "admin", "superadmin"), ...);
+router.put("/complejos/:id", authMiddleware, requireRole("dueno", "admin", "superadmin"), ...);
+router.delete("/complejos/:id", authMiddleware, requireRole("dueno", "admin", "superadmin"), ...);
+
+// === Endpoints de Canchas === (líneas 82-94)
+router.get("/canchas", authMiddleware, requireRole("dueno", "admin", "superadmin"), ...);
+router.post("/canchas", authMiddleware, requireRole("dueno", "admin", "superadmin"), ...);
+router.get("/canchas/:id", authMiddleware, requireRole("dueno", "admin", "superadmin"), ...);
+router.put("/canchas/:id", authMiddleware, requireRole("dueno", "admin", "superadmin"), ...);
+router.delete("/canchas/:id", authMiddleware, requireRole("dueno", "admin", "superadmin"), ...);
+
+// === Endpoints de Reservas y Estadísticas === (líneas 99-102)
+router.get("/reservas", authMiddleware, requireRole("dueno", "admin", "superadmin"), ...);
+router.get("/estadisticas", authMiddleware, requireRole("dueno", "admin", "superadmin"), ...);
+```
+
+### 🎯 **¿Por qué esto arregla el problema?**
+
+Con `authMiddleware` agregado:
+
+1. **authMiddleware** decodifica el JWT del header `Authorization`
+2. **authMiddleware** extrae los datos: `{sub: "34", rol: "admin", exp: ...}`
+3. **authMiddleware** crea `req.user = {id: 34, rol: "admin", ...}`
+4. **requireRole** ahora puede leer `req.user.rol = "admin"` ✅
+5. **requireRole** valida que "admin" esté en `["dueno", "admin", "superadmin"]` ✅
+6. **Controlador** procesa la petición ✅
+
+---
+
+## 📝 Problema Secundario: Inconsistencia de Roles
+
+### ⚠️ **Roles en módulo Auth vs Admin son diferentes**
+
+**Módulo Auth** (`/auth/types/authTypes.ts` línea 94):
+```typescript
+rol: 'usuario' | 'admin' | 'super_admin';  // ← Sin "dueno"
+```
+
+**Módulo Admin** (`/admin/presentation/guards/guards.ts` línea 17):
+```typescript
+requireRole(...roles: Array<"dueno" | "admin" | "superadmin">)  // ← Con "dueno"
+```
+
+**Módulo SuperAdmin** (`/superAdmin/types/superAdminTypes.ts` línea 54):
+```typescript
+rol: 'usuario' | 'dueno' | 'admin' | 'superadmin';  // ← Con "dueno"
+```
+
+### 🤔 **¿Cuál es correcto?**
+
+El sistema tiene **dos definiciones de roles contradictorias**:
+- El login (`/auth/login`) devuelve: `"usuario"`, `"admin"`, `"super_admin"`
+- Las rutas admin esperan: `"dueno"`, `"admin"`, `"superadmin"`
+
+### ✅ **Solución Sugerida**: Normalizar roles
+
+**Opción A**: Modificar `requireRole` para aceptar ambos (más simple):
+
+```typescript
+// backend/src/admin/presentation/guards/guards.ts
+
+export const requireRole =
+  (...roles: Array<"dueno" | "admin" | "superadmin">) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    let role = (req as any)?.user?.rol || (req.headers["x-user-role"] as string | undefined);
+
+    if (!role) return res.status(401).json(fail(401, "No autenticado"));
+
+    // NORMALIZAR: Tratar "admin" (del login) como "dueno" (esperado en admin routes)
+    const normalizedRole = role === "admin" ? "dueno" : role;
+
+    if (!roles.includes(normalizedRole as any)) {
+      return res.status(403).json(fail(403, "Permisos insuficientes"));
+    }
+
+    next();
+  };
+```
+
+**Opción B**: Unificar los tipos de roles en todo el backend (más correcto pero más trabajo)
+
+---
+
+## 🧪 Cómo Verificar el Fix
+
+### 1. Después de aplicar los cambios:
+
+```bash
+# Reiniciar el backend
+cd backend
+npm run dev
+```
+
+### 2. Desde el navegador (con token válido):
+
+```javascript
+// En la consola del navegador:
+const token = localStorage.getItem('access_token');
+fetch('http://localhost:4000/api/admin/canchas', {
+  headers: { 'Authorization': `Bearer ${token}` }
+})
+.then(r => r.json())
+.then(console.log);
+```
+
+**Resultado esperado**: ✅ 200 OK con lista de canchas (o [] si no hay)
+
+**Resultado actual (sin fix)**: ❌ 403 Forbidden
+
+---
+
+## 📋 Checklist para Backend
+
+- [ ] Importar `authMiddleware` en `admin.routes.ts`
+- [ ] Agregar `authMiddleware` antes de `requireRole` en ruta `/panel` (línea 60)
+- [ ] Agregar `authMiddleware` en 5 rutas de complejos (líneas 65-77)
+- [ ] Agregar `authMiddleware` en 5 rutas de canchas (líneas 82-94)
+- [ ] Agregar `authMiddleware` en 2 rutas de reservas/estadísticas (líneas 99-102)
+- [ ] (Opcional) Normalizar roles en `requireRole` para aceptar "admin" = "dueno"
+- [ ] Probar con `curl` o Postman que las rutas funcionen
+- [ ] Verificar en navegador que frontend puede crear/editar/eliminar
+
+---
+
+## 🔗 Referencias
+
+**Archivos involucrados**:
+- ❌ Bug: `backend/src/admin/presentation/routes/admin.routes.ts` (líneas 60-102)
+- ✅ Middleware correcto: `backend/src/auth/middlewares/authMiddleware.ts` (línea 26)
+- ✅ Guard correcto: `backend/src/admin/presentation/guards/guards.ts` (línea 17)
+- ⚠️ Inconsistencia tipos: `backend/src/auth/types/authTypes.ts` vs `backend/src/superAdmin/types/superAdminTypes.ts`
+
+**Comparación con otros módulos que SÍ funcionan**:
+```typescript
+// backend/src/reservas/presentation/routes/reservas.routes.new.ts (línea 137)
+router.get("/mias", authMiddleware, handler);  // ✅ Tiene authMiddleware
+
+// backend/src/admin/presentation/routes/admin.routes.ts (línea 82)  
+router.get("/canchas", requireRole(...), handler);  // ❌ NO tiene authMiddleware
+```
+
+---
+
+## 💡 Estado del Frontend
+
+El frontend está **correctamente implementado** y listo para usar:
+- ✅ Envía token en header `Authorization: Bearer <token>`
+- ✅ Maneja errores 401/403 apropiadamente
+- ✅ Redirige a login cuando no hay token
+- ✅ Usa interceptores de axios correctamente
+- ✅ Tipos TypeScript alineados con API
+
+**Cuando el backend aplique el fix, el frontend funcionará inmediatamente sin cambios.**
