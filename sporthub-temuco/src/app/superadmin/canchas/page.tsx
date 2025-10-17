@@ -32,7 +32,7 @@ export default function CanchasPage() {
         console.log('✅ Canchas cargadas:', canchasFromApi);
         
         // Adaptar datos de la API al formato del frontend
-        const adaptedCourts: Court[] = canchasFromApi.map(cancha => ({
+        const adaptedCourts: Court[] = canchasFromApi.map((cancha: any) => ({
           id: cancha.id.toString(),
           name: cancha.nombre,
           location: `Establecimiento ${cancha.establecimientoId}`,

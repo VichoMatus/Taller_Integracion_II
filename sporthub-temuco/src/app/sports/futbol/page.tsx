@@ -69,7 +69,7 @@ useEffect(() => {
       console.log('🔄 Cargando canchas individuales del backend...');
       
       // 🔥 IDs de las canchas de fútbol que quieres mostrar
-      const futbolCanchaIds = [1, 2, 3, 4, 5, 6]; // Ajusta estos IDs según las canchas de fútbol que tengas
+      const futbolCanchaIds = [1, 2, 3, 4, 5, 6];
       
       const canchasPromises = futbolCanchaIds.map(async (id) => {
         try {
@@ -77,29 +77,29 @@ useEffect(() => {
           const cancha = await canchaService.getCanchaById(id);
           console.log(`✅ Cancha ${id} obtenida:`, cancha);
           
-          // Verificar si es una cancha de fútbol
-          if (cancha.deporte !== 'futbol') {
-            console.log(`⚠️ Cancha ${id} no es de fútbol (${cancha.deporte}), saltando...`);
+          // 🔥 CORRECCIÓN: Usar 'tipo' en lugar de 'deporte'
+          if (cancha.tipo !== 'futbol') {
+            console.log(`⚠️ Cancha ${id} no es de fútbol (${cancha.tipo}), saltando...`);
             return null;
           }
           
           // Mapear al formato requerido por CourtCard
           const mappedCancha = {
-            id: cancha.id_cancha,
-            imageUrl: `/sports/futbol/canchas/Cancha${cancha.id_cancha}.png`,
+            id: cancha.id,
+            imageUrl: `/sports/futbol/canchas/Cancha${cancha.id}.png`,
             name: cancha.nombre,
-            address: `Complejo ${cancha.id_complejo}`,
-            rating: cancha.rating_promedio || 4.5,
+            address: `Complejo ${cancha.establecimientoId}`,
+            rating: cancha.rating || 4.5,
             tags: [
-              cancha.cubierta ? "Techada" : "Al aire libre",
-              cancha.activo ? "Disponible" : "No disponible",
+              cancha.techada ? "Techada" : "Al aire libre",
+              cancha.activa ? "Disponible" : "No disponible",
               "Estacionamiento",
               "Iluminación"
             ],
-            description: `Cancha de fútbol ${cancha.nombre} - ID: ${cancha.id_cancha}`,
-            price: cancha.precio_desde?.toString() || "25",
-            nextAvailable: cancha.activo ? "Disponible ahora" : "No disponible",
-            sport: cancha.deporte
+            description: `Cancha de fútbol ${cancha.nombre} - ID: ${cancha.id}`,
+            price: cancha.precioPorHora?.toString() || "25",
+            nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
+            sport: cancha.tipo
           };
           
           console.log('🗺️ Cancha mapeada:', mappedCancha);
@@ -107,14 +107,12 @@ useEffect(() => {
           
         } catch (error) {
           console.log(`❌ Error cargando cancha ${id}:`, error);
-          return null; // Retornar null si la cancha no existe
+          return null;
         }
       });
       
-      // Esperar a que todas las promesas se resuelvan
+      // 🔥 COMPLETAR ESTA PARTE QUE FALTA:
       const canchasResults = await Promise.all(canchasPromises);
-      
-      // Filtrar las canchas null (que no existen o no son de fútbol)
       const canchasValidas = canchasResults.filter(cancha => cancha !== null);
       
       console.log('🎉 Canchas de fútbol cargadas exitosamente:', canchasValidas.length);
@@ -123,13 +121,10 @@ useEffect(() => {
       setCanchas(canchasValidas);
       
     } catch (error: any) {
-      console.error('❌ ERROR DETALLADO cargando canchas:');
-      console.error('- Message:', error.message);
-      console.error('- Full error:', error);
-      
+      console.error('❌ ERROR DETALLADO cargando canchas:', error);
       setErrorCanchas(`Error: ${error.message}`);
       
-      // 🔥 Fallback
+      // 🔥 FALLBACK
       console.log('🚨 USANDO FALLBACK - Error en el API');
       setCanchas([
         {

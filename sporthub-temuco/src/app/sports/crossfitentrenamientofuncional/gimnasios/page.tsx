@@ -1,101 +1,129 @@
 'use client';
-import React, { useState } from 'react';
-import { useAuthStatus } from '@/hooks/useAuthStatus';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStatus } from '../../../../hooks/useAuthStatus';
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
+import LocationMap from '../../../../components/LocationMap';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
 
-const gimnasios = [
-  {
-    imageUrl: "/sports/crossfitentrenamientofuncional/gimnasios/Gimnasio1.png",
-    name: "CrossFit Iron Box",
-    address: "Centro, Temuco",
-    rating: 4.8,
-    tags: ["Entrenamiento Funcional", "CrossFit", "Box Profesional", "Coaching"],
-    description: "Box de CrossFit completamente equipado con rigs, kettlebells, barras olímpicas y entrenadores certificados",
-    price: "15",
-    nextAvailable: "06:00-07:00", 
-  },
-  {
-    imageUrl: "/sports/crossfitentrenamientofuncional/gimnasios/Gimnasio2.png",
-    name: "Functional Fitness Center",
-    address: "Sector Norte",
-    rating: 4.6,
-    tags: ["Entrenamiento Funcional", "TRX", "Kettlebells", "Personal Training"],
-    description: "Centro especializado en entrenamiento funcional con equipos TRX, battle ropes y entrenamientos personalizados",
-    price: "12",
-    nextAvailable: "07:30-08:30", 
-  },
-  {
-    imageUrl: "/sports/crossfit/gimnasios/Gym3.png",
-    name: "Elite CrossFit Sud",
-    address: "Sector Sur",
-    rating: 4.7,
-    tags: ["CrossFit", "Halterofilia", "Box Equipado", "Clases Grupales"],
-    description: "Box de CrossFit con plataformas de halterofilia, anillas y clases grupales dirigidas por atletas certificados",
-    price: "18",
-    nextAvailable: "Mañana 06:30-07:30",
-  },
-  {
-    imageUrl: "/sports/crossfit/gimnasios/Gym4.png",
-    name: "Beast Mode Gym",
-    address: "Centro Premium", 
-    rating: 4.9,
-    tags: ["CrossFit Elite", "Competencia", "Coaching Avanzado", "Nutrición"],
-    description: "Box premium de CrossFit para atletas de competencia con equipamiento profesional y coaching nutricional",
-    price: "25",
-    nextAvailable: "No disponible hoy",
-  },
-  {
-    imageUrl: "/sports/crossfit/gimnasios/Gym5.png",
-    name: "Functional Training Hub",
-    address: "Zona Industrial", 
-    rating: 4.5,
-    tags: ["Entrenamiento Funcional", "Calistenia", "Strongman", "Open Box"],
-    description: "Hub de entrenamiento funcional con área de calistenia, implementos strongman y concepto open box 24/7",
-    price: "20",
-    nextAvailable: "05:30-06:30",
-  },
-  {
-    imageUrl: "/sports/crossfit/gimnasios/Gym6.png",
-    name: "CrossFit Patagonia",
-    address: "Centro Deportivo", 
-    rating: 4.4,
-    tags: ["CrossFit", "Outdoor Training", "Bootcamp", "Recuperación"],
-    description: "Box de CrossFit con área outdoor, bootcamps al aire libre y zona de recuperación con sauna y masajes",
-    price: "16",
-    nextAvailable: "19:00-20:00",
-  },
-  {
-    imageUrl: "/sports/crossfit/gimnasios/Gym7.png",
-    name: "Titan Functional Gym",
-    address: "Sector Oriente", 
-    rating: 4.3,
-    tags: ["Entrenamiento Funcional", "Powerlifting", "Acondicionamiento", "Flexibilidad"],
-    description: "Gimnasio especializado en entrenamiento funcional con área de powerlifting y clases de movilidad",
-    price: "14",
-    nextAvailable: "12:00-13:00",
-  },
-  {
-    imageUrl: "/sports/crossfit/gimnasios/Gym8.png",
-    name: "Warrior CrossFit",
-    address: "Zona Norte", 
-    rating: 4.6,
-    tags: ["CrossFit", "MMA Conditioning", "Cardio Intensivo", "Fuerza"],
-    description: "Box de CrossFit con enfoque en acondicionamiento para MMA, cardio intensivo y desarrollo de fuerza",
-    price: "17",
-    nextAvailable: "08:00-09:00",
-  }
-];
+// 🔥 IMPORTAR SERVICIO
+import { canchaService } from '../../../../services/canchaService';
 
 export default function Page() {
-  const router = useRouter();
   const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredGimnasios, setFilteredGimnasios] = useState(gimnasios);
+  
+  // 🔥 ESTADOS PARA LA API
+  const [canchas, setCanchas] = useState<any[]>([]);
+  const [filteredCanchas, setFilteredCanchas] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [isLoadingCanchas, setIsLoadingCanchas] = useState(true);
+  const [error, setError] = useState<string>('');
+
+  // 🔥 FUNCIÓN PARA CARGAR GIMNASIOS DE CROSSFIT
+  const cargarCanchas = async () => {
+    try {
+      setIsLoadingCanchas(true);
+      setError('');
+      
+      console.log('🔄 [CrossFitGimnasios] Cargando gimnasios individuales del backend...');
+      
+      // 🔥 IDs de los gimnasios de CrossFit que quieres mostrar
+      const crossfitCanchaIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      
+      const canchasPromises = crossfitCanchaIds.map(async (id) => {
+        try {
+          console.log(`🔍 [CrossFitGimnasios] Cargando gimnasio ID: ${id}`);
+          const cancha = await canchaService.getCanchaById(id);
+          console.log(`✅ [CrossFitGimnasios] Gimnasio ${id} obtenido:`, cancha);
+          
+          // 🔥 FILTRAR SOLO GIMNASIOS DE CROSSFIT/ENTRENAMIENTO FUNCIONAL
+          if (cancha.tipo !== 'crossfit' && cancha.tipo !== 'entrenamiento_funcional') {
+            console.log(`⚠️ [CrossFitGimnasios] Gimnasio ${id} no es de CrossFit/Entrenamiento Funcional (${cancha.tipo}), saltando...`);
+            return null;
+          }
+          
+          // Mapear al formato requerido por CourtCard
+          const mappedCancha = {
+            id: cancha.id,
+            imageUrl: `/sports/crossfitentrenamientofuncional/gimnasios/Gimnasio${cancha.id}.png`,
+            name: cancha.nombre,
+            address: `Complejo ${cancha.establecimientoId}`,
+            rating: cancha.rating || 4.7,
+            tags: [
+              cancha.techada ? "Gimnasio techado" : "Espacio al aire libre",
+              cancha.activa ? "Disponible" : "No disponible",
+              "Equipamiento completo",
+              "Entrenadores certificados"
+            ],
+            description: `Gimnasio de CrossFit ${cancha.nombre} - ID: ${cancha.id}`,
+            price: cancha.precioPorHora?.toString() || "30",
+            nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
+            sport: "crossfitentrenamientofuncional"
+          };
+          
+          console.log('🗺️ [CrossFitGimnasios] Gimnasio mapeado:', mappedCancha);
+          return mappedCancha;
+          
+        } catch (error) {
+          console.log(`❌ [CrossFitGimnasios] Error cargando gimnasio ${id}:`, error);
+          return null;
+        }
+      });
+      
+      const canchasResults = await Promise.all(canchasPromises);
+      const canchasValidas = canchasResults.filter(cancha => cancha !== null);
+      
+      console.log('🎉 [CrossFitGimnasios] Gimnasios de CrossFit cargados exitosamente:', canchasValidas.length);
+      console.log('📋 [CrossFitGimnasios] Gimnasios finales:', canchasValidas);
+      
+      setCanchas(canchasValidas);
+      setFilteredCanchas(canchasValidas);
+      
+    } catch (error: any) {
+      console.error('❌ [CrossFitGimnasios] ERROR DETALLADO cargando gimnasios:', error);
+      setError(`Error: ${error.message}`);
+      
+      // 🔥 FALLBACK
+      console.log('🚨 [CrossFitGimnasios] USANDO FALLBACK - Error en el API');
+      const canchasEstaticas = [
+        {
+          id: 1,
+          imageUrl: "/sports/crossfitentrenamientofuncional/gimnasios/Gimnasio1.png",
+          name: "🚨 FALLBACK - CrossFit Centro",
+          address: "Norte, Centro, Sur",
+          rating: 4.5,
+          tags: ["DATOS OFFLINE", "Equipamiento completo", "Estacionamiento"],
+          description: "🚨 Estos son datos de fallback - API no disponible",
+          price: "30",
+          nextAvailable: "20:00-21:00",
+        },
+        {
+          id: 2,
+          imageUrl: "/sports/crossfitentrenamientofuncional/gimnasios/Gimnasio2.png",
+          name: "🚨 FALLBACK - CrossFit Norte",
+          address: "Sector Norte",
+          rating: 4.7,
+          tags: ["DATOS OFFLINE", "Entrenadores certificados"],
+          description: "🚨 Estos son datos de fallback - API no disponible",
+          price: "25",
+          nextAvailable: "14:30-15:30",
+        }
+      ];
+      
+      setCanchas(canchasEstaticas);
+      setFilteredCanchas(canchasEstaticas);
+    } finally {
+      setIsLoadingCanchas(false);
+    }
+  };
+
+  useEffect(() => {
+    cargarCanchas();
+  }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -103,13 +131,13 @@ export default function Page() {
 
   const handleSearch = () => {
     if (searchTerm.trim() === '') {
-      setFilteredGimnasios(gimnasios);
+      setFilteredCanchas(canchas);
     } else {
-      const filtered = gimnasios.filter(gimnasio =>
-        gimnasio.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        gimnasio.address.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = canchas.filter(cancha =>
+        cancha.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cancha.address.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setFilteredGimnasios(filtered);
+      setFilteredCanchas(filtered);
     }
   };
 
@@ -117,45 +145,38 @@ export default function Page() {
     router.push('/sports/crossfitentrenamientofuncional');
   };
 
-  const availableNow = filteredGimnasios.filter(gimnasio => 
-    gimnasio.nextAvailable !== "No disponible hoy" && 
-    !gimnasio.nextAvailable.includes("Mañana")
+  const availableNow = filteredCanchas.filter(cancha => 
+    cancha.nextAvailable !== "No disponible hoy" && 
+    !cancha.nextAvailable.includes("Mañana")
   ).length;
 
   const handleUserButtonClick = () => {
-
-
     if (isAuthenticated) {
-
-
       router.push('/usuario/EditarPerfil');
-
-
     } else {
-
-
       router.push('/login');
-
-
     }
-
-
   };
 
+  const handleRefresh = () => {
+    cargarCanchas();
+  };
 
+  const handleCanchaClick = (court: any) => {
+    console.log('Navegando a gimnasio:', court);
+    router.push(`/sports/crossfitentrenamientofuncional/gimnasios/gimnasioseleccionado?id=${court.id}`);
+  };
 
   return (
     <div className={styles.pageContainer}>
-      {/* 🔥 Sidebar específico para crossfit */}
       <Sidebar userRole="usuario" sport="crossfitentrenamientofuncional" />
 
-      {/* Contenido principal */}
       <div className={styles.mainContent}>
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerIcon}>🏋️‍♂️</div>
-            <h1 className={styles.headerTitle}>CrossFit y Entrenamiento Funcional</h1>
+            <div className={styles.headerIcon}>🏋️</div>
+            <h1 className={styles.headerTitle}>CrossFit & Entrenamiento Funcional</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar
@@ -176,35 +197,51 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Breadcrumb con navegación */}
+        {/* Breadcrumb */}
         <div className={styles.breadcrumb}>
           <button 
             className={styles.breadcrumbButton}
             onClick={handleBackToCrossFit}
           >
             <span>←</span>
-            <span>CrossFit y Entrenamiento Funcional</span>
+            <span>CrossFit & Entrenamiento Funcional</span>
           </button>
         </div>
 
-        {/* Filtros específicos para crossfit */}
+        {/* Mensajes de estado */}
+        {error && (
+          <div className={styles.errorMessage}>
+            <span>⚠️</span>
+            <span>Error: {error} - Mostrando datos offline</span>
+            <button onClick={handleRefresh}>Reintentar</button>
+          </div>
+        )}
+
+        {isLoadingCanchas && (
+          <div className={styles.loadingMessage}>
+            <span>🏋️</span>
+            <span>Cargando gimnasios de CrossFit...</span>
+          </div>
+        )}
+
+        {/* Filtros */}
         <div className={styles.filtersContainer}>
-          <h3 className={styles.filtersTitle}>Filtrar gimnasios de CrossFit y Entrenamiento Funcional</h3>
+          <h3 className={styles.filtersTitle}>Filtrar gimnasios de CrossFit</h3>
           <div className={styles.filtersGrid}>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#61677A'}}>📍</span>
-                <span>Ubicación o zona</span>
+                <span style={{color: '#22c55e'}}>📍</span>
+                <span>Ubicación o barrio</span>
               </label>
               <input
                 type="text"
-                placeholder="Centro, Norte, Sur, Industrial..."
+                placeholder="Norte, Centro, Sur, Oeste..."
                 className={styles.filterInput}
               />
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#61677A'}}>📅</span>
+                <span style={{color: '#22c55e'}}>📅</span>
                 <span>Fecha</span>
               </label>
               <input
@@ -215,71 +252,71 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#272829'}}>💰</span>
-                <span>Precio (max $/clase)</span>
+                <span style={{color: '#16a34a'}}>💰</span>
+                <span>Precio (max por sesión)</span>
               </label>
               <input
                 type="range"
                 min="0"
-                max="30"
+                max="60"
                 className={styles.priceSlider}
               />
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#D8D9DA'}}>🏋️</span>
-                <span>Tipo de entrenamiento</span>
+                <span style={{color: '#15803d'}}>🏋️</span>
+                <span>Tipo de gimnasio</span>
               </label>
               <select className={styles.filterSelect}>
-                <option>Tipo de entrenamiento</option>
-                <option>CrossFit</option>
+                <option>Tipo de gimnasio</option>
+                <option>CrossFit Box</option>
                 <option>Entrenamiento Funcional</option>
-                <option>Powerlifting</option>
-                <option>Calistenia</option>
-                <option>Strongman</option>
+                <option>Gimnasio híbrido</option>
               </select>
             </div>
           </div>
           <div className={styles.filtersActions}>
             <button className={styles.searchButton}>
               <span>🔍</span>
-              <span>Buscar</span>
+              <span>Buscar gimnasios</span>
             </button>
           </div>
         </div>
 
-        {/* Mostrar mensaje si no hay resultados */}
-        {filteredGimnasios.length === 0 && searchTerm && (
+        {/* Mensajes de no resultados */}
+        {filteredCanchas.length === 0 && searchTerm && !isLoadingCanchas && (
           <div className={styles.noResults}>
-            <h3>No se encontraron gimnasios para &quot;{searchTerm}&quot;</h3>
+            <h3>No se encontraron gimnasios de CrossFit para &quot;{searchTerm}&quot;</h3>
             <p>Intenta con otros términos de búsqueda o ubicaciones</p>
-            <button onClick={() => {setSearchTerm(''); setFilteredGimnasios(gimnasios);}}>
-              Ver todos los gimnasios
+            <button onClick={() => {setSearchTerm(''); setFilteredCanchas(canchas);}}>
+              Ver todos los gimnasios de CrossFit
             </button>
           </div>
         )}
 
-        {/* Contenedor de tarjetas */}
-        <div className={styles.cardsContainer}>
-          <div className={styles.cardsGrid}>
-            {filteredGimnasios.map((gimnasio, idx) => (
-              <CourtCard 
-                key={idx} 
-                {...gimnasio} 
-                sport="crossfitentrenamientofuncional" // 🔥 ESPECIFICAR DEPORTE
-              />
-            ))}
+        {filteredCanchas.length === 0 && !searchTerm && !isLoadingCanchas && !error && (
+          <div className={styles.noData}>
+            <h3>🏋️ No hay gimnasios de CrossFit registrados</h3>
+            <p>Aún no se han registrado gimnasios de CrossFit/Entrenamiento Funcional en el sistema</p>
+            <button onClick={handleRefresh}>Actualizar</button>
           </div>
-          
-          {/* Mensaje de disponibilidad */}
-          <div className={styles.availabilityMessage}>
-            <div className={styles.availabilityCard}>
-              <span className={styles.availabilityText}>
-                Gimnasios Disponibles ahora: <span className={styles.availabilityNumber}> {availableNow}</span>
-              </span>
+        )}
+
+        {/* Contenedor de tarjetas */}
+        {!isLoadingCanchas && filteredCanchas.length > 0 && (
+          <div className={styles.cardsContainer}>
+            <div className={styles.cardsGrid}>
+              {filteredCanchas.map((cancha, idx) => (
+                <CourtCard 
+                  key={cancha.id || idx} 
+                  {...cancha} 
+                  sport="crossfitentrenamientofuncional"
+                  onClick={() => handleCanchaClick(cancha)}
+                />
+              ))}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
