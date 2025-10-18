@@ -29,10 +29,11 @@
 import axios, { AxiosInstance } from 'axios';
 import { API_CONFIG, API_ENDPOINTS } from '../../config/config';
 import {
-  UserRegister, UserRegisterAPI, UserLogin, TokenResponse, ApiResponse, UserPublic,
+  UserLogin, TokenResponse, ApiResponse, UserPublic,
   UserUpdate, ChangePasswordRequest, ForgotPasswordRequest, ResetPasswordRequest,
   VerifyEmailRequest, ResendVerificationRequest, SendVerificationRequest, RefreshTokenRequest,
-  LogoutRequest, PushTokenRequest, SimpleMessage, AccessTokenOnly, EndpointStatus, EndpointType
+  LogoutRequest, PushTokenRequest, SimpleMessage, AccessTokenOnly, EndpointStatus, EndpointType,
+  RegisterInitRequest, RegisterInitResponse, RegisterVerifyRequest
 } from '../types/authTypes';
 
 /**
@@ -76,31 +77,21 @@ export class AuthService {
    */
 
   /**
-   * Registrar nuevo usuario en el sistema
-   * @param userData - Datos del usuario a registrar
-   * @returns Promise<ApiResponse<TokenResponse>> - Tokens y datos del usuario registrado
+   * Iniciar proceso de registro (envía OTP, no crea usuario aún)
+   * @param userData - Datos completos del usuario para pre-registro
+   * @returns Promise<ApiResponse<RegisterInitResponse>> - Action token para completar el proceso
    */
-  async register(userData: UserRegister): Promise<ApiResponse<TokenResponse>> {
+  async registerInit(userData: RegisterInitRequest): Promise<ApiResponse<RegisterInitResponse>> {
     try {
-      console.log('🔄 AuthService: Iniciando registro con datos:', JSON.stringify(userData, null, 2));
-      console.log('🔄 AuthService: URL de API:', API_CONFIG.baseURL + API_ENDPOINTS.auth.register);
+      console.log('🔄 AuthService: Iniciando registro por pasos con datos:', JSON.stringify(userData, null, 2));
+      console.log('🔄 AuthService: URL de API:', API_CONFIG.baseURL + API_ENDPOINTS.auth.registerInit);
       
-      // Crear objeto sin confirmPassword para enviar a la API
-      const { confirmPassword, ...apiData } = userData;
-      console.log('🔄 AuthService: Datos para API (sin confirmPassword):', JSON.stringify(apiData, null, 2));
+      const response = await this.apiClient.post(API_ENDPOINTS.auth.registerInit, userData);
       
-      const response = await this.apiClient.post(API_ENDPOINTS.auth.register, apiData);
-      
-      console.log('✅ AuthService: Registro exitoso', response.data);
-      
-      // Almacenar token para futuras peticiones
-      if (response.data.access_token) {
-        this.authToken = response.data.access_token;
-      }
-      
+      console.log('✅ AuthService: Init registro exitoso, OTP enviado', response.data);
       return { ok: true, data: response.data };
     } catch (error: any) {
-      console.error('❌ AuthService: Error en registro:', {
+      console.error('❌ AuthService: Error en init registro:', {
         message: error.message,
         status: error.response?.status,
         statusText: error.response?.statusText,
@@ -114,11 +105,58 @@ export class AuthService {
       
       return { 
         ok: false, 
-        error: error.response?.data?.detail || error.message || 'Error en el registro de usuario' 
+        error: error.response?.data?.detail || error.message || 'Error al iniciar proceso de registro' 
       };
     }
   }
 
+  /**
+   * Verificar OTP y completar el registro (crea el usuario verificado)
+   * @param verifyData - Email, código OTP y action token
+   * @returns Promise<ApiResponse<TokenResponse>> - Tokens y datos del usuario creado
+   */
+  async registerVerify(verifyData: RegisterVerifyRequest): Promise<ApiResponse<TokenResponse>> {
+    try {
+      console.log('🔄 AuthService: Verificando OTP y completando registro:', JSON.stringify(verifyData, null, 2));
+      console.log('🔄 AuthService: URL de API:', API_CONFIG.baseURL + API_ENDPOINTS.auth.registerVerify);
+      
+      const response = await this.apiClient.post(API_ENDPOINTS.auth.registerVerify, verifyData);
+      
+      console.log('✅ AuthService: Registro completo exitoso', response.data);
+      
+      // Almacenar token para futuras peticiones
+      if (response.data.access_token) {
+        this.authToken = response.data.access_token;
+      }
+      
+      return { ok: true, data: response.data };
+    } catch (error: any) {
+      console.error('❌ AuthService: Error en verificación de registro:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          data: error.config?.data
+        }
+      });
+      
+      return { 
+        ok: false, 
+        error: error.response?.data?.detail || error.message || 'Error al verificar código de registro' 
+      };
+    }
+  }
+
+  /**
+   * MÉTODOS DE PRE-REGISTRO CON VERIFICACIÓN DE EMAIL
+   * =================================================
+   */
+
+  /**
+   * Pre-registrar usuario y enviar correo de verificación
   /**
    * Autenticar usuario en el sistema
    * @param credentials - Email y contraseña del usuario
@@ -404,7 +442,8 @@ export class AuthService {
     
     // Mapear tipos de endpoint a URLs
     const endpointMap: Record<EndpointType, string> = {
-      register: API_ENDPOINTS.auth.register,
+      registerInit: API_ENDPOINTS.auth.registerInit,
+      registerVerify: API_ENDPOINTS.auth.registerVerify,
       login: API_ENDPOINTS.auth.login,
       logout: API_ENDPOINTS.auth.logout,
       refresh: API_ENDPOINTS.auth.refresh,
@@ -488,7 +527,7 @@ export class AuthService {
    * @returns Promise<Record<EndpointType, EndpointStatus>> - Status de todos los endpoints
    */
   async checkAllEndpointsStatus(): Promise<Record<EndpointType, EndpointStatus>> {
-    const endpoints: EndpointType[] = ['register', 'login', 'logout', 'refresh', 'me', 'verifyEmail', 'resendVerification', 'sendVerification', 'forgotPassword', 'resetPassword', 'pushToken'];
+    const endpoints: EndpointType[] = ['registerInit', 'registerVerify', 'login', 'logout', 'refresh', 'me', 'verifyEmail', 'resendVerification', 'sendVerification', 'forgotPassword', 'resetPassword', 'pushToken'];
     
     const statusChecks = endpoints.map(async (endpoint) => {
       const status = await this.checkEndpointStatus(endpoint);

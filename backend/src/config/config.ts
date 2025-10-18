@@ -43,7 +43,8 @@ export const API_CONFIG = {
 export const API_ENDPOINTS = {
   // Endpoints de autenticación
   auth: {
-    register: '/api/v1/auth/register',
+    registerInit: '/api/v1/auth/register/init',
+    registerVerify: '/api/v1/auth/register/verify',
     login: '/api/v1/auth/login',
     logout: '/api/v1/auth/logout',
     refresh: '/api/v1/auth/refresh',
