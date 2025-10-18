@@ -1,13 +1,18 @@
-# Dockerfile para Next.js
+# Dockerfile para Next.js - Optimizado
 FROM node:20-alpine AS base
+
+# Instalar dependencias primero (mejor cache)
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm install --frozen-lockfile
+RUN npm ci --only=production --silent && npm cache clean --force
+
+# Luego copiar código fuente
 COPY . .
 
-# Build sin lint check
+# Build optimizado
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DISABLE_ESLINT_PLUGIN=true
+ENV NODE_ENV=production
 
 # Variables de entorno para build
 ARG NEXT_PUBLIC_API_URL
