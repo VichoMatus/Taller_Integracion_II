@@ -7,12 +7,14 @@ import { useState } from 'react';
 
 export default function RegistroPage() {
   const { state, handleSubmit } = useRegistroLegacy();
+  
+  // Estados para las contraseñas (para que el HTML funcione)
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   // Función para verificar fortaleza de contraseña (simplificada)
   const checkPasswordStrength = (pass: string) => {
     if (pass.length === 0) return { strength: '', message: '' };
-    
-    const hasMinLength = pass.length >= 6;
     
     if (pass.length >= 8) {
       return { strength: 'strong', message: 'Contraseña segura' };
@@ -21,28 +23,6 @@ export default function RegistroPage() {
     } else {
       return { strength: 'weak', message: 'Muy corta' };
     }
-  };
-
-  // Función para manejar el envío del formulario con validación de contraseña
-  const handleFormSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    const formData = new FormData(e.currentTarget);
-    const passwordValue = formData.get('password') as string;
-    const confirmPasswordValue = formData.get('confirmPassword') as string;
-    
-    // Validaciones de contraseña (solo longitud mínima)
-    if (passwordValue.length < 6) {
-      alert('La contraseña debe tener al menos 6 caracteres');
-      return;
-    }
-    
-    if (passwordValue !== confirmPasswordValue) {
-      alert('Las contraseñas no coinciden');
-      return;
-    }
-    
-    handleSubmit(e);
   };
 
   const passwordStrength = checkPasswordStrength(password);
@@ -105,7 +85,7 @@ export default function RegistroPage() {
               success={state.success}
             />
             
-            <form onSubmit={handleFormSubmit}>
+            <form onSubmit={handleSubmit}>
               <label htmlFor="nombre">Nombre</label>
               <input 
                 type="text" 
