@@ -15,7 +15,7 @@ export interface LoginResponse {
   };
 }
 
-// Registro
+// Registro Legacy (mantener para compatibilidad)
 export interface RegisterRequest {
   nombre: string;
   apellido: string;
@@ -24,16 +24,44 @@ export interface RegisterRequest {
   telefono?: string | null;
 }
 
+// ========================================
+// REGISTRO DE 2 PASOS (NUEVO SISTEMA)
+// ========================================
+
+// Paso 1: Iniciar registro (POST /auth/register/init)
+export interface RegisterInitRequest {
+  nombre: string;
+  apellido: string;
+  email: string;
+  password: string;
+  telefono: string;
+}
+
+// Respuesta del paso 1
+export interface RegisterInitResponse {
+  action_token: string;
+  message: string;
+}
+
+// Paso 2: Verificar OTP (POST /auth/register/verify)
+export interface RegisterVerifyRequest {
+  email: string;
+  code: string;
+  action_token: string;
+}
+
 // Datos del usuario autenticado (me)
 export interface MeResponse {
   id_usuario: number | string;
   nombre: string;
   apellido: string;
   email: string;
+  telefono?: string | null;
   rol: string;
   esta_activo: boolean;
   verificado: boolean;
   avatar_url?: string | null;
+  bio?: string | null;
 }
 
 // ========================================

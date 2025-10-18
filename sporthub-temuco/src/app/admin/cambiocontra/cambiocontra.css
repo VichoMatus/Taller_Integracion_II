@@ -366,3 +366,23 @@
     font-size: 0.8rem;
   }
 }
+
+/* Agrega esto a tu archivo cambiocontra.css */
+.input-error {
+  border-color: #ef4444 !important;
+  background-color: #fef2f2 !important;
+}
+
+.error-text {
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.success-text {
+  color: #10b981;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: block;
+}

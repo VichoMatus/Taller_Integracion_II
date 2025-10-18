@@ -21,7 +21,13 @@ export const requireRole =
       (req as any)?.user?.rol || (req.headers["x-user-role"] as string | undefined);
 
     if (!role) return res.status(401).json(fail(401, "No autenticado"));
-    if (!roles.includes(role as any)) return res.status(403).json(fail(403, "Permisos insuficientes"));
+    if (!roles.includes(role as any)) return res.status(403).json(fail(403, "Permisos insuficientes - requiere rol de administrador"));
 
     next();
   };
+
+/**
+ * Middleware específico para owners de complejos.
+ * Verifica que el usuario sea dueño o admin.
+ */
+export const requireOwner = requireRole("admin", "superadmin");

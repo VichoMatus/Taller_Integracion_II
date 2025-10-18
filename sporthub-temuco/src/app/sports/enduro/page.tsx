@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStatus } from '../../../hooks/useAuthStatus';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
@@ -8,50 +9,10 @@ import Sidebar from '../../../components/layout/Sidebar';
 import StatsCard from '../../../components/charts/StatsCard';
 import styles from './page.module.css';
 
-const topRatedRoutes = [
-  {
-    imageUrl: "/sports/enduro/rutas/ruta1.png",
-    name: "Ruta Montaña Extremo",
-    address: "Cordillera Central",
-    rating: 4.8,
-    tags: ["Dificultad Alta", "Terreno Rocoso", "Vistas Panorámicas", "Guía Incluido"],
-    description: "Ruta desafiante para expertos con terrenos rocosos y descensos técnicos. Incluye guía certificado.",
-    price: "35",
-    nextAvailable: "Mañana 08:00-12:00", 
-  },
-  {
-    imageUrl: "/sports/enduro/rutas/ruta2.png",
-    name: "Sendero Bosque Verde",
-    address: "Reserva Natural",
-    rating: 4.5,
-    tags: ["Dificultad Media", "Bosque", "Ríos", "Familiar"],
-    description: "Ruta intermedia a través de bosques nativos con cruces de ríos y paisajes espectaculares.",
-    price: "28",
-    nextAvailable: "Hoy 14:00-17:00", 
-  },
-  {
-    imageUrl: "/path/to/enduro-route3.jpg",
-    name: "Circuito Técnico",
-    address: "Parque de Aventura",
-    rating: 4.6,
-    tags: ["Dificultad Alta", "Técnico", "Saltos", "Competencia"],
-    description: "Circuito diseñado para entrenamiento técnico con saltos y obstáculos desafiantes.",
-    price: "32",
-    nextAvailable: "Disponible ahora",
-  },
-  {
-    imageUrl: "/path/to/enduro-route4.jpg",
-    name: "Trail Iniciación",
-    address: "Centro de Enduro", 
-    rating: 4.3,
-    tags: ["Dificultad Baja", "Aprendizaje", "Equipo Incluido", "Instructor"],
-    description: "Perfecta para principiantes. Incluye equipo completo y instructor especializado.",
-    price: "40",
-    nextAvailable: "Mañana 10:00-13:00",
-  },
+// 🔥 IMPORTAR SERVICIO
+import { canchaService } from '../../../services/canchaService';
 
-];
-
+// 🔥 DATOS PARA LAS ESTADÍSTICAS DE ENDURO (SERÁN ACTUALIZADOS CON DATOS REALES)
 const enduroStats = [
   {
     title: "Rutas Disponibles Hoy",
@@ -84,6 +45,7 @@ const enduroStats = [
 ];
 
 export default function EnduroPage() {
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
@@ -91,6 +53,109 @@ export default function EnduroPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
+
+  // 🔥 ESTADOS PARA RUTAS DEL BACKEND
+  const [rutas, setRutas] = useState<any[]>([]);
+  const [loadingRutas, setLoadingRutas] = useState(true);
+  const [errorRutas, setErrorRutas] = useState<string | null>(null);
+
+  // 🔥 CARGAR RUTAS DEL BACKEND
+  useEffect(() => {
+    const loadRutas = async () => {
+      try {
+        setLoadingRutas(true);
+        setErrorRutas(null);
+        
+        console.log('🔄 [Enduro] Cargando rutas individuales del backend...');
+        
+        // 🔥 IDs de las rutas de enduro que quieres mostrar
+        const enduroRutaIds = [1, 2, 3, 4, 5, 6];
+        
+        const rutasPromises = enduroRutaIds.map(async (id) => {
+          try {
+            console.log(`🔍 [Enduro] Cargando ruta ID: ${id}`);
+            const ruta = await canchaService.getCanchaById(id);
+            console.log(`✅ [Enduro] Ruta ${id} obtenida:`, ruta);
+            
+            // 🔥 FILTRAR SOLO RUTAS DE ENDURO
+            if (ruta.tipo !== 'enduro') {
+              console.log(`⚠️ [Enduro] Ruta ${id} no es de enduro (${ruta.tipo}), saltando...`);
+              return null;
+            }
+            
+            // Mapear al formato requerido por CourtCard
+            const mappedRuta = {
+              id: ruta.id,
+              imageUrl: `/sports/enduro/rutas/ruta${ruta.id}.png`,
+              name: ruta.nombre,
+              address: `Zona ${ruta.establecimientoId}`,
+              rating: ruta.rating || 4.6,
+              tags: [
+                ruta.techada ? "Ruta techada" : "Ruta al aire libre",
+                ruta.activa ? "Disponible" : "No disponible",
+                "Guía incluido",
+                "Equipo disponible"
+              ],
+              description: `Ruta de enduro ${ruta.nombre} - ID: ${ruta.id}`,
+              price: ruta.precioPorHora?.toString() || "35",
+              nextAvailable: ruta.activa ? "Disponible ahora" : "No disponible",
+              sport: "enduro"
+            };
+            
+            console.log('🗺️ [Enduro] Ruta mapeada:', mappedRuta);
+            return mappedRuta;
+            
+          } catch (error) {
+            console.log(`❌ [Enduro] Error cargando ruta ${id}:`, error);
+            return null;
+          }
+        });
+        
+        const rutasResults = await Promise.all(rutasPromises);
+        const rutasValidas = rutasResults.filter(ruta => ruta !== null);
+        
+        console.log('🎉 [Enduro] Rutas de enduro cargadas exitosamente:', rutasValidas.length);
+        console.log('📋 [Enduro] Rutas finales:', rutasValidas);
+        
+        setRutas(rutasValidas);
+        
+      } catch (error: any) {
+        console.error('❌ [Enduro] ERROR DETALLADO cargando rutas:', error);
+        setErrorRutas(`Error: ${error.message}`);
+        
+        // 🔥 FALLBACK
+        console.log('🚨 [Enduro] USANDO FALLBACK - Error en el API');
+        setRutas([
+          {
+            id: 1,
+            imageUrl: "/sports/enduro/rutas/ruta1.png",
+            name: "🚨 FALLBACK - Ruta Montaña Extremo",
+            address: "Cordillera Central",
+            rating: 4.8,
+            tags: ["DATOS OFFLINE", "Dificultad Alta", "Terreno Rocoso", "Guía Incluido"],
+            description: "🚨 Estos son datos de fallback - API no disponible",
+            price: "35",
+            nextAvailable: "Mañana 08:00-12:00",
+          },
+          {
+            id: 2,
+            imageUrl: "/sports/enduro/rutas/ruta2.png",
+            name: "🚨 FALLBACK - Sendero Bosque Verde",
+            address: "Reserva Natural",
+            rating: 4.5,
+            tags: ["DATOS OFFLINE", "Dificultad Media", "Bosque", "Ríos"],
+            description: "🚨 Estos son datos de fallback - API no disponible",
+            price: "28",
+            nextAvailable: "Hoy 14:00-17:00",
+          }
+        ]);
+      } finally {
+        setLoadingRutas(false);
+      }
+    };
+
+    loadRutas();
+  }, []);
 
   useEffect(() => {
     setIsClient(true);
@@ -119,6 +184,8 @@ export default function EnduroPage() {
     };
   }, []);
 
+  // 🔥 USAR RUTAS REALES PARA EL CARRUSEL
+  const topRatedRoutes = rutas.slice(0, 6);
   const totalSlides = Math.max(1, topRatedRoutes.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -142,9 +209,31 @@ export default function EnduroPage() {
   };
 
   const handleRutaClick = (route: any) => {
-    console.log('Navegando a ruta:', route.name);
-    router.push('/sports/enduro/rutas/rutaseleccionada');
+    console.log('Navegando a ruta:', route);
+    router.push(`/sports/enduro/rutas/rutaseleccionada?id=${route.id}`);
   };
+
+  const handleUserButtonClick = () => {
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
+  };
+
+  // 🔥 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
+  const updatedStats = [
+    {
+      ...enduroStats[0],
+      value: rutas.filter(r => r.nextAvailable !== "No disponible").length.toString()
+    },
+    enduroStats[1], // Mantener precio por defecto
+    {
+      ...enduroStats[2],
+      value: `${(rutas.reduce((acc, r) => acc + r.rating, 0) / rutas.length || 4.6).toFixed(1)}⭐`
+    },
+    enduroStats[3] // Mantener kilómetros por defecto
+  ];
 
   if (!isClient) {
     return (
@@ -177,21 +266,25 @@ export default function EnduroPage() {
               placeholder="Nombre de la ruta o ubicación..."
               sport="enduro" 
             />
-            <button className={styles.userButton}>
+            <button 
+              className={styles.userButton}
+              onClick={handleUserButtonClick}
+              disabled={buttonProps.disabled}
+            >
               <span>👤</span>
-              <span>usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>
 
-        {/* Stats Cards para Enduro - USANDO EL COMPONENTE StatsCard */}
+        {/* 🔥 STATS CARDS CON DATOS ACTUALIZADOS */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
             <span className={styles.statsTitleIcon}>📊</span>
             Estadísticas del Enduro en Temuco
           </h2>
           <div className={styles.statsContainer}>
-            {enduroStats.map((stat, index) => (
+            {updatedStats.map((stat, index) => (
               <StatsCard
                 key={index}
                 title={stat.title}
@@ -202,7 +295,6 @@ export default function EnduroPage() {
                 sport="enduro"
                 onClick={() => {
                   console.log(`Clicked on ${stat.title} stat`);
-                  // Agregar navegación específica si es necesario
                   if (stat.title.includes("Rutas")) {
                     router.push('/sports/enduro/rutas');
                   }
@@ -226,19 +318,21 @@ export default function EnduroPage() {
           </button>
         </div>
 
-        {/* Rutas mejor calificadas con carrusel */}
+        {/* 🔥 CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>⭐</span>
               Rutas mejor calificadas
+              {loadingRutas && <span style={{ fontSize: '14px', marginLeft: '10px' }}>Cargando...</span>}
+              {errorRutas && <span style={{ fontSize: '14px', marginLeft: '10px', color: 'red' }}>⚠️ Usando datos offline</span>}
             </h2>
             <div className={styles.carouselControls}>
               <button 
                 onClick={prevSlide} 
                 className={styles.carouselButton}
-                disabled={currentSlide === 0}
-                style={{ opacity: currentSlide === 0 ? 0.5 : 1 }}
+                disabled={currentSlide === 0 || loadingRutas}
+                style={{ opacity: currentSlide === 0 || loadingRutas ? 0.5 : 1 }}
               >
                 ←
               </button>
@@ -248,8 +342,8 @@ export default function EnduroPage() {
               <button 
                 onClick={nextSlide} 
                 className={styles.carouselButton}
-                disabled={currentSlide === totalSlides - 1}
-                style={{ opacity: currentSlide === totalSlides - 1 ? 0.5 : 1 }}
+                disabled={currentSlide === totalSlides - 1 || loadingRutas}
+                style={{ opacity: currentSlide === totalSlides - 1 || loadingRutas ? 0.5 : 1 }}
               >
                 →
               </button>
@@ -257,34 +351,40 @@ export default function EnduroPage() {
           </div>
           
           <div className={styles.carouselContainer}>
-            <div 
-              className={styles.courtsGrid}
-              style={{
-                transform: `translateX(-${currentSlide * (320 + 20)}px)`,
-              }}
-            >
-              {topRatedRoutes.map((route, index) => (
-                <CourtCard 
-                  key={index} 
-                  {...route} 
-                  sport="enduro"
-                  onClick={() => handleRutaClick(route)}
-                />
-              ))}
-            </div>
+            {loadingRutas ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                <p>Cargando rutas...</p>
+              </div>
+            ) : (
+              <div 
+                className={styles.courtsGrid}
+                style={{
+                  transform: `translateX(-${currentSlide * (320 + 20)}px)`,
+                }}
+              >
+                {topRatedRoutes.map((route, index) => (
+                  <CourtCard 
+                    key={route.id || index} 
+                    {...route} 
+                    sport="enduro"
+                    onClick={() => handleRutaClick(route)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Ubicación en el mapa */}
         <div className={styles.mapSection}>
-          <h2 className={styles.sectionTitle}>Ubicación de las rutas de enduro</h2>
+          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las rutas</h2>
           
           <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>
               <span className={styles.locationIcon}>📍</span>
               <input
                 type="text"
-                placeholder="Zona, montaña o región"
+                placeholder="Dirección, barrio o ciudad"
                 value={locationSearch}
                 onChange={(e) => setLocationSearch(e.target.value)}
                 className={styles.locationInput}
@@ -299,8 +399,8 @@ export default function EnduroPage() {
               >
                 <option value="5">Radio 5km</option>
                 <option value="10">Radio 10km</option>
-                <option value="20">Radio 20km</option>
-                <option value="50">Radio 50km</option>
+                <option value="15">Radio 15km</option>
+                <option value="25">Radio 25km</option>
               </select>
             </div>
             <button onClick={handleLocationSearch} className={styles.searchLocationButton}>
@@ -311,10 +411,10 @@ export default function EnduroPage() {
           <LocationMap 
             latitude={-38.7359}
             longitude={-72.5904}
-            address="Zona de rutas, Temuco"
-            zoom={11}
+            address="Temuco, Chile"
+            zoom={13}
             height="400px"
-            sport="enduro" 
+            sport="enduro"
           />
 
           <div className={styles.mapActions}>

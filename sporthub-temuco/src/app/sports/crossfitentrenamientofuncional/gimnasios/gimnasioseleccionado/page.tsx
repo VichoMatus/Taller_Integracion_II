@@ -7,10 +7,12 @@ import SearchBar from '../../../../../components/SearchBar';
 import LocationMap from '../../../../../components/LocationMap'; 
 import styles from './page.module.css';
 
+import { useAuthStatus } from '@/hooks/useAuthStatus';
 export default function GimnasioSeleccionadoPage() {
   const router = useRouter();
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   
   // 🔥 DATOS ESTÁTICOS DE CROSSFIT Y ENTRENAMIENTO FUNCIONAL
@@ -76,9 +78,18 @@ export default function GimnasioSeleccionadoPage() {
   };
   
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 1200);
+    const timer = setTimeout(() => setDataLoading(false), 1200);
+    
+
     return () => clearTimeout(timer);
   }, []);
+  const handleUserButtonClick = () => {
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
+  };
 
   const handleBackToGimnasios = () => {
     router.push('/sports/crossfitentrenamientofuncional/gimnasios');
@@ -148,7 +159,7 @@ export default function GimnasioSeleccionadoPage() {
     alert('¡Excelente! Contacta al gimnasio para agendar tu clase de prueba gratuita. Incluye intro a movimientos básicos y WOD adaptado.');
   };
 
-  if (isLoading) {
+  if (dataLoading) {
     return (
       <div className={styles.pageContainer}>
         <Sidebar userRole="usuario" sport="crossfitentrenamientofuncional" />
@@ -159,6 +170,8 @@ export default function GimnasioSeleccionadoPage() {
       </div>
     );
   }
+
+  
 
   return (
     <div className={styles.pageContainer}>
@@ -177,9 +190,13 @@ export default function GimnasioSeleccionadoPage() {
             sport="crossfitentrenamientofuncional"
             onSearch={(term) => router.push(`/sports/crossfitentrenamientofuncional/gimnasios?search=${encodeURIComponent(term)}`)}
             />
-            <button className={styles.userButton}>
+            <button 
+              {...buttonProps}
+              onClick={handleUserButtonClick}
+              className={styles.userButton}
+            >
               <span>👤</span>
-              <span>Usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>

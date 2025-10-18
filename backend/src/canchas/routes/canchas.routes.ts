@@ -98,4 +98,88 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+// POST /api/canchas - Crea cancha (owner)
+router.post("/", async (req, res) => {
+  try {
+    const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
+    const { data } = await http.post('/api/v1/canchas', req.body);
+    res.status(201).json({ ok: true, data });
+  } catch (error: any) {
+    res.status(error.response?.status || 500).json({ 
+      ok: false, 
+      error: { code: error.response?.status || 500, message: error.message } 
+    });
+  }
+});
+
+// PATCH /api/canchas/:id - Edita cancha (owner)
+router.patch("/:id", async (req, res) => {
+  try {
+    const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
+    const { data } = await http.patch(`/api/v1/canchas/${req.params.id}`, req.body);
+    res.json({ ok: true, data });
+  } catch (error: any) {
+    res.status(error.response?.status || 500).json({ 
+      ok: false, 
+      error: { code: error.response?.status || 500, message: error.message } 
+    });
+  }
+});
+
+// DELETE /api/canchas/:id - Elimina/archiva cancha (owner/admin)
+router.delete("/:id", async (req, res) => {
+  try {
+    const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
+    const { data } = await http.delete(`/api/v1/canchas/${req.params.id}`);
+    res.json({ ok: true, data });
+  } catch (error: any) {
+    res.status(error.response?.status || 500).json({ 
+      ok: false, 
+      error: { code: error.response?.status || 500, message: error.message } 
+    });
+  }
+});
+
+// GET /api/canchas/:id/fotos - Lista fotos de la cancha
+router.get("/:id/fotos", async (req, res) => {
+  try {
+    const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
+    const { data } = await http.get(`/api/v1/canchas/${req.params.id}/fotos`);
+    res.json({ ok: true, data });
+  } catch (error: any) {
+    res.status(error.response?.status || 500).json({ 
+      ok: false, 
+      error: { code: error.response?.status || 500, message: error.message } 
+    });
+  }
+});
+
+// POST /api/canchas/:id/fotos - Agrega foto (presign + attach)
+router.post("/:id/fotos", async (req, res) => {
+  try {
+    const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
+    const { data } = await http.post(`/api/v1/canchas/${req.params.id}/fotos`, req.body);
+    res.status(201).json({ ok: true, data });
+  } catch (error: any) {
+    res.status(error.response?.status || 500).json({ 
+      ok: false, 
+      error: { code: error.response?.status || 500, message: error.message } 
+    });
+  }
+});
+
+// DELETE /api/canchas/:id/fotos/:media_id - Quita una foto
+router.delete("/:id/fotos/:media_id", async (req, res) => {
+  try {
+    const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
+    const { data } = await http.delete(`/api/v1/canchas/${req.params.id}/fotos/${req.params.media_id}`);
+    res.json({ ok: true, data });
+  } catch (error: any) {
+    res.status(error.response?.status || 500).json({ 
+      ok: false, 
+      error: { code: error.response?.status || 500, message: error.message } 
+    });
+  }
+});
+
 export default router;

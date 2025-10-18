@@ -1,12 +1,13 @@
- 'use client';
-import React, { useState } from 'react';
+'use client';
+import React, { useState, useCallback, useMemo, memo } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image'
+import Image from 'next/image';
 import Sidebar from '../../components/layout/Sidebar';
 import SearchBar from '../../components/SearchBar';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
 import styles from './page.module.css';
 
-// Datos de los deportes disponibles
+// 🔥 DATOS MOVIDOS FUERA + OPTIMIZACIÓN
 const sportsData = [
   {
     id: 'futbol',
@@ -14,7 +15,7 @@ const sportsData = [
     imageUrl: '/sports/futbol/futbol.png',
     description: 'Canchas de futbol 5-11 jugadores. Canchas con pasto sintético y pasto natural.',
     tag: 'Popular',
-    tagColor: '#3b82f6', // Azul
+    tagColor: '#3b82f6',
     href: '/sports/futbol'
   },
   {
@@ -23,7 +24,7 @@ const sportsData = [
     imageUrl: '/sports/basquetbol/Basquet.png',
     description: 'Explora ligas, equipos y partidos de baloncesto.',
     tag: 'Tendencia',
-    tagColor: '#f97316', // Naranja
+    tagColor: '#f97316',
     href: '/sports/basquetbol'
   },
   {
@@ -32,7 +33,7 @@ const sportsData = [
     imageUrl: '/sports/tenis/tenis.png',
     description: 'Grand Slams, rankings y próximos torneos.',
     tag: 'Próximamente',
-    tagColor: '#10b981', // Verde
+    tagColor: '#10b981',
     href: '/sports/tenis'
   },
   {
@@ -41,7 +42,7 @@ const sportsData = [
     imageUrl: '/sports/padel/padel.png',
     description: 'Explora ligas, equipos y partidos de padel.',
     tag: 'Próximamente',
-    tagColor: '#8b5cf6', // Violeta
+    tagColor: '#8b5cf6',
     href: '/sports/padel'
   },
   {
@@ -50,7 +51,7 @@ const sportsData = [
     imageUrl: '/sports/natacion/natacion.png',
     description: 'Explora natación y deportes acuáticos.',
     tag: 'Nuevo',
-    tagColor: '#06b6d4', // Cyan
+    tagColor: '#06b6d4',
     href: '/sports/natacion'
   },
   {
@@ -59,7 +60,7 @@ const sportsData = [
     imageUrl: '/sports/atletismo/atletismo.png',
     description: 'Pistas de atletismo, eventos de carreras y competencias deportivas.',
     tag: 'Nuevo',
-    tagColor: '#1E40AF', // Blue/gray palette for Atletismo
+    tagColor: '#1E40AF',
     href: '/sports/atletismo'
   },
   {
@@ -68,7 +69,7 @@ const sportsData = [
     imageUrl: '/sports/skate/skate.png',
     description: 'Skateparks, rampas, bowls y zonas de street skating.',
     tag: 'Nuevo',
-    tagColor: '#6b7280', // neutral gray (no naranja)
+    tagColor: '#6b7280',
     href: '/sports/skate'
   },
   {
@@ -77,7 +78,7 @@ const sportsData = [
     imageUrl: '/sports/ciclismo/ciclismo.png',
     description: 'Ciclovías urbanas, rutas de montaña y pistas de ciclismo.',
     tag: 'Nuevo',
-    tagColor: '#22c55e', // Verde para ciclismo
+    tagColor: '#22c55e',
     href: '/sports/ciclismo'
   },
   {
@@ -86,17 +87,16 @@ const sportsData = [
     imageUrl: '/sports/karting/karting.png',
     description: 'Kartódromos profesionales, pistas techadas y competencias de velocidad.',
     tag: 'Nuevo',
-    tagColor: '#ef4444', // Rojo para karting
+    tagColor: '#ef4444',
     href: '/sports/karting'
   },
-  // NUEVOS DEPORTES AGREGADOS
   {
     id: 'enduro',
     name: 'Enduro',
     imageUrl: '/sports/enduro/enduro.png',
     description: 'Rutas y circuitos para enduro. Terrenos desafiantes y emocionantes.',
     tag: 'Extremo',
-    tagColor: '#4B5320', // verde militar
+    tagColor: '#4B5320',
     href: '/sports/enduro'
   },
   {
@@ -105,7 +105,7 @@ const sportsData = [
     imageUrl: '/sports/futbol-americano/futbol-americano.png',
     description: 'Campos profesionales para partidos y entrenamientos de football americano.',
     tag: 'Contacto',
-    tagColor: '#002147', // azul marino
+    tagColor: '#002147',
     href: '/sports/futbol-americano'
   },
   {
@@ -114,7 +114,7 @@ const sportsData = [
     imageUrl: '/sports/rugby/rugby.png',
     description: 'Campos de rugby con medidas oficiales para partidos y entrenamientos.',
     tag: 'Intenso',
-    tagColor: '#722F37', // vino titno
+    tagColor: '#722F37',
     href: '/sports/rugby'
   },
   {
@@ -123,7 +123,7 @@ const sportsData = [
     imageUrl: '/sports/mountain-bike/mountain-bike.png',
     description: 'Senderos y circuitos para mountain bike. Diferentes niveles de dificultad.',
     tag: 'Aventura',
-    tagColor: '#4E342E', // Índigo
+    tagColor: '#4E342E',
     href: '/sports/mountain-bike'
   },
   {
@@ -141,7 +141,7 @@ const sportsData = [
     imageUrl: '/sports/crossfitentrenamientofuncional/crossfitentrenamientofuncional.png',
     description: 'Explora entrenamiento funcional y rutinas de ejercicio.',
     tag: 'Nuevo',
-    tagColor: '#272829', // Gris Oscuro
+    tagColor: '#272829',
     href: '/sports/crossfitentrenamientofuncional'
   },
   {
@@ -150,7 +150,7 @@ const sportsData = [
     imageUrl: '/sports/patinaje/patinaje.png',
     description: 'Explora patinaje y competencias.',
     tag: 'Nuevo',
-    tagColor: '#55f2edff', // Rosa
+    tagColor: '#55f2edff',
     href: '/sports/patinaje'
   },
   {
@@ -159,57 +159,129 @@ const sportsData = [
     imageUrl: '/sports/escalada/escalada.png',
     description: 'Explora centros de escalada y rutas.',
     tag: 'Nuevo',
-    tagColor: '#A67B5B', // Marrón
+    tagColor: '#A67B5B',
     href: '/sports/escalada'
   },
-];
+] as const;
+
+// 🔥 COMPONENTE MEMOIZADO INDIVIDUAL
+const SportCard = memo(({ sport, onClick }: {
+  sport: any;
+  onClick: (sport: any) => void;
+}) => {
+  const handleSportClick = useCallback((sport: any) => {
+    if (sport.href) {
+      // 🔥 FORZAR NAVEGACIÓN SIN PREFETCH
+      window.location.href = sport.href;
+    }
+  }, []);
+
+  const tagStyle = useMemo(() => ({
+    backgroundColor: sport.tagColor
+  }), [sport.tagColor]);
+
+  return (
+    <div 
+      className={styles.sportCard}
+      onClick={() => handleSportClick(sport)}
+    >
+      <div className={styles.sportImageContainer}>
+        <Image 
+          src={sport.imageUrl} 
+          alt={sport.name}
+          className={styles.sportImage}
+          width={300}
+          height={200}
+          loading="lazy"
+          priority={false}
+          unoptimized={true}
+        />
+        <div 
+          className={styles.sportTag}
+          style={tagStyle}
+        >
+          {sport.tag}
+        </div>
+      </div>
+
+      <div className={styles.sportContent}>
+        <h3 className={styles.sportName}>{sport.name}</h3>
+        <p className={styles.sportDescription}>{sport.description}</p>
+        
+        <div className={styles.exploreButton}>
+          Explorar
+        </div>
+      </div>
+    </div>
+  );
+});
+
+SportCard.displayName = 'SportCard';
 
 export default function SportsPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('competitivo');
-  const [filteredSports, setFilteredSports] = useState(sportsData);
+  
+  const { buttonProps } = useAuthStatus();
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  const handleSearch = () => {
+  const filteredSports = useMemo(() => {
     if (searchTerm.trim() === '') {
-      setFilteredSports(sportsData);
-    } else {
-      const filtered = sportsData.filter(sport =>
-        sport.name.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredSports(filtered);
+      return sportsData;
     }
-  };
+    const searchLower = searchTerm.toLowerCase();
+    return sportsData.filter(sport =>
+      sport.name.toLowerCase().includes(searchLower)
+    );
+  }, [searchTerm]);
 
-  const handleSportClick = (sport: typeof sportsData[0]) => {
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  }, []);
+
+  const handleSearch = useCallback(() => {
+    // Búsqueda automática con useMemo
+  }, []);
+
+  // 🔥 NAVEGACIÓN SIN PREFETCH
+  const handleSportClick = useCallback((sport: typeof sportsData[0]) => {
     if (sport.href) {
+      // 🔥 FORZAR NAVEGACIÓN SIN PREFETCH
       window.location.href = sport.href;
     }
-  };
+  }, []);
+
+  const handleUserButtonClick = useCallback(() => {
+    if (!buttonProps?.disabled) {
+      router.push(buttonProps.href);
+    }
+  }, [buttonProps, router]);
+
+  const handleResetSearch = useCallback(() => {
+    setSearchTerm('');
+  }, []);
+
+  const hasResults = filteredSports.length > 0;
+  const showNoResults = !hasResults && searchTerm.trim() !== '';
 
   return (
     <div className={styles.pageContainer}>
-      {/* Sidebar */}
-      <Sidebar userRole="usuario"  />
+      <Sidebar userRole="usuario" />
 
-      {/* Contenido principal */}
       <div className={styles.mainContent}>
-        {/* Header */}
         <div className={styles.header}>
           <h1 className={styles.pageTitle}>Explora Deportes</h1>
           <div className={styles.headerRight}>
-            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
+            <button 
+              className={styles.userButton} 
+              onClick={handleUserButtonClick}
+              disabled={buttonProps?.disabled}
+            >
               <span>👤</span>
-              <span>Usuario</span>
+              <span>{buttonProps?.text || 'Usuario'}</span>
             </button>
           </div>
         </div>
 
-        {/* Barra de búsqueda y filtros */}
         <div className={styles.searchSection}>
           <div className={styles.searchContainer}>
             <SearchBar
@@ -221,55 +293,24 @@ export default function SportsPage() {
           </div>
         </div>
 
-        {/* Grid de deportes */}
-        <div className={styles.sportsGrid}>
-          {filteredSports.map((sport) => (
-            <div 
-              key={sport.id} 
-              className={styles.sportCard}
-              onClick={() => handleSportClick(sport)}
-            >
-              {/* Imagen del deporte */}
-              <div className={styles.sportImageContainer}>
-                <Image 
-                    src={sport.imageUrl} 
-                    alt={sport.name}
-                    className={styles.sportImage}
-                    width={300}
-                    height={200}
-                    placeholder="blur"
-                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-                  />
-                <div 
-                  className={styles.sportTag}
-                  style={{ backgroundColor: sport.tagColor }}
-                >
-                  {sport.tag}
-                </div>
-              </div>
+        {hasResults && (
+          <div className={styles.sportsGrid}>
+            {filteredSports.map((sport) => (
+              <SportCard 
+                key={sport.id} 
+                sport={sport}
+                onClick={handleSportClick}
+              />
+            ))}
+          </div>
+        )}
 
-              <div className={styles.sportContent}>
-                <h3 className={styles.sportName}>{sport.name}</h3>
-                <p className={styles.sportDescription}>{sport.description}</p>
-                
-                <button className={styles.exploreButton}>
-                  Explorar
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Mensaje si no hay resultados */}
-        {filteredSports.length === 0 && searchTerm && (
+        {showNoResults && (
           <div className={styles.noResults}>
             <h3>No se encontraron deportes para &quot;{searchTerm}&quot;</h3>
             <p>Intenta con otros términos de búsqueda</p>
             <button 
-              onClick={() => {
-                setSearchTerm(''); 
-                setFilteredSports(sportsData);
-              }}
+              onClick={handleResetSearch}
               className={styles.resetButton}
             >
               Ver todos los deportes

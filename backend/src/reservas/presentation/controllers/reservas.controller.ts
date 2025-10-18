@@ -9,7 +9,11 @@ import {
   VerificarDisponibilidad,
   GetReservasByUsuario,
   ConfirmarPago,
-  CancelarReserva
+  CancelarReserva,
+  CreateReservaAdmin,
+  CancelarReservaAdmin,
+  GetReservasByCancha,
+  GetReservasByUsuarioAdmin
 } from "../../application/ReservasUseCases";
 
 /**
@@ -26,7 +30,12 @@ export class ReservasController {
     private verificarDisponibilidadUC: VerificarDisponibilidad,
     private getReservasByUsuarioUC: GetReservasByUsuario,
     private confirmarPagoUC: ConfirmarPago,
-    private cancelarReservaUC: CancelarReserva
+    private cancelarReservaUC: CancelarReserva,
+    // Casos de uso administrativos
+    private createReservaAdminUC?: CreateReservaAdmin,
+    private cancelarReservaAdminUC?: CancelarReservaAdmin,
+    private getReservasByCanchaUC?: GetReservasByCancha,
+    private getReservasByUsuarioAdminUC?: GetReservasByUsuarioAdmin
   ) {}
 
   /**
@@ -193,6 +202,114 @@ export class ReservasController {
       
       const reserva = await this.cancelarReservaUC.execute(Number(req.params.id), motivo);
       res.json(ok(reserva));
+    } catch (e: any) {
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details));
+    }
+  };
+
+  // ===== MÉTODOS ADMINISTRATIVOS =====
+
+  /**
+   * Crea una reserva como administrador.
+   * POST /reservas/admin/crear
+   */
+  createAdmin = async (req: Request, res: Response) => {
+    try {
+      if (!this.createReservaAdminUC) {
+        return res.status(501).json(fail(501, "Funcionalidad administrativa no disponible"));
+      }
+
+      const { id_cancha, fecha_reserva, hora_inicio, hora_fin, id_usuario } = req.body;
+      const adminUserId = (req as any).user?.id_usuario;
+      const targetUserId = id_usuario || adminUserId;
+
+      // Construir fechas completas
+      const fechaInicio = new Date(`${fecha_reserva}T${hora_inicio}:00.000Z`);
+      const fechaFin = new Date(`${fecha_reserva}T${hora_fin}:00.000Z`);
+
+      const input = {
+        usuarioId: targetUserId,
+        canchaId: id_cancha,
+        fechaInicio,
+        fechaFin,
+        metodoPago: undefined,
+        notas: `Creada por administrador ${adminUserId}`
+      };
+
+      const reserva = await this.createReservaAdminUC.execute(input, targetUserId, adminUserId);
+      res.status(201).json(ok(reserva));
+    } catch (e: any) {
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details));
+    }
+  };
+
+  /**
+   * Cancela una reserva como administrador.
+   * POST /reservas/admin/:id/cancelar
+   */
+  cancelarAdmin = async (req: Request, res: Response) => {
+    try {
+      if (!this.cancelarReservaAdminUC) {
+        return res.status(501).json(fail(501, "Funcionalidad administrativa no disponible"));
+      }
+
+      const { motivo } = req.body;
+      const adminUserId = (req as any).user?.id_usuario;
+
+      const reserva = await this.cancelarReservaAdminUC.execute(
+        Number(req.params.id), 
+        adminUserId, 
+        motivo
+      );
+      res.json(ok(reserva));
+    } catch (e: any) {
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details));
+    }
+  };
+
+  /**
+   * Obtiene reservas de una cancha específica.
+   * GET /reservas/admin/cancha/:canchaId
+   */
+  getByCancha = async (req: Request, res: Response) => {
+    try {
+      if (!this.getReservasByCanchaUC) {
+        return res.status(501).json(fail(501, "Funcionalidad administrativa no disponible"));
+      }
+
+      const canchaId = Number(req.params.canchaId);
+      const filters = {
+        fechaDesde: req.query.fecha_desde ? new Date(req.query.fecha_desde as string) : undefined,
+        fechaHasta: req.query.fecha_hasta ? new Date(req.query.fecha_hasta as string) : undefined,
+        estado: req.query.estado as any,
+      };
+
+      const reservas = await this.getReservasByCanchaUC.execute(canchaId, filters);
+      res.json(ok(reservas));
+    } catch (e: any) {
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details));
+    }
+  };
+
+  /**
+   * Obtiene reservas de un usuario específico (vista administrativa).
+   * GET /reservas/admin/usuario/:usuarioId
+   */
+  getByUsuarioAdmin = async (req: Request, res: Response) => {
+    try {
+      if (!this.getReservasByUsuarioAdminUC) {
+        return res.status(501).json(fail(501, "Funcionalidad administrativa no disponible"));
+      }
+
+      const usuarioId = Number(req.params.usuarioId);
+      const filters = {
+        fechaDesde: req.query.fecha_desde ? new Date(req.query.fecha_desde as string) : undefined,
+        fechaHasta: req.query.fecha_hasta ? new Date(req.query.fecha_hasta as string) : undefined,
+        estado: req.query.estado as any,
+      };
+
+      const reservas = await this.getReservasByUsuarioAdminUC.execute(usuarioId, filters);
+      res.json(ok(reservas));
     } catch (e: any) {
       res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details));
     }

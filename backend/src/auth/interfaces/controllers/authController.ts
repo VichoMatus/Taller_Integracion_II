@@ -13,19 +13,19 @@
  * 
  * Endpoints disponibles:
  * 
- * 🔐 AUTENTICACIÓN:
+ * AUTENTICACIÓN:
  * - POST /api/auth/register - Registro de usuario
  * - POST /api/auth/login - Iniciar sesión
  * - POST /api/auth/logout - Cerrar sesión
  * - POST /api/auth/refresh - Refrescar access token
  * 
- * 👤 GESTIÓN DE PERFIL:
+ * GESTIÓN DE PERFIL:
  * - GET /api/auth/me - Obtener perfil actual
  * - PATCH /api/auth/me - Actualizar perfil
  * - PATCH /api/auth/me/password - Cambiar contraseña
  * - POST /api/auth/me/push-token - Registrar token FCM
  * 
- * 📧 VERIFICACIÓN Y RECUPERACIÓN:
+ * VERIFICACIÓN Y RECUPERACIÓN:
  * - POST /api/auth/verify-email - Verificar email con token
  * - POST /api/auth/resend-verification - Reenviar verificación
  * - POST /api/auth/forgot-password - Solicitar reset de contraseña
@@ -35,9 +35,10 @@
 import { Request, Response } from 'express';
 import { AuthService } from '../../services/authService';
 import {
-  UserRegister, UserLogin, UserUpdate, ChangePasswordRequest,
+  UserLogin, UserUpdate, ChangePasswordRequest,
   VerifyEmailRequest, ResendVerificationRequest, SendVerificationRequest, ForgotPasswordRequest,
-  ResetPasswordRequest, RefreshTokenRequest, LogoutRequest, PushTokenRequest
+  ResetPasswordRequest, RefreshTokenRequest, LogoutRequest, PushTokenRequest,
+  RegisterInitRequest, RegisterInitResponse, RegisterVerifyRequest
 } from '../../types/authTypes';
 
 /**
@@ -57,38 +58,20 @@ export class AuthController {
    */
 
   /**
-   * POST /register
-   * Registrar nuevo usuario en el sistema
-   * Body: { nombre?, apellido?, email, password, confirmPassword?, telefono? }
-   * Response: { ok: boolean, data?: TokenResponse, error?: string }
+   * POST /register/init
+   * Iniciar proceso de registro (envía OTP, no crea usuario aún)
+   * Body: { nombre, apellido, email, password, telefono }
+   * Response: { ok: boolean, data?: RegisterInitResponse, error?: string }
    */
-  register = async (req: Request, res: Response): Promise<void> => {
+  registerInit = async (req: Request, res: Response): Promise<void> => {
     try {
-      const userData: UserRegister = req.body;
+      const userData: RegisterInitRequest = req.body;
       
-      // Validaciones básicas requeridas
-      if (!userData.email || !userData.password) {
+      // Validación básica - todos los campos son requeridos en este flujo
+      if (!userData.nombre || !userData.apellido || !userData.email || !userData.password || !userData.telefono) {
         res.status(400).json({ 
           ok: false, 
-          error: 'Email y contraseña son requeridos' 
-        });
-        return;
-      }
-
-      // Validación de confirmación de contraseña
-      if (userData.confirmPassword && userData.password !== userData.confirmPassword) {
-        res.status(400).json({ 
-          ok: false, 
-          error: 'contraseñas no coinciden' 
-        });
-        return;
-      }
-
-      // Validación de longitud mínima de contraseña
-      if (userData.password.length < 6) {
-        res.status(400).json({ 
-          ok: false, 
-          error: 'La contraseña debe tener al menos 6 caracteres' 
+          error: 'Todos los campos son requeridos: nombre, apellido, email, password, telefono' 
         });
         return;
       }
@@ -103,23 +86,52 @@ export class AuthController {
         return;
       }
 
-      // Validación de teléfono (si se proporciona)
-      if (userData.telefono && userData.telefono.length > 0) {
-        // Acepta múltiples prefijos internacionales: +56 (Chile), +54 (Argentina), +1 (USA/Canadá), 
-        // +34 (España), +52 (México), +57 (Colombia), +51 (Perú), +55 (Brasil), etc.
-        const telefonoRegex = /^(\+[1-9]\d{0,3})?[0-9]{7,10}$/;
-        if (!telefonoRegex.test(userData.telefono.replace(/[\s-]/g, ''))) {
-          res.status(400).json({ 
-            ok: false, 
-            error: 'El formato del teléfono no es válido (ejemplos: +56912345678, +1234567890, +34123456789)' 
-          });
-          return;
-        }
+      // Validación de longitud mínima de contraseña
+      if (userData.password.length < 6) {
+        res.status(400).json({ 
+          ok: false, 
+          error: 'La contraseña debe tener al menos 6 caracteres' 
+        });
+        return;
       }
 
-      console.log('✅ AuthController: Validaciones pasadas, enviando a AuthService');
+      const result = await this.service.registerInit(userData);
+      const status = result.ok ? 200 : 400;
+      res.status(status).json(result);
+    } catch (error) {
+      res.status(500).json({ ok: false, error: 'Error interno del servidor' });
+    }
+  };
+
+  /**
+   * POST /register/verify
+   * Verificar OTP y completar el registro (crea el usuario verificado)
+   * Body: { email, code, action_token }
+   * Response: { ok: boolean, data?: TokenResponse, error?: string }
+   */
+  registerVerify = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const verifyData: RegisterVerifyRequest = req.body;
       
-      const result = await this.service.register(userData);
+      // Validación básica
+      if (!verifyData.email || !verifyData.code || !verifyData.action_token) {
+        res.status(400).json({ 
+          ok: false, 
+          error: 'Email, código y action_token son requeridos' 
+        });
+        return;
+      }
+
+      // Validación de formato del código OTP (6 dígitos)
+      if (!/^\d{6}$/.test(verifyData.code)) {
+        res.status(400).json({ 
+          ok: false, 
+          error: 'El código debe tener 6 dígitos' 
+        });
+        return;
+      }
+
+      const result = await this.service.registerVerify(verifyData);
       const status = result.ok ? 201 : 400;
       res.status(status).json(result);
     } catch (error) {
@@ -508,7 +520,8 @@ export class AuthController {
         service: 'auth',
         timestamp: new Date().toISOString(),
         endpoints: {
-          register: 'POST /register',
+          registerInit: 'POST /register/init',
+          registerVerify: 'POST /register/verify',
           login: 'POST /login',
           logout: 'POST /logout',
           refresh: 'POST /refresh',
@@ -534,18 +547,37 @@ export class AuthController {
    */
 
   /**
-   * GET /register/status
-   * Verificar conectividad del endpoint de registro
+   * GET /register/init/status
+   * Verificar conectividad del endpoint de inicio de registro
    */
-  getRegisterStatus = async (req: Request, res: Response): Promise<void> => {
+  getRegisterInitStatus = async (req: Request, res: Response): Promise<void> => {
     try {
-      const status = await this.service.checkEndpointStatus('register');
+      const status = await this.service.checkEndpointStatus('registerInit');
       const httpStatus = status.ok ? 200 : 503;
       res.status(httpStatus).json(status);
     } catch (error) {
       res.status(500).json({ 
         ok: false, 
-        endpoint: 'register',
+        endpoint: 'registerInit',
+        error: 'Error interno del servidor',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
+  /**
+   * GET /register/verify/status
+   * Verificar conectividad del endpoint de verificación de registro
+   */
+  getRegisterVerifyStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const status = await this.service.checkEndpointStatus('registerVerify');
+      const httpStatus = status.ok ? 200 : 503;
+      res.status(httpStatus).json(status);
+    } catch (error) {
+      res.status(500).json({ 
+        ok: false, 
+        endpoint: 'registerVerify',
         error: 'Error interno del servidor',
         timestamp: new Date().toISOString()
       });

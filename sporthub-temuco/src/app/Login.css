@@ -213,16 +213,73 @@ body {
 
 /* Estilos específicos para el formulario de registro (más campos) */
 .login-form.registro-form {
-    min-height: 650px; /* Un poco más alto para registro */
-    max-height: 750px;
+    min-height: 680px;
+    max-height: none; /* Permitir crecimiento según contenido */
+    height: auto;
 }
 
 .login-form.registro-form .login-left {
-    padding: 30px 40px; /* Padding vertical reducido */
+    padding: 30px 40px 20px; /* Reducir padding inferior */
+    overflow-y: visible;
 }
 
 .login-form.registro-form .login-left input {
     margin-bottom: 12px; /* Espacio reducido entre campos */
+}
+
+/* Ajustes específicos para el espaciado en el formulario de registro */
+.login-form.registro-form .login-left button[type="submit"] {
+    margin-top: 5px; /* Reducido de 10px */
+    margin-bottom: 5px; /* Espacio después del botón */
+}
+
+.login-form.registro-form .login-left .or {
+    margin: 12px 0; /* Reducido de 20px */
+}
+
+.login-form.registro-form .login-left .google-btn {
+    margin-bottom: 5px; /* Espacio después del botón de Google */
+}
+
+.login-form.registro-form .login-left .signup {
+    margin-top: 15px; /* Reducido de 25px */
+}
+
+/* Estilos para mensajes de validación de contraseña */
+.password-strength {
+    font-size: 12px;
+    margin: -8px 0 12px 0;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.password-strength.weak {
+    color: #d63031;
+    background-color: #ffeaa7;
+}
+
+.password-strength.medium {
+    color: #fdcb6e;
+    background-color: #fff8e1;
+}
+
+.password-strength.strong {
+    color: #00b894;
+    background-color: #e8f5e8;
+}
+
+.password-requirements {
+    font-size: 11px;
+    color: #666;
+    margin: -5px 0 10px 0;
+    line-height: 1.3;
+}
+
+/* Ajuste para el contenedor de registro cuando hay mensajes */
+.login-container:has(.registro-form) {
+    align-items: flex-start;
+    padding-top: 30px;
+    padding-bottom: 30px;
 }
 
 /* Responsive */
@@ -286,4 +343,26 @@ body {
     padding: 15px;
     margin: 10px;
   }
+}
+/* Estilos para la página de recuperación de contraseña */
+.login-left .back-to-login {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.login-left .back-to-login a {
+    color: #4F46E5;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.login-left .back-to-login a:hover {
+    text-decoration: underline;
+}
+
+/* Ajustes para formularios de recuperación */
+.login-form .login-left {
+    justify-content: flex-start;
+    padding-top: 50px;
 }

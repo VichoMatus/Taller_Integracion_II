@@ -2,7 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { authService } from '@/services/authService';
 
 import './Sidebar.css'; 
 import indexStyles from './StylesSportsSideBar/IndexSideBar.module.css';
@@ -28,18 +29,40 @@ import rugbyStyles from './StylesSportsSideBar/RugbySideBar.module.css';
 import mountainbikeStyles from './StylesSportsSideBar/MountainBikeSideBar.module.css';
 
 interface SidebarProps {
-  userRole: 'admin' | 'superadmin' | 'usuario';
+  userRole: 'admin' | 'superadmin' | 'super_admin' | 'usuario';
   sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje'| 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | 'escalada' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
-
 }
 
 const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado a undefined por defecto
   const pathname = usePathname();
+  const router = useRouter();
+
+  // 🔥 FUNCIÓN DE LOGOUT
+  const handleLogout = async () => {
+    try {
+      console.log('🚪 Iniciando proceso de logout...');
+      
+      // Llamar al servicio de logout
+      await authService.logout();
+      
+      console.log('✅ Logout exitoso, redirigiendo al login...');
+      
+      // recargar la pagina para ver el cambio
+      window.location.reload();
+      
+    } catch (error: any) {
+      console.error('❌ Error durante el logout:', error);
+      
+      // Aunque haya error, limpiar la sesión local y redirigir
+      authService.clearSession();
+      window.location.reload();
+    }
+  };
 
   // Función para obtener los estilos según el rol Y deporte
   const getSportStyles = () => {
-    // 🔥 Si es admin o superadmin, devolver null (usará las clases CSS normales)
-    if (userRole === 'admin' || userRole === 'superadmin') {
+    // 🔥 Si es admin o superadmin (cualquier variante), devolver null (usará las clases CSS normales)
+    if (userRole === 'admin' || userRole === 'superadmin' || userRole === 'super_admin') {
       return null; 
     }
 
@@ -195,7 +218,7 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
     {
       name: 'Reservas',
       icon: '📅',
-      href: '/reservas',
+      href: '/usuario/reservas',
       active: pathname === '/reservas'
     },
     {
@@ -282,9 +305,12 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
         </ul>
       </nav>
 
-      {/* Logout Button */}
+      {/* Logout Button - 🔥 AHORA CON FUNCIONALIDAD */}
       <div className={styles ? styles.sidebarLogout : 'sidebar-logout'}>
-        <button className={styles ? styles.sidebarLogoutButton : 'sidebar-logout-button'}>
+        <button 
+          className={styles ? styles.sidebarLogoutButton : 'sidebar-logout-button'}
+          onClick={handleLogout}
+        >
           <span className={styles ? styles.sidebarLogoutIcon : 'sidebar-logout-icon'}>🚪</span>
           <span>Cerrar Sesión</span>
         </button>
