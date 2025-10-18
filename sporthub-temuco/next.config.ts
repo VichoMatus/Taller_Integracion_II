@@ -8,16 +8,12 @@ const nextConfig: NextConfig = {
     "http://localhost:3000"
   ],
   
-  // Configuración actualizada para Next.js 15
-  serverExternalPackages: ['https'],
-  
   // ESLint y TypeScript habilitados para verificar errores
   
   // Asegurar que las variables de entorno se expongan correctamente
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL,
-    // NODE_TLS_REJECT_UNAUTHORIZED se maneja por variables de entorno, no aquí
   },
   
   // Para depuración: mostrar las variables de entorno en build time
