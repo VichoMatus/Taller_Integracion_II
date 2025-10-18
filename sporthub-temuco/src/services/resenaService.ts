@@ -4,7 +4,12 @@ import {
   ResenaCreateRequest,
   ResenaUpdateRequest,
   ResenaListQuery,
-  ResumenCalificacion
+  ResenaExtendida,
+  EstadisticasComplejo,
+  LikeResponse,
+  ReportarResenaInput,
+  ReporteResponse,
+  ResponderResenaInput
 } from '../types/resena';
 import { handleApiError } from "../services/ApiError";
 
@@ -38,7 +43,7 @@ export const resenaService = {
 
   async actualizarResena(id: number | string, input: ResenaUpdateRequest): Promise<Resena> {
     try {
-      const { data } = await apiBackend.put(`/api/resenas/${id}`, input);
+      const { data } = await apiBackend.patch(`/api/resenas/${id}`, input);
       return data;
     } catch (err) {
       handleApiError(err);
@@ -53,10 +58,63 @@ export const resenaService = {
     }
   },
 
-  async obtenerResumenCalificacion(id_cancha: number | string): Promise<ResumenCalificacion> {
+  async obtenerResenasPorComplejo(complejoId: number): Promise<Resena[]> {
     try {
-      const { data } = await apiBackend.get(`/api/resenas/cancha/${id_cancha}/resumen`);
+      const { data } = await apiBackend.get(`/api/resenas/complejo/${complejoId}`);
       return data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  async obtenerResenasPorUsuario(usuarioId: number): Promise<Resena[]> {
+    try {
+      const { data } = await apiBackend.get(`/api/resenas/usuario/${usuarioId}`);
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  async obtenerEstadisticasComplejo(complejoId: number): Promise<EstadisticasComplejo> {
+    try {
+      const { data } = await apiBackend.get(`/api/resenas/estadisticas/${complejoId}`);
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  async darLike(id: number): Promise<LikeResponse> {
+    try {
+      const { data } = await apiBackend.post(`/api/resenas/${id}/like`);
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  async quitarLike(id: number): Promise<LikeResponse> {
+    try {
+      const { data } = await apiBackend.delete(`/api/resenas/${id}/like`);
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  async reportarResena(id: number, input: ReportarResenaInput): Promise<ReporteResponse> {
+    try {
+      const { data } = await apiBackend.post(`/api/resenas/${id}/reportar`, input);
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  async responderResena(id: number, input: ResponderResenaInput): Promise<void> {
+    try {
+      await apiBackend.post(`/api/resenas/${id}/responder`, input);
     } catch (err) {
       handleApiError(err);
     }

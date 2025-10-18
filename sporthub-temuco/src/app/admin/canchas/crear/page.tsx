@@ -11,15 +11,16 @@ export default function CreateCanchaPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Estado del formulario
+  // Estado del formulario - SOLO campos que acepta FastAPI CREATE
   const [formData, setFormData] = useState<CreateCanchaInput>({
     nombre: '',
     tipo: 'futbol',
+    techada: false,
+    establecimientoId: 1, // Por ahora hardcodeado, después se puede obtener del usuario logueado
+    // Campos UI internos (no se envían al backend):
     precioPorHora: 0,
     descripcion: '',
     capacidad: 1,
-    techada: false,
-    establecimientoId: 1, // Por ahora hardcodeado, después se puede obtener del usuario logueado
     imagenUrl: ''
   });
 
@@ -43,19 +44,14 @@ export default function CreateCanchaPage() {
       setLoading(true);
       setError(null);
       
-      // Validaciones básicas
+      // Validaciones básicas - SOLO para campos requeridos por FastAPI
       if (!formData.nombre.trim()) {
         setError('El nombre de la cancha es requerido');
         return;
       }
       
-      if (formData.precioPorHora <= 0) {
-        setError('El precio por hora debe ser mayor a 0');
-        return;
-      }
-      
-      if (formData.capacidad <= 0) {
-        setError('La capacidad debe ser mayor a 0');
+      if (!formData.establecimientoId) {
+        setError('El ID del establecimiento es requerido');
         return;
       }
       
@@ -153,34 +149,21 @@ export default function CreateCanchaPage() {
               </div>
 
               <div className="edit-form-group">
-                <label htmlFor="capacidad" className="edit-form-label">Capacidad: *</label>
+                <label htmlFor="establecimientoId" className="edit-form-label">ID Complejo: *</label>
                 <input
                   type="number"
-                  id="capacidad"
-                  name="capacidad"
-                  value={formData.capacidad}
+                  id="establecimientoId"
+                  name="establecimientoId"
+                  value={formData.establecimientoId}
                   onChange={handleInputChange}
                   className="edit-form-input"
                   min="1"
-                  placeholder="Ej: 22"
+                  placeholder="Ej: 1"
                   required
                 />
-              </div>
-
-              <div className="edit-form-group">
-                <label htmlFor="precioPorHora" className="edit-form-label">Precio por hora: *</label>
-                <input
-                  type="number"
-                  id="precioPorHora"
-                  name="precioPorHora"
-                  value={formData.precioPorHora}
-                  onChange={handleInputChange}
-                  className="edit-form-input"
-                  min="0"
-                  step="0.01"
-                  placeholder="Ej: 25000"
-                  required
-                />
+                <small style={{ color: 'var(--text-gray)', fontSize: '0.8rem' }}>
+                  ID del complejo deportivo al que pertenece esta cancha
+                </small>
               </div>
             </div>
           </div>
@@ -204,50 +187,14 @@ export default function CreateCanchaPage() {
             </div>
           </div>
 
-          {/* Descripción */}
-          <div className="edit-section">
-            <h3 className="edit-section-title">Descripción</h3>
-            <div className="edit-form-group">
-              <label htmlFor="descripcion" className="edit-form-label">Descripción:</label>
-              <textarea
-                id="descripcion"
-                name="descripcion"
-                value={formData.descripcion}
-                onChange={handleInputChange}
-                className="edit-form-textarea"
-                rows={4}
-                placeholder="Descripción detallada de la cancha, servicios, etc..."
-              />
-            </div>
-          </div>
-
-          {/* Imagen */}
-          <div className="edit-section">
-            <h3 className="edit-section-title">Imagen</h3>
-            <div className="edit-form-group">
-              <label htmlFor="imagenUrl" className="edit-form-label">URL de la Imagen:</label>
-              <input
-                type="url"
-                id="imagenUrl"
-                name="imagenUrl"
-                value={formData.imagenUrl}
-                onChange={handleInputChange}
-                className="edit-form-input"
-                placeholder="https://ejemplo.com/imagen.jpg"
-              />
-              <small style={{ color: 'var(--text-gray)', fontSize: '0.8rem' }}>
-                Opcional: URL de una imagen para mostrar la cancha
-              </small>
-            </div>
-          </div>
-
           {/* Información adicional */}
           <div className="edit-section">
             <h3 className="edit-section-title">Información</h3>
             <div className="edit-info-item">
               <p style={{ color: 'var(--text-gray)', fontSize: '0.9rem' }}>
-                Los campos marcados con (*) son obligatorios. La cancha será creada y estará disponible 
-                inmediatamente para reservas si el estado es "Activa".
+                <strong>Campos obligatorios:</strong> Nombre e ID del complejo.<br />
+                <strong>Nota:</strong> Precio, capacidad, descripción e imagen se configuran desde el backend 
+                o en módulos específicos. Esta creación básica permite registrar la cancha en el sistema.
               </p>
             </div>
           </div>

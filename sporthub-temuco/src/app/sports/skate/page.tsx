@@ -1,4 +1,4 @@
-"use client";
+'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStatus } from '../../../hooks/useAuthStatus';
@@ -6,49 +6,41 @@ import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
-import styles from './page.module.css';
 import StatsCard from '../../../components/charts/StatsCard';
+import styles from './page.module.css';
 
-const topRatedCourts = [
+// 🔥 IMPORTAR SERVICIO
+import { canchaService } from '../../../services/canchaService';
+
+// 🛹 DATOS PARA LAS ESTADÍSTICAS DE SKATE (SERÁN ACTUALIZADOS CON DATOS REALES)
+const skateStats = [
   {
-    imageUrl: "/sports/skate/canchas/Skate1.svg",
-    name: "Skate Plaza Central",
-    address: "Plaza de Armas, Centro",
-    rating: 4.6,
-    tags: ["Bowl", "Street", "Rampas"],
-    description: "Skatepark urbano con bowl profesional y zona street completa",
-    price: "0",
-    nextAvailable: "Abierto", 
+    title: "Skateparks Disponibles",
+    value: "6",
+    icon: "🛹",
+    subtitle: "Listos para practicar",
+    trend: { value: 1, isPositive: true }
   },
   {
-    imageUrl: "/sports/skate/canchas/Skate2.svg",
-    name: "Skatepark Universidad",
-    address: "Campus Universitario, Temuco",
-    rating: 4.4,
-    tags: ["Principiantes", "Mini Ramp", "Flatground"],
-    description: "Área perfecta para aprender, con obstáculos básicos",
-    price: "0",
-    nextAvailable: "Abierto",
+    title: "Rango de Precios",
+    value: "$15-30",
+    icon: "💰",
+    subtitle: "Por sesión",
+    trend: { value: 2, isPositive: true }
   },
   {
-    imageUrl: "/sports/skate/canchas/Skate1.svg",
-    name: "Bowl Parque Costanera",
-    address: "Costanera Norte, Temuco",
-    rating: 4.8,
-    tags: ["Bowl Profundo", "Avanzado", "Vert"],
-    description: "Bowl de concreto de nivel profesional con transiciones perfectas",
-    price: "0",
-    nextAvailable: "Abierto",
+    title: "Calificación Promedio",
+    value: "4.5⭐",
+    icon: "🏆",
+    subtitle: "De nuestros skateparks",
+    trend: { value: 0.2, isPositive: true }
   },
   {
-    imageUrl: "/sports/skate/canchas/Skate2.svg",
-    name: "Street Plaza Condell",
-    address: "Av. Condell, Temuco",
-    rating: 4.3,
-    tags: ["Street", "Rails", "Escaleras"],
-    description: "Plaza de street skating con rails, escaleras y bordillos",
-    price: "0",
-    nextAvailable: "Abierto",
+    title: "Skaters Activos",
+    value: "42",
+    icon: "👥",
+    subtitle: "Ahora mismo",
+    trend: { value: 8, isPositive: true }
   }
 ];
 
@@ -62,14 +54,119 @@ export default function SkatePage() {
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
+  // 🔥 ESTADOS PARA SKATEPARKS DEL BACKEND
+  const [skateparks, setSkateparks] = useState<any[]>([]);
+  const [loadingSkateparks, setLoadingSkateparks] = useState(true);
+  const [errorSkateparks, setErrorSkateparks] = useState<string | null>(null);
+
+  // 🔥 CARGAR SKATEPARKS DEL BACKEND
+  useEffect(() => {
+    const loadSkateparks = async () => {
+      try {
+        setLoadingSkateparks(true);
+        setErrorSkateparks(null);
+        
+        console.log('🔄 [Skate] Cargando skateparks individuales del backend...');
+        
+        // 🔥 IDs de los skateparks que quieres mostrar
+        const skateparkIds = [1, 2, 3, 4, 5, 6, 7, 8];
+        
+        const skateparksPromises = skateparkIds.map(async (id) => {
+          try {
+            console.log(`🔍 [Skate] Cargando skatepark ID: ${id}`);
+            const skatepark = await canchaService.getCanchaById(id);
+            console.log(`✅ [Skate] Skatepark ${id} obtenido:`, skatepark);
+            
+            // 🔥 FILTRAR SOLO SKATEPARKS
+            if (skatepark.tipo !== 'skate') {
+              console.log(`⚠️ [Skate] Skatepark ${id} no es de skate (${skatepark.tipo}), saltando...`);
+              return null;
+            }
+            
+            // Mapear al formato requerido por CourtCard
+            const mappedSkatepark = {
+              id: skatepark.id,
+              imageUrl: `/sports/skate/canchas/Skatepark${skatepark.id}.png`,
+              name: skatepark.nombre,
+              address: `Complejo ${skatepark.establecimientoId}`,
+              rating: skatepark.rating || 4.5,
+              tags: [
+                skatepark.techada ? "Skatepark cubierto" : "Skatepark al aire libre",
+                skatepark.activa ? "Disponible" : "No disponible",
+                "Rampas incluidas",
+                "Equipo de seguridad"
+              ],
+              description: `Skatepark ${skatepark.nombre} - ID: ${skatepark.id}`,
+              price: skatepark.precioPorHora?.toString() || "20",
+              nextAvailable: skatepark.activa ? "Disponible ahora" : "No disponible",
+              sport: "skate"
+            };
+            
+            console.log('🗺️ [Skate] Skatepark mapeado:', mappedSkatepark);
+            return mappedSkatepark;
+            
+          } catch (error) {
+            console.log(`❌ [Skate] Error cargando skatepark ${id}:`, error);
+            return null;
+          }
+        });
+        
+        const skateparksResults = await Promise.all(skateparksPromises);
+        const skateparksValidos = skateparksResults.filter(skatepark => skatepark !== null);
+        
+        console.log('🎉 [Skate] Skateparks cargados exitosamente:', skateparksValidos.length);
+        console.log('📋 [Skate] Skateparks finales:', skateparksValidos);
+        
+        setSkateparks(skateparksValidos);
+        
+      } catch (error: any) {
+        console.error('❌ [Skate] ERROR DETALLADO cargando skateparks:', error);
+        setErrorSkateparks(`Error: ${error.message}`);
+        
+        // 🔥 FALLBACK
+        console.log('🚨 [Skate] USANDO FALLBACK - Error en el API');
+        setSkateparks([
+          {
+            id: 1,
+            imageUrl: "/sports/skate/canchas/Skatepark1.png",
+            name: "🚨 FALLBACK - Skatepark Centro",
+            address: "Norte, Centro, Sur",
+            rating: 4.6,
+            tags: ["DATOS OFFLINE", "Rampas incluidas", "Bowl", "Street"],
+            description: "🚨 Estos son datos de fallback - API no disponible",
+            price: "20",
+            nextAvailable: "16:00-18:00",
+          },
+          {
+            id: 2,
+            imageUrl: "/sports/skate/canchas/Skatepark2.png",
+            name: "🚨 FALLBACK - Skate Plaza Norte",
+            address: "Sector Norte",
+            rating: 4.4,
+            tags: ["DATOS OFFLINE", "Skatepark al aire libre", "Mini ramps"],
+            description: "🚨 Estos son datos de fallback - API no disponible",
+            price: "15",
+            nextAvailable: "14:00-16:00",
+          }
+        ]);
+      } finally {
+        setLoadingSkateparks(false);
+      }
+    };
+
+    loadSkateparks();
+  }, []);
+
   useEffect(() => {
     setIsClient(true);
+
     const calculateCardsToShow = () => {
       const screenWidth = window.innerWidth;
       const cardWidth = 320;
       const gap = 20;
       const sidebarWidth = 240;
       const padding = 40;
+
       const availableWidth = screenWidth - sidebarWidth - padding;
       return Math.max(1, Math.min(4, Math.floor(availableWidth / (cardWidth + gap))));
     };
@@ -81,30 +178,62 @@ export default function SkatePage() {
     };
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
-  const stats = {
-    disponiblesHoy: 4,
-    precioPromedio: { min: 0, max: 0 },
-    promedioCalificacion: 4.5,
-    cantidadAtletas: 25
+  // 🔥 USAR SKATEPARKS REALES PARA EL CARRUSEL
+  const topRatedParks = skateparks.slice(0, 6);
+  const totalSlides = Math.max(1, topRatedParks.length - cardsToShow + 1);
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => Math.min(prev + 1, totalSlides - 1));
   };
 
-  const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
+  const prevSlide = () => {
+    setCurrentSlide((prev) => Math.max(prev - 1, 0));
+  };
 
-  const nextSlide = () => setCurrentSlide((prev) => Math.min(prev + 1, totalSlides - 1));
-  const prevSlide = () => setCurrentSlide((prev) => Math.max(prev - 1, 0));
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value);
-  const handleSearch = () => console.log('Buscando:', searchTerm);
-  const handleLocationSearch = () => console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
+  const handleSearch = () => {
+    console.log('Buscando:', searchTerm);
+  };
+
+  const handleLocationSearch = () => {
+    console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
+  };
+
+  const handleSkateparkClick = (park: any) => {
+    console.log('Navegando a skatepark:', park);
+    router.push(`/sports/skate/canchas/canchaseleccionada?id=${park.id}`);
+  };
 
   const handleUserButtonClick = () => {
-    if (!buttonProps.disabled) {
-      router.push(buttonProps.href);
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
     }
   };
+
+  // 🔥 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
+  const updatedStats = [
+    {
+      ...skateStats[0],
+      value: skateparks.filter(s => s.nextAvailable !== "No disponible").length.toString()
+    },
+    skateStats[1], // Mantener precio por defecto
+    {
+      ...skateStats[2],
+      value: `${(skateparks.reduce((acc, s) => acc + s.rating, 0) / skateparks.length || 4.5).toFixed(1)}⭐`
+    },
+    skateStats[3] // Mantener skaters por defecto
+  ];
 
   if (!isClient) {
     return (
@@ -122,12 +251,11 @@ export default function SkatePage() {
   return (
     <div className={styles.pageContainer}>
       <Sidebar userRole="usuario" sport="skate" />
+
       <div className={styles.mainContent}>
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerIcon} style={{ '--emoji': 'var(--skate-main-emoji)' } as React.CSSProperties}>
-              {/* Emoji desde CSS variable */}
-            </div>
+            <div className={styles.headerIcon}>🛹</div>
             <h1 className={styles.headerTitle}>Skate</h1>
           </div>
           <div className={styles.headerRight}>
@@ -135,11 +263,11 @@ export default function SkatePage() {
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre del skatepark o ubicación..."
+              placeholder="Nombre del skatepark..."
               sport="skate"
             />
             <button 
-              className={styles.userButton} 
+              className={styles.userButton}
               onClick={handleUserButtonClick}
               disabled={buttonProps.disabled}
             >
@@ -149,56 +277,37 @@ export default function SkatePage() {
           </div>
         </div>
 
-        <div className={styles.statsContainer}>
-          <StatsCard
-            title="Skateparks disponibles hoy"
-            value={stats.disponiblesHoy}
-            icon={<span style={{fontSize: 20}}>📅</span>}
-            subtitle="Disponible ahora"
-            color="green"
-            className={styles.statCard}
-            ariaLabel="Skateparks disponibles hoy"
-            sport="skate"
-          />
-
-          <StatsCard
-            title="Rango de precios"
-            value={`$${stats.precioPromedio.min}-${stats.precioPromedio.max}`}
-            icon={<span style={{fontSize: 20}}>💲</span>}
-            subtitle="Precio promedio"
-            color="blue"
-            className={styles.statCard}
-            ariaLabel="Rango de precios por hora"
-            sport="skate"
-          />
-
-          <StatsCard
-            title="Promedio de calificación"
-            value={`${stats.promedioCalificacion} ⭐`}
-            icon={<span style={{fontSize: 20}}>⭐</span>}
-            subtitle="Reseñas acumuladas"
-            color="yellow"
-            className={styles.statCard}
-            ariaLabel="Promedio de calificación"
-            sport="skate"
-          />
-
-          <StatsCard
-            title="Skaters activos"
-            value={stats.cantidadAtletas}
-            icon={<span style={{fontSize: 20}}>🛹</span>}
-            subtitle="Asistentes activos"
-            color="purple"
-            className={styles.statCard}
-            ariaLabel="Skaters en park"
-            sport="skate"
-          />
+        {/* 🔥 STATS CARDS CON DATOS ACTUALIZADOS */}
+        <div className={styles.statsSection}>
+          <h2 className={styles.statsTitle}>
+            <span className={styles.statsTitleIcon}>📊</span>
+            Estadísticas de Skate en Temuco
+          </h2>
+          <div className={styles.statsContainer}>
+            {updatedStats.map((stat, index) => (
+              <StatsCard
+                key={index}
+                title={stat.title}
+                value={stat.value}
+                icon={stat.icon}
+                subtitle={stat.subtitle}
+                trend={stat.trend}
+                sport="skate"
+                onClick={() => {
+                  console.log(`Clicked on ${stat.title} stat`);
+                  if (stat.title.includes("Skateparks")) {
+                    router.push('/sports/skate/canchas');
+                  }
+                }}
+              />
+            ))}
+          </div>
         </div>
 
         <div className={styles.quickAccessSection}>
-          <button 
-            className={`${styles.mainCourtButton} ${styles.containerCard}`}
-            onClick={() => router.push('/sports/skate/canchas')}
+          <button
+            className={styles.mainCourtButton}
+            onClick={() => window.location.href = '/sports/skate/canchas/'}
           >
             <div className={styles.courtButtonIcon}>🛹</div>
             <div className={styles.courtButtonText}>
@@ -209,50 +318,109 @@ export default function SkatePage() {
           </button>
         </div>
 
+        {/* 🔥 CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>⭐</span>
-              Skateparks mejor valorados
+              Skateparks mejor calificados
+              {loadingSkateparks && <span style={{ fontSize: '14px', marginLeft: '10px' }}>Cargando...</span>}
+              {errorSkateparks && <span style={{ fontSize: '14px', marginLeft: '10px', color: 'red' }}>⚠️ Usando datos offline</span>}
             </h2>
             <div className={styles.carouselControls}>
-              <button onClick={prevSlide} className={styles.carouselButton} disabled={currentSlide === 0}>←</button>
-              <span className={styles.slideIndicator}>{currentSlide + 1} / {totalSlides}</span>
-              <button onClick={nextSlide} className={styles.carouselButton} disabled={currentSlide === totalSlides - 1}>→</button>
+              <button
+                onClick={prevSlide}
+                className={styles.carouselButton}
+                disabled={currentSlide === 0 || loadingSkateparks}
+                style={{ opacity: currentSlide === 0 || loadingSkateparks ? 0.5 : 1 }}
+              >
+                ←
+              </button>
+              <span className={styles.slideIndicator}>
+                {currentSlide + 1} / {totalSlides}
+              </span>
+              <button
+                onClick={nextSlide}
+                className={styles.carouselButton}
+                disabled={currentSlide === totalSlides - 1 || loadingSkateparks}
+                style={{ opacity: currentSlide === totalSlides - 1 || loadingSkateparks ? 0.5 : 1 }}
+              >
+                →
+              </button>
             </div>
           </div>
 
           <div className={styles.carouselContainer}>
-            <div className={styles.courtsGrid} style={{ transform: `translateX(-${currentSlide * (320 + 20)}px)` }}>
-              {topRatedCourts.map((court, index) => (
-                <CourtCard key={index} {...court} sport="skate" onClick={() => router.push('/sports/skate/canchas/canchaseleccionada')} />
-              ))}
-            </div>
+            {loadingSkateparks ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                <p>Cargando skateparks...</p>
+              </div>
+            ) : (
+              <div
+                className={styles.courtsGrid}
+                style={{
+                  transform: `translateX(-${currentSlide * (320 + 20)}px)`,
+                }}
+              >
+                {topRatedParks.map((park, index) => (
+                  <CourtCard
+                    key={park.id || index}
+                    {...park}
+                    sport="skate"
+                    onClick={() => handleSkateparkClick(park)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
+        {/* Ubicación en el mapa */}
         <div className={styles.mapSection}>
           <h2 className={styles.sectionTitle}>Ubicación en el mapa de los skateparks</h2>
+
           <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>
               <span className={styles.locationIcon}>📍</span>
-              <input type="text" placeholder="Dirección, barrio o ciudad" value={locationSearch} onChange={(e) => setLocationSearch(e.target.value)} className={styles.locationInput} />
+              <input
+                type="text"
+                placeholder="Dirección, barrio o ciudad"
+                value={locationSearch}
+                onChange={(e) => setLocationSearch(e.target.value)}
+                className={styles.locationInput}
+              />
             </div>
             <div className={styles.radiusContainer}>
               <span className={styles.radiusIcon}>📏</span>
-              <select value={radiusKm} onChange={(e) => setRadiusKm(e.target.value)} className={styles.radiusSelect}>
+              <select
+                value={radiusKm}
+                onChange={(e) => setRadiusKm(e.target.value)}
+                className={styles.radiusSelect}
+              >
                 <option value="1">Radio 1km</option>
                 <option value="3">Radio 3km</option>
                 <option value="5">Radio 5km</option>
                 <option value="10">Radio 10km</option>
               </select>
             </div>
-            <button onClick={handleLocationSearch} className={styles.searchButton}>Buscar</button>
+            <button onClick={handleLocationSearch} className={styles.searchLocationButton}>
+              Buscar
+            </button>
           </div>
 
-          <LocationMap sport="skate" latitude={-38.7359} longitude={-72.5904} address="Temuco, Chile" zoom={13} height="400px" />
+          <LocationMap
+            latitude={-38.7359}
+            longitude={-72.5904}
+            address="Temuco, Chile"
+            zoom={13}
+            height="400px"
+            sport="skate"
+          />
+
           <div className={styles.mapActions}>
-            <button className={styles.helpButton}>❓ Ayuda</button>
+            <button className={styles.helpButton}>
+              ❓ Ayuda
+            </button>
           </div>
         </div>
       </div>

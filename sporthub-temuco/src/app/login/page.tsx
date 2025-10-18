@@ -40,6 +40,7 @@ export default function LoginPage() {
                         router.push('/admin');
                         break;
                     case 'super_admin':
+                    case 'superadmin':
                         router.push('/superadmin');
                         break;
                     default:

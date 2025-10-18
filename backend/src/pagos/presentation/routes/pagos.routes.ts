@@ -133,7 +133,7 @@ router.post("/:id/confirmar", authMiddleware, (req, res) => ctrl(req).confirmarP
 // Requieren rol admin o superadmin
 
 /** POST /pagos/:id/reembolsar - Reembolsar pago (requiere rol admin) */
-router.post("/:id/reembolsar", requireRole("admin", "superadmin"), (req, res) => ctrl(req).reembolsarPago(req, res));
+router.post("/:id/reembolsar", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).reembolsarPago(req, res));
 
 // === Endpoints relacionados con reservas ===
 

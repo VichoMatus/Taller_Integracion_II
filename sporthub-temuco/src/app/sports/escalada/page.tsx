@@ -9,99 +9,38 @@ import Sidebar from '../../../components/layout/Sidebar';
 import StatsCard from '../../../components/charts/StatsCard';
 import styles from './page.module.css';
 
-// Datos de ejemplo para los centros de escalada mejor calificados (6 tarjetas)
-const topRatedClimbingCenters = [
-  {
-    imageUrl: "/sports/escalada/centros/Centro1.png",
-    name: "Escalada Vertical - Centro",
-    address: "Centro, Temuco",
-    rating: 4.7,
-    tags: ["Escalada Indoor", "Boulder", "Equipos Incluidos", "Instructores"],
-    description: "Centro de escalada indoor con rutas de diferentes niveles, boulder y alquiler de equipos completo",
-    price: "18",
-    nextAvailable: "14:00-15:00", 
-  },
-  {
-    imageUrl: "/sports/escalada/centros/Centro2.png",
-    name: "Boulder & Climb Norte",
-    address: "Sector Norte",
-    rating: 4.5,
-    tags: ["Boulder", "Escalada Deportiva", "Cafetería", "Estacionamiento"],
-    description: "Centro especializado en boulder y escalada deportiva con muro de 15 metros y zona de entrenamiento",
-    price: "15",
-    nextAvailable: "16:30-17:30", 
-  },
-  {
-    imageUrl: "/sports/escalada/centros/Centro3.png",
-    name: "Escalada Outdoor Sur",
-    address: "Sector Sur",
-    rating: 4.8,
-    tags: ["Escalada Outdoor", "Guías", "Transporte", "Equipos"],
-    description: "Centro de escalada en roca natural con guías certificados y tours a sectores cercanos a Temuco",
-    price: "35",
-    nextAvailable: "Mañana 08:00-09:00",
-  },
-  {
-    imageUrl: "/sports/escalada/centros/Centro4.png",
-    name: "Climb Gym Premium",
-    address: "Centro Premium", 
-    rating: 4.9,
-    tags: ["Escalada Indoor", "Boulder", "Entrenamiento", "Sauna"],
-    description: "Gimnasio de escalada premium con muros de 18 metros, boulder avanzado y área de recuperación",
-    price: "25",
-    nextAvailable: "Disponible ahora",
-  },
-  {
-    imageUrl: "/sports/escalada/centros/Centro5.png",
-    name: "Escalada Volcán",
-    address: "Zona Volcánica", 
-    rating: 4.6,
-    tags: ["Escalada Outdoor", "Volcanes", "Expediciones", "Camping"],
-    description: "Centro especializado en escalada en volcanes con expediciones guiadas y camping base",
-    price: "45",
-    nextAvailable: "Sábado 06:00-07:00",
-  },
-  {
-    imageUrl: "/sports/escalada/centros/Centro6.png",
-    name: "Rock Climbing Temuco",
-    address: "Centro Deportivo", 
-    rating: 4.4,
-    tags: ["Escalada Indoor", "Cursos", "Certificación", "Competencias"],
-    description: "Centro de escalada con cursos de certificación, competencias regulares y entrenamiento técnico",
-    price: "20",
-    nextAvailable: "19:00-20:00",
-  }
-];
+// 🔥 IMPORTAR SERVICIO
+import { canchaService } from '../../../services/canchaService';
 
-// 🔥 DATOS PARA LAS ESTADÍSTICAS DE ESCALADA
-const climbingStats = [
+// 🧗 DATOS PARA LAS ESTADÍSTICAS DE ESCALADA (SERÁN ACTUALIZADOS CON DATOS REALES)
+const escaladaStats = [
   {
     title: "Centros Disponibles Hoy",
-    value: "8",
-    icon: "🧗‍♂️",
+    value: "5",
+    icon: "🧗",
     subtitle: "Listos para escalar",
     trend: { value: 2, isPositive: true }
   },
   {
     title: "Rango de Precios",
-    value: "$15-45",
+    value: "$15-40",
     icon: "💰",
     subtitle: "Por sesión",
-    trend: { value: 5, isPositive: true }
+    trend: { value: 2, isPositive: true }
   },
   {
     title: "Calificación Promedio",
-    value: "4.6⭐",
+    value: "4.5⭐",
     icon: "🏆",
     subtitle: "De nuestros centros",
-    trend: { value: 0.3, isPositive: true }
+    trend: { value: 0.2, isPositive: true }
   },
   {
-    title: "Escaladores Activos",
-    value: "34",
-    icon: "🏔️",
-    subtitle: "Ahora mismo",
-    trend: { value: 12, isPositive: true }
+    title: "Rutas Totales",
+    value: "45",
+    icon: "🎯",
+    subtitle: "Disponibles",
+    trend: { value: 8, isPositive: true }
   }
 ];
 
@@ -115,16 +54,119 @@ export default function EscaladaPage() {
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
+  // 🔥 ESTADOS PARA CENTROS DEL BACKEND
+  const [centros, setCentros] = useState<any[]>([]);
+  const [loadingCentros, setLoadingCentros] = useState(true);
+  const [errorCentros, setErrorCentros] = useState<string | null>(null);
+
+  // 🔥 CARGAR CENTROS DEL BACKEND
+  useEffect(() => {
+    const loadCentros = async () => {
+      try {
+        setLoadingCentros(true);
+        setErrorCentros(null);
+        
+        console.log('🔄 [Escalada] Cargando centros individuales del backend...');
+        
+        // 🔥 IDs de los centros de escalada que quieres mostrar
+        const escaladaCentroIds = [1, 2, 3, 4, 5, 6, 7, 8];
+        
+        const centrosPromises = escaladaCentroIds.map(async (id) => {
+          try {
+            console.log(`🔍 [Escalada] Cargando centro ID: ${id}`);
+            const centro = await canchaService.getCanchaById(id);
+            console.log(`✅ [Escalada] Centro ${id} obtenido:`, centro);
+            
+            // 🔥 FILTRAR SOLO CENTROS DE ESCALADA
+            if (centro.tipo !== 'escalada') {
+              console.log(`⚠️ [Escalada] Centro ${id} no es de escalada (${centro.tipo}), saltando...`);
+              return null;
+            }
+            
+            // Mapear al formato requerido por CourtCard
+            const mappedCentro = {
+              id: centro.id,
+              imageUrl: `/sports/escalada/centros/Centro${centro.id}.png`,
+              name: centro.nombre,
+              address: `Complejo ${centro.establecimientoId}`,
+              rating: centro.rating || 4.5,
+              tags: [
+                centro.techada ? "Centro techado" : "Escalada al aire libre",
+                centro.activa ? "Disponible" : "No disponible",
+                "Equipo incluido",
+                "Instructor disponible"
+              ],
+              description: `Centro de escalada ${centro.nombre} - ID: ${centro.id}`,
+              price: centro.precioPorHora?.toString() || "25",
+              nextAvailable: centro.activa ? "Disponible ahora" : "No disponible",
+              sport: "escalada"
+            };
+            
+            console.log('🗺️ [Escalada] Centro mapeado:', mappedCentro);
+            return mappedCentro;
+            
+          } catch (error) {
+            console.log(`❌ [Escalada] Error cargando centro ${id}:`, error);
+            return null;
+          }
+        });
+        
+        const centrosResults = await Promise.all(centrosPromises);
+        const centrosValidos = centrosResults.filter(centro => centro !== null);
+        
+        console.log('🎉 [Escalada] Centros de escalada cargados exitosamente:', centrosValidos.length);
+        console.log('📋 [Escalada] Centros finales:', centrosValidos);
+        
+        setCentros(centrosValidos);
+        
+      } catch (error: any) {
+        console.error('❌ [Escalada] ERROR DETALLADO cargando centros:', error);
+        setErrorCentros(`Error: ${error.message}`);
+        
+        // 🔥 FALLBACK
+        console.log('🚨 [Escalada] USANDO FALLBACK - Error en el API');
+        setCentros([
+          {
+            id: 1,
+            imageUrl: "/sports/escalada/centros/Centro1.png",
+            name: "🚨 FALLBACK - Centro Escalada Temuco",
+            address: "Norte, Centro, Sur",
+            rating: 4.6,
+            tags: ["DATOS OFFLINE", "Equipo incluido", "Instructor", "Vestuarios"],
+            description: "🚨 Estos son datos de fallback - API no disponible",
+            price: "25",
+            nextAvailable: "20:00-21:00",
+          },
+          {
+            id: 2,
+            imageUrl: "/sports/escalada/centros/Centro2.png",
+            name: "🚨 FALLBACK - Escalada Outdoor",
+            address: "Sector Norte",
+            rating: 4.4,
+            tags: ["DATOS OFFLINE", "Al aire libre", "Diferentes niveles"],
+            description: "🚨 Estos son datos de fallback - API no disponible",
+            price: "20",
+            nextAvailable: "14:30-15:30",
+          }
+        ]);
+      } finally {
+        setLoadingCentros(false);
+      }
+    };
+
+    loadCentros();
+  }, []);
+
   useEffect(() => {
     setIsClient(true);
-    
+
     const calculateCardsToShow = () => {
       const screenWidth = window.innerWidth;
       const cardWidth = 320;
       const gap = 20;
       const sidebarWidth = 240;
       const padding = 40;
-      
+
       const availableWidth = screenWidth - sidebarWidth - padding;
       return Math.max(1, Math.min(4, Math.floor(availableWidth / (cardWidth + gap))));
     };
@@ -142,7 +184,9 @@ export default function EscaladaPage() {
     };
   }, []);
 
-  const totalSlides = Math.max(1, topRatedClimbingCenters.length - cardsToShow + 1);
+  // 🔥 USAR CENTROS REALES PARA EL CARRUSEL
+  const topRatedCenters = centros.slice(0, 6);
+  const totalSlides = Math.max(1, topRatedCenters.length - cardsToShow + 1);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => Math.min(prev + 1, totalSlides - 1));
@@ -157,16 +201,16 @@ export default function EscaladaPage() {
   };
 
   const handleSearch = () => {
-    console.log('Buscando centro de escalada:', searchTerm);
+    console.log('Buscando:', searchTerm);
   };
 
   const handleLocationSearch = () => {
-    console.log('Buscando ubicación de centros de escalada:', locationSearch, 'Radio:', radiusKm);
+    console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
   };
 
   const handleCentroClick = (center: any) => {
-    console.log('Navegando a centro de escalada...');
-    router.push('/sports/escalada/centros/centroseleccionado');
+    console.log('Navegando a centro:', center);
+    router.push(`/sports/escalada/centros/centroseleccionado?id=${center.id}`);
   };
 
   const handleUserButtonClick = () => {
@@ -177,13 +221,27 @@ export default function EscaladaPage() {
     }
   };
 
+  // 🔥 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
+  const updatedStats = [
+    {
+      ...escaladaStats[0],
+      value: centros.filter(c => c.nextAvailable !== "No disponible").length.toString()
+    },
+    escaladaStats[1], // Mantener precio por defecto
+    {
+      ...escaladaStats[2],
+      value: `${(centros.reduce((acc, c) => acc + c.rating, 0) / centros.length || 4.5).toFixed(1)}⭐`
+    },
+    escaladaStats[3] // Mantener rutas por defecto
+  ];
+
   if (!isClient) {
     return (
       <div className={styles.pageContainer}>
         <Sidebar userRole="usuario" sport="escalada" />
         <div className={styles.mainContent}>
           <div style={{ height: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <p>Cargando centros de escalada...</p>
+            <p>Cargando...</p>
           </div>
         </div>
       </div>
@@ -197,7 +255,7 @@ export default function EscaladaPage() {
       <div className={styles.mainContent}>
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerIcon}>🧗‍♂️</div>
+            <div className={styles.headerIcon}>🧗</div>
             <h1 className={styles.headerTitle}>Escalada</h1>
           </div>
           <div className={styles.headerRight}>
@@ -205,8 +263,8 @@ export default function EscaladaPage() {
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre del centro o ruta..."
-              sport="escalada" 
+              placeholder="Nombre del centro..."
+              sport="escalada"
             />
             <button 
               className={styles.userButton}
@@ -219,14 +277,14 @@ export default function EscaladaPage() {
           </div>
         </div>
 
-        {/* 🔥 STATS CARDS MEJORADAS CON STATSCARD */}
+        {/* 🔥 STATS CARDS CON DATOS ACTUALIZADOS */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
             <span className={styles.statsTitleIcon}>📊</span>
-            Estadísticas de Escalada en Temuco
+            Estadísticas de la Escalada en Temuco
           </h2>
           <div className={styles.statsContainer}>
-            {climbingStats.map((stat, index) => (
+            {updatedStats.map((stat, index) => (
               <StatsCard
                 key={index}
                 title={stat.title}
@@ -234,9 +292,9 @@ export default function EscaladaPage() {
                 icon={stat.icon}
                 subtitle={stat.subtitle}
                 trend={stat.trend}
+                sport="escalada"
                 onClick={() => {
                   console.log(`Clicked on ${stat.title} stat`);
-                  // Navegación específica para escalada
                   if (stat.title.includes("Centros")) {
                     router.push('/sports/escalada/centros');
                   }
@@ -247,78 +305,86 @@ export default function EscaladaPage() {
         </div>
 
         <div className={styles.quickAccessSection}>
-          <button 
+          <button
             className={styles.mainCourtButton}
             onClick={() => window.location.href = '/sports/escalada/centros/'}
           >
-            <div className={styles.courtButtonIcon}>🧗‍♂️</div>
+            <div className={styles.courtButtonIcon}>🧗</div>
             <div className={styles.courtButtonText}>
-              <span className={styles.courtButtonTitle}>Explorar Centros de Escalada</span>
-              <span className={styles.courtButtonSubtitle}>Ver todos los centros y rutas disponibles</span>
+              <span className={styles.courtButtonTitle}>Explorar Centros</span>
+              <span className={styles.courtButtonSubtitle}>Ver todos los centros disponibles</span>
             </div>
-            <div className={styles.courtButtonArrow}> → </div>
+            <div className={styles.courtButtonArrow}>→</div>
           </button>
         </div>
 
-        {/* Centros de escalada mejor calificados con carrusel */}
+        {/* 🔥 CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>⭐</span>
               Centros mejor calificados
+              {loadingCentros && <span style={{ fontSize: '14px', marginLeft: '10px' }}>Cargando...</span>}
+              {errorCentros && <span style={{ fontSize: '14px', marginLeft: '10px', color: 'red' }}>⚠️ Usando datos offline</span>}
             </h2>
             <div className={styles.carouselControls}>
-              <button 
-                onClick={prevSlide} 
+              <button
+                onClick={prevSlide}
                 className={styles.carouselButton}
-                disabled={currentSlide === 0}
-                style={{ opacity: currentSlide === 0 ? 0.5 : 1 }}
+                disabled={currentSlide === 0 || loadingCentros}
+                style={{ opacity: currentSlide === 0 || loadingCentros ? 0.5 : 1 }}
               >
                 ←
               </button>
               <span className={styles.slideIndicator}>
                 {currentSlide + 1} / {totalSlides}
               </span>
-              <button 
-                onClick={nextSlide} 
+              <button
+                onClick={nextSlide}
                 className={styles.carouselButton}
-                disabled={currentSlide === totalSlides - 1}
-                style={{ opacity: currentSlide === totalSlides - 1 ? 0.5 : 1 }}
+                disabled={currentSlide === totalSlides - 1 || loadingCentros}
+                style={{ opacity: currentSlide === totalSlides - 1 || loadingCentros ? 0.5 : 1 }}
               >
                 →
               </button>
             </div>
           </div>
-          
+
           <div className={styles.carouselContainer}>
-            <div 
-              className={styles.courtsGrid}
-              style={{
-                transform: `translateX(-${currentSlide * (320 + 20)}px)`,
-              }}
-            >
-              {topRatedClimbingCenters.map((center, index) => (
-                <CourtCard 
-                  key={index} 
-                  {...center} 
-                  sport="escalada"
-                  onClick={() => router.push('/sports/escalada/centros/centroseleccionado')}
-                />
-              ))}
-            </div>
+            {loadingCentros ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                <p>Cargando centros...</p>
+              </div>
+            ) : (
+              <div
+                className={styles.courtsGrid}
+                style={{
+                  transform: `translateX(-${currentSlide * (320 + 20)}px)`,
+                }}
+              >
+                {topRatedCenters.map((center, index) => (
+                  <CourtCard
+                    key={center.id || index}
+                    {...center}
+                    sport="escalada"
+                    onClick={() => handleCentroClick(center)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Ubicación en el mapa */}
         <div className={styles.mapSection}>
-          <h2 className={styles.sectionTitle}>Ubicación en el mapa de los centros de escalada</h2>
-          
+          <h2 className={styles.sectionTitle}>Ubicación en el mapa de los centros</h2>
+
           <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>
               <span className={styles.locationIcon}>📍</span>
               <input
                 type="text"
-                placeholder="Dirección, barrio o zona de escalada"
+                placeholder="Dirección, barrio o ciudad"
                 value={locationSearch}
                 onChange={(e) => setLocationSearch(e.target.value)}
                 className={styles.locationInput}
@@ -326,8 +392,8 @@ export default function EscaladaPage() {
             </div>
             <div className={styles.radiusContainer}>
               <span className={styles.radiusIcon}>📏</span>
-              <select 
-                value={radiusKm} 
+              <select
+                value={radiusKm}
                 onChange={(e) => setRadiusKm(e.target.value)}
                 className={styles.radiusSelect}
               >
@@ -335,16 +401,14 @@ export default function EscaladaPage() {
                 <option value="3">Radio 3km</option>
                 <option value="5">Radio 5km</option>
                 <option value="10">Radio 10km</option>
-                <option value="25">Radio 25km</option>
-                <option value="50">Radio 50km</option>
               </select>
             </div>
             <button onClick={handleLocationSearch} className={styles.searchLocationButton}>
-              Buscar centros
+              Buscar
             </button>
           </div>
 
-          <LocationMap 
+          <LocationMap
             latitude={-38.7359}
             longitude={-72.5904}
             address="Temuco, Chile"

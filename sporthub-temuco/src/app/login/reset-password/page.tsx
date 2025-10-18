@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authService } from '@/services/authService';
 import '../../Login.css';
@@ -13,10 +13,23 @@ function ResetPasswordContent() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState(false);
+    const [countdown, setCountdown] = useState(10);
     const router = useRouter();
     const searchParams = useSearchParams();
     
     const email = searchParams.get('email');
+
+    // Efecto para el countdown y redirección automática
+    useEffect(() => {
+        if (success && countdown > 0) {
+            const timer = setTimeout(() => {
+                setCountdown(countdown - 1);
+            }, 1000);
+            return () => clearTimeout(timer);
+        } else if (success && countdown === 0) {
+            router.push('/login');
+        }
+    }, [success, countdown, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -86,9 +99,18 @@ function ResetPasswordContent() {
             <h1>Restablecer Contraseña</h1>
             <p>Ingresa el código que recibiste y tu nueva contraseña</p>
             {email && (
-                <p style={{ fontSize: '14px', color: '#666', marginBottom: '20px' }}>
-                    Código enviado a: <strong>{email}</strong>
-                </p>
+                <div style={{ 
+                    backgroundColor: '#dcfce7', 
+                    border: '1px solid #bbf7d0', 
+                    color: '#16a34a', 
+                    padding: '0.75rem', 
+                    borderRadius: '0.5rem', 
+                    marginBottom: '1rem',
+                    fontSize: '14px'
+                }}>
+                    Código enviado a: <strong>{email}</strong><br/>
+                    Revisa tu bandeja de entrada y spam.
+                </div>
             )}
             
             {error && (
@@ -105,16 +127,86 @@ function ResetPasswordContent() {
             )}
 
             {success ? (
-                <div className="verification-message">
-                    <h3>¡Contraseña restablecida!</h3>
-                    <p>Tu contraseña ha sido actualizada correctamente.</p>
-                    <div style={{ marginTop: '20px' }}>
-                        <Link href="/login" style={{ 
-                            color: '#4F46E5', 
-                            textDecoration: 'none', 
-                            fontWeight: '600' 
-                        }}>
-                            Iniciar sesión
+                <div style={{
+                    textAlign: 'center',
+                    padding: '2rem',
+                    backgroundColor: '#f0fdf4',
+                    border: '2px solid #22c55e',
+                    borderRadius: '12px',
+                    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.15)'
+                }}>
+                    <div style={{
+                        fontSize: '4rem',
+                        marginBottom: '1rem'
+                    }}>
+                    
+                    </div>
+                    <h2 style={{
+                        color: '#15803d',
+                        margin: '0 0 1rem 0',
+                        fontSize: '1.5rem',
+                        fontWeight: 'bold'
+                    }}>
+                        ¡Contraseña restablecida exitosamente!
+                    </h2>
+                    <p style={{
+                        color: '#166534',
+                        margin: '0 0 1.5rem 0',
+                        fontSize: '1rem'
+                    }}>
+                        Tu contraseña ha sido actualizada correctamente.
+                    </p>
+                    
+                    <div style={{
+                        backgroundColor: '#dcfce7',
+                        border: '1px solid #bbf7d0',
+                        borderRadius: '8px',
+                        padding: '1rem',
+                        margin: '1rem 0',
+                        color: '#15803d'
+                    }}>
+                        <p style={{ margin: 0, fontSize: '0.9rem' }}>
+                            Serás redirigido al login automáticamente en{' '}
+                            <strong style={{ 
+                                color: '#4F46E5',
+                                fontSize: '1.1rem'
+                            }}>
+                                {countdown}
+                            </strong>
+                            {countdown === 1 ? ' segundo' : ' segundos'}
+                        </p>
+                    </div>
+
+                    <div style={{ 
+                        display: 'flex', 
+                        gap: '1rem',
+                        justifyContent: 'center',
+                        flexWrap: 'wrap'
+                    }}>
+                        <Link 
+                            href="/login" 
+                            style={{
+                                backgroundColor: '#4F46E5',
+                                color: 'white',
+                                padding: '0.75rem 1.5rem',
+                                textDecoration: 'none',
+                                borderRadius: '8px',
+                                fontWeight: '600',
+                                fontSize: '0.9rem',
+                                display: 'inline-block',
+                                transition: 'all 0.2s',
+                                border: '2px solid #4F46E5'
+                            }}
+                            onMouseOver={(e) => {
+                                e.currentTarget.style.backgroundColor = '#3730a3';
+                                e.currentTarget.style.borderColor = '#3730a3';
+                            }}
+                            onMouseOut={(e) => {
+                                e.currentTarget.style.backgroundColor = '#4F46E5';
+                                e.currentTarget.style.borderColor = '#4F46E5';
+                            }}
+                        >
+                            Ir al login ahora
                         </Link>
                     </div>
                 </div>

@@ -3,7 +3,12 @@ import {
   Reserva,
   ReservaFilters,
   CreateReservaInput,
-  UpdateReservaInput
+  UpdateReservaInput,
+  CotizacionInput,
+  CotizacionResponse,
+  ConfirmarReservaResponse,
+  CheckInResponse,
+  NoShowResponse
 } from '../types/reserva';
 import { handleApiError } from "../services/ApiError";
 
@@ -52,28 +57,45 @@ export const reservaService = {
     }
   },
 
-  async getReservasByUsuario(usuarioId: number): Promise<Reserva[]> {
+  async getMisReservas(): Promise<Reserva[]> {
     try {
-      const { data } = await apiBackend.get(`/api/reservas/usuario/${usuarioId}`);
+      const { data } = await apiBackend.get('/api/reservas/mias');
       return data;
     } catch (err) {
       handleApiError(err);
     }
   },
 
-  async verificarDisponibilidad(canchaId: number, fechaInicio: string, fechaFin: string, reservaId?: number): Promise<{ disponible: boolean; mensaje?: string }> {
+  async cotizarReserva(input: CotizacionInput): Promise<CotizacionResponse> {
     try {
-      const body = { canchaId, fechaInicio, fechaFin, reservaId };
-      const { data } = await apiBackend.post('/api/reservas/verificar-disponibilidad', body);
+      const { data } = await apiBackend.post('/api/reservas/cotizar', input);
       return data;
     } catch (err) {
       handleApiError(err);
     }
   },
 
-  async confirmarPago(id: number): Promise<Reserva> {
+  async confirmarReserva(id: number): Promise<ConfirmarReservaResponse> {
     try {
-      const { data } = await apiBackend.post(`/api/reservas/${id}/confirmar-pago`);
+      const { data } = await apiBackend.post(`/api/reservas/${id}/confirmar`);
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  async checkInReserva(id: number): Promise<CheckInResponse> {
+    try {
+      const { data } = await apiBackend.post(`/api/reservas/${id}/check-in`);
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  async noShowReserva(id: number): Promise<NoShowResponse> {
+    try {
+      const { data } = await apiBackend.post(`/api/reservas/${id}/no-show`);
       return data;
     } catch (err) {
       handleApiError(err);

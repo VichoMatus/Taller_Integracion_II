@@ -213,3 +213,104 @@ export class CancelarReserva {
     return this.repo.cancelarReserva(id, motivo);
   }
 }
+
+// ===== CASOS DE USO ADMINISTRATIVOS =====
+
+/**
+ * Caso de uso para crear reservas administrativamente.
+ */
+export class CreateReservaAdmin {
+  constructor(private repo: ReservaRepository) {}
+  
+  /**
+   * Crea una reserva como administrador (puede ser para cualquier usuario).
+   * @param input - Datos de la reserva
+   * @param targetUserId - ID del usuario para quien se crea la reserva
+   * @param adminUserId - ID del usuario administrador que crea la reserva
+   * @returns Promise con la reserva creada
+   */
+  async execute(input: CreateReservaInput, targetUserId: number, adminUserId: number): Promise<Reserva> {
+    // Validaciones de negocio
+    this.validateReservaInput(input);
+    
+    // Agregar metadatos administrativos
+    const adminInput = {
+      ...input,
+      created_by_admin: adminUserId,
+      target_user_id: targetUserId,
+      admin_created: true
+    };
+    
+    return this.repo.createReservaAdmin(adminInput, targetUserId);
+  }
+  
+  private validateReservaInput(input: CreateReservaInput): void {
+    if (!input.canchaId) {
+      throw new Error('ID de cancha es requerido');
+    }
+    if (!input.fechaInicio) {
+      throw new Error('Fecha de inicio es requerida');
+    }
+    if (!input.fechaFin) {
+      throw new Error('Fecha de fin es requerida');
+    }
+    if (input.fechaInicio >= input.fechaFin) {
+      throw new Error('Fecha de inicio debe ser menor que fecha de fin');
+    }
+  }
+}
+
+/**
+ * Caso de uso para cancelar reservas administrativamente.
+ */
+export class CancelarReservaAdmin {
+  constructor(private repo: ReservaRepository) {}
+  
+  /**
+   * Cancela una reserva con privilegios administrativos.
+   * @param reservaId - ID de la reserva a cancelar
+   * @param adminUserId - ID del administrador que cancela
+   * @param motivo - Motivo de la cancelación administrativa
+   * @returns Promise con la reserva cancelada
+   */
+  execute(reservaId: number, adminUserId: number, motivo?: string): Promise<Reserva> {
+    const adminMotivo = `[ADMIN ${adminUserId}] ${motivo || 'Cancelación administrativa'}`;
+    return this.repo.cancelarReservaAdmin(reservaId, adminMotivo);
+  }
+}
+
+/**
+ * Caso de uso para obtener reservas por cancha (vista administrativa).
+ */
+export class GetReservasByCancha {
+  constructor(private repo: ReservaRepository) {}
+  
+  /**
+   * Obtiene todas las reservas de una cancha específica.
+   * @param canchaId - ID de la cancha
+   * @param filters - Filtros adicionales (fechas, estado)
+   * @returns Promise con lista de reservas
+   */
+  execute(canchaId: number, filters: ReservaFilters = {}): Promise<Reserva[]> {
+    const canchaFilters = { ...filters, canchaId };
+    return this.repo.getReservasByCancha(canchaId, canchaFilters);
+  }
+}
+
+/**
+ * Caso de uso para obtener reservas por usuario (vista administrativa).
+ */
+export class GetReservasByUsuarioAdmin {
+  constructor(private repo: ReservaRepository) {}
+  
+  /**
+   * Obtiene todas las reservas de un usuario específico (vista admin).
+   * @param usuarioId - ID del usuario
+   * @param filters - Filtros adicionales
+   * @returns Promise con lista de reservas
+   */
+  execute(usuarioId: number, filters: ReservaFilters = {}): Promise<Reserva[]> {
+    const userFilters = { ...filters, usuarioId };
+    return this.repo.getReservasByUsuarioAdmin(usuarioId, userFilters);
+  }
+}
