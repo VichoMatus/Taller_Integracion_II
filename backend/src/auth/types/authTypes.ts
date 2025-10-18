@@ -23,28 +23,39 @@
  */
 
 /**
- * Datos para registrar un nuevo usuario
- * Utilizada en el endpoint POST /auth/register
+ * REGISTRO POR PASOS (2-STEP REGISTRATION)
+ * ========================================
  */
-export interface UserRegister {
-  nombre?: string;          // Nombre del usuario (opcional)
-  apellido?: string;        // Apellido del usuario (opcional)
-  email: string;            // Email único del usuario (requerido)
-  password: string;         // Contraseña (min 6 caracteres)
-  confirmPassword?: string; // Confirmación de contraseña (validación frontend/backend)
-  telefono?: string;        // Número de teléfono (opcional)
+
+/**
+ * Datos para iniciar el proceso de registro (POST /auth/register/init)
+ * Envía los datos completos pero solo genera OTP, no crea el usuario aún
+ */
+export interface RegisterInitRequest {
+  nombre: string;           // Nombre del usuario (requerido en este flujo)
+  apellido: string;         // Apellido del usuario (requerido en este flujo)
+  email: string;            // Email único del usuario
+  password: string;         // Contraseña del usuario
+  telefono: string;         // Número de teléfono (requerido en este flujo)
 }
 
 /**
- * Datos para enviar a la API FastAPI (sin confirmPassword)
- * La API externa no necesita la confirmación, solo la validamos en el BFF
+ * Respuesta del endpoint de inicio de registro
+ * Contiene el token firmado para completar el proceso
  */
-export interface UserRegisterAPI {
-  nombre?: string;          // Nombre del usuario (opcional)
-  apellido?: string;        // Apellido del usuario (opcional)
-  email: string;            // Email único del usuario (requerido)
-  password: string;         // Contraseña (min 6 caracteres)
-  telefono?: string;        // Número de teléfono (opcional)
+export interface RegisterInitResponse {
+  action_token: string;     // Token firmado para validar en el siguiente paso
+  message: string;          // Mensaje informativo sobre el OTP enviado
+}
+
+/**
+ * Datos para completar el registro (POST /auth/register/verify)
+ * Valida OTP + action_token y crea el usuario verificado
+ */
+export interface RegisterVerifyRequest {
+  email: string;            // Email del usuario (debe coincidir con el del action_token)
+  code: string;             // Código OTP de 6 dígitos recibido por email
+  action_token: string;     // Token recibido en el paso /register/init
 }
 
 /**
@@ -259,4 +270,4 @@ export interface EndpointStatus {
 /**
  * Tipos de endpoints disponibles para hacer health check
  */
-export type EndpointType = 'register' | 'login' | 'logout' | 'refresh' | 'me' | 'verifyEmail' | 'resendVerification' | 'sendVerification' | 'forgotPassword' | 'resetPassword' | 'pushToken';
+export type EndpointType = 'registerInit' | 'registerVerify' | 'login' | 'logout' | 'refresh' | 'me' | 'verifyEmail' | 'resendVerification' | 'sendVerification' | 'forgotPassword' | 'resetPassword' | 'pushToken';

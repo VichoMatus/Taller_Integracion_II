@@ -1,14 +1,12 @@
 'use client';
 import Link from 'next/link';
 import '../../Login.css';
-import { useRegistro } from '../../../hooks/useRegistro';
+import { useRegistroLegacy } from '../../../hooks/useRegistroLegacy';
 import { MessageDisplay } from '../../../components/ui/MessageDisplay';
 import { useState } from 'react';
 
 export default function RegistroPage() {
-  const { state, handleSubmit } = useRegistro();
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const { state, handleSubmit } = useRegistroLegacy();
 
   // Función para verificar fortaleza de contraseña (simplificada)
   const checkPasswordStrength = (pass: string) => {
