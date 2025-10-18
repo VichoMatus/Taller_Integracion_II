@@ -11,13 +11,19 @@ import axios from 'axios';
 // Configuración centralizada de URLs
 // Detecta automáticamente el entorno
 const getBackendUrl = () => {
-  // En cliente: detecta por hostname
+  // Prioridad 1: Variable de entorno explícita
+  if (process.env.NEXT_PUBLIC_BACKEND_URL) {
+    return process.env.NEXT_PUBLIC_BACKEND_URL;
+  }
+  
+  // Prioridad 2: En cliente, detecta por hostname
   if (typeof window !== 'undefined') {
     return window.location.hostname === 'localhost' 
       ? 'http://localhost:4000'
       : 'https://backend-mn66n6-82bd05-168-232-167-73.traefik.me';
   }
-  // En servidor: usa variable de entorno o localhost por defecto
+  
+  // Prioridad 3: En servidor, localhost por defecto
   return 'http://localhost:4000';
 };
 
@@ -35,6 +41,10 @@ export const apiBackend = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Configuración para manejar certificados SSL en desarrollo/staging
+  validateStatus: function (status) {
+    return status >= 200 && status < 500; // Permite códigos de error para mejor debugging
+  }
 });
 
 // Interceptor para agregar token automáticamente
