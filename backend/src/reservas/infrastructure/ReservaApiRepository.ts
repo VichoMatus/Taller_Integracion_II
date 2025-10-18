@@ -185,4 +185,88 @@ export class ReservaApiRepository implements ReservaRepository {
       throw httpError(e);
     }
   }
+
+  // ===== MÉTODOS ADMINISTRATIVOS =====
+
+  /**
+   * Crea una reserva con privilegios administrativos.
+   */
+  async createReservaAdmin(input: CreateReservaInput, targetUserId: number): Promise<Reserva> {
+    try {
+      const payload = toSnake({
+        ...input,
+        fechaInicio: input.fechaInicio.toISOString(),
+        fechaFin: input.fechaFin.toISOString(),
+        usuarioId: targetUserId
+      });
+      
+      const { data } = await this.http.post<FastReserva>(`/reservas`, payload, {
+        headers: {
+          'X-Admin-Create': 'true',
+          'X-User-ID': targetUserId.toString()
+        }
+      });
+      return toReserva(data);
+    } catch (e) {
+      throw httpError(e);
+    }
+  }
+
+  /**
+   * Cancela una reserva con privilegios administrativos.
+   */
+  async cancelarReservaAdmin(id: number, motivoAdmin: string): Promise<Reserva> {
+    try {
+      const payload = { 
+        motivo: motivoAdmin,
+        admin_cancel: true 
+      };
+      const { data } = await this.http.post<FastReserva>(`/reservas/${id}/cancelar`, payload);
+      return toReserva(data);
+    } catch (e) {
+      throw httpError(e);
+    }
+  }
+
+  /**
+   * Obtiene reservas de una cancha específica.
+   */
+  async getReservasByCancha(canchaId: number, filters: ReservaFilters = {}): Promise<Reserva[]> {
+    try {
+      const params = toSnake({
+        ...filters,
+        canchaId,
+        fechaDesde: filters.fechaDesde?.toISOString(),
+        fechaHasta: filters.fechaHasta?.toISOString(),
+      });
+      const { data } = await this.http.get(`/reservas`, { params });
+      
+      // Si es una respuesta paginada, tomar solo los items
+      const items = data.items || data;
+      return items.map((item: FastReserva) => toReserva(item));
+    } catch (e) {
+      throw httpError(e);
+    }
+  }
+
+  /**
+   * Obtiene reservas de un usuario específico (vista administrativa).
+   */
+  async getReservasByUsuarioAdmin(usuarioId: number, filters: ReservaFilters = {}): Promise<Reserva[]> {
+    try {
+      const params = toSnake({
+        ...filters,
+        usuarioId,
+        fechaDesde: filters.fechaDesde?.toISOString(),
+        fechaHasta: filters.fechaHasta?.toISOString(),
+      });
+      const { data } = await this.http.get(`/reservas`, { params });
+      
+      // Si es una respuesta paginada, tomar solo los items
+      const items = data.items || data;
+      return items.map((item: FastReserva) => toReserva(item));
+    } catch (e) {
+      throw httpError(e);
+    }
+  }
 }

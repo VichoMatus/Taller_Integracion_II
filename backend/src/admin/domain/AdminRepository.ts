@@ -1,52 +1,109 @@
-import { Rol, User } from "../../domain/user/User";
 import { Paginated } from "../../app/common/pagination";
+import { Complejo } from "../../domain/complejo/Complejo";
+import { Cancha } from "../../domain/cancha/Cancha";
+import { EstadisticasOwner, ReservaOwner } from "../../domain/admin/Owner";
 
 /**
- * Repositorio para operaciones administrativas sobre usuarios y roles.
- * Define el contrato para la gestión de usuarios desde la perspectiva de administración.
+ * Repositorio para operaciones del owner de complejos deportivos.
+ * Define el contrato para la gestión de complejos, canchas y reservas.
  */
 export interface AdminRepository {
+  // === PANEL OWNER (MIS RECURSOS) ===
+  
   /**
-   * Obtiene una lista paginada de usuarios con filtros opcionales.
-   * @param params - Parámetros de consulta
-   * @param params.page - Número de página (opcional)
-   * @param params.pageSize - Tamaño de página (opcional) 
-   * @param params.q - Texto de búsqueda en email, nombre o apellido (opcional)
-   * @param params.rol - Filtrar por rol específico (opcional)
-   * @returns Promise con resultado paginado de usuarios
+   * Obtiene los complejos del owner logueado.
+   * @param ownerId - ID del owner
+   * @returns Promise con lista de complejos
    */
-  listUsers(params: { page?: number; pageSize?: number; q?: string; rol?: Rol }): Promise<Paginated<User>>;
+  getMisComplejos(ownerId: number): Promise<Complejo[]>;
 
   /**
-   * Obtiene un usuario específico por su ID.
-   * @param id - ID del usuario
-   * @returns Promise con los datos del usuario
-   * @throws Error si el usuario no existe
+   * Obtiene las canchas del owner logueado.
+   * @param ownerId - ID del owner
+   * @returns Promise con lista de canchas
    */
-  getUser(id: number): Promise<User>;
+  getMisCanchas(ownerId: number): Promise<Cancha[]>;
 
   /**
-   * Actualiza parcialmente los datos de un usuario.
-   * @param id - ID del usuario a actualizar
-   * @param input - Datos a actualizar (parciales)
-   * @returns Promise con el usuario actualizado
-   * @throws Error si el usuario no existe
+   * Obtiene las reservas de las canchas del owner.
+   * @param ownerId - ID del owner
+   * @param params - Filtros opcionales
+   * @returns Promise con lista de reservas
    */
-  patchUser(id: number, input: Partial<Omit<User, "id" | "rol">> & { rol?: Rol }): Promise<User>;
+  getMisReservas(ownerId: number, params: { fecha_desde?: string; fecha_hasta?: string; estado?: string }): Promise<ReservaOwner[]>;
 
   /**
-   * Elimina un usuario del sistema.
-   * @param id - ID del usuario a eliminar
-   * @throws Error si el usuario no existe o no se puede eliminar
+   * Obtiene estadísticas de negocio del owner.
+   * @param ownerId - ID del owner
+   * @returns Promise con estadísticas
    */
-  removeUser(id: number): Promise<void>;
+  getMisEstadisticas(ownerId: number): Promise<EstadisticasOwner>;
+
+  // === GESTIÓN DE COMPLEJOS ===
+  
+  /**
+   * Crea un nuevo complejo.
+   * @param ownerId - ID del owner
+   * @param data - Datos del complejo
+   * @returns Promise con el complejo creado
+   */
+  createComplejo(ownerId: number, data: Omit<Complejo, "id" | "owner_id">): Promise<Complejo>;
 
   /**
-   * Asigna un rol específico a un usuario.
-   * @param userId - ID del usuario
-   * @param rol - Nuevo rol a asignar
-   * @returns Promise con el usuario actualizado
-   * @throws Error si el usuario no existe o el rol es inválido
+   * Obtiene un complejo específico del owner.
+   * @param ownerId - ID del owner
+   * @param complejoId - ID del complejo
+   * @returns Promise con el complejo
    */
-  asignarRol(userId: number, rol: Rol): Promise<User>;
+  getComplejo(ownerId: number, complejoId: number): Promise<Complejo>;
+
+  /**
+   * Actualiza un complejo del owner.
+   * @param ownerId - ID del owner
+   * @param complejoId - ID del complejo
+   * @param data - Datos a actualizar
+   * @returns Promise con el complejo actualizado
+   */
+  updateComplejo(ownerId: number, complejoId: number, data: Partial<Omit<Complejo, "id" | "owner_id">>): Promise<Complejo>;
+
+  /**
+   * Elimina un complejo del owner.
+   * @param ownerId - ID del owner
+   * @param complejoId - ID del complejo
+   */
+  deleteComplejo(ownerId: number, complejoId: number): Promise<void>;
+
+  // === GESTIÓN DE CANCHAS ===
+  
+  /**
+   * Crea una nueva cancha.
+   * @param ownerId - ID del owner (para verificar permisos)
+   * @param data - Datos de la cancha
+   * @returns Promise con la cancha creada
+   */
+  createCancha(ownerId: number, data: Omit<Cancha, "id">): Promise<Cancha>;
+
+  /**
+   * Obtiene una cancha específica del owner.
+   * @param ownerId - ID del owner
+   * @param canchaId - ID de la cancha
+   * @returns Promise con la cancha
+   */
+  getCancha(ownerId: number, canchaId: number): Promise<Cancha>;
+
+  /**
+   * Actualiza una cancha del owner.
+   * @param ownerId - ID del owner
+   * @param canchaId - ID de la cancha
+   * @param data - Datos a actualizar
+   * @returns Promise con la cancha actualizada
+   */
+  updateCancha(ownerId: number, canchaId: number, data: Partial<Omit<Cancha, "id">>): Promise<Cancha>;
+
+  /**
+   * Elimina una cancha del owner.
+   * @param ownerId - ID del owner
+   * @param canchaId - ID de la cancha
+   */
+  deleteCancha(ownerId: number, canchaId: number): Promise<void>;
 }

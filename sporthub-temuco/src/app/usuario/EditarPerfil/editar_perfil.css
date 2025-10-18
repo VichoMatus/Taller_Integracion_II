@@ -426,6 +426,31 @@ html, body {
   box-shadow: 0 6px 20px rgba(52, 211, 153, 0.3);
 }
 
+/* Mejoras visuales para la sección de biografía */
+.input-label {
+  color: var(--primary-color);
+  font-weight: bold;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+
+.input-description {
+  color: var(--primary-light);
+  font-size: 15px;
+  margin-bottom: 8px;
+  font-style: italic;
+  transition: color 0.3s;
+}
+
+.textarea {
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.textarea:hover, .textarea:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 8px rgba(124, 115, 230, 0.15);
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 1024px) {
   .editar-perfil-wrapper {

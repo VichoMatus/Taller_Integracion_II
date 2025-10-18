@@ -168,4 +168,38 @@ export interface ReservaRepository {
    * @returns Promise con la reserva actualizada
    */
   noShowReserva(id: number, observaciones?: string): Promise<Reserva>;
+
+  // ===== MÉTODOS ADMINISTRATIVOS =====
+
+  /**
+   * Crea una reserva con privilegios administrativos (para cualquier usuario).
+   * @param input - Datos de la reserva 
+   * @param targetUserId - ID del usuario objetivo
+   * @returns Promise con la reserva creada
+   */
+  createReservaAdmin(input: CreateReservaInput, targetUserId: number): Promise<Reserva>;
+
+  /**
+   * Cancela una reserva con privilegios administrativos.
+   * @param id - ID de la reserva
+   * @param motivoAdmin - Motivo administrativo
+   * @returns Promise con la reserva cancelada
+   */
+  cancelarReservaAdmin(id: number, motivoAdmin: string): Promise<Reserva>;
+
+  /**
+   * Obtiene reservas de una cancha específica (vista administrativa).
+   * @param canchaId - ID de la cancha
+   * @param filters - Filtros adicionales
+   * @returns Promise con lista de reservas
+   */
+  getReservasByCancha(canchaId: number, filters: ReservaFilters): Promise<Reserva[]>;
+
+  /**
+   * Obtiene reservas de un usuario específico (vista administrativa).
+   * @param usuarioId - ID del usuario
+   * @param filters - Filtros adicionales
+   * @returns Promise con lista de reservas
+   */
+  getReservasByUsuarioAdmin(usuarioId: number, filters: ReservaFilters): Promise<Reserva[]>;
 }

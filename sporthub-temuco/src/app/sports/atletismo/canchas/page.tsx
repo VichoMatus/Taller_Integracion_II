@@ -1,79 +1,129 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStatus } from '../../../../hooks/useAuthStatus';
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
+import LocationMap from '../../../../components/LocationMap';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
 
-const canchas = [
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha1.png",
-    name: "Atletismo - Centro",
-    address: "Norte, Centro, Sur",
-    rating: 4.3,
-    tags: ["Pista al aire libre", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Pista de atletismo ubicada en el centro con áreas para salto y lanzamiento",
-    price: "21",
-    nextAvailable: "20:00-21:00", 
-  },
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha2.png",
-    name: "Atletismo - Norte",
-    address: "Sector Norte",
-    rating: 4.5,
-    tags: ["Pista al aire libre", "Estacionamiento"],
-    description: "Pista de atletismo con cronometraje y carriles reglamentarios",
-    price: "19",
-    nextAvailable: "14:30-15:30", 
-  },
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha1.png",
-    name: "Atletismo - Sur",
-    address: "Sector Sur",
-    rating: 4.8,
-    tags: ["Pista techada", "Vestuarios", "Entrenadores", "Áreas de salto"],
-    description: "Pista de atletismo con instalaciones completas y zona de entrenamiento",
-    price: "23",
-    nextAvailable: "10:30-11:30",
-  },
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha2.png",
-    name: "Atletismo - Premium",
-    address: "Centro Premium", 
-    rating: 4.7,
-    tags: ["Pista Profesional", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Pista de atletismo profesional con equipos de cronometraje electrónico",
-    price: "28",
-    nextAvailable: "No disponible hoy",
-  },
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha1.png",
-    name: "Atletismo - Elite",
-    address: "Zona Elite",
-    rating: 4.4,
-    tags: ["Pista Profesional", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Pista de atletismo de élite con áreas especializadas para cada disciplina",
-    price: "32",
-    nextAvailable: "18:00-19:00",
-  },
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha2.png",
-    name: "Atletismo - Oeste",
-    address: "Sector Oeste",
-    rating: 4.2,
-    tags: ["Pista al aire libre", "Estacionamiento", "Iluminación"],
-    description: "Pista de atletismo ubicada en el sector oeste con implementos básicos",
-    price: "20",
-    nextAvailable: "16:00-17:00",
-  }
-];
+// 🔥 IMPORTAR SERVICIO
+import { canchaService } from '../../../../services/canchaService';
 
 export default function Page() {
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredCanchas, setFilteredCanchas] = useState(canchas);
+  
+  // 🔥 ESTADOS PARA LA API
+  const [canchas, setCanchas] = useState<any[]>([]);
+  const [filteredCanchas, setFilteredCanchas] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [isLoadingCanchas, setIsLoadingCanchas] = useState(true);
+  const [error, setError] = useState<string>('');
+
+  // 🔥 FUNCIÓN PARA CARGAR PISTAS DE ATLETISMO
+  const cargarCanchas = async () => {
+    try {
+      setIsLoadingCanchas(true);
+      setError('');
+      
+      console.log('🔄 [AtletismoCanchas] Cargando pistas individuales del backend...');
+      
+      // 🔥 IDs de las pistas de atletismo que quieres mostrar
+      const atletismoCanchaIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      
+      const canchasPromises = atletismoCanchaIds.map(async (id) => {
+        try {
+          console.log(`🔍 [AtletismoCanchas] Cargando pista ID: ${id}`);
+          const cancha = await canchaService.getCanchaById(id);
+          console.log(`✅ [AtletismoCanchas] Pista ${id} obtenida:`, cancha);
+          
+          // 🔥 FILTRAR SOLO PISTAS DE ATLETISMO
+          if (cancha.tipo !== 'atletismo') {
+            console.log(`⚠️ [AtletismoCanchas] Pista ${id} no es de atletismo (${cancha.tipo}), saltando...`);
+            return null;
+          }
+          
+          // Mapear al formato requerido por CourtCard
+          const mappedCancha = {
+            id: cancha.id,
+            imageUrl: `/sports/atletismo/canchas/Cancha${cancha.id}.png`,
+            name: cancha.nombre,
+            address: `Complejo ${cancha.establecimientoId}`,
+            rating: cancha.rating || 4.5,
+            tags: [
+              cancha.techada ? "Pista techada" : "Pista al aire libre",
+              cancha.activa ? "Disponible" : "No disponible",
+              "Cronometraje",
+              "Áreas de salto"
+            ],
+            description: `Pista de atletismo ${cancha.nombre} - ID: ${cancha.id}`,
+            price: cancha.precioPorHora?.toString() || "21",
+            nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
+            sport: cancha.tipo
+          };
+          
+          console.log('🗺️ [AtletismoCanchas] Pista mapeada:', mappedCancha);
+          return mappedCancha;
+          
+        } catch (error) {
+          console.log(`❌ [AtletismoCanchas] Error cargando pista ${id}:`, error);
+          return null;
+        }
+      });
+      
+      const canchasResults = await Promise.all(canchasPromises);
+      const canchasValidas = canchasResults.filter(cancha => cancha !== null);
+      
+      console.log('🎉 [AtletismoCanchas] Pistas de atletismo cargadas exitosamente:', canchasValidas.length);
+      console.log('📋 [AtletismoCanchas] Pistas finales:', canchasValidas);
+      
+      setCanchas(canchasValidas);
+      setFilteredCanchas(canchasValidas);
+      
+    } catch (error: any) {
+      console.error('❌ [AtletismoCanchas] ERROR DETALLADO cargando pistas:', error);
+      setError(`Error: ${error.message}`);
+      
+      // 🔥 FALLBACK
+      console.log('🚨 [AtletismoCanchas] USANDO FALLBACK - Error en el API');
+      const canchasEstaticas = [
+        {
+          id: 1,
+          imageUrl: "/sports/atletismo/canchas/Cancha1.png",
+          name: "🚨 FALLBACK - Atletismo Centro",
+          address: "Norte, Centro, Sur",
+          rating: 4.3,
+          tags: ["DATOS OFFLINE", "Pista al aire libre", "Estacionamiento"],
+          description: "🚨 Estos son datos de fallback - API no disponible",
+          price: "21",
+          nextAvailable: "20:00-21:00",
+        },
+        {
+          id: 2,
+          imageUrl: "/sports/atletismo/canchas/Cancha2.png",
+          name: "🚨 FALLBACK - Atletismo Norte",
+          address: "Sector Norte",
+          rating: 4.5,
+          tags: ["DATOS OFFLINE", "Pista al aire libre"],
+          description: "🚨 Estos son datos de fallback - API no disponible",
+          price: "19",
+          nextAvailable: "14:30-15:30",
+        }
+      ];
+      
+      setCanchas(canchasEstaticas);
+      setFilteredCanchas(canchasEstaticas);
+    } finally {
+      setIsLoadingCanchas(false);
+    }
+  };
+
+  useEffect(() => {
+    cargarCanchas();
+  }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -100,6 +150,23 @@ export default function Page() {
     !cancha.nextAvailable.includes("Mañana")
   ).length;
 
+  const handleUserButtonClick = () => {
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
+  };
+
+  const handleRefresh = () => {
+    cargarCanchas();
+  };
+
+  const handleCanchaClick = (court: any) => {
+    console.log('Navegando a pista:', court);
+    router.push(`/sports/atletismo/canchas/canchaseleccionada?id=${court.id}`);
+  };
+
   return (
     <div className={styles.pageContainer}>
       <Sidebar userRole="usuario" sport="atletismo" />
@@ -117,18 +184,22 @@ export default function Page() {
               onChange={handleSearchChange}
               onSearch={handleSearch}
               placeholder="Nombre de la pista"
-              sport="atletismo"
+              sport="atletismo" 
             />
-            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
+            <button 
+              {...buttonProps}
+              onClick={handleUserButtonClick}
+              className={styles.userButton}
+            >
               <span>👤</span>
-              <span>Usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>
 
         {/* Breadcrumb */}
         <div className={styles.breadcrumb}>
-          <button
+          <button 
             className={styles.breadcrumbButton}
             onClick={handleBackToAtletismo}
           >
@@ -137,13 +208,29 @@ export default function Page() {
           </button>
         </div>
 
+        {/* Mensajes de estado */}
+        {error && (
+          <div className={styles.errorMessage}>
+            <span>⚠️</span>
+            <span>Error: {error} - Mostrando datos offline</span>
+            <button onClick={handleRefresh}>Reintentar</button>
+          </div>
+        )}
+
+        {isLoadingCanchas && (
+          <div className={styles.loadingMessage}>
+            <span>🏃</span>
+            <span>Cargando pistas de atletismo...</span>
+          </div>
+        )}
+
         {/* Filtros */}
         <div className={styles.filtersContainer}>
           <h3 className={styles.filtersTitle}>Filtrar pistas de atletismo</h3>
           <div className={styles.filtersGrid}>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#3b82f6'}}>📍</span>
+                <span style={{color: '#22c55e'}}>📍</span>
                 <span>Ubicación o barrio</span>
               </label>
               <input
@@ -154,7 +241,7 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#3b82f6'}}>📅</span>
+                <span style={{color: '#22c55e'}}>📅</span>
                 <span>Fecha</span>
               </label>
               <input
@@ -165,7 +252,7 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#2563eb'}}>💰</span>
+                <span style={{color: '#16a34a'}}>💰</span>
                 <span>Precio (max $hr)</span>
               </label>
               <input
@@ -177,14 +264,14 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#1e40af'}}>🏃</span>
+                <span style={{color: '#15803d'}}>🏃</span>
                 <span>Tipo de pista</span>
               </label>
               <select className={styles.filterSelect}>
                 <option>Tipo de pista</option>
                 <option>Pista al aire libre</option>
                 <option>Pista techada</option>
-                <option>Pista profesional</option>
+                <option>Pista sintética</option>
               </select>
             </div>
           </div>
@@ -196,8 +283,8 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Mensaje de no resultados */}
-        {filteredCanchas.length === 0 && searchTerm && (
+        {/* Mensajes de no resultados */}
+        {filteredCanchas.length === 0 && searchTerm && !isLoadingCanchas && (
           <div className={styles.noResults}>
             <h3>No se encontraron pistas de atletismo para &quot;{searchTerm}&quot;</h3>
             <p>Intenta con otros términos de búsqueda o ubicaciones</p>
@@ -207,20 +294,29 @@ export default function Page() {
           </div>
         )}
 
-        {/* Contenedor de tarjetas */}
-        <div className={styles.cardsContainer}>
-          <div className={styles.cardsGrid}>
-            {filteredCanchas.map((cancha, idx) => (
-              <CourtCard
-                key={idx}
-                {...cancha}
-                sport="atletismo"
-              />
-            ))}
+        {filteredCanchas.length === 0 && !searchTerm && !isLoadingCanchas && !error && (
+          <div className={styles.noData}>
+            <h3>🏃 No hay pistas de atletismo registradas</h3>
+            <p>Aún no se han registrado pistas de atletismo en el sistema</p>
+            <button onClick={handleRefresh}>Actualizar</button>
           </div>
+        )}
 
-
-        </div>
+        {/* Contenedor de tarjetas */}
+        {!isLoadingCanchas && filteredCanchas.length > 0 && (
+          <div className={styles.cardsContainer}>
+            <div className={styles.cardsGrid}>
+              {filteredCanchas.map((cancha, idx) => (
+                <CourtCard 
+                  key={cancha.id || idx} 
+                  {...cancha} 
+                  sport="atletismo"
+                  onClick={() => handleCanchaClick(cancha)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

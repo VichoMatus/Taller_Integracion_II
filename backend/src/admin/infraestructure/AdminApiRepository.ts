@@ -1,86 +1,163 @@
 import { AxiosInstance } from "axios";
 import { AdminRepository } from "../domain/AdminRepository";
-import { Rol, User } from "../../domain/user/User";
-import { toUser, FastUser } from "./mappers";
+import { Complejo } from "../../domain/complejo/Complejo";
+import { Cancha } from "../../domain/cancha/Cancha";
+import { ReservaOwner, EstadisticasOwner } from "../../domain/admin/Owner";
 import { httpError } from "../../infra/http/errors";
 import { Paginated, normalizePage } from "../../app/common/pagination";
-import { toSnake } from "../../app/common/case";
 
 /**
- * Implementación del repositorio administrativo utilizando FastAPI como backend.
- * Maneja la comunicación HTTP con el servicio de usuarios y convierte entre formatos.
+ * Implementación del repositorio para dueños de complejos deportivos utilizando FastAPI como backend.
+ * Maneja la gestión de complejos, canchas, reservas y estadísticas para owners.
  */
 export class AdminApiRepository implements AdminRepository {
   constructor(private http: AxiosInstance) {}
 
+  // =============== PANEL DEL OWNER ===============
+
   /**
-   * Lista usuarios desde FastAPI con paginación y filtros.
-   * @param p - Parámetros de consulta
-   * @returns Promise con usuarios paginados
+   * Obtiene los complejos del dueño usando endpoint existente.
    */
-  async listUsers(p: { page?: number; pageSize?: number; q?: string; rol?: Rol }): Promise<Paginated<User>> {
+  async getMisComplejos(ownerId: number): Promise<Complejo[]> {
     try {
-      // Usar endpoint real de tu API
-      const { data } = await this.http.get(`/api/v1/usuarios`, { params: p });
-      return normalizePage<User>(data, x => toUser(x as FastUser));
+      // Usar endpoint existente /complejos con filtro de dueño
+      const { data } = await this.http.get(`/complejos`, { 
+        params: { duenio_id: ownerId } 
+      });
+      return data.items || data || [];
     } catch (e) { throw httpError(e); }
   }
 
   /**
-   * Obtiene un usuario específico desde FastAPI.
-   * @param id - ID del usuario
-   * @returns Promise con el usuario encontrado
+   * Obtiene las canchas del dueño usando endpoint existente.
    */
-  async getUser(id: number): Promise<User> {
-    try { 
-      // Usar endpoint real de tu API
-      const { data } = await this.http.get<FastUser>(`/api/v1/usuarios/${id}`); 
-      return toUser(data); 
-    }
-    catch (e) { throw httpError(e); }
-  }
-
-  /**
-   * Actualiza un usuario en FastAPI.
-   * Convierte los datos a snake_case antes de enviar.
-   * @param id - ID del usuario
-   * @param input - Datos a actualizar
-   * @returns Promise con el usuario actualizado
-   */
-  async patchUser(id: number, input: Partial<Omit<User,"id"|"rol">> & { rol?: Rol }): Promise<User> {
+  async getMisCanchas(ownerId: number): Promise<Cancha[]> {
     try {
-      // Usar endpoint real de tu API
-      const payload = toSnake(input);
-      const { data } = await this.http.patch<FastUser>(`/api/v1/usuarios/${id}`, payload);
-      return toUser(data);
+      // Usar endpoint existente /canchas con filtro de dueño
+      const { data } = await this.http.get(`/canchas`, { 
+        params: { duenio_id: ownerId } 
+      });
+      return data.items || data || [];
     } catch (e) { throw httpError(e); }
   }
 
   /**
-   * Elimina un usuario en FastAPI.
-   * @param id - ID del usuario a eliminar
+   * Obtiene las reservas del dueño usando endpoint existente.
    */
-  async removeUser(id: number): Promise<void> {
-    try { 
-      // Usar endpoint real de tu API
-      await this.http.delete(`/api/v1/usuarios/${id}`); 
-    }
-    catch (e) { throw httpError(e); }
+  async getMisReservas(ownerId: number, params: { fecha_desde?: string; fecha_hasta?: string; estado?: string } = {}): Promise<ReservaOwner[]> {
+    try {
+      // Usar endpoint existente /reservas con filtro de dueño
+      const { data } = await this.http.get(`/reservas`, { 
+        params: { duenio_id: ownerId, ...params } 
+      });
+      return data.items || data || [];
+    } catch (e) { throw httpError(e); }
   }
 
   /**
-   * Asigna un rol a un usuario mediante FastAPI.
-   * Maneja diferentes formatos de respuesta del endpoint.
-   * @param userId - ID del usuario
-   * @param rol - Rol a asignar
-   * @returns Promise con el usuario actualizado
+   * Obtiene las estadísticas del dueño - simulando con datos de reservas.
    */
-  async asignarRol(userId: number, rol: Rol): Promise<User> {
+  async getMisEstadisticas(ownerId: number): Promise<EstadisticasOwner> {
     try {
-      // Usar endpoint real de tu API
-      const { data } = await this.http.post<FastUser | { detail: string }>(`/api/v1/admin/usuarios/${userId}/rol`, { rol });
-      if ((data as any)?.id_usuario) return toUser(data as FastUser);
-      return { id: userId, email: "", rol, activo: true, verificado: true } as User;
+      // Como no hay endpoint específico, calculamos básicas con reservas
+      const reservas = await this.getMisReservas(ownerId);
+      const complejos = await this.getMisComplejos(ownerId);
+      const canchas = await this.getMisCanchas(ownerId);
+      
+      return {
+        ingresos_totales: reservas.reduce((sum, r) => sum + (r.precio_total || 0), 0),
+        ocupacion_promedio: reservas.length > 0 ? 75 : 0, // Placeholder
+        reservas_mes: reservas.filter(r => r.estado === 'confirmada').length,
+        canchas_activas: canchas.length
+      };
+    } catch (e) { throw httpError(e); }
+  }
+
+  // =============== GESTIÓN DE COMPLEJOS ===============
+
+  /**
+   * Crea un nuevo complejo usando endpoint existente.
+   */
+  async createComplejo(ownerId: number, complejo: Omit<Complejo, 'id'>): Promise<Complejo> {
+    try {
+      const { data } = await this.http.post(`/complejos`, {
+        ...complejo,
+        duenio_id: ownerId
+      });
+      return data;
+    } catch (e) { throw httpError(e); }
+  }
+
+  /**
+   * Obtiene un complejo específico usando endpoint existente.
+   */
+  async getComplejo(ownerId: number, complejoId: number): Promise<Complejo> {
+    try {
+      const { data } = await this.http.get(`/complejos/${complejoId}`);
+      return data;
+    } catch (e) { throw httpError(e); }
+  }
+
+  /**
+   * Actualiza un complejo usando endpoint existente.
+   */
+  async updateComplejo(ownerId: number, complejoId: number, updates: Partial<Complejo>): Promise<Complejo> {
+    try {
+      const { data } = await this.http.put(`/complejos/${complejoId}`, updates);
+      return data;
+    } catch (e) { throw httpError(e); }
+  }
+
+  /**
+   * Elimina un complejo usando endpoint existente.
+   */
+  async deleteComplejo(ownerId: number, complejoId: number): Promise<void> {
+    try {
+      await this.http.delete(`/complejos/${complejoId}`);
+    } catch (e) { throw httpError(e); }
+  }
+
+  // =============== GESTIÓN DE CANCHAS ===============
+
+  /**
+   * Crea una nueva cancha usando endpoint existente.
+   */
+  async createCancha(ownerId: number, cancha: Omit<Cancha, 'id'>): Promise<Cancha> {
+    try {
+      const { data } = await this.http.post(`/canchas`, {
+        ...cancha,
+        duenio_id: ownerId
+      });
+      return data;
+    } catch (e) { throw httpError(e); }
+  }
+
+  /**
+   * Obtiene una cancha específica usando endpoint existente.
+   */
+  async getCancha(ownerId: number, canchaId: number): Promise<Cancha> {
+    try {
+      const { data } = await this.http.get(`/canchas/${canchaId}`);
+      return data;
+    } catch (e) { throw httpError(e); }
+  }
+
+  /**
+   * Actualiza una cancha usando endpoint existente.
+   */
+  async updateCancha(ownerId: number, canchaId: number, updates: Partial<Cancha>): Promise<Cancha> {
+    try {
+      const { data } = await this.http.put(`/canchas/${canchaId}`, updates);
+      return data;
+    } catch (e) { throw httpError(e); }
+  }
+
+  /**
+   * Elimina una cancha usando endpoint existente.
+   */
+  async deleteCancha(ownerId: number, canchaId: number): Promise<void> {
+    try {
+      await this.http.delete(`/canchas/${canchaId}`);
     } catch (e) { throw httpError(e); }
   }
 }
