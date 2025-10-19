@@ -45,7 +45,9 @@ export const tokenUtils = {
   // Verificar si el token es válido y no ha expirado
   isTokenValid: (token?: string): boolean => {
     if (!token) {
-      token = tokenUtils.getToken();
+      // 🔧 FIX: Manejar correctamente el tipo null
+      const retrievedToken = tokenUtils.getToken();
+      token = retrievedToken || undefined; // Convertir null a undefined
     }
     
     if (!token) {
