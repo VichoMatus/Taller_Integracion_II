@@ -13,7 +13,7 @@ export const complejosService = {
    */
   async getComplejos(filters?: ComplejoFilters) {
     try {
-      const response = await apiBackend.get('/api/complejos', { params: filters });
+      const response = await apiBackend.get('/complejos', { params: filters });
       return response.data;
     } catch (error: any) {
       throw new Error('Error al obtener complejos: ' + (error.response?.data?.message || error.message));
@@ -25,7 +25,7 @@ export const complejosService = {
    */
   async getComplejoById(id: number) {
     try {
-      const response = await apiBackend.get(`/api/complejos/${id}`);
+      const response = await apiBackend.get(`/complejos/${id}`);
       return response.data;
     } catch (error: any) {
       throw new Error('Error al obtener el complejo: ' + (error.response?.data?.message || error.message));

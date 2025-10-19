@@ -27,7 +27,7 @@ import notificacionesRoutes from './notificaciones/routes/notificacionesRoutes';
 import favoritosRoutes from './favoritos/routes/favoritosRoute';
 import adminRoutes from './admin/presentation/routes/admin.routes';
 import bloqueoRoutes from './bloqueos/presentation/routes/bloqueos.routes';
-import reservasRoutes from './reservas/presentation/routes/reservas.routes.new';
+import reservasRoutes from './reservas/presentation/routes/reservas.routes';
 import disponibilidadRoutes from './disponibilidad/presentation/routes/disponibilidad.routes';
 import pricingRoutes from './pricing/presentation/routes/pricing.routes';
 import pagosRoutes from './pagos/presentation/routes/pagos.routes';
