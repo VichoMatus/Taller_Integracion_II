@@ -16,7 +16,7 @@ export default function ReservasPage() {
   const [selectedEstado, setSelectedEstado] = useState<EstadoReserva | ''>('');
   const itemsPerPage = 10;
 
-  // Cargar reservas desde el backend
+  // Cargar reservas desde el backend usando endpoint admin
   const loadReservas = async () => {
     try {
       setLoading(true);
@@ -27,7 +27,9 @@ export default function ReservasPage() {
         ...(searchTerm && { q: searchTerm }),
         ...(selectedEstado && { estado: selectedEstado })
       };
-      const data = await reservaService.getReservas(filters);
+      
+      // Usar endpoint específico de admin que filtra por permisos del usuario
+      const data = await reservaService.getAdminReservas(filters);
       setReservas(data);
     } catch (err: any) {
       console.warn('Backend no disponible, usando datos mock:', err);
@@ -85,16 +87,30 @@ export default function ReservasPage() {
     router.push('/admin/reservas/crear');
   };
 
-  // Función para eliminar reserva
+  // Función para eliminar reserva (como admin)
   const deleteReservation = async (reservationId: number) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar esta reserva?')) {
+    if (window.confirm('¿Estás seguro de que deseas eliminar esta reserva? Esta acción no se puede deshacer.')) {
       try {
-        await reservaService.deleteReserva(reservationId);
+        await reservaService.deleteReservaAdmin(reservationId);
         alert('Reserva eliminada exitosamente');
         loadReservas(); // Recargar la lista
       } catch (err: any) {
-        console.warn('No se pudo eliminar (backend no disponible):', err);
-        alert('No se puede eliminar en modo desarrollo (backend no disponible)');
+        console.error('Error al eliminar reserva:', err);
+        alert(err.message || 'No se pudo eliminar la reserva');
+      }
+    }
+  };
+
+  // Función para cancelar reserva como administrador (forzar cancelación)
+  const cancelReservationAdmin = async (reservationId: number) => {
+    if (window.confirm('¿Deseas cancelar esta reserva como administrador? Esta acción es permanente.')) {
+      try {
+        await reservaService.cancelarReservaAdmin(reservationId);
+        alert('Reserva cancelada exitosamente');
+        loadReservas(); // Recargar la lista
+      } catch (err: any) {
+        console.error('Error al cancelar reserva:', err);
+        alert(err.message || 'No se pudo cancelar la reserva');
       }
     }
   };
@@ -273,6 +289,20 @@ export default function ReservasPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                         </svg>
                       </button>
+                      
+                      {/* Botón Cancelar (solo si no está cancelada o completada) */}
+                      {reserva.estado !== 'cancelada' && reserva.estado !== 'completada' && (
+                        <button 
+                          className="btn-action" 
+                          title="Cancelar Reserva"
+                          onClick={() => cancelReservationAdmin(reserva.id)}
+                          style={{ backgroundColor: 'var(--warning)', color: 'white' }}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
                       
                       {/* Botón Eliminar */}
                       <button 

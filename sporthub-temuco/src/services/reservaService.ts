@@ -109,5 +109,99 @@ export const reservaService = {
     } catch (err) {
       handleApiError(err);
     }
+  },
+
+  // ==========================================
+  // MÉTODOS ESPECÍFICOS PARA ADMIN
+  // ==========================================
+
+  /**
+   * Obtener reservas del administrador (desde /admin/reservas)
+   * Requiere rol admin o superadmin
+   */
+  async getAdminReservas(filters?: ReservaFilters): Promise<Reserva[]> {
+    try {
+      const { data } = await apiBackend.get('/api/admin/reservas', { params: filters });
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  /**
+   * Obtener todas las reservas (lista completa admin)
+   * Requiere rol admin o superadmin
+   */
+  async getAllReservasAdmin(filters?: ReservaFilters): Promise<Reserva[]> {
+    try {
+      const { data } = await apiBackend.get('/api/reservas', { params: filters });
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  /**
+   * Obtener reservas de una cancha específica (admin)
+   * Requiere rol admin o superadmin
+   */
+  async getReservasByCancha(canchaId: number, filters?: ReservaFilters): Promise<Reserva[]> {
+    try {
+      const { data } = await apiBackend.get(`/api/reservas/admin/cancha/${canchaId}`, { params: filters });
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  /**
+   * Obtener reservas de un usuario específico (admin)
+   * Requiere rol admin o superadmin
+   */
+  async getReservasByUsuarioAdmin(usuarioId: number, filters?: ReservaFilters): Promise<Reserva[]> {
+    try {
+      const { data } = await apiBackend.get(`/api/reservas/admin/usuario/${usuarioId}`, { params: filters });
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  /**
+   * Crear reserva como administrador (para cualquier usuario)
+   * Requiere rol admin o superadmin
+   */
+  async createReservaAdmin(input: CreateReservaInput): Promise<Reserva> {
+    try {
+      const { data } = await apiBackend.post('/api/reservas/admin/crear', input);
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  /**
+   * Cancelar reserva como administrador (forzar cancelación)
+   * Requiere rol admin o superadmin
+   */
+  async cancelarReservaAdmin(id: number): Promise<Reserva> {
+    try {
+      const { data } = await apiBackend.post(`/api/reservas/admin/${id}/cancelar`);
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  /**
+   * Eliminar reserva permanentemente (admin)
+   * Requiere rol admin o superadmin
+   */
+  async deleteReservaAdmin(id: number): Promise<void> {
+    try {
+      await apiBackend.delete(`/api/reservas/${id}`);
+    } catch (err) {
+      handleApiError(err);
+    }
   }
 };

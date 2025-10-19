@@ -71,52 +71,80 @@ const adaptCanchaFromBackend = (backendCancha: any) => {
 /**
  * Adaptador para convertir datos del frontend al formato del backend FastAPI
  * 
- * SCHEMAS REALES según OpenAPI de FastAPI:
- * 
- * CREATE (CanchaCreateIn):
- *   - id_complejo (required)
- *   - nombre (required)
- *   - deporte (optional) - nombre del deporte
- *   - cubierta (optional, default: false)
+ * SCHEMA EXACTO según API de FastAPI para CREATE:
+ * {
+ *   "id_complejo": number (required),
+ *   "nombre": string (required),
+ *   "id_deporte": number (optional),
+ *   "deporte": string (optional),
+ *   "cubierta": boolean (optional, default: false)
+ * }
  * 
  * UPDATE (CanchaUpdateIn):
  *   - nombre (optional)
  *   - deporte (optional)
  *   - cubierta (optional)
  *   - activo (optional)
- * 
- * IMPORTANTE: precio_desde, capacidad NO existen en CREATE/UPDATE
- * Son campos de solo lectura que retorna el GET
  */
 const adaptCanchaToBackend = (frontendCancha: CreateCanchaInput | UpdateCanchaInput, isUpdate: boolean = false) => {
   const payload: any = {};
 
-  // Campos comunes a CREATE y UPDATE
-  if (frontendCancha.nombre !== undefined) {
-    payload.nombre = frontendCancha.nombre;
+  // === CAMPOS PARA CREATE ===
+  if (!isUpdate) {
+    // id_complejo - REQUERIDO para CREATE
+    if ((frontendCancha as any).establecimientoId !== undefined) {
+      payload.id_complejo = (frontendCancha as any).establecimientoId;
+    }
+
+    // nombre - REQUERIDO para CREATE
+    if (frontendCancha.nombre !== undefined) {
+      payload.nombre = frontendCancha.nombre;
+    }
+
+    // id_deporte - OPCIONAL
+    if ((frontendCancha as any).id_deporte !== undefined) {
+      payload.id_deporte = (frontendCancha as any).id_deporte;
+    }
+
+    // deporte - OPCIONAL (nombre del deporte)
+    if ((frontendCancha as any).tipo !== undefined) {
+      payload.deporte = (frontendCancha as any).tipo;
+    }
+
+    // cubierta - OPCIONAL (default: false)
+    if ((frontendCancha as any).techada !== undefined) {
+      payload.cubierta = (frontendCancha as any).techada;
+    } else {
+      payload.cubierta = false; // Default explícito
+    }
   }
 
-  if ((frontendCancha as any).tipo !== undefined) {
-    payload.deporte = (frontendCancha as any).tipo;
-  }
+  // === CAMPOS PARA UPDATE ===
+  if (isUpdate) {
+    // nombre - OPCIONAL
+    if (frontendCancha.nombre !== undefined) {
+      payload.nombre = frontendCancha.nombre;
+    }
 
-  if ((frontendCancha as any).techada !== undefined) {
-    payload.cubierta = (frontendCancha as any).techada;
-  }
+    // deporte - OPCIONAL
+    if ((frontendCancha as any).tipo !== undefined) {
+      payload.deporte = (frontendCancha as any).tipo;
+    }
 
-  // id_deporte (común para CREATE y UPDATE si está presente)
-  if ((frontendCancha as any).id_deporte !== undefined) {
-    payload.id_deporte = (frontendCancha as any).id_deporte;
-  }
+    // cubierta - OPCIONAL
+    if ((frontendCancha as any).techada !== undefined) {
+      payload.cubierta = (frontendCancha as any).techada;
+    }
 
-  // Campo SOLO para CREATE
-  if (!isUpdate && (frontendCancha as any).establecimientoId !== undefined) {
-    payload.id_complejo = (frontendCancha as any).establecimientoId;
-  }
+    // id_deporte - OPCIONAL
+    if ((frontendCancha as any).id_deporte !== undefined) {
+      payload.id_deporte = (frontendCancha as any).id_deporte;
+    }
 
-  // Campo SOLO para UPDATE
-  if (isUpdate && (frontendCancha as any).activa !== undefined) {
-    payload.activo = (frontendCancha as any).activa;
+    // activo - OPCIONAL
+    if ((frontendCancha as any).activa !== undefined) {
+      payload.activo = (frontendCancha as any).activa;
+    }
   }
 
   return payload;
@@ -196,8 +224,17 @@ export const canchaService = {
       
       const backendData = adaptCanchaToBackend(input, false); // false = CREATE
       console.log('📤 [canchaService] Enviando datos para crear cancha:', backendData);
+      console.log('📤 [canchaService] Input original:', input);
+      
       // Usar endpoint /admin/canchas que tiene control de permisos para dueno/admin/superadmin
       const response = await apiBackend.post('/admin/canchas', backendData);
+      
+      console.log('📥 [canchaService] Respuesta completa del backend:', {
+        status: response.status,
+        statusText: response.statusText,
+        data: response.data,
+        headers: response.headers
+      });
       
       // Adaptar la respuesta
       let canchaData = response.data;
@@ -210,10 +247,14 @@ export const canchaService = {
     } catch (error: any) {
       console.error('❌ [canchaService] Error al crear cancha:', {
         message: error.message,
+        response: error.response,
         responseData: error.response?.data,
+        responseDataType: typeof error.response?.data,
+        responseDataKeys: error.response?.data ? Object.keys(error.response.data) : [],
         responseDataFull: JSON.stringify(error.response?.data, null, 2),
         status: error.response?.status,
-        statusText: error.response?.statusText
+        statusText: error.response?.statusText,
+        config: error.config
       });
       
       // Extraer el mensaje de error más específico
