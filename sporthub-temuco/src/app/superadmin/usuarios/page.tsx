@@ -1,321 +1,318 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usuariosService } from '@/services/usuariosService';
-import { Usuario } from '@/types/usuarios';
+import { tokenUtils } from '@/utils/tokenUtils';
+import { Usuario, UserDisplay } from '@/types/usuarios';
 import '@/app/admin/dashboard.css';
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  type: 'Regular' | 'Premium' | 'Básico' | 'Empresa';
-  status: 'Activo' | 'Inactivo' | 'Por revisar';
-  lastAccess: string;
-}
+const ITEMS_PER_PAGE = 10;
 
 export default function UsuariosPage() {
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [users, setUsers] = useState<User[]>([]);
+  
+  // Estados del componente
+  const [users, setUsers] = useState<UserDisplay[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const itemsPerPage = 4;
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Cargar usuarios reales desde la API
-  useEffect(() => {
-    const cargarUsuariosReales = async () => {
-      try {
-        setIsLoading(true);
-        setError('');
-        console.log('🔍 Cargando usuarios reales desde la API...');
-        
-        const usuariosReales = await usuariosService.listar();
-        console.log('✅ Usuarios reales obtenidos:', usuariosReales);
-        
-        // Mapear usuarios reales al formato de la interfaz User
-        const usersMapeados: User[] = usuariosReales.map(usuario => {
-          // Determinar el tipo basado en el rol
-          let type: 'Regular' | 'Premium' | 'Básico' | 'Empresa' = 'Regular';
-          if (usuario.rol === 'admin' || usuario.rol === 'super_admin') {
-            type = 'Premium';
-          } else if (usuario.rol === 'usuario') {
-            type = 'Regular';
-          }
-
-          // Determinar estado
-          let status: 'Activo' | 'Inactivo' | 'Por revisar' = 'Activo';
-          if (!usuario.esta_activo) {
-            status = 'Inactivo';
-          } else if (!usuario.verificado) {
-            status = 'Por revisar';
-          }
-
-          // Formatear última actualización como "lastAccess"
-          const lastAccess = new Date(usuario.fecha_actualizacion).toLocaleDateString('es-CL', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric'
-          });
-
-          return {
-            id: usuario.id_usuario.toString(),
-            name: `${usuario.nombre} ${usuario.apellido || ''}`.trim(),
-            email: usuario.email,
-            type: type,
-            status: status,
-            lastAccess: lastAccess
-          };
-        });
-
-        setUsers(usersMapeados);
-        
-      } catch (err: any) {
-        console.error('❌ Error cargando usuarios reales:', err);
-        setError(err.message || 'Error al cargar los usuarios');
-        
-        // Mantener datos de ejemplo como fallback
-        const usersEjemplo: User[] = [
-          { id: '1', name: 'Ana Lopez', email: 'ana.lopez@gmail.com', type: 'Regular', status: 'Activo', lastAccess: 'Hoy, 19:03' },
-          { id: '2', name: 'Admin123', email: 'admin123@gmail.com', type: 'Premium', status: 'Inactivo', lastAccess: '28-08-2025' },
-          { id: '3', name: 'Juan Carlos', email: 'carlosjuan@gmail.com', type: 'Básico', status: 'Por revisar', lastAccess: 'Ayer, 16:45' },
-          { id: '4', name: 'Monica Vega', email: 'monicavega@gmail.com', type: 'Empresa', status: 'Activo', lastAccess: 'Hoy, 11:35' },
-        ];
-        
-        setUsers(usersEjemplo);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    cargarUsuariosReales();
-  }, []);
-
-  // Función para navegar a editar usuario
-  const editUser = (userId: string) => {
-    router.push(`/superadmin/usuarios/${userId}`);
+  // Helper functions
+  const getUserType = (rol: string): 'Regular' | 'Premium' => {
+    return (rol === 'admin' || rol === 'super_admin') ? 'Premium' : 'Regular';
   };
 
-  // Filtrar usuarios basado en búsqueda
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
+  const getUserStatus = (esta_activo: boolean, verificado: boolean): 'Activo' | 'Inactivo' | 'Por revisar' => {
+    if (!esta_activo) return 'Inactivo';
+    if (!verificado) return 'Por revisar';
+    return 'Activo';
+  };
+
+  const mapUsuarioToDisplay = (usuario: Usuario): UserDisplay => ({
+    id: usuario.id_usuario.toString(),
+    name: `${usuario.nombre} ${usuario.apellido || ''}`.trim(),
+    email: usuario.email,
+    rol: usuario.rol,
+    verificado: usuario.verificado,
+    esta_activo: usuario.esta_activo,
+    type: getUserType(usuario.rol),
+    status: getUserStatus(usuario.esta_activo, usuario.verificado),
+    lastAccess: new Date(usuario.fecha_actualizacion).toLocaleDateString('es-CL')
   });
 
-  // Paginación
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + itemsPerPage);
+  // Función principal para cargar usuarios
+  const cargarUsuarios = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+      
+      // Verificar autenticación y obtener token fresco
+      const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+      console.log('🔍 Verificando token:', token ? `${token.substring(0, 20)}...` : 'No encontrado');
+      
+      if (!token) {
+        console.error('❌ No se encontró token');
+        router.push('/login');
+        return;
+      }
 
-  // Función para obtener el color del badge de tipo
+      // Decodificar token para verificar rol y expiración
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const payload = JSON.parse(window.atob(base64));
+        console.log('🎟️ Token payload:', payload);
+        
+        // Verificar expiración
+        if (payload.exp && payload.exp * 1000 < Date.now()) {
+          console.error('❌ Token expirado');
+          localStorage.clear();
+          router.push('/login');
+          return;
+        }
+
+        // Verificar rol
+        const userRole = payload.role || localStorage.getItem('user_role');
+        console.log('👤 Rol del usuario:', userRole);
+        
+        if (userRole !== 'super_admin') {
+          console.error('❌ Rol incorrecto:', userRole);
+          setError('Acceso denegado. Se requiere rol de super_admin.');
+          setTimeout(() => router.push('/'), 2000);
+          return;
+        }
+      } catch (e) {
+        console.error('❌ Error decodificando token:', e);
+        localStorage.clear();
+        router.push('/login');
+        return;
+      }
+
+      // Obtener usuarios
+      console.log('🔄 Iniciando petición de usuarios...');
+      try {
+        const usuariosReales = await usuariosService.listar();
+        console.log('✅ Usuarios obtenidos:', usuariosReales);
+        
+        // Mapear usuarios al formato de visualización
+        const usersMapeados = usuariosReales.map(mapUsuarioToDisplay);
+        console.log('📋 Usuarios mapeados:', usersMapeados);
+        setUsers(usersMapeados);
+      } catch (err) {
+        console.error('❌ Error al listar usuarios:', err);
+        throw err; // Re-lanzamos el error para que sea manejado por el catch exterior
+      }
+    } catch (error: any) {
+      console.error('Error cargando usuarios:', error);
+      setError(error.message || 'Error al cargar usuarios');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [router]);
+
+  // Cargar usuarios al montar el componente
+  useEffect(() => {
+    cargarUsuarios();
+  }, [cargarUsuarios]);
+
+  // Funciones de manejo de usuarios
+  const handleEditUser = (userId: string) => {
+    console.log('Editando usuario:', userId);
+    // router.push(`/superadmin/usuarios/editar/${userId}`);
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (window.confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
+      try {
+        await usuariosService.eliminar(userId);
+        cargarUsuarios();
+      } catch (error: any) {
+        setError('Error al eliminar usuario: ' + error.message);
+      }
+    }
+  };
+
+  const handleApproveUser = async (userId: string) => {
+    try {
+      await usuariosService.actualizar(userId, { verificado: true });
+      cargarUsuarios();
+    } catch (error: any) {
+      setError('Error al aprobar usuario: ' + error.message);
+    }
+  };
+
+  // Funciones para clases CSS
   const getTypeBadgeClass = (type: string) => {
     switch (type) {
+      case 'Premium':
+        return 'bg-purple-100 text-purple-800';
       case 'Regular':
         return 'bg-blue-100 text-blue-800';
-      case 'Premium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'Básico':
-        return 'bg-gray-100 text-gray-800';
-      case 'Empresa':
-        return 'bg-green-100 text-green-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="admin-dashboard-container">
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '200px',
-          fontSize: '18px'
-        }}>
-          Cargando usuarios...
-        </div>
-      </div>
-    );
-  }
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case 'Activo':
+        return 'bg-green-100 text-green-800';
+      case 'Inactivo':
+        return 'bg-red-100 text-red-800';
+      case 'Por revisar':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
 
+  // Filtrar y paginar usuarios
+  const filteredUsers = users.filter(user => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      user.name.toLowerCase().includes(searchLower) ||
+      user.email.toLowerCase().includes(searchLower) ||
+      user.type.toLowerCase().includes(searchLower) ||
+      user.status.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Render
   return (
     <div className="admin-dashboard-container">
-      {/* Header Principal */}
-      <div className="estadisticas-header">
-        <h1 className="text-2xl font-bold text-gray-900">Panel de Gestión de Usuarios</h1>
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-6">Panel de Gestión de Usuarios</h1>
         
-        <div className="admin-controls">
-          <button className="export-button">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Exportar informe
-          </button>
-          
-          <button className="export-button">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Crear Usuario
-          </button>
+        <div className="flex justify-between items-center mb-6">
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Buscar usuarios..."
+              className="input-search px-4 py-2 pr-10 rounded-lg border focus:outline-none focus:ring-2"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Mensaje de error */}
-      {error && (
-        <div className="error-message">
-          <strong>Error:</strong> {error}
-          <br />
-          <small>Se muestran datos de ejemplo para desarrollo</small>
-        </div>
-      )}
+        {error && (
+          <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+            <p className="text-red-700">{error}</p>
+          </div>
+        )}
 
-      {/* Contenedor Principal de la Tabla */}
-      <div className="admin-table-container">
-        {/* Header de la Tabla */}
-        <div className="admin-table-header">
-          <h2 className="admin-table-title">Lista de Usuarios ({filteredUsers.length})</h2>
-          
-          <div className="admin-search-filter">
-            {/* Búsqueda */}
-            <div className="admin-search-container">
-              <input
-                type="text"
-                placeholder="Buscar"
-                value={searchTerm}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchTerm(e.target.value)}
-                className="admin-search-input"
-              />
-              <svg className="admin-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <p>Cargando usuarios...</p>
+          </div>
+        ) : (
+          <>
+            <div className="overflow-x-auto bg-white rounded-lg shadow">
+              <table className="min-w-full">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Nombre
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Tipo
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Estado
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Última Actividad
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {paginatedUsers.map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">{user.email}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getTypeBadgeClass(user.type)}`}>
+                          {user.type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(user.status)}`}>
+                          {user.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {user.lastAccess}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEditUser(user.id)}
+                            className="text-indigo-600 hover:text-indigo-900"
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(user.id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            🗑️
+                          </button>
+                          {user.status === 'Por revisar' && (
+                            <button
+                              onClick={() => handleApproveUser(user.id)}
+                              className="text-green-600 hover:text-green-900"
+                            >
+                              ✓
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            
-            {/* Filtro */}
-            <button className="btn-filtrar">
-              Filtrar
-            </button>
-          </div>
-        </div>
-        
-        {/* Tabla Principal */}
-        <div className="overflow-x-auto">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Email</th>
-                <th>Tipo</th>
-                <th>Estado</th>
-                <th>Último acceso</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedUsers.map((user) => (
-                <tr key={user.id}>
-                  <td>
-                    <div className="admin-cell-title">
-                      <div className="admin-avatar">{user.name[0].toUpperCase()}</div>
-                      {user.name}
-                    </div>
-                  </td>
-                  <td>
-                    <div className="admin-cell-subtitle">{user.email}</div>
-                  </td>
-                  <td>
-                    <span className={`inline-flex px-2 py-1 text-sm font-medium rounded-full ${getTypeBadgeClass(user.type)}`}>
-                      {user.type}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`status-badge ${
-                      user.status === 'Activo' ? 'status-activo' :
-                      user.status === 'Inactivo' ? 'status-inactivo' :
-                      'status-por-revisar'
-                    }`}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="admin-cell-text">{user.lastAccess}</div>
-                  </td>
-                  <td>
-                    <div className="admin-actions-container">
-                      {/* Botón Editar */}
-                      <button 
-                        className="btn-action btn-editar" 
-                        title="Editar"
-                        onClick={() => editUser(user.id)}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                      </button>
-                      
-                      {/* Botón Eliminar */}
-                      <button className="btn-action btn-eliminar" title="Eliminar">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                      
-                      {/* Botón Aprobar/Check (solo visible cuando el estado es "Por revisar") */}
-                      {user.status === 'Por revisar' && (
-                        <button className="btn-action btn-aprobar" title="Aprobar">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        {/* Paginación */}
-        <div className="admin-pagination-container">
-          <div className="admin-pagination-info">
-            mostrando {startIndex + 1} de {Math.min(startIndex + itemsPerPage, filteredUsers.length)} usuarios
-          </div>
-          
-          <div className="admin-pagination-controls">
-            <button
-              onClick={() => setCurrentPage((prev: number) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="btn-pagination"
-            >
-              Anterior
-            </button>
-            
-            <div className="admin-pagination-numbers">
-              {[...Array(totalPages)].map((_, i) => (
+
+            <div className="flex justify-between items-center mt-4">
+              <div className="text-sm text-gray-700">
+                Mostrando {startIndex + 1} a {Math.min(endIndex, filteredUsers.length)} de {filteredUsers.length} usuarios
+              </div>
+              <div className="flex space-x-2">
                 <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`btn-pagination ${currentPage === i + 1 ? 'active' : ''}`}
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border rounded-md disabled:opacity-50"
                 >
-                  {i + 1}
+                  Anterior
                 </button>
-              ))}
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage >= totalPages}
+                  className="px-3 py-1 border rounded-md disabled:opacity-50"
+                >
+                  Siguiente
+                </button>
+              </div>
             </div>
-            
-            <button
-              onClick={() => setCurrentPage((prev: number) => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="btn-pagination"
-            >
-              Siguiente
-            </button>
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

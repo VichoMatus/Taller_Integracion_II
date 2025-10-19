@@ -52,3 +52,16 @@ export interface UsuarioListQuery {
   page?: number;
   size?: number;
 }
+
+// Nueva interfaz para el display en frontend
+export interface UserDisplay {
+  id: string;
+  name: string;
+  email: string;
+  type: 'Regular' | 'Premium';
+  status: 'Activo' | 'Inactivo' | 'Por revisar';
+  lastAccess: string;
+  rol: UsuarioRol;
+  verificado: boolean;
+  esta_activo: boolean;
+}

@@ -16,6 +16,42 @@ import {
 export const authService = {
   
   // ========================================
+  // MÉTODOS DE VALIDACIÓN DE TOKEN
+  // ========================================
+  
+  verifyToken() {
+    const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+    if (!token) return null;
+
+    try {
+      // Decodificar el token
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const payload = JSON.parse(window.atob(base64));
+
+      // Verificar expiración
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        console.error('Token expirado');
+        this.clearAuth();
+        return null;
+      }
+
+      return payload;
+    } catch (e) {
+      console.error('Error decodificando token:', e);
+      this.clearAuth();
+      return null;
+    }
+  },
+
+  clearAuth() {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('userData');
+  },
+
+  // ========================================
   // MÉTODOS LEGACY (mantener compatibilidad)
   // ========================================
   
