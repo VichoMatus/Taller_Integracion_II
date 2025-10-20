@@ -114,5 +114,21 @@ export const complejosService = {
     } catch (error: any) {
       throw new Error('Error al obtener resumen del complejo: ' + (error.response?.data?.message || error.message));
     }
+  },
+
+  /**
+   * Obtener complejos de un administrador/dueño específico
+   * @param adminId - ID del administrador/dueño
+   */
+  async getComplejosByAdmin(adminId: number) {
+    try {
+      console.log(`📍 [complejosService] Obteniendo complejos del admin ID: ${adminId}`);
+      const response = await apiBackend.get(`/api/complejos/admin/${adminId}`);
+      console.log(`✅ [complejosService] Complejos obtenidos:`, response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error(`❌ [complejosService] Error al obtener complejos del admin:`, error);
+      throw new Error('Error al obtener complejos del administrador: ' + (error.response?.data?.message || error.message));
+    }
   }
 };

@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { canchaService } from '@/services/canchaService';
+import { complejosService } from '@/services/complejosService';
 import '@/app/admin/dashboard.css';
 
 // Tipos de cancha disponibles (mantenemos en minúscula como el backend)
@@ -15,22 +16,104 @@ const TIPOS_CANCHA = [
   'futbol_sala'
 ];
 
+interface Complejo {
+  id: number;
+  nombre: string;
+  direccion?: string;
+  comuna?: string;
+}
+
 export default function NuevaCanchaPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingComplejos, setIsLoadingComplejos] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [complejos, setComplejos] = useState<Complejo[]>([]);
+  const [userId, setUserId] = useState<number | null>(null);
 
   // Estado del formulario
   const [formData, setFormData] = useState({
     nombre: '',
     tipo: 'futbol',
     techada: false,
-    establecimientoId: 1,
+    establecimientoId: 0,
     precioPorHora: 0,
     capacidad: 10,
     descripcion: ''
   });
+
+  // Cargar complejos del administrador al montar el componente
+  useEffect(() => {
+    loadUserComplejos();
+  }, []);
+
+  const loadUserComplejos = async () => {
+    try {
+      setIsLoadingComplejos(true);
+      
+      // Obtener datos del usuario desde localStorage
+      const userDataString = localStorage.getItem('userData');
+      if (!userDataString) {
+        setError('No se encontró información del usuario. Por favor, inicia sesión nuevamente.');
+        return;
+      }
+
+      const userData = JSON.parse(userDataString);
+      const adminId = userData.id_usuario || userData.id;
+      
+      if (!adminId) {
+        setError('No se pudo obtener el ID del usuario.');
+        return;
+      }
+
+      setUserId(adminId);
+      console.log('👤 [CrearCancha] Cargando complejos del admin ID:', adminId);
+
+      // Cargar complejos del administrador
+      const complejosData = await complejosService.getComplejosByAdmin(adminId);
+      
+      console.log('📋 [CrearCancha] Complejos cargados:', complejosData);
+      
+      // Adaptar formato si es necesario
+      let complejosArray = [];
+      if (Array.isArray(complejosData)) {
+        complejosArray = complejosData;
+      } else if (complejosData?.items) {
+        complejosArray = complejosData.items;
+      } else if (complejosData?.data) {
+        complejosArray = Array.isArray(complejosData.data) ? complejosData.data : complejosData.data.items || [];
+      }
+
+      // Mapear a formato esperado
+      const complejosFormateados = complejosArray.map((c: any) => ({
+        id: c.id || c.id_complejo,
+        nombre: c.nombre,
+        direccion: c.direccion,
+        comuna: c.comuna
+      }));
+
+      setComplejos(complejosFormateados);
+
+      // Si solo hay un complejo, seleccionarlo automáticamente
+      if (complejosFormateados.length === 1) {
+        setFormData(prev => ({
+          ...prev,
+          establecimientoId: complejosFormateados[0].id
+        }));
+        console.log('✅ [CrearCancha] Auto-seleccionado complejo único:', complejosFormateados[0].nombre);
+      } 
+      // No mostrar error si no hay complejos, permitir ingreso manual de ID
+
+    } catch (err: any) {
+      console.error('❌ [CrearCancha] Error cargando complejos:', err);
+      console.warn('⚠️ [CrearCancha] Endpoint no disponible. Permitiendo ingreso manual de ID.');
+      // No mostrar error visual, solo permitir ingreso manual
+      setComplejos([]); // Array vacío activará el input manual
+    } finally {
+      setIsLoadingComplejos(false);
+    }
+  };
 
   // Manejar cambios en el formulario
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -56,6 +139,10 @@ export default function NuevaCanchaPage() {
       // Validaciones básicas
       if (!formData.nombre.trim()) {
         throw new Error('El nombre de la cancha es requerido');
+      }
+
+      if (!formData.establecimientoId || formData.establecimientoId === 0 || formData.establecimientoId < 1) {
+        throw new Error('Debes seleccionar un complejo deportivo o ingresar un ID válido');
       }
 
       if (formData.precioPorHora < 0) {
@@ -183,22 +270,70 @@ export default function NuevaCanchaPage() {
               </div>
 
               <div className="edit-form-group">
-                <label htmlFor="establecimientoId" className="edit-form-label">ID Complejo: *</label>
-                <input
-                  type="number"
-                  id="establecimientoId"
-                  name="establecimientoId"
-                  value={formData.establecimientoId}
-                  onChange={handleChange}
-                  className="edit-form-input"
-                  min="1"
-                  placeholder="Ej: 1"
-                  required
-                  disabled={isLoading}
-                />
-                <small style={{ color: 'var(--text-gray)', fontSize: '0.8rem' }}>
-                  ID del complejo deportivo donde se ubicará la cancha
-                </small>
+                <label htmlFor="establecimientoId" className="edit-form-label">Complejo Deportivo: *</label>
+                {isLoadingComplejos ? (
+                  <div className="edit-form-input" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span>Cargando complejos...</span>
+                  </div>
+                ) : complejos.length === 0 ? (
+                  <div>
+                    <input
+                      type="number"
+                      id="establecimientoId"
+                      name="establecimientoId"
+                      value={formData.establecimientoId || ''}
+                      onChange={handleChange}
+                      className="edit-form-input"
+                      min="1"
+                      placeholder="Ingresa el ID del complejo"
+                      required
+                      disabled={isLoading}
+                    />
+                    <small style={{ color: '#f59e0b', fontSize: '0.8rem', display: 'block', marginTop: '0.25rem' }}>
+                      ⚠️ Modo temporal: Ingresa manualmente el ID del complejo (esperando endpoint de la API)
+                    </small>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <select
+                          id="establecimientoId"
+                          name="establecimientoId"
+                          value={formData.establecimientoId}
+                          onChange={handleChange}
+                          className="edit-form-select"
+                          required
+                          disabled={isLoading || complejos.length === 0}
+                        >
+                          <option value={0} disabled>Selecciona un complejo</option>
+                          {complejos.map(complejo => (
+                            <option key={complejo.id} value={complejo.id}>
+                              {complejo.nombre} {complejo.comuna ? `- ${complejo.comuna}` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div style={{ width: '120px' }}>
+                        <input
+                          type="number"
+                          name="establecimientoId"
+                          value={formData.establecimientoId || ''}
+                          onChange={handleChange}
+                          className="edit-form-input"
+                          min="1"
+                          placeholder="ID"
+                          title="ID del complejo"
+                          disabled={isLoading}
+                          style={{ fontSize: '0.9rem' }}
+                        />
+                      </div>
+                    </div>
+                    <small style={{ color: 'var(--text-gray)', fontSize: '0.8rem' }}>
+                      Solo se muestran tus complejos asociados (o ingresa ID manualmente)
+                    </small>
+                  </>
+                )}
               </div>
             </div>
           </div>
