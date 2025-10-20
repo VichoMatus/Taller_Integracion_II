@@ -1,38 +1,38 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStatus } from '../../../hooks/useAuthStatus';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
-import StatsCard from '../../../components/charts/StatsCard';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
+import StatsCard from '../../../components/charts/StatsCard';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
+import { canchaService } from '@/services/canchaService';
+import { complejosService } from '@/services/complejosService';
 import styles from './page.module.css';
 
-// 🔥 IMPORTAR SERVICIO
-import { canchaService } from '../../../services/canchaService';
-
-const volleyballStats = [
+// 🏐 DATOS PARA LAS ESTADÍSTICAS DE VOLEIBOL
+const voleibolStats = [
   {
     title: "Canchas Disponibles Hoy",
-    value: "8",
+    value: "6",
     icon: "🏐",
     subtitle: "Listas para reservar",
-    trend: { value: 3, isPositive: true }
+    trend: { value: 2, isPositive: true }
   },
   {
     title: "Rango de Precios",
-    value: "$22-35",
+    value: "$15-30",
     icon: "💰",
     subtitle: "Por hora",
-    trend: { value: 5, isPositive: true }
+    trend: { value: 3, isPositive: true }
   },
   {
     title: "Calificación Promedio",
     value: "4.6⭐",
     icon: "🏆",
     subtitle: "De nuestras canchas",
-    trend: { value: 0.3, isPositive: true }
+    trend: { value: 0.2, isPositive: true }
   },
   {
     title: "Jugadores en Cancha",
@@ -43,8 +43,31 @@ const volleyballStats = [
   }
 ];
 
+// 🏐 FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO
+const getStaticComplejoData = (establecimientoId: number) => {
+  const staticComplejos = {
+    1: {
+      nombre: "Club Voleibol Elite",
+      direccion: "Av. Alemania 1234, Temuco, Chile"
+    },
+    2: {
+      nombre: "Centro Deportivo Voleibol", 
+      direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+    },
+    3: {
+      nombre: "Voleibol Club Temuco",
+      direccion: "Calle Montt 890, Temuco, Chile"
+    },
+    default: {
+      nombre: "Club de Voleibol",
+      direccion: "Av. Alemania 1234, Temuco, Chile"
+    }
+  };
+
+  return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+};
+
 export default function VoleibolPage() {
-  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
@@ -53,101 +76,128 @@ export default function VoleibolPage() {
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
-  // 🔥 ESTADOS PARA CANCHAS DEL BACKEND
+  // 🏐 ESTADOS PARA CANCHAS DEL BACKEND
   const [canchas, setCanchas] = useState<any[]>([]);
   const [loadingCanchas, setLoadingCanchas] = useState(true);
   const [errorCanchas, setErrorCanchas] = useState<string | null>(null);
 
-  // 🔥 CARGAR CANCHAS DEL BACKEND
+  // 🏐 Hook de autenticación
+  const { buttonProps } = useAuthStatus();
+
+  // 🏐 CARGAR CANCHAS DEL BACKEND CON DATOS DE COMPLEJO
   useEffect(() => {
     const loadCanchas = async () => {
       try {
         setLoadingCanchas(true);
         setErrorCanchas(null);
         
-        console.log('🔄 [Voleibol] Cargando canchas individuales del backend...');
+        console.log('🔄 [VoleibolPage] Cargando TODAS las canchas del backend...');
         
-        // 🔥 IDs de las canchas de voleibol que quieres mostrar
-        const voleibolCanchaIds = [1, 2, 3, 4, 5, 6];
+        // 🏐 OBTENER TODAS LAS CANCHAS
+        const todasLasCanchas = await canchaService.getCanchas();
+        console.log('✅ [VoleibolPage] Todas las canchas obtenidas:', todasLasCanchas);
         
-        const canchasPromises = voleibolCanchaIds.map(async (id) => {
-          try {
-            console.log(`🔍 [Voleibol] Cargando cancha ID: ${id}`);
-            const cancha = await canchaService.getCanchaById(id);
-            console.log(`✅ [Voleibol] Cancha ${id} obtenida:`, cancha);
+        // 🏐 FILTRAR CANCHAS DE VOLEIBOL
+        const canchasDeVoleibol = todasLasCanchas.filter((cancha: any) => {
+          console.log(`🔍 [VoleibolPage] Evaluando cancha ID ${cancha.id}: tipo="${cancha.tipo}"`);
+          return ['voleibol', 'volleyball', 'voley'].includes(cancha.tipo.toLowerCase());
+        });
+        
+        console.log('🏐 [VoleibolPage] Canchas de voleibol encontradas:', canchasDeVoleibol.length);
+        
+        // 🏐 OBTENER DATOS DE COMPLEJOS PARA CADA CANCHA
+        const canchasMapeadas = await Promise.all(
+          canchasDeVoleibol.map(async (cancha: any) => {
+            let complejoData = null;
+            let addressInfo = `Complejo ${cancha.establecimientoId}`;
             
-            // 🔥 FILTRAR SOLO CANCHAS DE VOLEIBOL
-            if (cancha.tipo !== 'voleibol') {
-              console.log(`⚠️ [Voleibol] Cancha ${id} no es de voleibol (${cancha.tipo}), saltando...`);
-              return null;
+            // 🏐 INTENTAR OBTENER DATOS DEL COMPLEJO
+            if (cancha.establecimientoId) {
+              try {
+                console.log(`🔍 [VoleibolPage] Cargando complejo ID ${cancha.establecimientoId} para cancha ${cancha.id}`);
+                complejoData = await complejosService.getComplejoById(cancha.establecimientoId);
+                
+                if (complejoData) {
+                  addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                  console.log(`✅ [VoleibolPage] Complejo cargado: ${addressInfo}`);
+                }
+                
+              } catch (complejoError: any) {
+                console.warn(`⚠️ [VoleibolPage] Error cargando complejo ${cancha.establecimientoId}:`, complejoError.message);
+                // Usar datos de fallback
+                const staticComplejo = getStaticComplejoData(cancha.establecimientoId);
+                addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+              }
             }
             
-            // Mapear al formato requerido por CourtCard
+            // 🏐 MAPEAR CANCHA CON DATOS DEL COMPLEJO
             const mappedCancha = {
               id: cancha.id,
               imageUrl: `/sports/voleibol/canchas/Cancha${cancha.id}.png`,
               name: cancha.nombre,
-              address: `Complejo ${cancha.establecimientoId}`,
+              address: addressInfo, // 🏐 USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
               rating: cancha.rating || 4.6,
               tags: [
-                cancha.techada ? "Cancha Cerrada" : "Cancha Exterior",
+                cancha.techada ? "Techada" : "Al aire libre",
                 cancha.activa ? "Disponible" : "No disponible",
-                "Balones incluidos",
-                "Red profesional"
+                "Red Profesional"
               ],
-              description: `Cancha de voleibol ${cancha.nombre} - ID: ${cancha.id}`,
-              price: cancha.precioPorHora?.toString() || "28",
+              description: `Cancha de ${cancha.tipo} ${cancha.nombre} - ID: ${cancha.id}`,
+              price: cancha.precioPorHora?.toString() || "20",
               nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
-              sport: "voleibol"
+              sport: cancha.tipo
             };
             
-            console.log('🗺️ [Voleibol] Cancha mapeada:', mappedCancha);
+            console.log('🗺️ [VoleibolPage] Cancha mapeada:', mappedCancha);
             return mappedCancha;
-            
-          } catch (error) {
-            console.log(`❌ [Voleibol] Error cargando cancha ${id}:`, error);
-            return null;
-          }
-        });
+          })
+        );
         
-        const canchasResults = await Promise.all(canchasPromises);
-        const canchasValidas = canchasResults.filter(cancha => cancha !== null);
-        
-        console.log('🎉 [Voleibol] Canchas de voleibol cargadas exitosamente:', canchasValidas.length);
-        console.log('📋 [Voleibol] Canchas finales:', canchasValidas);
-        
-        setCanchas(canchasValidas);
+        console.log('🎉 [VoleibolPage] Canchas con datos de complejo cargadas:', canchasMapeadas.length);
+        setCanchas(canchasMapeadas);
         
       } catch (error: any) {
-        console.error('❌ [Voleibol] ERROR DETALLADO cargando canchas:', error);
+        console.error('❌ [VoleibolPage] ERROR cargando canchas:', error);
         setErrorCanchas(`Error: ${error.message}`);
         
-        // 🔥 FALLBACK
-        console.log('🚨 [Voleibol] USANDO FALLBACK - Error en el API');
-        setCanchas([
+        // 🏐 FALLBACK CON DATOS ESTÁTICOS MEJORADOS
+        const canchasEstaticas = [
           {
             id: 1,
-            imageUrl: "/sports/voleibol/canchas/Cancha1.png",
-            name: "🚨 FALLBACK - Voleibol Centro",
-            address: "Norte, Centro, Sur",
-            rating: 4.8,
-            tags: ["DATOS OFFLINE", "Cancha Cerrada", "Iluminación", "Cafetería"],
-            description: "🚨 Estos son datos de fallback - API no disponible",
-            price: "25",
+            imageUrl: "/sports/voleibol/voleibol.png",
+            name: "🚨 FALLBACK - Club Voleibol Elite",
+            address: "Club Voleibol Elite - Av. Alemania 1234, Temuco",
+            rating: 4.7,
+            tags: ["DATOS OFFLINE", "Red Profesional", "Techada"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "20",
             nextAvailable: "20:00-21:00",
           },
           {
             id: 2,
-            imageUrl: "/sports/voleibol/canchas/Cancha2.png",
-            name: "🚨 FALLBACK - Voleibol Norte",
-            address: "Sector Norte",
-            rating: 4.6,
-            tags: ["DATOS OFFLINE", "Cancha Cerrada", "Vestuarios"],
-            description: "🚨 Estos son datos de fallback - API no disponible",
-            price: "22",
-            nextAvailable: "14:30-15:30",
+            imageUrl: "/sports/voleibol/voleibol.png",
+            name: "🚨 FALLBACK - Centro Voleibol",
+            address: "Centro Deportivo Voleibol - Av. Pedro de Valdivia 567, Temuco",
+            rating: 4.5,
+            tags: ["DATOS OFFLINE", "Arena Profesional", "Techada"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "18",
+            nextAvailable: "14:30-15:30", 
+          },
+          {
+            id: 3,
+            imageUrl: "/sports/voleibol/voleibol.png",
+            name: "🚨 FALLBACK - Voleibol Club",
+            address: "Voleibol Club Temuco - Calle Montt 890, Temuco",
+            rating: 4.8,
+            tags: ["DATOS OFFLINE", "Piso Flotante", "Al aire libre"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "25",
+            nextAvailable: "Mañana 09:00-10:00",
           }
-        ]);
+        ];
+        
+        setCanchas(canchasEstaticas);
       } finally {
         setLoadingCanchas(false);
       }
@@ -183,8 +233,8 @@ export default function VoleibolPage() {
     };
   }, []);
 
-  // 🔥 USAR CANCHAS REALES PARA EL CARRUSEL
-  const topRatedCourts = canchas.slice(0, 6);
+  // 🏐 USAR CANCHAS REALES PARA EL CARRUSEL
+  const topRatedCourts = canchas.slice(0, 6); // Máximo 6 canchas para el carrusel
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -212,26 +262,32 @@ export default function VoleibolPage() {
     router.push(`/sports/voleibol/canchas/canchaseleccionada?id=${court.id}`);
   };
 
+  // 🏐 Manejador del botón de usuario
   const handleUserButtonClick = () => {
-    if (isAuthenticated) {
-      router.push('/usuario/EditarPerfil');
-    } else {
-      router.push('/login');
+    if (!buttonProps.disabled) {
+      router.push(buttonProps.href);
     }
   };
 
-  // 🔥 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
+  // 🏐 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
   const updatedStats = [
     {
-      ...volleyballStats[0],
+      ...voleibolStats[0],
       value: canchas.filter(c => c.nextAvailable !== "No disponible").length.toString()
     },
-    volleyballStats[1], // Mantener precio por defecto
     {
-      ...volleyballStats[2],
-      value: `${(canchas.reduce((acc, c) => acc + c.rating, 0) / canchas.length || 4.6).toFixed(1)}⭐`
+      ...voleibolStats[1],
+      value: canchas.length > 0 ? 
+        `$${Math.min(...canchas.map(c => parseInt(c.price || '0')))}-${Math.max(...canchas.map(c => parseInt(c.price || '0')))}` : 
+        "$15-30"
     },
-    volleyballStats[3] // Mantener jugadores por defecto
+    {
+      ...voleibolStats[2],
+      value: canchas.length > 0 ? 
+        `${(canchas.reduce((acc, c) => acc + c.rating, 0) / canchas.length).toFixed(1)}⭐` : 
+        "4.6⭐"
+    },
+    voleibolStats[3] // Mantener jugadores por defecto
   ];
 
   if (!isClient) {
@@ -266,7 +322,7 @@ export default function VoleibolPage() {
               sport="voleibol" 
             />
             <button 
-              className={styles.userButton} 
+              className={styles.userButton}
               onClick={handleUserButtonClick}
               disabled={buttonProps.disabled}
             >
@@ -276,7 +332,7 @@ export default function VoleibolPage() {
           </div>
         </div>
 
-        {/* 🔥 STATS CARDS CON DATOS ACTUALIZADOS */}
+        {/* 🏐 STATS CARDS CON DATOS ACTUALIZADOS */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
             <span className={styles.statsTitleIcon}>📊</span>
@@ -306,23 +362,23 @@ export default function VoleibolPage() {
         <div className={styles.quickAccessSection}>
           <button 
             className={styles.mainCourtButton}
-            onClick={() => window.location.href = '/sports/voleibol/canchas'}
+            onClick={() => window.location.href = '/sports/voleibol/canchas/'}
           >
             <div className={styles.courtButtonIcon}>🏐</div>
             <div className={styles.courtButtonText}>
               <span className={styles.courtButtonTitle}>Explorar Canchas</span>
-              <span className={styles.courtButtonSubtitle}>Ver todas las canchas disponibles</span>
+              <span className={styles.courtButtonSubtitle}>Ver todas las canchas de voleibol disponibles</span>
             </div>
             <div className={styles.courtButtonArrow}>→</div>
           </button>
         </div>
 
-        {/* 🔥 CARRUSEL CON DATOS REALES */}
+        {/* 🏐 CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>⭐</span>
-              Canchas mejor calificadas
+              Canchas de voleibol mejor calificadas
               {loadingCanchas && <span style={{ fontSize: '14px', marginLeft: '10px' }}>Cargando...</span>}
               {errorCanchas && <span style={{ fontSize: '14px', marginLeft: '10px', color: 'red' }}>⚠️ Usando datos offline</span>}
             </h2>
@@ -352,7 +408,7 @@ export default function VoleibolPage() {
           <div className={styles.carouselContainer}>
             {loadingCanchas ? (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
-                <p>Cargando canchas...</p>
+                <p>Cargando canchas de voleibol...</p>
               </div>
             ) : (
               <div 
@@ -376,7 +432,7 @@ export default function VoleibolPage() {
 
         {/* Ubicación en el mapa */}
         <div className={styles.mapSection}>
-          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las canchas</h2>
+          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las canchas de voleibol</h2>
           
           <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>

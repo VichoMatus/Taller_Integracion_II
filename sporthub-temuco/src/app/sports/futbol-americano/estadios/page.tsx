@@ -7,8 +7,9 @@ import SearchBar from '../../../../components/SearchBar';
 import LocationMap from '../../../../components/LocationMap';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
+import { complejosService } from '../../../../services/complejosService';
 
-// 🔥 IMPORTAR SERVICIO
+// 🏈 IMPORTAR SERVICIO
 import { canchaService } from '../../../../services/canchaService';
 
 export default function Page() {
@@ -16,111 +17,159 @@ export default function Page() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   
-  // 🔥 ESTADOS PARA LA API
+  // 🏈 ESTADOS PARA LA API
   const [estadios, setEstadios] = useState<any[]>([]);
   const [filteredEstadios, setFilteredEstadios] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [isLoadingEstadios, setIsLoadingEstadios] = useState(true);
   const [error, setError] = useState<string>('');
 
-  // 🔥 FUNCIÓN PARA CARGAR ESTADIOS DE FÚTBOL AMERICANO
+  // 🏈 FUNCIÓN PARA CARGAR ESTADIOS MODIFICADA PARA FÚTBOL AMERICANO
   const cargarEstadios = async () => {
     try {
       setIsLoadingEstadios(true);
       setError('');
       
-      console.log('🔄 [EstadiosFutbolAmericano] Cargando estadios individuales del backend...');
+      console.log('🔄 [EstadiosFutbolAmericano] Cargando TODAS las canchas del backend...');
       
-      // 🔥 IDs de los estadios de fútbol americano que quieres mostrar
-      const futbolAmericanoEstadioIds = [1, 2, 3, 4, 5, 6];
+      const todasLasCanchas = await canchaService.getCanchas();
+      console.log('✅ [EstadiosFutbolAmericano] Todas las canchas obtenidas:', todasLasCanchas);
       
-      const estadiosPromises = futbolAmericanoEstadioIds.map(async (id) => {
-        try {
-          console.log(`🔍 [EstadiosFutbolAmericano] Cargando estadio ID: ${id}`);
-          const estadio = await canchaService.getCanchaById(id);
-          console.log(`✅ [EstadiosFutbolAmericano] Estadio ${id} obtenido:`, estadio);
+      // 🏈 FILTRAR ESTADIOS DE FÚTBOL AMERICANO
+      const estadiosDeFutbolAmericano = todasLasCanchas.filter((cancha: any) => {
+        return ['futbol americano', 'american football', 'football americano'].includes(cancha.tipo.toLowerCase());
+      });
+      
+      console.log('🏈 [EstadiosFutbolAmericano] Estadios de fútbol americano encontrados:', estadiosDeFutbolAmericano.length);
+      
+      // 🏈 OBTENER DATOS DE COMPLEJOS PARA CADA ESTADIO
+      const estadiosMapeados = await Promise.all(
+        estadiosDeFutbolAmericano.map(async (cancha: any) => {
+          let complejoData = null;
+          let addressInfo = `Estadio ${cancha.establecimientoId}`;
           
-          // 🔥 FILTRAR SOLO ESTADIOS DE FÚTBOL AMERICANO
-          if (estadio.tipo !== 'futbol_americano') {
-            console.log(`⚠️ [EstadiosFutbolAmericano] Estadio ${id} no es de fútbol americano (${estadio.tipo}), saltando...`);
-            return null;
+          // 🏈 INTENTAR OBTENER DATOS DEL COMPLEJO
+          if (cancha.establecimientoId) {
+            try {
+              console.log(`🔍 [EstadiosFutbolAmericano] Cargando complejo ID ${cancha.establecimientoId} para estadio ${cancha.id}`);
+              complejoData = await complejosService.getComplejoById(cancha.establecimientoId);
+              
+              if (complejoData) {
+                addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                console.log(`✅ [EstadiosFutbolAmericano] Complejo cargado: ${addressInfo}`);
+              }
+              
+            } catch (complejoError: any) {
+              console.warn(`⚠️ [EstadiosFutbolAmericano] Error cargando complejo ${cancha.establecimientoId}:`, complejoError.message);
+              // Usar datos de fallback
+              const staticComplejo = getStaticComplejoData(cancha.establecimientoId);
+              addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+            }
           }
           
-          // Mapear al formato requerido por CourtCard
+          // 🏈 MAPEAR ESTADIO CON DATOS DEL COMPLEJO
           const mappedEstadio = {
-            id: estadio.id,
-            imageUrl: `/sports/futbol-americano/estadios/Estadio${estadio.id}.png`,
-            name: estadio.nombre,
-            address: `Complejo ${estadio.establecimientoId}`,
-            rating: estadio.rating || 4.8,
+            id: cancha.id,
+            imageUrl: `/sports/futbol-americano/estadios/Estadio${cancha.id}.png`,
+            name: cancha.nombre,
+            address: addressInfo, // 🏈 USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
+            rating: cancha.rating || 4.7,
             tags: [
-              estadio.techada ? "Estadio techado" : "Estadio al aire libre",
-              estadio.activa ? "Disponible" : "No disponible",
-              "Césped artificial",
-              "Marcador electrónico"
+              cancha.techada ? "Estadio Techado" : "Estadio Exterior",
+              cancha.activa ? "Disponible" : "No disponible",
+              "Postes Oficiales NFL"
             ],
-            description: `Estadio de fútbol americano ${estadio.nombre} - ID: ${estadio.id}`,
-            price: estadio.precioPorHora?.toString() || "60",
-            nextAvailable: estadio.activa ? "Disponible ahora" : "No disponible",
-            sport: "futbol-americano"
+            description: `Estadio de ${cancha.tipo} ${cancha.nombre} - ID: ${cancha.id}`,
+            price: cancha.precioPorHora?.toString() || "60",
+            nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
+            sport: cancha.tipo
           };
           
           console.log('🗺️ [EstadiosFutbolAmericano] Estadio mapeado:', mappedEstadio);
           return mappedEstadio;
-          
-        } catch (error) {
-          console.log(`❌ [EstadiosFutbolAmericano] Error cargando estadio ${id}:`, error);
-          return null;
-        }
-      });
+        })
+      );
       
-      const estadiosResults = await Promise.all(estadiosPromises);
-      const estadiosValidos = estadiosResults.filter(estadio => estadio !== null);
-      
-      console.log('🎉 [EstadiosFutbolAmericano] Estadios de fútbol americano cargados exitosamente:', estadiosValidos.length);
-      console.log('📋 [EstadiosFutbolAmericano] Estadios finales:', estadiosValidos);
-      
-      setEstadios(estadiosValidos);
-      setFilteredEstadios(estadiosValidos);
+      console.log('🎉 [EstadiosFutbolAmericano] Estadios con datos de complejo cargados:', estadiosMapeados.length);
+      setEstadios(estadiosMapeados);
+      setFilteredEstadios(estadiosMapeados);
       
     } catch (error: any) {
-      console.error('❌ [EstadiosFutbolAmericano] ERROR DETALLADO cargando estadios:', error);
+      console.error('❌ [EstadiosFutbolAmericano] ERROR cargando estadios:', error);
       setError(`Error: ${error.message}`);
       
-      // 🔥 FALLBACK
-      console.log('🚨 [EstadiosFutbolAmericano] USANDO FALLBACK - Error en el API');
-      const estadiosEstaticos = [
+      // 🏈 Fallback con datos estáticos de fútbol americano
+      const fallbackEstadios = [
         {
           id: 1,
-          imageUrl: "/sports/futbol-americano/estadios/Estadio1.png",
-          name: "🚨 FALLBACK - Estadio Champions",
-          address: "Norte, Centro, Sur",
-          rating: 4.9,
-          tags: ["DATOS OFFLINE", "Césped artificial", "Marcador electrónico"],
-          description: "🚨 Estos son datos de fallback - API no disponible",
+          imageUrl: "/sports/futbol-americano/futbol-americano.png",
+          name: "Estadio Nacional Temuco",
+          address: "Estadio Nacional Temuco - Av. Alemania 1234, Temuco, Chile",
+          rating: 4.8,
+          tags: ["Estadio Exterior", "Disponible", "Postes Oficiales NFL"],
+          description: "Estadio profesional de fútbol americano con postes reglamentarios",
           price: "60",
-          nextAvailable: "20:00-22:00",
+          nextAvailable: "Disponible ahora",
+          sport: "futbol americano"
         },
         {
           id: 2,
-          imageUrl: "/sports/futbol-americano/estadios/Estadio2.png",
-          name: "🚨 FALLBACK - Arena Temuco",
-          address: "Sector Norte",
-          rating: 4.7,
-          tags: ["DATOS OFFLINE", "Estadio techado", "Graderías"],
-          description: "🚨 Estos son datos de fallback - API no disponible",
-          price: "45",
-          nextAvailable: "16:00-18:00",
+          imageUrl: "/sports/futbol-americano/futbol-americano.png",
+          name: "Complejo NFL Chile",
+          address: "Complejo Deportivo NFL Chile - Av. Pedro de Valdivia 567, Temuco, Chile",
+          rating: 4.9,
+          tags: ["Estadio Exterior", "Disponible", "Iluminación Profesional"],
+          description: "Complejo deportivo especializado en fútbol americano",
+          price: "75",
+          nextAvailable: "Disponible ahora",
+          sport: "futbol americano"
+        },
+        {
+          id: 3,
+          imageUrl: "/sports/futbol-americano/futbol-americano.png",
+          name: "Estadio Araucanía Football",
+          address: "Estadio Araucanía Football - Calle Montt 890, Temuco, Chile",
+          rating: 4.6,
+          tags: ["Estadio Exterior", "Disponible", "Campo Reglamentario"],
+          description: "Estadio con campo reglamentario NFL y facilidades profesionales",
+          price: "55",
+          nextAvailable: "Disponible ahora",
+          sport: "futbol americano"
         }
       ];
       
-      setEstadios(estadiosEstaticos);
-      setFilteredEstadios(estadiosEstaticos);
+      setEstadios(fallbackEstadios);
+      setFilteredEstadios(fallbackEstadios);
     } finally {
       setIsLoadingEstadios(false);
     }
   };
 
+  // 🏈 FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO
+  const getStaticComplejoData = (establecimientoId: number) => {
+    const staticComplejos = {
+      1: {
+        nombre: "Estadio Nacional Temuco",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      },
+      2: {
+        nombre: "Complejo Deportivo NFL Chile", 
+        direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+      },
+      3: {
+        nombre: "Estadio Araucanía Football",
+        direccion: "Calle Montt 890, Temuco, Chile"
+      },
+      default: {
+        nombre: "Estadio de Fútbol Americano",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      }
+    };
+    
+    return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+  };
+
+  // 🏈 CARGAR ESTADIOS AL MONTAR EL COMPONENTE
   useEffect(() => {
     cargarEstadios();
   }, []);
@@ -141,7 +190,7 @@ export default function Page() {
     }
   };
 
-  const handleBackToFutbolAmericano = () => {
+  const handleBackToFootballAmericano = () => {
     router.push('/sports/futbol-americano');
   };
 
@@ -158,13 +207,15 @@ export default function Page() {
     }
   };
 
+  // 🏈 FUNCIÓN PARA REFRESCAR DATOS
   const handleRefresh = () => {
     cargarEstadios();
   };
 
-  const handleEstadioClick = (stadium: any) => {
-    console.log('Navegando a estadio:', stadium);
-    router.push(`/sports/futbol-americano/estadios/estadioseleccionado?id=${stadium.id}`);
+  // 🏈 MANEJADOR DE CLICK EN ESTADIO
+  const handleEstadioClick = (court: any) => {
+    console.log('Navegando a estadio:', court);
+    router.push(`/sports/futbol-americano/estadios/estadioseleccionado?id=${court.id}`);
   };
 
   return (
@@ -201,14 +252,14 @@ export default function Page() {
         <div className={styles.breadcrumb}>
           <button 
             className={styles.breadcrumbButton}
-            onClick={handleBackToFutbolAmericano}
+            onClick={handleBackToFootballAmericano}
           >
             <span>←</span>
             <span>Fútbol Americano</span>
           </button>
         </div>
 
-        {/* Mensajes de estado */}
+        {/* 🏈 MENSAJE DE ERROR CON INDICADOR DE FALLBACK */}
         {error && (
           <div className={styles.errorMessage}>
             <span>⚠️</span>
@@ -217,6 +268,7 @@ export default function Page() {
           </div>
         )}
 
+        {/* 🏈 MENSAJE DE CARGA */}
         {isLoadingEstadios && (
           <div className={styles.loadingMessage}>
             <span>🏈</span>
@@ -230,7 +282,7 @@ export default function Page() {
           <div className={styles.filtersGrid}>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#22c55e'}}>📍</span>
+                <span style={{color: '#b45309'}}>📍</span>
                 <span>Ubicación o barrio</span>
               </label>
               <input
@@ -241,7 +293,7 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#22c55e'}}>📅</span>
+                <span style={{color: '#b45309'}}>📅</span>
                 <span>Fecha</span>
               </label>
               <input
@@ -252,26 +304,26 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#16a34a'}}>💰</span>
+                <span style={{color: '#92400e'}}>💰</span>
                 <span>Precio (max $hr)</span>
               </label>
               <input
                 type="range"
                 min="0"
-                max="120"
+                max="100"
                 className={styles.priceSlider}
               />
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#15803d'}}>🏈</span>
-                <span>Tipo de estadio</span>
+                <span style={{color: '#78350f'}}>🏈</span>
+                <span>Tipo de campo</span>
               </label>
               <select className={styles.filterSelect}>
-                <option>Tipo de estadio</option>
-                <option>Estadio al aire libre</option>
-                <option>Estadio techado</option>
-                <option>Arena cubierta</option>
+                <option>Tipo de campo</option>
+                <option>Campo NFL Oficial</option>
+                <option>Campo Colegial</option>
+                <option>Campo de Práctica</option>
               </select>
             </div>
           </div>
@@ -283,7 +335,7 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Mensajes de no resultados */}
+        {/* Mensaje de no resultados */}
         {filteredEstadios.length === 0 && searchTerm && !isLoadingEstadios && (
           <div className={styles.noResults}>
             <h3>No se encontraron estadios de fútbol americano para &quot;{searchTerm}&quot;</h3>
@@ -294,11 +346,15 @@ export default function Page() {
           </div>
         )}
 
+        {/* 🏈 MENSAJE CUANDO NO HAY ESTADIOS EN LA BD */}
         {filteredEstadios.length === 0 && !searchTerm && !isLoadingEstadios && !error && (
           <div className={styles.noData}>
-            <h3>🏈 No hay estadios de fútbol americano registrados</h3>
-            <p>Aún no se han registrado estadios de fútbol americano en el sistema</p>
-            <button onClick={handleRefresh}>Actualizar</button>
+            <div className={styles.noDataContainer}>
+              <div className={styles.noDataIcon}>🏈</div>
+              <h3 className={styles.noDataTitle}>No hay estadios de fútbol americano registrados</h3>
+              <p className={styles.noDataText}>Aún no se han registrado estadios de fútbol americano en el sistema</p>
+              <button className={styles.refreshButton} onClick={handleRefresh}>Actualizar</button>
+            </div>
           </div>
         )}
 
