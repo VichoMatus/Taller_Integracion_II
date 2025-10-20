@@ -69,7 +69,7 @@ export const useAdminProtection = () => {
           return;
         }
 
-        // Verificar que el token sea válido y el usuario sea admin o superadmin
+        // Verificar que el token sea válido y el usuario sea admin o super_admin
         try {
           console.log('🔍 [useAdminProtection] Validando token con /auth/me...');
           const response = await apiBackend.get('/auth/me');
@@ -94,7 +94,7 @@ export const useAdminProtection = () => {
             throw new Error('Token inválido o expirado');
           }
 
-          // 🔥 NORMALIZAR ROL: Convertir super_admin a superadmin
+          // 🔥 NORMALIZAR ROL: Convertir super_admin a super_admin
           let normalizedRole = 'usuario'; // default
           
           if (userData.rol) {
@@ -107,8 +107,8 @@ export const useAdminProtection = () => {
               lowercase: rolLower
             });
             
-            if (rolLower === 'super_admin' || rolLower === 'superadmin') {
-              normalizedRole = 'superadmin';
+            if (rolLower === 'super_admin' || rolLower === 'super_admin') {
+              normalizedRole = 'super_admin';
             } else if (rolLower === 'admin') {
               normalizedRole = 'admin';
             } else if (rolLower === 'usuario') {
@@ -128,17 +128,17 @@ export const useAdminProtection = () => {
 
           // ✅ VERIFICACIÓN DE ROL ACTIVADA
           // 🔥 ACTUALIZADO: Ya no hay super_admin en la API, todos son admin
-          // Permitir acceso solo a usuarios con rol 'admin' o 'superadmin' (legacy)
-          if (!userData || (normalizedRole !== 'admin' && normalizedRole !== 'superadmin')) {
+          // Permitir acceso solo a usuarios con rol 'admin' o 'super_admin' (legacy)
+          if (!userData || (normalizedRole !== 'admin' && normalizedRole !== 'super_admin')) {
             console.log('❌ [useAdminProtection] Acceso denegado:', {
               motivo: !userData ? 'Sin datos de usuario' : 'Rol insuficiente',
               email: userData?.email,
               rolRecibido: userData?.rol,
               rolNormalizado: normalizedRole,
-              rolesPermitidos: ['admin', 'superadmin'],
+              rolesPermitidos: ['admin', 'super_admin'],
               nota: 'En la API actual todos los super_admin se convirtieron en admin'
             });
-            // Si no es admin ni superadmin, limpiar y redirigir según el rol
+            // Si no es admin ni super_admin, limpiar y redirigir según el rol
             localStorage.removeItem('token');
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
@@ -156,13 +156,13 @@ export const useAdminProtection = () => {
           }
 
           // 🔥 SIN REDIRECCIÓN: Admins pueden acceder a /admin sin ser redirigidos
-          // Ya no hay distinción entre admin y superadmin en la API
+          // Ya no hay distinción entre admin y super_admin en la API
           console.log('✅ [useAdminProtection] Admin - Acceso permitido:', {
             email: userData.email,
             rol: userData.rol,
             rolNormalizado: normalizedRole,
             rutaActual: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
-            nota: 'Usuario admin puede acceder a /admin y /superadmin'
+            nota: 'Usuario admin puede acceder a /admin y /super_admin'
           });
 
           console.log('✅ [useAdminProtection] Acceso autorizado:', {

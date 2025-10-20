@@ -73,9 +73,9 @@ export const API_ENDPOINTS = {
   },
   
   // Endpoints específicos de SuperAdmin
-  superadmin: {
-    parametros: '/api/v1/superadmin/parametros',
-    estadisticas: '/api/v1/superadmin/estadisticas',
-    logs: '/api/v1/superadmin/logs'
+  super_admin: {
+    parametros: '/api/v1/super_admin/parametros',
+    estadisticas: '/api/v1/super_admin/estadisticas',
+    logs: '/api/v1/super_admin/logs'
   }
 };

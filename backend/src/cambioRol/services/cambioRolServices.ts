@@ -13,7 +13,7 @@ import { CambioRolRequest } from "../types/cambioRolTypes";
  */
 export const cambioRolService = {
   /**
-   * Promociona a un usuario a un rol superior (admin o superadmin).
+   * Promociona a un usuario a un rol superior (admin o super_admin).
    */
   async promover(id_usuario: string | number, payload: CambioRolRequest): Promise<Usuario> {
     const { data } = await axios.post<Usuario>(

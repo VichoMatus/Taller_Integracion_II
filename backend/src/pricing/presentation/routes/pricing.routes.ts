@@ -132,13 +132,13 @@ router.get("/promociones/:id", (req, res) => ctrl(req).getPromocion(req, res));
 // Requieren autenticación y permisos específicos
 
 /** POST /pricing - Crear regla de precio (requiere rol admin) */
-router.post("/", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).createPricingRule(req, res));
+router.post("/", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).createPricingRule(req, res));
 
 /** PATCH /pricing/:id - Actualizar regla de precio (requiere rol admin) */
-router.patch("/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).updatePricingRule(req, res));
+router.patch("/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).updatePricingRule(req, res));
 
 /** DELETE /pricing/:id - Eliminar regla de precio (requiere rol admin) */
-router.delete("/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).deletePricingRule(req, res));
+router.delete("/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).deletePricingRule(req, res));
 
 /** POST /promociones - Crear promoción (requiere autenticación) */
 router.post("/promociones", authMiddleware, (req, res) => ctrl(req).createPromocion(req, res));
@@ -147,6 +147,6 @@ router.post("/promociones", authMiddleware, (req, res) => ctrl(req).createPromoc
 router.patch("/promociones/:id", authMiddleware, (req, res) => ctrl(req).updatePromocion(req, res));
 
 /** DELETE /promociones/:id - Eliminar promoción (requiere rol admin) */
-router.delete("/promociones/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).deletePromocion(req, res));
+router.delete("/promociones/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).deletePromocion(req, res));
 
 export default router;

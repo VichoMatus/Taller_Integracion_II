@@ -57,11 +57,20 @@ export const authService = {
   
   normalizeRole(rol: string): string {
     const normalized = rol.toLowerCase().trim();
-    // Convertir super_admin a superadmin para consistencia
-    if (normalized === 'super_admin') {
-      return 'superadmin';
+    
+    // Mapear roles específicos
+    switch (normalized) {
+      case 'admin':
+        return 'admin';
+      case 'super_admin':
+      case 'superadmin':
+        return 'super_admin';
+      case 'usuario':
+      case 'user':
+        return 'usuario';
+      default:
+        return normalized;
     }
-    return normalized;
   },
 
   // ========================================

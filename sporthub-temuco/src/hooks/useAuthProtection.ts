@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { apiBackend } from '@/config/backend';
 
-type UserRole = 'admin' | 'superadmin' | 'super_admin' | 'usuario';
+type UserRole = 'admin' | 'super_admin' | 'super_admin' | 'usuario';
 
 interface UserData {
   id_usuario: number;
@@ -52,9 +52,9 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
         });
 
         if (storedRole && storedUserData) {
-          // 🔥 NORMALIZAR: super_admin → superadmin, ADMIN → admin, etc.
+          // 🔥 NORMALIZAR: super_admin → super_admin, ADMIN → admin, etc.
           const normalizedStoredRole = storedRole.toLowerCase().trim() === 'super_admin' 
-            ? 'superadmin' 
+            ? 'super_admin' 
             : storedRole.toLowerCase().trim();
           const isRoleAllowed = allowedRoles.some(role => 
             role.toLowerCase().trim() === normalizedStoredRole
@@ -79,9 +79,9 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
 
         console.log('📦 [useAuthProtection] Datos recibidos:', userData);
 
-        // 🔥 NORMALIZAR: super_admin → superadmin, ADMIN → admin, etc.
+        // 🔥 NORMALIZAR: super_admin → super_admin, ADMIN → admin, etc.
         const normalizedRole = userData.rol.toLowerCase().trim() === 'super_admin' 
-          ? 'superadmin' 
+          ? 'super_admin' 
           : userData.rol.toLowerCase().trim();
         const isRoleAllowed = allowedRoles.some(role => 
           role.toLowerCase().trim() === normalizedRole

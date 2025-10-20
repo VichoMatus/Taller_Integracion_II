@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from "next/navigation";
-import './perfilsuperadmin.css';
+import './perfilsuper_admin.css';
 import AdminLayout from '@/components/layout/AdminsLayout';
 import authService from '@/services/authService';
 
@@ -37,8 +37,8 @@ export default function PerfilSuperAdministrador() {
   ];
 
   if (loading) return (
-    <AdminLayout userRole="superadmin" userName="Super Admin" notificationCount={3}>
-      <div className="superadmin-container">
+    <AdminLayout userRole="super_admin" userName="Super Admin" notificationCount={3}>
+      <div className="super_admin-container">
         <div className="profile-card">
           <div>Cargando perfil...</div>
         </div>
@@ -47,8 +47,8 @@ export default function PerfilSuperAdministrador() {
   );
 
   if (!user) return (
-    <AdminLayout userRole="superadmin" userName="Super Admin" notificationCount={3}>
-      <div className="superadmin-container">
+    <AdminLayout userRole="super_admin" userName="Super Admin" notificationCount={3}>
+      <div className="super_admin-container">
         <div className="profile-card">
           <div>No se pudo cargar el perfil.</div>
         </div>
@@ -57,8 +57,8 @@ export default function PerfilSuperAdministrador() {
   );
 
   return (
-    <AdminLayout userRole="superadmin" userName={user.nombre || "Super Admin"} notificationCount={3}>
-      <div className="superadmin-container">
+    <AdminLayout userRole="super_admin" userName={user.nombre || "Super Admin"} notificationCount={3}>
+      <div className="super_admin-container">
         {/* Panel Izquierdo - Perfil */}
         <div className="profile-card">
           <div className="avatar-container">
@@ -69,7 +69,7 @@ export default function PerfilSuperAdministrador() {
                 className="avatar-image"
               />
             ) : (
-              <div className="avatar-default superadmin-avatar">
+              <div className="avatar-default super_admin-avatar">
                 <span className="avatar-initial">{getInitial(user.nombre || "S")}</span>
               </div>
             )}
@@ -94,10 +94,10 @@ export default function PerfilSuperAdministrador() {
             </div>
           </div>
 
-          <div className="superadmin-actions">
+          <div className="super_admin-actions">
             <button
               className="action-button secondary"
-              onClick={() => router.push("/superadmin/cambiocontra")}
+              onClick={() => router.push("/super_admin/cambiocontra")}
             >
               <span className="action-icon">🔑</span>
               Cambiar Contraseña
@@ -185,7 +185,7 @@ export default function PerfilSuperAdministrador() {
                   </div>
                   <button
                     className="security-action-btn"
-                    onClick={() => router.push("/superadmin/cambiocontra")}
+                    onClick={() => router.push("/super_admin/cambiocontra")}
                   >
                     Cambiar Contraseña
                   </button>

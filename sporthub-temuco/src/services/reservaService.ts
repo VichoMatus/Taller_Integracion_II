@@ -117,7 +117,7 @@ export const reservaService = {
 
   /**
    * Obtener reservas del administrador (desde /admin/reservas)
-   * Requiere rol admin o superadmin
+   * Requiere rol admin o super_admin
    */
   async getAdminReservas(filters?: ReservaFilters): Promise<Reserva[]> {
     try {
@@ -130,7 +130,7 @@ export const reservaService = {
 
   /**
    * Obtener todas las reservas (lista completa admin)
-   * Requiere rol admin o superadmin
+   * Requiere rol admin o super_admin
    */
   async getAllReservasAdmin(filters?: ReservaFilters): Promise<Reserva[]> {
     try {
@@ -143,7 +143,7 @@ export const reservaService = {
 
   /**
    * Obtener reservas de una cancha específica (admin)
-   * Requiere rol admin o superadmin
+   * Requiere rol admin o super_admin
    */
   async getReservasByCancha(canchaId: number, filters?: ReservaFilters): Promise<Reserva[]> {
     try {
@@ -156,7 +156,7 @@ export const reservaService = {
 
   /**
    * Obtener reservas de un usuario específico (admin)
-   * Requiere rol admin o superadmin
+   * Requiere rol admin o super_admin
    */
   async getReservasByUsuarioAdmin(usuarioId: number, filters?: ReservaFilters): Promise<Reserva[]> {
     try {
@@ -169,7 +169,7 @@ export const reservaService = {
 
   /**
    * Crear reserva como administrador (para cualquier usuario)
-   * Requiere rol admin o superadmin
+   * Requiere rol admin o super_admin
    */
   async createReservaAdmin(input: CreateReservaInput): Promise<Reserva> {
     try {
@@ -182,7 +182,7 @@ export const reservaService = {
 
   /**
    * Cancelar reserva como administrador (forzar cancelación)
-   * Requiere rol admin o superadmin
+   * Requiere rol admin o super_admin
    */
   async cancelarReservaAdmin(id: number): Promise<Reserva> {
     try {
@@ -195,7 +195,7 @@ export const reservaService = {
 
   /**
    * Eliminar reserva permanentemente (admin)
-   * Requiere rol admin o superadmin
+   * Requiere rol admin o super_admin
    */
   async deleteReservaAdmin(id: number): Promise<void> {
     try {

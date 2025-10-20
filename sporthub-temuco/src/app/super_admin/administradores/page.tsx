@@ -40,8 +40,8 @@ export default function AdministradoresPage() {
           return;
         }
 
-        if (userRole !== 'superadmin' && userRole !== 'super_admin') {
-          setError('Acceso denegado. Se requiere rol de superadmin.');
+        if (userRole !== 'super_admin' && userRole !== 'super_admin') {
+          setError('Acceso denegado. Se requiere rol de super_admin.');
           setTimeout(() => router.push('/'), 2000);
           return;
         }
@@ -129,7 +129,7 @@ export default function AdministradoresPage() {
 
   // Función para navegar a editar administrador
   const editAdmin = (adminId: string | number) => {
-    router.push(`/superadmin/administradores/${adminId}`);
+    router.push(`/super_admin/administradores/${adminId}`);
   };
 
   // Función para desactivar administrador
@@ -186,7 +186,7 @@ export default function AdministradoresPage() {
           </button>
           
           <button 
-            onClick={() => router.push('/superadmin/administradores/nuevo')}
+            onClick={() => router.push('/super_admin/administradores/nuevo')}
             className="export-button"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

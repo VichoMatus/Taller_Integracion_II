@@ -11,20 +11,20 @@
  * - Retorna respuestas estandarizadas
  * 
  * Endpoints disponibles:
- * - POST /api/superadmin/auth/login - Autenticación
- * - POST /api/superadmin/auth/logout - Cerrar sesión
- * - GET /api/superadmin/users - Listar usuarios
- * - GET /api/superadmin/users/:id - Obtener usuario
- * - PATCH /api/superadmin/users/:id - Actualizar usuario
- * - DELETE /api/superadmin/users/:id - Eliminar usuario
- * - GET /api/superadmin/complejos - Listar complejos
- * - GET /api/superadmin/complejos/:id - Obtener complejo
- * - GET /api/superadmin/complejos/:id/canchas - Canchas del complejo
- * - POST /api/superadmin/system/parameters - Configuración sistema
- * - GET /api/superadmin/system/statistics - Estadísticas
- * - GET /api/superadmin/system/logs - Logs del sistema
- * - GET /api/superadmin/dashboard - Datos del dashboard
- * - GET /api/superadmin/search?q=term - Búsqueda global
+ * - POST /api/super_admin/auth/login - Autenticación
+ * - POST /api/super_admin/auth/logout - Cerrar sesión
+ * - GET /api/super_admin/users - Listar usuarios
+ * - GET /api/super_admin/users/:id - Obtener usuario
+ * - PATCH /api/super_admin/users/:id - Actualizar usuario
+ * - DELETE /api/super_admin/users/:id - Eliminar usuario
+ * - GET /api/super_admin/complejos - Listar complejos
+ * - GET /api/super_admin/complejos/:id - Obtener complejo
+ * - GET /api/super_admin/complejos/:id/canchas - Canchas del complejo
+ * - POST /api/super_admin/system/parameters - Configuración sistema
+ * - GET /api/super_admin/system/statistics - Estadísticas
+ * - GET /api/super_admin/system/logs - Logs del sistema
+ * - GET /api/super_admin/dashboard - Datos del dashboard
+ * - GET /api/super_admin/search?q=term - Búsqueda global
  */
 
 import { Request, Response } from 'express';
