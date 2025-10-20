@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from "next/navigation";
-import './perfilsuper_admin.css';
+import './perfilsuperadmin.css';
 import AdminLayout from '@/components/layout/AdminsLayout';
 import authService from '@/services/authService';
 
@@ -38,7 +38,7 @@ export default function PerfilSuperAdministrador() {
 
   if (loading) return (
     <AdminLayout userRole="super_admin" userName="Super Admin" notificationCount={3}>
-      <div className="super_admin-container">
+      <div className="superadmin-container">
         <div className="profile-card">
           <div>Cargando perfil...</div>
         </div>
@@ -48,7 +48,7 @@ export default function PerfilSuperAdministrador() {
 
   if (!user) return (
     <AdminLayout userRole="super_admin" userName="Super Admin" notificationCount={3}>
-      <div className="super_admin-container">
+      <div className="superadmin-container">
         <div className="profile-card">
           <div>No se pudo cargar el perfil.</div>
         </div>
@@ -58,7 +58,7 @@ export default function PerfilSuperAdministrador() {
 
   return (
     <AdminLayout userRole="super_admin" userName={user.nombre || "Super Admin"} notificationCount={3}>
-      <div className="super_admin-container">
+      <div className="superadmin-container">
         {/* Panel Izquierdo - Perfil */}
         <div className="profile-card">
           <div className="avatar-container">
@@ -69,7 +69,7 @@ export default function PerfilSuperAdministrador() {
                 className="avatar-image"
               />
             ) : (
-              <div className="avatar-default super_admin-avatar">
+              <div className="avatar-default superadmin-avatar">
                 <span className="avatar-initial">{getInitial(user.nombre || "S")}</span>
               </div>
             )}
@@ -94,7 +94,7 @@ export default function PerfilSuperAdministrador() {
             </div>
           </div>
 
-          <div className="super_admin-actions">
+          <div className="superadmin-actions">
             <button
               className="action-button secondary"
               onClick={() => router.push("/super_admin/cambiocontra")}
