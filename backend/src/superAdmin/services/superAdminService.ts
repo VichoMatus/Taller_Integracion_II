@@ -73,7 +73,7 @@ export class SuperAdminService {
       const response = await this.apiClient.post(API_ENDPOINTS.auth.login, credentials);
       
       // Verificar que el usuario tiene permisos de administrador
-      if (response.data.user.rol !== 'superadmin' && response.data.user.rol !== 'admin') {
+      if (response.data.user.rol !== 'super_admin' && response.data.user.rol !== 'admin') {
         return { ok: false, error: 'Usuario no autorizado para el panel de administración' };
       }
 
@@ -191,7 +191,7 @@ export class SuperAdminService {
   // SuperAdmin específico
   async updateSystemParameters(parametros: any): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.post(API_ENDPOINTS.superadmin.parametros, parametros);
+      const response = await this.apiClient.post(API_ENDPOINTS.super_admin.parametros, parametros);
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al actualizar parámetros' };
@@ -200,7 +200,7 @@ export class SuperAdminService {
 
   async getSystemStatistics(): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.get(API_ENDPOINTS.superadmin.estadisticas);
+      const response = await this.apiClient.get(API_ENDPOINTS.super_admin.estadisticas);
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al obtener estadísticas' };
@@ -209,7 +209,7 @@ export class SuperAdminService {
 
   async getSystemLogs(): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.get(API_ENDPOINTS.superadmin.logs);
+      const response = await this.apiClient.get(API_ENDPOINTS.super_admin.logs);
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al obtener logs' };

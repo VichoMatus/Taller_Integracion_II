@@ -15,7 +15,7 @@ import { handleApiError } from "../services/ApiError";
 export const reservaService = {
   async getReservas(filters?: ReservaFilters): Promise<Reserva[]> {
     try {
-      const { data } = await apiBackend.get('/api/reservas', { params: filters });
+      const { data } = await apiBackend.get('/api/v1/reservas', { params: filters });
       return data;
     } catch (err) {
       handleApiError(err);
@@ -24,7 +24,7 @@ export const reservaService = {
 
   async getReservaById(id: number): Promise<Reserva> {
     try {
-      const { data } = await apiBackend.get(`/api/reservas/${id}`);
+      const { data } = await apiBackend.get(`/api/v1/reservas/${id}`);
       return data;
     } catch (err) {
       handleApiError(err);
@@ -33,7 +33,7 @@ export const reservaService = {
 
   async createReserva(input: CreateReservaInput): Promise<Reserva> {
     try {
-      const { data } = await apiBackend.post('/api/reservas', input);
+      const { data } = await apiBackend.post('/api/v1/reservas', input);
       return data;
     } catch (err) {
       handleApiError(err);
@@ -42,7 +42,7 @@ export const reservaService = {
 
   async updateReserva(id: number, input: UpdateReservaInput): Promise<Reserva> {
     try {
-      const { data } = await apiBackend.patch(`/api/reservas/${id}`, input);
+      const { data } = await apiBackend.patch(`/api/v1/reservas/${id}`, input);
       return data;
     } catch (err) {
       handleApiError(err);
@@ -51,29 +51,43 @@ export const reservaService = {
 
   async deleteReserva(id: number): Promise<void> {
     try {
-      await apiBackend.delete(`/api/reservas/${id}`);
+      await apiBackend.delete(`/api/v1/reservas/${id}`);
     } catch (err) {
       handleApiError(err);
     }
   },
 
+
+
+    // ...existing code...
   async getMisReservas(): Promise<Reserva[]> {
     try {
-      const { data } = await apiBackend.get('/api/reservas/mias');
-      return data;
-    } catch (err) {
+      console.log("Intentando acceder a endpoint:", '/api/v1/reservas/mias');
+      
+      // Probar con la URL completa para evitar problemas de manipulación de URL
+      const url = '/api/v1/reservas/mias';
+      const { data } = await apiBackend.get(url, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        }
+      });
+      
+      console.log("Respuesta mis reservas:", data);
+      return Array.isArray(data) ? data : (data.items || data.data || []);
+    } catch (err: any) {
+      console.error("Error detallado al obtener mis reservas:", {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+        url: err.config?.url,
+        baseURL: err.config?.baseURL
+      });
       handleApiError(err);
+      return []; // Devuelve array vacío en caso de error
     }
   },
+  // ...existing code...
 
-  async cotizarReserva(input: CotizacionInput): Promise<CotizacionResponse> {
-    try {
-      const { data } = await apiBackend.post('/api/reservas/cotizar', input);
-      return data;
-    } catch (err) {
-      handleApiError(err);
-    }
-  },
 
   async confirmarReserva(id: number): Promise<ConfirmarReservaResponse> {
     try {
@@ -117,7 +131,7 @@ export const reservaService = {
 
   /**
    * Obtener reservas del administrador (desde /admin/reservas)
-   * Requiere rol admin o superadmin
+   * Requiere rol admin o super_admin
    */
   async getAdminReservas(filters?: ReservaFilters): Promise<Reserva[]> {
     try {
@@ -130,7 +144,7 @@ export const reservaService = {
 
   /**
    * Obtener todas las reservas (lista completa admin)
-   * Requiere rol admin o superadmin
+   * Requiere rol admin o super_admin
    */
   async getAllReservasAdmin(filters?: ReservaFilters): Promise<Reserva[]> {
     try {
@@ -143,7 +157,7 @@ export const reservaService = {
 
   /**
    * Obtener reservas de una cancha específica (admin)
-   * Requiere rol admin o superadmin
+   * Requiere rol admin o super_admin
    */
   async getReservasByCancha(canchaId: number, filters?: ReservaFilters): Promise<Reserva[]> {
     try {
@@ -156,7 +170,7 @@ export const reservaService = {
 
   /**
    * Obtener reservas de un usuario específico (admin)
-   * Requiere rol admin o superadmin
+   * Requiere rol admin o super_admin
    */
   async getReservasByUsuarioAdmin(usuarioId: number, filters?: ReservaFilters): Promise<Reserva[]> {
     try {
@@ -169,7 +183,7 @@ export const reservaService = {
 
   /**
    * Crear reserva como administrador (para cualquier usuario)
-   * Requiere rol admin o superadmin
+   * Requiere rol admin o super_admin
    */
   async createReservaAdmin(input: CreateReservaInput): Promise<Reserva> {
     try {
@@ -182,7 +196,7 @@ export const reservaService = {
 
   /**
    * Cancelar reserva como administrador (forzar cancelación)
-   * Requiere rol admin o superadmin
+   * Requiere rol admin o super_admin
    */
   async cancelarReservaAdmin(id: number): Promise<Reserva> {
     try {
@@ -195,7 +209,7 @@ export const reservaService = {
 
   /**
    * Eliminar reserva permanentemente (admin)
-   * Requiere rol admin o superadmin
+   * Requiere rol admin o super_admin
    */
   async deleteReservaAdmin(id: number): Promise<void> {
     try {

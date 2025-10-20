@@ -57,42 +57,48 @@ export default function SeguridadPage() {
       return;
     }
 
+    
+    // ...existing code...
     try {
-      // Intentar cambiar la contraseña
-      await authService.changePassword({
+      const response = await authService.changePassword({
         current_password: currentPassword,
         new_password: newPassword,
       });
       
-      // Si llegamos aquí, la contraseña se cambió exitosamente
-      setSuccess("Contraseña cambiada exitosamente");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      setPasswordStrength(0);
+      console.log("Respuesta cambio contraseña:", response);
       
-    } catch (err: any) {
-      console.error('Error completo:', err);
+      // Verificar si la respuesta es un objeto y contiene mensaje de éxito
+      // Acceder directamente a response ya que puede no tener .data
+      const responseMessage = ((response as any).message || 
+                              (response as any).error || 
+                              '').toLowerCase();
       
-      // VERIFICACIÓN ESPECIAL: Si el backend retorna error pero la contraseña SÍ se cambió
-      const errorStatus = err?.response?.status;
-      const errorDetail = err?.response?.data?.detail;
-      
-      // Si es error 400 pero la operación probablemente funcionó (comportamiento extraño del backend)
-      if (errorStatus === 400) {
-        // Mostrar mensaje de advertencia pero limpiar el formulario
-        console.warn('Backend retornó error 400 pero la contraseña puede haberse cambiado');
+      if (responseMessage.includes('contraseña actualizada correctamente') || 
+          responseMessage.includes('password updated successfully')) {
         setSuccess("Contraseña cambiada exitosamente");
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
         setPasswordStrength(0);
+      } else if ((response as any).ok === false) {
+        setError((response as any).error || (response as any).message || "Error desconocido");
+      } else {
+        setSuccess("Contraseña cambiada exitosamente");
+      }
+    } catch (err: any) {
+      console.error("Error completo:", err);
+      
+      // Verificar si hay un mensaje específico sobre contraseña incorrecta
+      if (err?.response?.data?.detail?.includes("contraseña actual") || 
+          err?.response?.data?.error?.includes("contraseña actual") || 
+          err?.response?.data?.message?.includes("contraseña actual")) {
+        setError("La contraseña actual es incorrecta");
       } 
-      else if (errorStatus === 401) {
+      else if (err?.response?.status === 401) {
         setError("Tu sesión ha expirado. Por favor inicia sesión nuevamente.");
-      } 
-      else if (errorDetail) {
-        setError(errorDetail);
+      }
+      else if (err?.response?.data?.detail) {
+        setError(err.response.data.detail);
       } 
       else if (err?.message) {
         setError(err.message);
@@ -103,6 +109,9 @@ export default function SeguridadPage() {
     } finally {
       setIsLoading(false);
     }
+    // ...existing code...
+
+
   };
 
   const seguridadLogs = [

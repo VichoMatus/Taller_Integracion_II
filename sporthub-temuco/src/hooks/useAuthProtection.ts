@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { apiBackend } from '@/config/backend';
 
-type UserRole = 'admin' | 'superadmin' | 'super_admin' | 'usuario';
+type UserRole = 'admin' | 'super_admin' | 'super_admin' | 'usuario';
 
 interface UserData {
   id_usuario: number;
@@ -52,11 +52,19 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
         });
 
         if (storedRole && storedUserData) {
-          // 🔥 CORREGIDO: Normalizar roles ('super_admin' → 'superadmin')
-          const normalizedStoredRole = storedRole === 'super_admin' ? 'superadmin' : storedRole;
-          const isRoleAllowed = allowedRoles.includes(normalizedStoredRole as UserRole);
+          // 🔥 NORMALIZAR: super_admin → super_admin, ADMIN → admin, etc.
+          const normalizedStoredRole = storedRole.toLowerCase().trim() === 'super_admin' 
+            ? 'super_admin' 
+            : storedRole.toLowerCase().trim();
+          const isRoleAllowed = allowedRoles.some(role => 
+            role.toLowerCase().trim() === normalizedStoredRole
+          );
           if (isRoleAllowed) {
-            console.log('✅ [useAuthProtection] Usando datos almacenados');
+            console.log('✅ [useAuthProtection] Usando datos almacenados:', {
+              rolAlmacenado: storedRole,
+              rolNormalizado: normalizedStoredRole,
+              rolesPermitidos: allowedRoles
+            });
             return;
           }
         }
@@ -71,9 +79,13 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
 
         console.log('📦 [useAuthProtection] Datos recibidos:', userData);
 
-        // 🔥 CORREGIDO: Normalizar rol del backend
-        const normalizedRole = userData.rol === 'super_admin' ? 'superadmin' : userData.rol.toLowerCase();
-        const isRoleAllowed = allowedRoles.includes(normalizedRole as UserRole);
+        // 🔥 NORMALIZAR: super_admin → super_admin, ADMIN → admin, etc.
+        const normalizedRole = userData.rol.toLowerCase().trim() === 'super_admin' 
+          ? 'super_admin' 
+          : userData.rol.toLowerCase().trim();
+        const isRoleAllowed = allowedRoles.some(role => 
+          role.toLowerCase().trim() === normalizedRole
+        );
 
         if (!isRoleAllowed) {
           console.log('❌ [useAuthProtection] Rol no permitido:', {

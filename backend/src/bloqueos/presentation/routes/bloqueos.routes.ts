@@ -152,12 +152,12 @@ router.post("/:id/activar", (req, res) => ctrl(req).activar(req, res));
 router.post("/:id/desactivar", (req, res) => ctrl(req).desactivar(req, res));
 
 // === Endpoints Administrativos ===
-// Requieren rol admin o superadmin
+// Requieren rol admin o super_admin
 
 /** GET /bloqueos - Lista todos los bloqueos con filtros */
-router.get("/", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).list(req, res));
+router.get("/", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).list(req, res));
 
 /** DELETE /bloqueos/:id - Elimina bloqueo */
-router.delete("/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).delete(req, res));
+router.delete("/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).delete(req, res));
 
 export default router;

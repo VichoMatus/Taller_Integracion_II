@@ -23,8 +23,7 @@
   padding: 2rem;
   margin-left: -256px;
   margin-top: 70px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  min-height: calc(100vh - 70px);
+  background: #ffffff;
   animation: fadeIn 0.8s ease;
 }
 

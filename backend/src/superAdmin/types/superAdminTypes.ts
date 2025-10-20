@@ -51,7 +51,7 @@ export interface UserPublic {
   email: string;                                                // Email del usuario
   telefono?: string;                                            // Teléfono (opcional)
   avatar?: string;                                              // URL del avatar (opcional)
-  rol: 'usuario' | 'admin' | 'superadmin';          // Rol del usuario en el sistema
+  rol: 'usuario' | 'admin' | 'super_admin';          // Rol del usuario en el sistema
   activo: boolean;                                              // Estado activo/inactivo
   verificado: boolean;                                          // Si el email está verificado
   fecha_creacion: string;                                       // Fecha de creación (ISO format)

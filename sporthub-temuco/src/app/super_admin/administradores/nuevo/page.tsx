@@ -26,7 +26,7 @@ export default function NuevoAdministrador() {
     e.preventDefault();
     try {
       await usuariosService.createAdministrador(formData);
-      router.push('/superadmin/administradores');
+      router.push('/super_admin/administradores');
       router.refresh();
     } catch (error) {
       setError('Error al crear el administrador');

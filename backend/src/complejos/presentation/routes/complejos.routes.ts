@@ -49,24 +49,24 @@ router.get("/", (req, res) => ctrl(req).list(req, res));
 router.get("/:id", (req, res) => ctrl(req).get(req, res));
 
 // === Endpoints para Administradores ===
-// Requieren rol admin o superadmin
+// Requieren rol admin o super_admin
 
 /** GET /complejos/admin/:adminId - Obtiene complejos de un administrador */
-router.get("/admin/:adminId", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).getByDuenio(req, res));
+router.get("/admin/:adminId", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getByDuenio(req, res));
 
 // === Endpoints Administrativos ===
-// Requieren rol admin o superadmin
+// Requieren rol admin o super_admin
 
 /** POST /complejos - Crea nuevo complejo */
-router.post("/", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).create(req, res));
+router.post("/", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).create(req, res));
 
 /** PATCH /complejos/:id - Actualiza complejo */
-router.patch("/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).update(req, res));
+router.patch("/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).update(req, res));
 
 /** DELETE /complejos/:id - Elimina complejo */
-router.delete("/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).delete(req, res));
+router.delete("/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).delete(req, res));
 
 /** PATCH /complejos/:id/estado - Cambia estado de complejo */
-router.patch("/:id/estado", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).cambiarEstado(req, res));
+router.patch("/:id/estado", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).cambiarEstado(req, res));
 
 export default router;

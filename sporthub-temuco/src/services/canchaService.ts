@@ -226,8 +226,9 @@ export const canchaService = {
       console.log('📤 [canchaService] Enviando datos para crear cancha:', backendData);
       console.log('📤 [canchaService] Input original:', input);
       
-      // Usar endpoint /admin/canchas que tiene control de permisos para dueno/admin/superadmin
-      const response = await apiBackend.post('/admin/canchas', backendData);
+      // 🔥 CORREGIDO: Endpoint es /canchas (no /admin/canchas)
+      // El control de permisos lo hace el middleware authMiddleware + requireRole
+      const response = await apiBackend.post('/canchas', backendData);
       
       console.log('📥 [canchaService] Respuesta completa del backend:', {
         status: response.status,
@@ -271,9 +272,9 @@ export const canchaService = {
     try {
       const backendData = adaptCanchaToBackend(input, true); // true = UPDATE
       console.log(`📤 [canchaService] Enviando datos para actualizar cancha ${id}:`, backendData);
-      // Usar endpoint /admin/canchas que tiene control de permisos
-      // Cambio de PATCH a PUT para coincidir con la ruta definida en el backend
-      const response = await apiBackend.put(`/admin/canchas/${id}`, backendData);
+      // 🔥 CORREGIDO: Endpoint es /canchas (no /admin/canchas)
+      // El backend usa PATCH, no PUT
+      const response = await apiBackend.patch(`/canchas/${id}`, backendData);
       
       // Adaptar la respuesta
       let canchaData = response.data;
@@ -301,8 +302,8 @@ export const canchaService = {
   async deleteCancha(id: number) {
     try {
       console.log(`🗑️ [canchaService] Eliminando cancha ${id}`);
-      // Usar endpoint /admin/canchas que tiene control de permisos
-      const response = await apiBackend.delete(`/admin/canchas/${id}`);
+      // 🔥 CORREGIDO: Endpoint es /canchas (no /admin/canchas)
+      const response = await apiBackend.delete(`/canchas/${id}`);
       console.log('✅ [canchaService] Cancha eliminada exitosamente');
       return response.data;
     } catch (error: any) {

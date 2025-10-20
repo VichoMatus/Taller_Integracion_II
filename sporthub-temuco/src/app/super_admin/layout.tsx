@@ -11,7 +11,7 @@ export default function SuperadminLayout({
 }) {
   const [mounted, setMounted] = useState(false);
   const [userName, setUserName] = useState('Superadministrador');
-  const [userRole, setUserRole] = useState<'admin' | 'superadmin'>('superadmin');
+  const [userRole, setUserRole] = useState<'admin' | 'super_admin'>('super_admin');
   
   // 🔥 CORREGIDO: Llamar el hook de protección SIN condición
   useSuperAdminProtection();
@@ -30,13 +30,13 @@ export default function SuperadminLayout({
       }
 
       const storedRole = localStorage.getItem('user_role');
-      // 🔥 CORREGIDO: Manejar tanto 'super_admin' como 'superadmin'
-      const mappedRole = storedRole === 'super_admin' ? 'superadmin' : (storedRole || 'superadmin');
-      setUserRole(mappedRole as 'admin' | 'superadmin');
+      // 🔥 CORREGIDO: Manejar tanto 'super_admin' como 'super_admin'
+      const mappedRole = storedRole === 'super_admin' ? 'super_admin' : (storedRole || 'super_admin');
+      setUserRole(mappedRole as 'admin' | 'super_admin');
     } catch (error) {
       console.error('Error cargando datos del usuario:', error);
       setUserName('Superadministrador');
-      setUserRole('superadmin');
+      setUserRole('super_admin');
     }
   }, [mounted]);
 

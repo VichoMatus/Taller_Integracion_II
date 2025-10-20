@@ -3,9 +3,9 @@
  * 
  * - usuario: Usuario básico del sistema
  * - admin: Administrador/Propietario con permisos de gestión de complejos
- * - superadmin: Administrador con permisos completos del sistema
+ * - super_admin: Administrador con permisos completos del sistema
  */
-export type Rol = "usuario" | "admin" | "superadmin";
+export type Rol = "usuario" | "admin" | "super_admin";
 
 /**
  * Entidad principal de usuario del sistema.

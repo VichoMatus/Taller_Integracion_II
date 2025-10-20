@@ -26,7 +26,7 @@ import { authMiddleware } from "../../../auth/middlewares/authMiddleware";
  * Router para endpoints administrativos.
  * Maneja la gestión de usuarios y asignación de roles.
  *
- * Todos los endpoints requieren rol admin o superadmin.
+ * Todos los endpoints requieren rol admin o super_admin.
  */
 const router = Router();
 
@@ -55,52 +55,52 @@ const ctrl = (req: any) => {
 };
 
 // === Endpoints del Panel del Dueño ===
-// Requieren ser dueño, admin o superadmin para acceso
+// Requieren ser dueño, admin o super_admin para acceso
 
 /** GET /admin/panel - Obtiene resumen de recursos del dueño */
-router.get("/panel", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).getMisRecursos(req, res));
+router.get("/panel", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getMisRecursos(req, res));
 
 // === Endpoints de Complejos ===
 
 /** GET /admin/complejos - Lista complejos del administrador */
-router.get("/complejos", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).listComplejos(req, res));
+router.get("/complejos", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).listComplejos(req, res));
 
 /** POST /admin/complejos - Crea nuevo complejo */
-router.post("/complejos", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).createComplejo(req, res));
+router.post("/complejos", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).createComplejo(req, res));
 
 /** GET /admin/complejos/:id - Obtiene complejo específico */
-router.get("/complejos/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).getComplejo(req, res));
+router.get("/complejos/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getComplejo(req, res));
 
 /** PUT /admin/complejos/:id - Actualiza complejo */
-router.put("/complejos/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).updateComplejo(req, res));
+router.put("/complejos/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).updateComplejo(req, res));
 
 /** DELETE /admin/complejos/:id - Elimina complejo */
-router.delete("/complejos/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).deleteComplejo(req, res));
+router.delete("/complejos/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).deleteComplejo(req, res));
 
 // === Endpoints de Canchas ===
 
 /** GET /admin/canchas - Lista canchas del administrador */
-router.get("/canchas", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).listCanchas(req, res));
+router.get("/canchas", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).listCanchas(req, res));
 
 /** POST /admin/canchas - Crea nueva cancha */
-router.post("/canchas", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).createCancha(req, res));
+router.post("/canchas", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).createCancha(req, res));
 
 /** GET /admin/canchas/:id - Obtiene cancha específica */
-router.get("/canchas/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).getCancha(req, res));
+router.get("/canchas/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getCancha(req, res));
 
 /** PUT /admin/canchas/:id - Actualiza cancha */
-router.put("/canchas/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).updateCancha(req, res));
+router.put("/canchas/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).updateCancha(req, res));
 
 /** DELETE /admin/canchas/:id - Elimina cancha */
-router.delete("/canchas/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).deleteCancha(req, res));
+router.delete("/canchas/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).deleteCancha(req, res));
 
 // === Endpoints de Reservas y Estadísticas ===
 
 /** GET /admin/reservas - Lista reservas del administrador */
-router.get("/reservas", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).getMisReservas(req, res));
+router.get("/reservas", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getMisReservas(req, res));
 
 /** GET /admin/estadisticas - Obtiene estadísticas del administrador */
-router.get("/estadisticas", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).getMisEstadisticas(req, res));
+router.get("/estadisticas", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getMisEstadisticas(req, res));
 
 /** GET /admin/status - Verifica estado y conectividad del módulo admin */
 router.get("/status", async (req, res) => {

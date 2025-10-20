@@ -29,7 +29,7 @@ import rugbyStyles from './StylesSportsSideBar/RugbySideBar.module.css';
 import mountainbikeStyles from './StylesSportsSideBar/MountainBikeSideBar.module.css';
 
 interface SidebarProps {
-  userRole: 'admin' | 'superadmin' | 'super_admin' | 'usuario';
+  userRole: 'admin' | 'super_admin' | 'super_admin' | 'usuario';
   sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje'| 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | 'escalada' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
 }
 
@@ -61,8 +61,8 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
 
   // Función para obtener los estilos según el rol Y deporte
   const getSportStyles = () => {
-    // 🔥 Si es admin o superadmin (cualquier variante), devolver null (usará las clases CSS normales)
-    if (userRole === 'admin' || userRole === 'superadmin' || userRole === 'super_admin') {
+    // 🔥 Si es admin o super_admin (cualquier variante), devolver null (usará las clases CSS normales)
+    if (userRole === 'admin' || userRole === 'super_admin' || userRole === 'super_admin') {
       return null; 
     }
 
@@ -173,38 +173,38 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
     {
       name: 'Dashboard',
       icon: '📊',
-      href: '/superadmin',
-      active: pathname === '/superadmin'
+      href: '/super_admin',
+      active: pathname === '/super_admin'
     },
     {
       name: 'Gestión Administradores',
       icon: '👥',
-      href: '/superadmin/administradores',
-      active: pathname === '/superadmin/administradores'
+      href: '/super_admin/administradores',
+      active: pathname === '/super_admin/administradores'
     },
     {
       name: 'Gestión Usuarios',
       icon: '👤',
-      href: '/superadmin/usuarios',
-      active: pathname === '/superadmin/usuarios'
+      href: '/super_admin/usuarios',
+      active: pathname === '/super_admin/usuarios'
     },
     {
       name: 'Gestión de Canchas',
       icon: '🏟️',
-      href: '/superadmin/canchas',
-      active: pathname === '/superadmin/canchas'
+      href: '/super_admin/canchas',
+      active: pathname === '/super_admin/canchas'
     },
     {
       name: 'Estadísticas Globales',
       icon: '📈',
-      href: '/superadmin/estadisticas',
-      active: pathname === '/superadmin/estadisticas'
+      href: '/super_admin/estadisticas',
+      active: pathname === '/super_admin/estadisticas'
     },
     {
       name: 'Perfil',
       icon: '🔧',
-      href: '/superadmin/perfil',
-      active: pathname === '/superadmin/perfil'
+      href: '/super_admin/perfil',
+      active: pathname === '/super_admin/perfil'
     }
   ];
 
@@ -220,6 +220,12 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
       icon: '📅',
       href: '/usuario/reservas',
       active: pathname === '/reservas'
+    },
+    {
+      name: 'Pagos',
+      icon: '💳',
+      href: '/usuario/pagos',
+      active: pathname === '/usuario/pagos'
     },
     {
       name: 'Mapa',
@@ -247,15 +253,15 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
     }
   ];
 
-  const menuItems = userRole === 'superadmin' ? superAdminMenuItems : userRole === 'admin' ? adminMenuItems : usuarioMenuItems;
-  const userTitle = userRole === 'superadmin' ? 'Superadministrador' : userRole === 'admin' ? 'Administrador' : 'Usuario';
+  const menuItems = userRole === 'super_admin' ? superAdminMenuItems : userRole === 'admin' ? adminMenuItems : usuarioMenuItems;
+  const userTitle = userRole === 'super_admin' ? 'Superadministrador' : userRole === 'admin' ? 'Administrador' : 'Usuario';
 
   // 🔥 FUNCIÓN PARA DETERMINAR EL HREF DEL HEADER
   const getHeaderHref = () => {
     switch (userRole) {
       case 'admin':
         return '/sports';
-      case 'superadmin':
+      case 'super_admin':
         return '/sports';
       case 'usuario':
         return '/sports';
