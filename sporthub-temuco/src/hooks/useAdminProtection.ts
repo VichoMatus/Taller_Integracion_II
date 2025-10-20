@@ -81,6 +81,9 @@ export const useAdminProtection = () => {
           console.log('✅ [useAdminProtection] Datos de usuario obtenidos:', {
             email: userData?.email,
             rol: userData?.rol,
+            rolTipo: typeof userData?.rol,
+            rolLength: userData?.rol?.length,
+            rolCharCodes: userData?.rol?.split('').map((c: string) => c.charCodeAt(0)),
             nombre: userData?.nombre,
             id: userData?.id_usuario
           });
@@ -91,20 +94,58 @@ export const useAdminProtection = () => {
             throw new Error('Token inválido o expirado');
           }
 
-          if (!userData || (userData.rol !== 'admin' && userData.rol !== 'super_admin')) {
+          // 🔥 NORMALIZAR ROL: Convertir super_admin a superadmin
+          let normalizedRole = 'usuario'; // default
+          
+          if (userData.rol) {
+            // Limpiar espacios y convertir a minúsculas
+            const rolLower = userData.rol.toString().trim().toLowerCase();
+            
+            console.log('🔍 [useAdminProtection] Normalizando rol:', {
+              original: userData.rol,
+              trimmed: userData.rol.toString().trim(),
+              lowercase: rolLower
+            });
+            
+            if (rolLower === 'super_admin' || rolLower === 'superadmin') {
+              normalizedRole = 'superadmin';
+            } else if (rolLower === 'admin') {
+              normalizedRole = 'admin';
+            } else if (rolLower === 'usuario') {
+              normalizedRole = 'usuario';
+            } else {
+              console.warn('⚠️ [useAdminProtection] Rol desconocido:', rolLower);
+            }
+          }
+          
+          console.log('🔍 [useAdminProtection] Verificando permisos de acceso:', {
+            email: userData?.email,
+            rolRecibido: userData?.rol,
+            rolRecibiloLowerCase: userData?.rol?.toLowerCase(),
+            rolNormalizado: normalizedRole,
+            rutaActual: typeof window !== 'undefined' ? window.location.pathname : 'unknown'
+          });
+
+          // ✅ VERIFICACIÓN DE ROL ACTIVADA
+          // 🔥 ACTUALIZADO: Ya no hay super_admin en la API, todos son admin
+          // Permitir acceso solo a usuarios con rol 'admin' o 'superadmin' (legacy)
+          if (!userData || (normalizedRole !== 'admin' && normalizedRole !== 'superadmin')) {
             console.log('❌ [useAdminProtection] Acceso denegado:', {
               motivo: !userData ? 'Sin datos de usuario' : 'Rol insuficiente',
               email: userData?.email,
               rolRecibido: userData?.rol,
-              rolesPermitidos: ['admin', 'super_admin']
+              rolNormalizado: normalizedRole,
+              rolesPermitidos: ['admin', 'superadmin'],
+              nota: 'En la API actual todos los super_admin se convirtieron en admin'
             });
             // Si no es admin ni superadmin, limpiar y redirigir según el rol
             localStorage.removeItem('token');
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
             localStorage.removeItem('userData');
+            localStorage.removeItem('user_role');
             
-            if (userData?.rol === 'usuario') {
+            if (normalizedRole === 'usuario') {
               router.push('/sports');
             } else {
               router.push('/login');
@@ -114,25 +155,37 @@ export const useAdminProtection = () => {
             return;
           }
 
-          // Si es superadmin, redirigir al panel de superadmin
-          if (userData.rol === 'super_admin') {
-            console.log('🔄 [useAdminProtection] Super admin detectado, redirigiendo a /superadmin:', {
-              email: userData.email,
-              rol: userData.rol
-            });
-            router.push('/superadmin');
-            isCheckingRef.current = false;
-            hasCheckedRef.current = true;
-            return;
-          }
-
-          console.log('✅ [useAdminProtection] Acceso autorizado para admin:', {
+          // 🔥 SIN REDIRECCIÓN: Admins pueden acceder a /admin sin ser redirigidos
+          // Ya no hay distinción entre admin y superadmin en la API
+          console.log('✅ [useAdminProtection] Admin - Acceso permitido:', {
             email: userData.email,
             rol: userData.rol,
+            rolNormalizado: normalizedRole,
+            rutaActual: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+            nota: 'Usuario admin puede acceder a /admin y /superadmin'
+          });
+
+          console.log('✅ [useAdminProtection] Acceso autorizado:', {
+            email: userData.email,
+            rol: userData.rol,
+            rolNormalizado: normalizedRole,
             nombre: userData.nombre
           });
-          // Actualizar datos del usuario en localStorage
-          localStorage.setItem('userData', JSON.stringify(userData));
+          
+          // 🔥 IMPORTANTE: Actualizar datos del usuario con ROL NORMALIZADO en localStorage
+          const normalizedUserData = {
+            ...userData,
+            rol: normalizedRole // ← Usar el rol normalizado, no el original
+          };
+          
+          localStorage.setItem('userData', JSON.stringify(normalizedUserData));
+          localStorage.setItem('user_role', normalizedRole); // ← Guardar también el rol normalizado
+          
+          console.log('💾 [useAdminProtection] Datos guardados en localStorage:', {
+            rolOriginal: userData.rol,
+            rolNormalizado: normalizedRole,
+            userDataGuardado: normalizedUserData
+          });
           isCheckingRef.current = false;
           hasCheckedRef.current = true;
         } catch (error: any) {

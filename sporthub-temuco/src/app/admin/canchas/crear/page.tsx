@@ -3,72 +3,97 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { canchaService } from '@/services/canchaService';
-import { CreateCanchaInput } from '@/types/cancha';
-import '../../dashboard.css';
+import '@/app/admin/dashboard.css';
 
-export default function CreateCanchaPage() {
+// Tipos de cancha disponibles (mantenemos en minúscula como el backend)
+const TIPOS_CANCHA = [
+  'futbol',
+  'basquet', 
+  'tenis',
+  'padel',
+  'volley',
+  'futbol_sala'
+];
+
+export default function NuevaCanchaPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  // Estado del formulario - SOLO campos que acepta FastAPI CREATE
-  const [formData, setFormData] = useState<CreateCanchaInput>({
+  // Estado del formulario
+  const [formData, setFormData] = useState({
     nombre: '',
     tipo: 'futbol',
     techada: false,
-    establecimientoId: 1, // Por ahora hardcodeado, después se puede obtener del usuario logueado
-    // Campos UI internos (no se envían al backend):
+    establecimientoId: 1,
     precioPorHora: 0,
-    descripcion: '',
-    capacidad: 1,
-    imagenUrl: ''
+    capacidad: 10,
+    descripcion: ''
   });
 
   // Manejar cambios en el formulario
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type, checked } = e.target as HTMLInputElement;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
     
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'number' ? parseFloat(value) || 0 : 
-               type === 'checkbox' ? checked : 
-               value
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
+               type === 'number' ? Number(value) : value
     }));
   };
 
-  // Crear nueva cancha
+  // Manejar envío del formulario
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
+
     try {
-      setLoading(true);
-      setError(null);
+      console.log('📤 Enviando datos para crear cancha:', formData);
       
-      // Validaciones básicas - SOLO para campos requeridos por FastAPI
+      // Validaciones básicas
       if (!formData.nombre.trim()) {
-        setError('El nombre de la cancha es requerido');
-        return;
+        throw new Error('El nombre de la cancha es requerido');
       }
-      
-      if (!formData.establecimientoId) {
-        setError('El ID del establecimiento es requerido');
-        return;
+
+      if (formData.precioPorHora < 0) {
+        throw new Error('El precio por hora no puede ser negativo');
       }
+
+      if (formData.capacidad < 1) {
+        throw new Error('La capacidad debe ser al menos 1');
+      }
+
+      // Crear la cancha usando el servicio
+      const nuevaCancha = await canchaService.createCancha({
+        nombre: formData.nombre.trim(),
+        tipo: formData.tipo as any,
+        techada: formData.techada,
+        establecimientoId: formData.establecimientoId,
+        precioPorHora: formData.precioPorHora,
+        capacidad: formData.capacidad,
+        descripcion: formData.descripcion.trim() || undefined
+      });
+
+      console.log('✅ Cancha creada exitosamente:', nuevaCancha);
       
-      await canchaService.createCancha(formData);
+      setSuccess('Cancha creada exitosamente');
       
-      // Mostrar mensaje de éxito y redirigir
-      alert('Cancha creada exitosamente');
-      router.push('/admin/canchas');
+      // Redirigir después de 2 segundos
+      setTimeout(() => {
+        router.push('/admin/canchas');
+      }, 2000);
+
     } catch (err: any) {
-      console.error('Error creando cancha:', err);
-      setError(err.message || 'Error al crear la cancha');
+      console.error('❌ Error al crear cancha:', err);
+      setError(err.message || 'Error al crear la cancha. Por favor, intenta nuevamente.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  // Cancelar y volver
   const handleCancel = () => {
     router.push('/admin/canchas');
   };
@@ -92,12 +117,12 @@ export default function CreateCanchaPage() {
             type="submit" 
             form="create-cancha-form"
             className="btn-guardar" 
-            disabled={loading}
+            disabled={isLoading}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            {loading ? 'Creando...' : 'Crear Cancha'}
+            {isLoading ? 'Creando...' : 'Crear Cancha'}
           </button>
         </div>
       </div>
@@ -105,7 +130,14 @@ export default function CreateCanchaPage() {
       {/* Error Message */}
       {error && (
         <div className="error-container">
-          <p>{error}</p>
+          <p><strong>Error:</strong> {error}</p>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {success && (
+        <div className="success-container">
+          <p><strong>Éxito:</strong> {success}</p>
         </div>
       )}
 
@@ -123,10 +155,11 @@ export default function CreateCanchaPage() {
                   id="nombre"
                   name="nombre"
                   value={formData.nombre}
-                  onChange={handleInputChange}
+                  onChange={handleChange}
                   className="edit-form-input"
-                  placeholder="Ej: Cancha Principal"
+                  placeholder="Ej: Cancha Central de Fútbol"
                   required
+                  disabled={isLoading}
                 />
               </div>
               
@@ -136,15 +169,16 @@ export default function CreateCanchaPage() {
                   id="tipo"
                   name="tipo"
                   value={formData.tipo}
-                  onChange={handleInputChange}
+                  onChange={handleChange}
                   className="edit-form-select"
                   required
+                  disabled={isLoading}
                 >
-                  <option value="futbol">Fútbol</option>
-                  <option value="basquet">Básquet</option>
-                  <option value="tenis">Tenis</option>
-                  <option value="padel">Padel</option>
-                  <option value="volley">Volley</option>
+                  {TIPOS_CANCHA.map(tipo => (
+                    <option key={tipo} value={tipo}>
+                      {tipo.charAt(0).toUpperCase() + tipo.slice(1).replace('_', ' ')}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -155,15 +189,56 @@ export default function CreateCanchaPage() {
                   id="establecimientoId"
                   name="establecimientoId"
                   value={formData.establecimientoId}
-                  onChange={handleInputChange}
+                  onChange={handleChange}
                   className="edit-form-input"
                   min="1"
                   placeholder="Ej: 1"
                   required
+                  disabled={isLoading}
                 />
                 <small style={{ color: 'var(--text-gray)', fontSize: '0.8rem' }}>
-                  ID del complejo deportivo al que pertenece esta cancha
+                  ID del complejo deportivo donde se ubicará la cancha
                 </small>
+              </div>
+            </div>
+          </div>
+
+          {/* Configuración de Precios y Capacidad */}
+          <div className="edit-section">
+            <h3 className="edit-section-title">Configuración de Precios y Capacidad</h3>
+            <div className="edit-form-grid">
+              <div className="edit-form-group">
+                <label htmlFor="precioPorHora" className="edit-form-label">Precio por Hora (CLP): *</label>
+                <input
+                  type="number"
+                  id="precioPorHora"
+                  name="precioPorHora"
+                  value={formData.precioPorHora}
+                  onChange={handleChange}
+                  className="edit-form-input"
+                  min="0"
+                  step="1000"
+                  placeholder="Ej: 15000"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="edit-form-group">
+                <label htmlFor="capacidad" className="edit-form-label">Capacidad de Jugadores: *</label>
+                <input
+                  type="number"
+                  id="capacidad"
+                  name="capacidad"
+                  value={formData.capacidad}
+                  onChange={handleChange}
+                  className="edit-form-input"
+                  min="1"
+                  max="50"
+                  placeholder="Ej: 10"
+                  required
+                  disabled={isLoading}
+                />
               </div>
             </div>
           </div>
@@ -178,7 +253,8 @@ export default function CreateCanchaPage() {
                     type="checkbox"
                     name="techada"
                     checked={formData.techada}
-                    onChange={handleInputChange}
+                    onChange={handleChange}
+                    disabled={isLoading}
                     style={{ marginRight: '0.5rem' }}
                   />
                   Cancha techada/cubierta
@@ -187,15 +263,22 @@ export default function CreateCanchaPage() {
             </div>
           </div>
 
-          {/* Información adicional */}
+          {/* Descripción */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Información</h3>
-            <div className="edit-info-item">
-              <p style={{ color: 'var(--text-gray)', fontSize: '0.9rem' }}>
-                <strong>Campos obligatorios:</strong> Nombre e ID del complejo.<br />
-                <strong>Nota:</strong> Precio, capacidad, descripción e imagen se configuran desde el backend 
-                o en módulos específicos. Esta creación básica permite registrar la cancha en el sistema.
-              </p>
+            <h3 className="edit-section-title">Descripción</h3>
+            <div className="edit-form-group">
+              <label htmlFor="descripcion" className="edit-form-label">Descripción (Opcional):</label>
+              <textarea
+                id="descripcion"
+                name="descripcion"
+                value={formData.descripcion}
+                onChange={handleChange}
+                disabled={isLoading}
+                rows={4}
+                className="edit-form-input"
+                placeholder="Describe las características de la cancha..."
+                style={{ minHeight: '100px', resize: 'vertical' }}
+              />
             </div>
           </div>
         </form>

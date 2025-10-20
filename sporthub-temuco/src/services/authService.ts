@@ -52,6 +52,19 @@ export const authService = {
   },
 
   // ========================================
+  // HELPER: Normalizar roles
+  // ========================================
+  
+  normalizeRole(rol: string): string {
+    const normalized = rol.toLowerCase().trim();
+    // Convertir super_admin a superadmin para consistencia
+    if (normalized === 'super_admin') {
+      return 'superadmin';
+    }
+    return normalized;
+  },
+
+  // ========================================
   // MÉTODOS LEGACY (mantener compatibilidad)
   // ========================================
   
@@ -64,17 +77,25 @@ export const authService = {
     
     const data = await api.post<BFFTokenResponse>("/auth/login", bffPayload).then(r => r.data);
     
+    // 🔥 NORMALIZAR ROL antes de guardar en localStorage
+    const normalizedRole = data?.user?.rol ? this.normalizeRole(data.user.rol) : '';
+    
+    console.log('🔄 [authService.login] Rol normalizado:', {
+      original: data?.user?.rol,
+      normalizado: normalizedRole
+    });
+    
     // Guardar tokens, rol y datos del usuario en localStorage
     if (data?.access_token && data?.user) {
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("access_token", data.access_token);
-      localStorage.setItem("user_role", data.user.rol);
+      localStorage.setItem("user_role", normalizedRole);
       localStorage.setItem("userData", JSON.stringify({
         id_usuario: data.user.id_usuario,
         nombre: data.user.nombre || '',
         apellido: data.user.apellido || '',
         email: data.user.email,
-        rol: data.user.rol
+        rol: normalizedRole
       }));
     }
     
@@ -86,7 +107,7 @@ export const authService = {
         nombre: data.user.nombre || '',
         apellido: data.user.apellido || '',
         email: data.user.email,
-        rol: data.user.rol
+        rol: normalizedRole
       }
     } as LoginResponse;
   },
@@ -103,10 +124,21 @@ export const authService = {
     
     const data = await api.post<BFFTokenResponse>("/auth/register", bffPayload).then(r => r.data);
     
-    // Guardar tokens
-    if (data?.access_token) {
+    // 🔥 NORMALIZAR ROL antes de guardar en localStorage
+    const normalizedRole = data?.user?.rol ? this.normalizeRole(data.user.rol) : 'usuario';
+    
+    // Guardar tokens y datos del usuario
+    if (data?.access_token && data?.user) {
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("user_role", normalizedRole);
+      localStorage.setItem("userData", JSON.stringify({
+        id_usuario: data.user.id_usuario,
+        nombre: data.user.nombre || '',
+        apellido: data.user.apellido || '',
+        email: data.user.email,
+        rol: normalizedRole
+      }));
     }
     
     // Retornar en el formato legacy esperado
@@ -117,7 +149,7 @@ export const authService = {
         nombre: data.user.nombre || '',
         apellido: data.user.apellido || '',
         email: data.user.email,
-        rol: data.user.rol
+        rol: normalizedRole
       }
     } as LoginResponse;
   },
