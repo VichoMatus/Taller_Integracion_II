@@ -222,6 +222,12 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
       active: pathname === '/reservas'
     },
     {
+      name: 'Pagos',
+      icon: '💳',
+      href: '/usuario/pagos',
+      active: pathname === '/usuario/pagos'
+    },
+    {
       name: 'Mapa',
       icon: '🗺️',
       href: '/mapa',

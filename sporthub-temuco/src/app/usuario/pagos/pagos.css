@@ -1,0 +1,576 @@
+.pagos-wrapper {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pagos-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.pagos-titulo {
+  font-size: 2.5rem;
+  color: #333;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.pagos-subtitulo {
+  color: #666;
+  font-size: 1.1rem;
+}
+
+/* Filtros */
+.filtros-pagos {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  flex-wrap: wrap;
+  align-items: end;
+}
+
+.filtro-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.filtro-group label {
+  font-weight: 600;
+  color: #333;
+}
+
+.filtro-group select {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: white;
+}
+
+.btn-limpiar {
+  padding: 8px 16px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-limpiar:hover {
+  background: #5a6268;
+}
+
+/* Lista de Pagos */
+.pagos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.pago-card {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  border: 1px solid #e9ecef;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.pago-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+/* Header del Pago */
+.pago-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 15px;
+}
+
+.pago-info-cancha {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.cancha-imagen {
+  width: 80px;
+  height: 80px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.cancha-info h4 {
+  margin: 0 0 8px 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.cancha-detalle {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 5px 0;
+  flex-wrap: wrap;
+}
+
+.deporte-tag {
+  background: #007bff;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.cancha-direccion {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 5px 0 0 0;
+}
+
+.pago-monto-estado {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  text-align: right;
+}
+
+.pago-monto {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #28a745;
+}
+
+.estado-pago {
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.pago-fecha {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+/* Estados */
+.estado-pagado {
+  background: #d4edda;
+  color: #155724;
+}
+
+.estado-creado {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.estado-autorizado {
+  background: #cce7ff;
+  color: #004085;
+}
+
+.estado-fallido {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.estado-reembolsado {
+  background: #e2e3e5;
+  color: #383d41;
+}
+
+/* Botón Ver Detalles */
+.btn-ver-detalles {
+  width: 100%;
+  padding: 12px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+  font-weight: 600;
+}
+
+.btn-ver-detalles:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.btn-ver-detalles:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Boleta - Detalles Completos */
+.boleta-detalles {
+  margin-top: 20px;
+  padding: 25px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 2px solid #e9ecef;
+}
+
+.boleta-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.boleta-titulo h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.3rem;
+}
+
+.boleta-numero {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.estado-boleta {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+}
+
+.boleta-content {
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+.boleta-section h4 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.1rem;
+  border-left: 4px solid #007bff;
+  padding-left: 10px;
+}
+
+/* Información de Cancha en Boleta */
+.cancha-detalle-completo {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.cancha-imagen-boleta {
+  width: 120px;
+  height: 120px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 2px solid #dee2e6;
+}
+
+.cancha-info-boleta h5 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.cancha-info-boleta p {
+  margin: 5px 0;
+  color: #555;
+}
+
+/* Grid de Detalles */
+.detalles-pago-grid,
+.metadata-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.detalles-pago-grid > div,
+.metadata-grid > div {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.detalles-pago-grid span:first-child,
+.metadata-grid span:first-child {
+  font-weight: 600;
+  color: #333;
+}
+
+.monto-total {
+  font-weight: bold;
+  color: #28a745;
+  font-size: 1.1rem;
+}
+
+/* Acciones de Boleta */
+.boleta-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 2px solid #dee2e6;
+  flex-wrap: wrap;
+}
+
+.btn-generar-boleta {
+  padding: 12px 20px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+  font-weight: 600;
+}
+
+.btn-generar-boleta:hover {
+  background: #218838;
+}
+
+.btn-reembolso {
+  padding: 12px 20px;
+  background: #ffc107;
+  color: #212529;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+  font-weight: 600;
+}
+
+.btn-reembolso:hover {
+  background: #e0a800;
+}
+
+.btn-ver-reserva {
+  padding: 12px 20px;
+  background: #17a2b8;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+  font-weight: 600;
+}
+
+.btn-ver-reserva:hover {
+  background: #138496;
+}
+
+/* Sin Pagos */
+.sin-pagos {
+  text-align: center;
+  padding: 60px 40px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.sin-pagos-icon {
+  font-size: 4rem;
+  margin-bottom: 20px;
+}
+
+.sin-pagos h3 {
+  color: #666;
+  margin-bottom: 10px;
+  font-size: 1.5rem;
+}
+
+.sin-pagos p {
+  color: #888;
+  margin-bottom: 25px;
+}
+
+.btn-explorar-cancha {
+  padding: 12px 24px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+
+.btn-explorar-cancha:hover {
+  background: #0056b3;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.modal-content h3 {
+  margin-bottom: 15px;
+  color: #333;
+  text-align: center;
+}
+
+.motivo-reembolso {
+  margin: 20px 0;
+}
+
+.motivo-reembolso label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+}
+
+.motivo-reembolso textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.btn-cancelar {
+  padding: 10px 20px;
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-cancelar:hover {
+  background: #5a6268;
+}
+
+.btn-confirmar {
+  padding: 10px 20px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-confirmar:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.btn-confirmar:hover:not(:disabled) {
+  background: #c82333;
+}
+
+/* Loading */
+.loading-spinner {
+  text-align: center;
+  padding: 40px;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .pagos-wrapper {
+    padding: 10px;
+  }
+
+  .filtros-pagos {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pago-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .pago-info-cancha {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .cancha-imagen {
+    align-self: center;
+  }
+
+  .pago-monto-estado {
+    align-items: center;
+    text-align: center;
+  }
+
+  .cancha-detalle-completo {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .cancha-imagen-boleta {
+    align-self: center;
+  }
+
+  .detalles-pago-grid,
+  .metadata-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .boleta-actions {
+    flex-direction: column;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+  }
+}
