@@ -1,6 +1,8 @@
+//MiniResumen: El apartado de reservas no muestra datos por que por lo visto no existe el Endpoint, preguntandole a copilot deduje que este era el problema, pero por ahora se dejara asi hasta recibir respuesta del backend
+
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './reserva.css';
 import { Button } from '../componentes/compUser';
 import UserLayout from '../UsuarioLayout';
@@ -11,14 +13,14 @@ import type { Reserva } from '@/types/reserva';
 // Función para mapear la respuesta de la API a tu tipo Reserva
 function mapApiReserva(r: any): Reserva {
   return {
-    id: r.id_reserva,
-    usuarioId: r.id_usuario,
-    canchaId: r.id_cancha,
+    id: r.id_reserva ?? r.id ?? 0,
+    usuarioId: r.id_usuario ?? r.usuario_id ?? 0,
+    canchaId: r.id_cancha ?? r.cancha_id ?? 0,
     complejoId: r.complejo_id ?? 0,
-    fechaInicio: r.hora_inicio || r.fecha_inicio || r.fecha_reserva || "",
-    fechaFin: r.hora_fin || r.fecha_fin || r.fecha_reserva || "",
-    estado: r.estado,
-    precioTotal: r.monto_total ?? 0,
+    fechaInicio: r.hora_inicio ?? r.fecha_inicio ?? r.fecha_reserva ?? "",
+    fechaFin: r.hora_fin ?? r.fecha_fin ?? r.fecha_reserva ?? "",
+    estado: r.estado ?? "pendiente",
+    precioTotal: r.monto_total ?? r.precio_total ?? 0,
     metodoPago: r.metodo_pago,
     pagado: r.pagado ?? false,
     notas: r.notas,
@@ -37,39 +39,52 @@ export default function ReservaPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userName, setUserName] = useState("Usuario");
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+
+  // ...existing code...
+  // ...existing code...
+  const cargarReservas = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Cargar datos del usuario
+      const userData = await authService.me();
+      setUserName(`${userData.nombre ?? ''} ${userData.apellido ?? ''}`.trim() || 'Usuario');
+      
+      // Intentar obtener reservas con el endpoint principal
+      let misReservasApi = [];
+      try {
+        misReservasApi = await reservaService.getMisReservas();
+      } catch (endpointError) {
+        console.warn("Error con endpoint principal, intentando alternativa:", endpointError.message);
+        
+        // Plan B: Intentar con el endpoint general filtrando por usuario
+        misReservasApi = await reservaService.getReservas({
+          usuarioId: userData.id // O el campo que use tu API
+        });
+      }
+      
+      console.log("Reservas obtenidas:", misReservasApi);
+      
+      if (Array.isArray(misReservasApi)) {
+        // Mapear y procesar las reservas
+        setReservas(misReservasApi.map(mapApiReserva));
+      } else {
+        console.warn("La respuesta no es un array:", misReservasApi);
+        setReservas([]);
+      }
+    } catch (error: any) {
+      // ...existing error handling code...
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+  // ...existing code...
 
   useEffect(() => {
-    async function cargarDatos() {
-      try {
-        // Cargar datos del usuario
-        const userData = await authService.me();
-        setUserName(`${userData.nombre} ${userData.apellido}`);
-
-        // Cargar reservas del usuario
-        const misReservasApi = await reservaService.getMisReservas();
-        const misReservas: Reserva[] = Array.isArray(misReservasApi)
-          ? misReservasApi.map(mapApiReserva)
-          : [];
-
-        if (misReservas.length > 0) {
-          setReservas(misReservas);
-          setReservaActiva(misReservas[0]);
-        } else {
-          setReservas([]);
-          setReservaActiva(null);
-        }
-      } catch (error) {
-        console.error("Error al cargar datos:", error);
-        setError("No se pudieron cargar las reservas. Intente más tarde.");
-        setReservas([]);
-        setReservaActiva(null);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    cargarDatos();
-  }, []);
+    cargarReservas();
+  }, [cargarReservas]);
 
   // Función para cancelar una reserva
   const handleCancelarReserva = async (id: number) => {
@@ -80,32 +95,18 @@ export default function ReservaPage() {
     try {
       setIsLoading(true);
       await reservaService.cancelarReserva(id);
-
-      // Recargar datos después de cancelar
-      const misReservasApi = await reservaService.getMisReservas();
-      const misReservas: Reserva[] = Array.isArray(misReservasApi)
-        ? misReservasApi.map(mapApiReserva)
-        : [];
-
-      if (misReservas.length > 0) {
-        setReservas(misReservas);
-        setReservaActiva(misReservas[0]);
-      } else {
-        setReservas([]);
-        setReservaActiva(null);
-      }
-
+      await cargarReservas();
       alert("Reserva cancelada con éxito");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al cancelar reserva:", error);
-      alert("Error al cancelar la reserva. Intente nuevamente.");
+      alert(error?.response?.data?.detail || error?.message || "Error al cancelar la reserva. Intente nuevamente.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const getEstadoColor = (estado: string) => {
-    const estadoLower = estado.toLowerCase();
+    const estadoLower = (estado || '').toLowerCase();
     if (estadoLower.includes('confirm')) return 'estado-confirmada';
     if (estadoLower.includes('pendiente')) return 'estado-pendiente';
     if (estadoLower.includes('cancel')) return 'estado-cancelada';
@@ -144,6 +145,30 @@ export default function ReservaPage() {
           <p className="reserva-subtitulo">Gestiona y revisa tus reservas activas</p>
         </div>
 
+        {/* Botón de recarga */}
+        <div style={{textAlign: 'right', marginBottom: '10px'}}>
+          <Button onClick={cargarReservas}>↻ Recargar</Button>
+        </div>
+
+        {/* Panel de debug - Solo visible en desarrollo */}
+        {process.env.NODE_ENV !== 'production' && debugInfo && (
+          <div style={{
+            background: '#111', 
+            color: '#eee', 
+            padding: '10px', 
+            borderRadius: '5px',
+            marginBottom: '15px',
+            fontSize: '12px',
+            maxHeight: '200px',
+            overflow: 'auto'
+          }}>
+            <strong>DEBUG INFO:</strong>
+            <pre style={{whiteSpace: 'pre-wrap', wordBreak: 'break-word'}}>
+              {JSON.stringify(debugInfo, null, 2)}
+            </pre>
+          </div>
+        )}
+
         {isLoading ? (
           <div className="loading-container">
             <div className="spinner"></div>
@@ -152,7 +177,7 @@ export default function ReservaPage() {
         ) : error ? (
           <div className="error-container">
             <p className="error-message">{error}</p>
-            <Button className="btn-retry" onClick={() => window.location.reload()}>
+            <Button className="btn-retry" onClick={cargarReservas}>
               Intentar nuevamente
             </Button>
           </div>
@@ -197,7 +222,7 @@ export default function ReservaPage() {
                         <div className="detail-item">
                           <span className="detail-label">⏰ Horario:</span>
                           <span>
-                            {reserva.fechaInicio.slice(11, 16)} - {reserva.fechaFin.slice(11, 16)}
+                            {reserva.fechaInicio?.slice(11, 16) || '-'} - {reserva.fechaFin?.slice(11, 16) || '-'}
                           </span>
                         </div>
                         <div className="detail-item">
@@ -237,7 +262,7 @@ export default function ReservaPage() {
                       <div className="info-item">
                         <span className="info-label">⏰ Horario:</span>
                         <span>
-                          {reservaActiva.fechaInicio.slice(11, 16)} - {reservaActiva.fechaFin.slice(11, 16)}
+                          {reservaActiva.fechaInicio?.slice(11, 16) || '-'} - {reservaActiva.fechaFin?.slice(11, 16) || '-'}
                         </span>
                       </div>
                       <div className="info-item">
@@ -261,9 +286,9 @@ export default function ReservaPage() {
                     <Button
                       className="btn-anular"
                       onClick={() => handleCancelarReserva(reservaActiva.id)}
-                      disabled={reservaActiva.estado.toLowerCase().includes('cancel')}
+                      disabled={(reservaActiva.estado || '').toLowerCase().includes('cancel')}
                     >
-                      {reservaActiva.estado.toLowerCase().includes('cancel')
+                      {(reservaActiva.estado || '').toLowerCase().includes('cancel')
                         ? '❌ Reserva Cancelada'
                         : '❌ Cancelar Reserva'
                       }
