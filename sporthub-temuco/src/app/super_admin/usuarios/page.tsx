@@ -3,8 +3,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usuariosService } from '@/services/usuariosService';
-import { tokenUtils } from '@/utils/tokenUtils';
 import { Usuario, UserDisplay } from '@/types/usuarios';
+import { useSuperAdminProtection } from '@/hooks/useSuperAdminProtection';
 import '@/app/admin/dashboard.css';
 
 const ITEMS_PER_PAGE = 10;
@@ -12,6 +12,9 @@ const ITEMS_PER_PAGE = 10;
 export default function UsuariosPage() {
   const router = useRouter();
   
+  // Protección de ruta
+  useSuperAdminProtection();
+
   // Estados del componente
   const [users, setUsers] = useState<UserDisplay[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -58,37 +61,7 @@ export default function UsuariosPage() {
         return;
       }
 
-      // Decodificar token para verificar rol y expiración
-      try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const payload = JSON.parse(window.atob(base64));
-        console.log('🎟️ Token payload:', payload);
-        
-        // Verificar expiración
-        if (payload.exp && payload.exp * 1000 < Date.now()) {
-          console.error('❌ Token expirado');
-          localStorage.clear();
-          router.push('/login');
-          return;
-        }
-
-        // Verificar rol
-        const userRole = payload.role || localStorage.getItem('user_role');
-        console.log('👤 Rol del usuario:', userRole);
-        
-        if (userRole !== 'super_admin') {
-          console.error('❌ Rol incorrecto:', userRole);
-          setError('Acceso denegado. Se requiere rol de super_admin.');
-          setTimeout(() => router.push('/'), 2000);
-          return;
-        }
-      } catch (e) {
-        console.error('❌ Error decodificando token:', e);
-        localStorage.clear();
-        router.push('/login');
-        return;
-      }
+      // La verificación del rol ahora la maneja useSuperAdminProtection
 
       // Obtener usuarios
       console.log('🔄 Iniciando petición de usuarios...');

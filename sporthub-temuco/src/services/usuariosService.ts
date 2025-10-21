@@ -30,8 +30,19 @@ class UsuariosService {
     }
 
     // Verificar rol específico de super_admin
-    if (decoded.role !== 'super_admin') {
-      console.error('❌ Rol incorrecto en token:', decoded.role);
+    const storedRole = localStorage.getItem('user_role');
+    console.log('🔍 [usuariosService] Verificando roles:', {
+      tokenRole: decoded.role,
+      storedRole,
+      tokenPreview: `${token.substring(0, 20)}...`
+    });
+
+    if (decoded.role !== 'super_admin' && storedRole !== 'super_admin') {
+      console.error('❌ Rol incorrecto:', {
+        tokenRole: decoded.role,
+        storedRole,
+        required: 'super_admin'
+      });
       tokenUtils.clearTokenAndRedirect();
       throw new Error('Acceso denegado: se requiere rol super_admin');
     }

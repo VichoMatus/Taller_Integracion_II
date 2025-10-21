@@ -45,9 +45,12 @@ export const tokenUtils = {
   // Verificar si el token es válido y no ha expirado
   isTokenValid: (token?: string): boolean => {
     if (!token) {
-      // 🔧 FIX: Manejar correctamente el tipo null
       const retrievedToken = tokenUtils.getToken();
-      token = retrievedToken || undefined; // Convertir null a undefined
+      if (!retrievedToken) {
+        console.log('❌ [tokenUtils] No se encontró token en localStorage');
+        return false;
+      }
+      token = retrievedToken;
     }
     
     if (!token) {
