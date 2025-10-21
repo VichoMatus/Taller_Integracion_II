@@ -179,8 +179,8 @@ router.delete("/:id", (req, res) => ctrl(req).delete(req, res));
 router.post("/:id/processed", (req, res) => ctrl(req).markProcessed(req, res));
 
 // === Endpoints Administrativos ===
-router.get("/", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).list(req, res));
-router.get("/stats", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).getStats(req, res));
-router.post("/cleanup", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).cleanup(req, res));
+router.get("/", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).list(req, res));
+router.get("/stats", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getStats(req, res));
+router.post("/cleanup", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).cleanup(req, res));
 
 export default router;

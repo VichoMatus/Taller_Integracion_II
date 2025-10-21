@@ -736,3 +736,13 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.refreshButton:hover {
+  transform: none !important; /* Quita cualquier transformación */
+}
+
+/* O también puedes quitar el hover completamente */
+.refreshButton {
+  transform: none !important;
+  transition: none; /* Quita transiciones también */
+}

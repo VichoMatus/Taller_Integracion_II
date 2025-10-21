@@ -1,6 +1,6 @@
 // src/usuario/type/usuarioTypes.ts
 
-export type UsuarioRol = "ADMIN" | "USER" | "OPERADOR" | string;
+export type UsuarioRol = "admin" | "usuario" | "super_admin";
 
 export interface Usuario {
   id_usuario: number | string;

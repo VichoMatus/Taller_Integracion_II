@@ -5,12 +5,12 @@ import './Header.css';
 
 interface HeaderProps {
   userName: string;
-  userRole: 'usuario' | 'admin' | 'superadmin';
+  userRole: 'usuario' | 'admin' | 'super_admin';
   notificationCount?: number;
 }
 
 const Header = ({ userName, userRole, notificationCount = 0 }: HeaderProps) => {
-  const userTitle = userRole === 'superadmin' ? 'Superadministrador' : userRole === 'admin' ? 'Administrador' : 'Usuario';
+  const userTitle = userRole === 'super_admin' ? 'Superadministrador' : userRole === 'admin' ? 'Administrador' : 'Usuario';
   const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase();
 
   return (

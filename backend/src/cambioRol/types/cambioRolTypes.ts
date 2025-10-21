@@ -2,11 +2,11 @@
  * Tipos para las operaciones de cambio de rol de usuario.
  */
 
-export type Rol = "usuario" | "admin" | "superadmin";
+export type Rol = "usuario" | "admin" | "super_admin";
 
 /**
  * Cuerpo de la solicitud para cambiar el rol de un usuario.
- * Para promocionar: "admin" o "superadmin".
+ * Para promocionar: "admin" o "super_admin".
  * Para degradar: "admin" o "usuario".
  */
 export interface CambioRolRequest {

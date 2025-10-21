@@ -1,154 +1,203 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStatus } from '../../../hooks/useAuthStatus';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import StatsCard from '../../../components/charts/StatsCard';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
+import { canchaService } from '@/services/canchaService';
+import { complejosService } from '@/services/complejosService';
 import styles from './page.module.css';
 
-// 🔥 IMPORTAR SERVICIO
-import { canchaService } from '../../../services/canchaService';
-
-// 🚵 DATOS PARA LAS ESTADÍSTICAS DE MOUNTAIN BIKE (SERÁN ACTUALIZADOS CON DATOS REALES)
+// 🚵‍♂️ DATOS PARA LAS ESTADÍSTICAS DE MOUNTAIN BIKE
 const mountainBikeStats = [
   {
     title: "Rutas Disponibles Hoy",
-    value: "6",
-    icon: "🚵",
-    subtitle: "Listas para pedalear",
-    trend: { value: 2, isPositive: true }
+    value: "12",
+    icon: "🚵‍♂️",
+    subtitle: "Listas para recorrer",
+    trend: { value: 3, isPositive: true }
   },
   {
     title: "Rango de Precios",
     value: "$15-35",
     icon: "💰",
-    subtitle: "Por ruta",
-    trend: { value: 3, isPositive: true }
+    subtitle: "Por día",
+    trend: { value: 5, isPositive: true }
   },
   {
     title: "Calificación Promedio",
-    value: "4.7⭐",
+    value: "4.6⭐",
     icon: "🏆",
     subtitle: "De nuestras rutas",
-    trend: { value: 0.2, isPositive: true }
+    trend: { value: 0.4, isPositive: true }
   },
   {
-    title: "Kilómetros Totales",
-    value: "120km",
-    icon: "📏",
-    subtitle: "De rutas disponibles",
-    trend: { value: 20, isPositive: true }
+    title: "Ciclistas Activos",
+    value: "18",
+    icon: "👥",
+    subtitle: "Ahora mismo",
+    trend: { value: 6, isPositive: true }
   }
 ];
 
+// 🚵‍♂️ FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO
+const getStaticComplejoData = (establecimientoId: number) => {
+  const staticComplejos = {
+    1: {
+      nombre: "Centro MTB Cordillera",
+      direccion: "Cordillera de Nahuelbuta, Temuco, Chile"
+    },
+    2: {
+      nombre: "Base Mountain Bike Sur", 
+      direccion: "Camino a Cunco Km 15, Temuco, Chile"
+    },
+    3: {
+      nombre: "MTB Park Araucanía",
+      direccion: "Ruta 5 Sur Km 680, Temuco, Chile"
+    },
+    default: {
+      nombre: "Centro de Mountain Bike",
+      direccion: "Cordillera de Nahuelbuta, Temuco, Chile"
+    }
+  };
+
+  return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+};
+
 export default function MountainBikePage() {
-  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
-  const [radiusKm, setRadiusKm] = useState('15');
+  const [radiusKm, setRadiusKm] = useState('5');
   const [currentSlide, setCurrentSlide] = useState(0);
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
-  // 🔥 ESTADOS PARA RUTAS DEL BACKEND
+  // 🚵‍♂️ ESTADOS PARA RUTAS DEL BACKEND
   const [rutas, setRutas] = useState<any[]>([]);
   const [loadingRutas, setLoadingRutas] = useState(true);
   const [errorRutas, setErrorRutas] = useState<string | null>(null);
 
-  // 🔥 CARGAR RUTAS DEL BACKEND
+  // 🚵‍♂️ Hook de autenticación
+  const { buttonProps } = useAuthStatus();
+
+  // 🚵‍♂️ CARGAR RUTAS DEL BACKEND CON DATOS DE COMPLEJO
   useEffect(() => {
     const loadRutas = async () => {
       try {
         setLoadingRutas(true);
         setErrorRutas(null);
         
-        console.log('🔄 [MountainBike] Cargando rutas individuales del backend...');
+        console.log('🔄 [MountainBikePage] Cargando TODAS las rutas del backend...');
         
-        // 🔥 IDs de las rutas de mountain bike que quieres mostrar
-        const mountainBikeRutaIds = [1, 2, 3, 4, 5, 6, 7, 8];
+        // 🚵‍♂️ OBTENER TODAS LAS CANCHAS/RUTAS
+        const todasLasRutas = await canchaService.getCanchas();
+        console.log('✅ [MountainBikePage] Todas las rutas obtenidas:', todasLasRutas);
         
-        const rutasPromises = mountainBikeRutaIds.map(async (id) => {
-          try {
-            console.log(`🔍 [MountainBike] Cargando ruta ID: ${id}`);
-            const ruta = await canchaService.getCanchaById(id);
-            console.log(`✅ [MountainBike] Ruta ${id} obtenida:`, ruta);
+        // 🚵‍♂️ FILTRAR RUTAS DE MOUNTAIN BIKE
+        const rutasDeMTB = todasLasRutas.filter((ruta: any) => {
+          console.log(`🔍 [MountainBikePage] Evaluando ruta ID ${ruta.id}: tipo="${ruta.tipo}"`);
+          return ['mountain bike', 'mtb', 'ciclismo', 'bicicleta'].includes(ruta.tipo.toLowerCase());
+        });
+        
+        console.log('🚵‍♂️ [MountainBikePage] Rutas de mountain bike encontradas:', rutasDeMTB.length);
+        
+        // 🚵‍♂️ OBTENER DATOS DE COMPLEJOS PARA CADA RUTA
+        const rutasMapeadas = await Promise.all(
+          rutasDeMTB.map(async (ruta: any) => {
+            let complejoData = null;
+            let addressInfo = `Centro MTB ${ruta.establecimientoId}`;
             
-            // 🔥 FILTRAR SOLO RUTAS DE MOUNTAIN BIKE
-            if (ruta.tipo !== 'mountain_bike') {
-              console.log(`⚠️ [MountainBike] Ruta ${id} no es de mountain bike (${ruta.tipo}), saltando...`);
-              return null;
+            // 🚵‍♂️ INTENTAR OBTENER DATOS DEL COMPLEJO
+            if (ruta.establecimientoId) {
+              try {
+                console.log(`🔍 [MountainBikePage] Cargando complejo ID ${ruta.establecimientoId} para ruta ${ruta.id}`);
+                complejoData = await complejosService.getComplejoById(ruta.establecimientoId);
+                
+                if (complejoData) {
+                  addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                  console.log(`✅ [MountainBikePage] Complejo cargado: ${addressInfo}`);
+                }
+                
+              } catch (complejoError: any) {
+                console.warn(`⚠️ [MountainBikePage] Error cargando complejo ${ruta.establecimientoId}:`, complejoError.message);
+                // Usar datos de fallback
+                const staticComplejo = getStaticComplejoData(ruta.establecimientoId);
+                addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+              }
             }
             
-            // Mapear al formato requerido por CourtCard
+            // 🚵‍♂️ MAPEAR RUTA CON DATOS DEL COMPLEJO
             const mappedRuta = {
               id: ruta.id,
               imageUrl: `/sports/mountain-bike/rutas/Ruta${ruta.id}.png`,
               name: ruta.nombre,
-              address: `Sendero ${ruta.establecimientoId}`,
-              rating: ruta.rating || 4.7,
+              address: addressInfo, // 🚵‍♂️ USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
+              rating: ruta.rating || 4.6,
               tags: [
-                ruta.techada ? "Sendero techado" : "Sendero al aire libre",
+                ruta.techada ? "Sendero Cubierto" : "Sendero Abierto",
                 ruta.activa ? "Disponible" : "No disponible",
-                "Bici incluida",
-                "Guía opcional"
+                "Sendero Natural"
               ],
-              description: `Ruta de mountain bike ${ruta.nombre} - ID: ${ruta.id}`,
+              description: `Ruta de ${ruta.tipo} ${ruta.nombre} - ID: ${ruta.id}`,
               price: ruta.precioPorHora?.toString() || "25",
               nextAvailable: ruta.activa ? "Disponible ahora" : "No disponible",
-              sport: "mountain-bike"
+              sport: ruta.tipo
             };
             
-            console.log('🗺️ [MountainBike] Ruta mapeada:', mappedRuta);
+            console.log('🗺️ [MountainBikePage] Ruta mapeada:', mappedRuta);
             return mappedRuta;
-            
-          } catch (error) {
-            console.log(`❌ [MountainBike] Error cargando ruta ${id}:`, error);
-            return null;
-          }
-        });
+          })
+        );
         
-        const rutasResults = await Promise.all(rutasPromises);
-        const rutasValidas = rutasResults.filter(ruta => ruta !== null);
-        
-        console.log('🎉 [MountainBike] Rutas de mountain bike cargadas exitosamente:', rutasValidas.length);
-        console.log('📋 [MountainBike] Rutas finales:', rutasValidas);
-        
-        setRutas(rutasValidas);
+        console.log('🎉 [MountainBikePage] Rutas con datos de complejo cargadas:', rutasMapeadas.length);
+        setRutas(rutasMapeadas);
         
       } catch (error: any) {
-        console.error('❌ [MountainBike] ERROR DETALLADO cargando rutas:', error);
+        console.error('❌ [MountainBikePage] ERROR cargando rutas:', error);
         setErrorRutas(`Error: ${error.message}`);
         
-        // 🔥 FALLBACK
-        console.log('🚨 [MountainBike] USANDO FALLBACK - Error en el API');
-        setRutas([
+        // 🚵‍♂️ FALLBACK CON DATOS ESTÁTICOS MEJORADOS
+        const rutasEstaticas = [
           {
             id: 1,
-            imageUrl: "/sports/mountain-bike/rutas/Ruta1.png",
-            name: "🚨 FALLBACK - Sendero Los Volcanes",
-            address: "Cordillera de los Andes",
-            rating: 4.8,
-            tags: ["DATOS OFFLINE", "Dificultad Alta", "Vista panorámica", "Guía incluido"],
-            description: "🚨 Estos son datos de fallback - API no disponible",
-            price: "28",
-            nextAvailable: "Mañana 08:00-12:00",
+            imageUrl: "/sports/mountain-bike/mountain-bike.png",
+            name: "🚨 FALLBACK - Sendero Cordillera",
+            address: "Centro MTB Cordillera - Cordillera de Nahuelbuta, Temuco",
+            rating: 4.7,
+            tags: ["DATOS OFFLINE", "Sendero Abierto", "Dificultad Media"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "25",
+            nextAvailable: "Disponible ahora",
           },
           {
             id: 2,
-            imageUrl: "/sports/mountain-bike/rutas/Ruta2.png",
-            name: "🚨 FALLBACK - Trail Bosque Nativo",
-            address: "Reserva Natural",
-            rating: 4.6,
-            tags: ["DATOS OFFLINE", "Dificultad Media", "Bosque", "Fauna local"],
-            description: "🚨 Estos son datos de fallback - API no disponible",
-            price: "22",
-            nextAvailable: "Hoy 14:00-17:00",
+            imageUrl: "/sports/mountain-bike/mountain-bike.png",
+            name: "🚨 FALLBACK - Ruta del Bosque",
+            address: "Base Mountain Bike Sur - Camino a Cunco Km 15, Temuco",
+            rating: 4.5,
+            tags: ["DATOS OFFLINE", "Sendero Natural", "Dificultad Alta"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "30",
+            nextAvailable: "Disponible ahora", 
+          },
+          {
+            id: 3,
+            imageUrl: "/sports/mountain-bike/mountain-bike.png",
+            name: "🚨 FALLBACK - Trail Araucanía",
+            address: "MTB Park Araucanía - Ruta 5 Sur Km 680, Temuco",
+            rating: 4.8,
+            tags: ["DATOS OFFLINE", "Sendero Técnico", "Dificultad Extrema"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "35",
+            nextAvailable: "Disponible ahora",
           }
-        ]);
+        ];
+        
+        setRutas(rutasEstaticas);
       } finally {
         setLoadingRutas(false);
       }
@@ -159,14 +208,14 @@ export default function MountainBikePage() {
 
   useEffect(() => {
     setIsClient(true);
-
+    
     const calculateCardsToShow = () => {
       const screenWidth = window.innerWidth;
       const cardWidth = 320;
       const gap = 20;
       const sidebarWidth = 240;
       const padding = 40;
-
+      
       const availableWidth = screenWidth - sidebarWidth - padding;
       return Math.max(1, Math.min(4, Math.floor(availableWidth / (cardWidth + gap))));
     };
@@ -184,8 +233,8 @@ export default function MountainBikePage() {
     };
   }, []);
 
-  // 🔥 USAR RUTAS REALES PARA EL CARRUSEL
-  const topRatedRoutes = rutas.slice(0, 6);
+  // 🚵‍♂️ USAR RUTAS REALES PARA EL CARRUSEL
+  const topRatedRoutes = rutas.slice(0, 6); // Máximo 6 rutas para el carrusel
   const totalSlides = Math.max(1, topRatedRoutes.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -213,26 +262,32 @@ export default function MountainBikePage() {
     router.push(`/sports/mountain-bike/rutas/rutaseleccionada?id=${route.id}`);
   };
 
+  // 🚵‍♂️ Manejador del botón de usuario
   const handleUserButtonClick = () => {
-    if (isAuthenticated) {
-      router.push('/usuario/EditarPerfil');
-    } else {
-      router.push('/login');
+    if (!buttonProps.disabled) {
+      router.push(buttonProps.href);
     }
   };
 
-  // 🔥 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
+  // 🚵‍♂️ ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
   const updatedStats = [
     {
       ...mountainBikeStats[0],
       value: rutas.filter(r => r.nextAvailable !== "No disponible").length.toString()
     },
-    mountainBikeStats[1], // Mantener precio por defecto
+    {
+      ...mountainBikeStats[1],
+      value: rutas.length > 0 ? 
+        `$${Math.min(...rutas.map(r => parseInt(r.price || '0')))}-${Math.max(...rutas.map(r => parseInt(r.price || '0')))}` : 
+        "$15-35"
+    },
     {
       ...mountainBikeStats[2],
-      value: `${(rutas.reduce((acc, r) => acc + r.rating, 0) / rutas.length || 4.7).toFixed(1)}⭐`
+      value: rutas.length > 0 ? 
+        `${(rutas.reduce((acc, r) => acc + r.rating, 0) / rutas.length).toFixed(1)}⭐` : 
+        "4.6⭐"
     },
-    mountainBikeStats[3] // Mantener kilómetros por defecto
+    mountainBikeStats[3] // Mantener ciclistas por defecto
   ];
 
   if (!isClient) {
@@ -255,7 +310,7 @@ export default function MountainBikePage() {
       <div className={styles.mainContent}>
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerIcon}>🚵</div>
+            <div className={styles.headerIcon}>🚵‍♂️</div>
             <h1 className={styles.headerTitle}>Mountain Bike</h1>
           </div>
           <div className={styles.headerRight}>
@@ -263,8 +318,8 @@ export default function MountainBikePage() {
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre de la ruta o ubicación..."
-              sport="mountain-bike"
+              placeholder="Nombre de la ruta..."
+              sport="mountain-bike" 
             />
             <button 
               className={styles.userButton}
@@ -277,7 +332,7 @@ export default function MountainBikePage() {
           </div>
         </div>
 
-        {/* 🔥 STATS CARDS CON DATOS ACTUALIZADOS */}
+        {/* 🚵‍♂️ STATS CARDS CON DATOS ACTUALIZADOS */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
             <span className={styles.statsTitleIcon}>📊</span>
@@ -305,31 +360,31 @@ export default function MountainBikePage() {
         </div>
 
         <div className={styles.quickAccessSection}>
-          <button
+          <button 
             className={styles.mainCourtButton}
             onClick={() => window.location.href = '/sports/mountain-bike/rutas/'}
           >
-            <div className={styles.courtButtonIcon}>🚵</div>
+            <div className={styles.courtButtonIcon}>🚵‍♂️</div>
             <div className={styles.courtButtonText}>
               <span className={styles.courtButtonTitle}>Explorar Rutas</span>
-              <span className={styles.courtButtonSubtitle}>Descubre todas las rutas disponibles</span>
+              <span className={styles.courtButtonSubtitle}>Ver todas las rutas de mountain bike disponibles</span>
             </div>
             <div className={styles.courtButtonArrow}>→</div>
           </button>
         </div>
 
-        {/* 🔥 CARRUSEL CON DATOS REALES */}
+        {/* 🚵‍♂️ CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>⭐</span>
-              Rutas mejor calificadas
+              Rutas de mountain bike mejor calificadas
               {loadingRutas && <span style={{ fontSize: '14px', marginLeft: '10px' }}>Cargando...</span>}
               {errorRutas && <span style={{ fontSize: '14px', marginLeft: '10px', color: 'red' }}>⚠️ Usando datos offline</span>}
             </h2>
             <div className={styles.carouselControls}>
-              <button
-                onClick={prevSlide}
+              <button 
+                onClick={prevSlide} 
                 className={styles.carouselButton}
                 disabled={currentSlide === 0 || loadingRutas}
                 style={{ opacity: currentSlide === 0 || loadingRutas ? 0.5 : 1 }}
@@ -339,8 +394,8 @@ export default function MountainBikePage() {
               <span className={styles.slideIndicator}>
                 {currentSlide + 1} / {totalSlides}
               </span>
-              <button
-                onClick={nextSlide}
+              <button 
+                onClick={nextSlide} 
                 className={styles.carouselButton}
                 disabled={currentSlide === totalSlides - 1 || loadingRutas}
                 style={{ opacity: currentSlide === totalSlides - 1 || loadingRutas ? 0.5 : 1 }}
@@ -349,23 +404,23 @@ export default function MountainBikePage() {
               </button>
             </div>
           </div>
-
+          
           <div className={styles.carouselContainer}>
             {loadingRutas ? (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
-                <p>Cargando rutas...</p>
+                <p>Cargando rutas de mountain bike...</p>
               </div>
             ) : (
-              <div
+              <div 
                 className={styles.courtsGrid}
                 style={{
                   transform: `translateX(-${currentSlide * (320 + 20)}px)`,
                 }}
               >
                 {topRatedRoutes.map((route, index) => (
-                  <CourtCard
-                    key={route.id || index}
-                    {...route}
+                  <CourtCard 
+                    key={route.id || index} 
+                    {...route} 
                     sport="mountain-bike"
                     onClick={() => handleRutaClick(route)}
                   />
@@ -377,8 +432,8 @@ export default function MountainBikePage() {
 
         {/* Ubicación en el mapa */}
         <div className={styles.mapSection}>
-          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las rutas</h2>
-
+          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las rutas de mountain bike</h2>
+          
           <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>
               <span className={styles.locationIcon}>📍</span>
@@ -392,15 +447,15 @@ export default function MountainBikePage() {
             </div>
             <div className={styles.radiusContainer}>
               <span className={styles.radiusIcon}>📏</span>
-              <select
-                value={radiusKm}
+              <select 
+                value={radiusKm} 
                 onChange={(e) => setRadiusKm(e.target.value)}
                 className={styles.radiusSelect}
               >
+                <option value="1">Radio 1km</option>
+                <option value="3">Radio 3km</option>
+                <option value="5">Radio 5km</option>
                 <option value="10">Radio 10km</option>
-                <option value="15">Radio 15km</option>
-                <option value="25">Radio 25km</option>
-                <option value="50">Radio 50km</option>
               </select>
             </div>
             <button onClick={handleLocationSearch} className={styles.searchLocationButton}>
@@ -408,7 +463,7 @@ export default function MountainBikePage() {
             </button>
           </div>
 
-          <LocationMap
+          <LocationMap 
             latitude={-38.7359}
             longitude={-72.5904}
             address="Temuco, Chile"

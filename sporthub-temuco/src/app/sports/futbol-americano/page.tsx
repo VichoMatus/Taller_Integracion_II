@@ -1,51 +1,73 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStatus } from '../../../hooks/useAuthStatus';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import StatsCard from '../../../components/charts/StatsCard';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
+import { canchaService } from '@/services/canchaService';
+import { complejosService } from '@/services/complejosService';
 import styles from './page.module.css';
 
-// 🔥 IMPORTAR SERVICIO
-import { canchaService } from '../../../services/canchaService';
-
-// 🏈 DATOS PARA LAS ESTADÍSTICAS DE FÚTBOL AMERICANO (SERÁN ACTUALIZADOS CON DATOS REALES)
-const futbolAmericanoStats = [
+// 🏈 DATOS PARA LAS ESTADÍSTICAS DE FÚTBOL AMERICANO
+const footballAmericanoStats = [
   {
     title: "Estadios Disponibles Hoy",
-    value: "3",
+    value: "4",
     icon: "🏈",
-    subtitle: "Listos para jugar",
+    subtitle: "Listos para reservar",
     trend: { value: 1, isPositive: true }
   },
   {
     title: "Rango de Precios",
-    value: "$40-80",
+    value: "$50-80",
     icon: "💰",
     subtitle: "Por hora",
-    trend: { value: 5, isPositive: true }
+    trend: { value: 10, isPositive: true }
   },
   {
     title: "Calificación Promedio",
-    value: "4.8⭐",
+    value: "4.7⭐",
     icon: "🏆",
     subtitle: "De nuestros estadios",
-    trend: { value: 0.2, isPositive: true }
+    trend: { value: 0.4, isPositive: true }
   },
   {
     title: "Jugadores Activos",
-    value: "22",
+    value: "44",
     icon: "👥",
     subtitle: "Ahora mismo",
-    trend: { value: 3, isPositive: true }
+    trend: { value: 12, isPositive: true }
   }
 ];
 
+// 🏈 FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO
+const getStaticComplejoData = (establecimientoId: number) => {
+  const staticComplejos = {
+    1: {
+      nombre: "Estadio Nacional Temuco",
+      direccion: "Av. Alemania 1234, Temuco, Chile"
+    },
+    2: {
+      nombre: "Complejo Deportivo NFL Chile", 
+      direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+    },
+    3: {
+      nombre: "Estadio Araucanía Football",
+      direccion: "Calle Montt 890, Temuco, Chile"
+    },
+    default: {
+      nombre: "Estadio de Fútbol Americano",
+      direccion: "Av. Alemania 1234, Temuco, Chile"
+    }
+  };
+
+  return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+};
+
 export default function FutbolAmericanoPage() {
-  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
@@ -54,101 +76,128 @@ export default function FutbolAmericanoPage() {
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
-  // 🔥 ESTADOS PARA ESTADIOS DEL BACKEND
+  // 🏈 ESTADOS PARA ESTADIOS DEL BACKEND
   const [estadios, setEstadios] = useState<any[]>([]);
   const [loadingEstadios, setLoadingEstadios] = useState(true);
   const [errorEstadios, setErrorEstadios] = useState<string | null>(null);
 
-  // 🔥 CARGAR ESTADIOS DEL BACKEND
+  // 🏈 Hook de autenticación
+  const { buttonProps } = useAuthStatus();
+
+  // 🏈 CARGAR ESTADIOS DEL BACKEND CON DATOS DE COMPLEJO
   useEffect(() => {
     const loadEstadios = async () => {
       try {
         setLoadingEstadios(true);
         setErrorEstadios(null);
         
-        console.log('🔄 [FutbolAmericano] Cargando estadios individuales del backend...');
+        console.log('🔄 [FutbolAmericanoPage] Cargando TODAS las canchas del backend...');
         
-        // 🔥 IDs de los estadios de fútbol americano que quieres mostrar
-        const futbolAmericanoEstadioIds = [1, 2, 3, 4, 5, 6];
+        // 🏈 OBTENER TODAS LAS CANCHAS
+        const todasLasCanchas = await canchaService.getCanchas();
+        console.log('✅ [FutbolAmericanoPage] Todas las canchas obtenidas:', todasLasCanchas);
         
-        const estadiosPromises = futbolAmericanoEstadioIds.map(async (id) => {
-          try {
-            console.log(`🔍 [FutbolAmericano] Cargando estadio ID: ${id}`);
-            const estadio = await canchaService.getCanchaById(id);
-            console.log(`✅ [FutbolAmericano] Estadio ${id} obtenido:`, estadio);
-            
-            // 🔥 FILTRAR SOLO ESTADIOS DE FÚTBOL AMERICANO
-            if (estadio.tipo !== 'futbol_americano') {
-              console.log(`⚠️ [FutbolAmericano] Estadio ${id} no es de fútbol americano (${estadio.tipo}), saltando...`);
-              return null;
-            }
-            
-            // Mapear al formato requerido por CourtCard
-            const mappedEstadio = {
-              id: estadio.id,
-              imageUrl: `/sports/futbol-americano/estadios/Estadio${estadio.id}.png`,
-              name: estadio.nombre,
-              address: `Complejo ${estadio.establecimientoId}`,
-              rating: estadio.rating || 4.8,
-              tags: [
-                estadio.techada ? "Estadio techado" : "Estadio al aire libre",
-                estadio.activa ? "Disponible" : "No disponible",
-                "Césped artificial",
-                "Marcador electrónico"
-              ],
-              description: `Estadio de fútbol americano ${estadio.nombre} - ID: ${estadio.id}`,
-              price: estadio.precioPorHora?.toString() || "60",
-              nextAvailable: estadio.activa ? "Disponible ahora" : "No disponible",
-              sport: "futbol-americano"
-            };
-            
-            console.log('🗺️ [FutbolAmericano] Estadio mapeado:', mappedEstadio);
-            return mappedEstadio;
-            
-          } catch (error) {
-            console.log(`❌ [FutbolAmericano] Error cargando estadio ${id}:`, error);
-            return null;
-          }
+        // 🏈 FILTRAR ESTADIOS DE FÚTBOL AMERICANO
+        const estadiosDeFutbolAmericano = todasLasCanchas.filter((cancha: any) => {
+          console.log(`🔍 [FutbolAmericanoPage] Evaluando cancha ID ${cancha.id}: tipo="${cancha.tipo}"`);
+          return ['futbol americano', 'american football', 'football americano'].includes(cancha.tipo.toLowerCase());
         });
         
-        const estadiosResults = await Promise.all(estadiosPromises);
-        const estadiosValidos = estadiosResults.filter(estadio => estadio !== null);
+        console.log('🏈 [FutbolAmericanoPage] Estadios de fútbol americano encontrados:', estadiosDeFutbolAmericano.length);
         
-        console.log('🎉 [FutbolAmericano] Estadios de fútbol americano cargados exitosamente:', estadiosValidos.length);
-        console.log('📋 [FutbolAmericano] Estadios finales:', estadiosValidos);
+        // 🏈 OBTENER DATOS DE COMPLEJOS PARA CADA ESTADIO
+        const estadiosMapeados = await Promise.all(
+          estadiosDeFutbolAmericano.map(async (cancha: any) => {
+            let complejoData = null;
+            let addressInfo = `Estadio ${cancha.establecimientoId}`;
+            
+            // 🏈 INTENTAR OBTENER DATOS DEL COMPLEJO
+            if (cancha.establecimientoId) {
+              try {
+                console.log(`🔍 [FutbolAmericanoPage] Cargando complejo ID ${cancha.establecimientoId} para estadio ${cancha.id}`);
+                complejoData = await complejosService.getComplejoById(cancha.establecimientoId);
+                
+                if (complejoData) {
+                  addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                  console.log(`✅ [FutbolAmericanoPage] Complejo cargado: ${addressInfo}`);
+                }
+                
+              } catch (complejoError: any) {
+                console.warn(`⚠️ [FutbolAmericanoPage] Error cargando complejo ${cancha.establecimientoId}:`, complejoError.message);
+                // Usar datos de fallback
+                const staticComplejo = getStaticComplejoData(cancha.establecimientoId);
+                addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+              }
+            }
+            
+            // 🏈 MAPEAR ESTADIO CON DATOS DEL COMPLEJO
+            const mappedEstadio = {
+              id: cancha.id,
+              imageUrl: `/sports/futbol-americano/estadios/Estadio${cancha.id}.png`,
+              name: cancha.nombre,
+              address: addressInfo, // 🏈 USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
+              rating: cancha.rating || 4.7,
+              tags: [
+                cancha.techada ? "Estadio Techado" : "Estadio Exterior",
+                cancha.activa ? "Disponible" : "No disponible",
+                "Postes Oficiales NFL"
+              ],
+              description: `Estadio de ${cancha.tipo} ${cancha.nombre} - ID: ${cancha.id}`,
+              price: cancha.precioPorHora?.toString() || "60",
+              nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
+              sport: cancha.tipo
+            };
+            
+            console.log('🗺️ [FutbolAmericanoPage] Estadio mapeado:', mappedEstadio);
+            return mappedEstadio;
+          })
+        );
         
-        setEstadios(estadiosValidos);
+        console.log('🎉 [FutbolAmericanoPage] Estadios con datos de complejo cargados:', estadiosMapeados.length);
+        setEstadios(estadiosMapeados);
         
       } catch (error: any) {
-        console.error('❌ [FutbolAmericano] ERROR DETALLADO cargando estadios:', error);
+        console.error('❌ [FutbolAmericanoPage] ERROR cargando estadios:', error);
         setErrorEstadios(`Error: ${error.message}`);
         
-        // 🔥 FALLBACK
-        console.log('🚨 [FutbolAmericano] USANDO FALLBACK - Error en el API');
-        setEstadios([
+        // 🏈 FALLBACK CON DATOS ESTÁTICOS MEJORADOS
+        const estadiosEstaticos = [
           {
             id: 1,
-            imageUrl: "/sports/futbol-americano/estadios/Estadio1.png",
-            name: "🚨 FALLBACK - Estadio Champions",
-            address: "Norte, Centro, Sur",
-            rating: 4.9,
-            tags: ["DATOS OFFLINE", "Césped artificial", "Marcador electrónico", "Vestuarios"],
-            description: "🚨 Estos son datos de fallback - API no disponible",
+            imageUrl: "/sports/futbol-americano/futbol-americano.png",
+            name: "🚨 FALLBACK - Estadio Nacional",
+            address: "Estadio Nacional Temuco - Av. Alemania 1234, Temuco",
+            rating: 4.8,
+            tags: ["DATOS OFFLINE", "Postes NFL", "Césped Natural"],
+            description: "🚨 Datos de fallback - API no disponible",
             price: "60",
-            nextAvailable: "20:00-22:00",
+            nextAvailable: "16:00-18:00",
           },
           {
             id: 2,
-            imageUrl: "/sports/futbol-americano/estadios/Estadio2.png",
-            name: "🚨 FALLBACK - Arena Temuco",
-            address: "Sector Norte",
-            rating: 4.7,
-            tags: ["DATOS OFFLINE", "Estadio techado", "Graderías"],
-            description: "🚨 Estos son datos de fallback - API no disponible",
-            price: "45",
-            nextAvailable: "16:00-18:00",
+            imageUrl: "/sports/futbol-americano/futbol-americano.png",
+            name: "🚨 FALLBACK - Complejo NFL Chile",
+            address: "Complejo Deportivo NFL Chile - Av. Pedro de Valdivia 567, Temuco",
+            rating: 4.9,
+            tags: ["DATOS OFFLINE", "Iluminación Profesional", "Gradas"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "75",
+            nextAvailable: "14:00-16:00", 
+          },
+          {
+            id: 3,
+            imageUrl: "/sports/futbol-americano/futbol-americano.png",
+            name: "🚨 FALLBACK - Estadio Araucanía",
+            address: "Estadio Araucanía Football - Calle Montt 890, Temuco",
+            rating: 4.6,
+            tags: ["DATOS OFFLINE", "Campo Reglamentario", "Vestuarios"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "55",
+            nextAvailable: "Mañana 10:00-12:00",
           }
-        ]);
+        ];
+        
+        setEstadios(estadiosEstaticos);
       } finally {
         setLoadingEstadios(false);
       }
@@ -159,14 +208,14 @@ export default function FutbolAmericanoPage() {
 
   useEffect(() => {
     setIsClient(true);
-
+    
     const calculateCardsToShow = () => {
       const screenWidth = window.innerWidth;
       const cardWidth = 320;
       const gap = 20;
       const sidebarWidth = 240;
       const padding = 40;
-
+      
       const availableWidth = screenWidth - sidebarWidth - padding;
       return Math.max(1, Math.min(4, Math.floor(availableWidth / (cardWidth + gap))));
     };
@@ -184,9 +233,9 @@ export default function FutbolAmericanoPage() {
     };
   }, []);
 
-  // 🔥 USAR ESTADIOS REALES PARA EL CARRUSEL
-  const topRatedStadiums = estadios.slice(0, 6);
-  const totalSlides = Math.max(1, topRatedStadiums.length - cardsToShow + 1);
+  // 🏈 USAR ESTADIOS REALES PARA EL CARRUSEL
+  const topRatedCourts = estadios.slice(0, 6); // Máximo 6 estadios para el carrusel
+  const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => Math.min(prev + 1, totalSlides - 1));
@@ -208,31 +257,37 @@ export default function FutbolAmericanoPage() {
     console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
   };
 
-  const handleEstadioClick = (stadium: any) => {
-    console.log('Navegando a estadio:', stadium);
-    router.push(`/sports/futbol-americano/estadios/estadioseleccionado?id=${stadium.id}`);
+  const handleEstadioClick = (court: any) => {
+    console.log('Navegando a estadio:', court);
+    router.push(`/sports/futbol-americano/estadios/estadioseleccionado?id=${court.id}`);
   };
 
+  // 🏈 Manejador del botón de usuario
   const handleUserButtonClick = () => {
-    if (isAuthenticated) {
-      router.push('/usuario/EditarPerfil');
-    } else {
-      router.push('/login');
+    if (!buttonProps.disabled) {
+      router.push(buttonProps.href);
     }
   };
 
-  // 🔥 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
+  // 🏈 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
   const updatedStats = [
     {
-      ...futbolAmericanoStats[0],
-      value: estadios.filter(e => e.nextAvailable !== "No disponible").length.toString()
+      ...footballAmericanoStats[0],
+      value: estadios.filter(c => c.nextAvailable !== "No disponible").length.toString()
     },
-    futbolAmericanoStats[1], // Mantener precio por defecto
     {
-      ...futbolAmericanoStats[2],
-      value: `${(estadios.reduce((acc, e) => acc + e.rating, 0) / estadios.length || 4.8).toFixed(1)}⭐`
+      ...footballAmericanoStats[1],
+      value: estadios.length > 0 ? 
+        `$${Math.min(...estadios.map(c => parseInt(c.price || '0')))}-${Math.max(...estadios.map(c => parseInt(c.price || '0')))}` : 
+        "$50-80"
     },
-    futbolAmericanoStats[3] // Mantener jugadores por defecto
+    {
+      ...footballAmericanoStats[2],
+      value: estadios.length > 0 ? 
+        `${(estadios.reduce((acc, c) => acc + c.rating, 0) / estadios.length).toFixed(1)}⭐` : 
+        "4.7⭐"
+    },
+    footballAmericanoStats[3] // Mantener jugadores por defecto
   ];
 
   if (!isClient) {
@@ -264,7 +319,7 @@ export default function FutbolAmericanoPage() {
               onChange={handleSearchChange}
               onSearch={handleSearch}
               placeholder="Nombre del estadio..."
-              sport="futbol-americano"
+              sport="futbol-americano" 
             />
             <button 
               className={styles.userButton}
@@ -277,7 +332,7 @@ export default function FutbolAmericanoPage() {
           </div>
         </div>
 
-        {/* 🔥 STATS CARDS CON DATOS ACTUALIZADOS */}
+        {/* 🏈 STATS CARDS CON DATOS ACTUALIZADOS */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
             <span className={styles.statsTitleIcon}>📊</span>
@@ -305,20 +360,20 @@ export default function FutbolAmericanoPage() {
         </div>
 
         <div className={styles.quickAccessSection}>
-          <button
+          <button 
             className={styles.mainCourtButton}
             onClick={() => window.location.href = '/sports/futbol-americano/estadios/'}
           >
             <div className={styles.courtButtonIcon}>🏈</div>
             <div className={styles.courtButtonText}>
               <span className={styles.courtButtonTitle}>Explorar Estadios</span>
-              <span className={styles.courtButtonSubtitle}>Ver todos los estadios disponibles</span>
+              <span className={styles.courtButtonSubtitle}>Ver todos los estadios de fútbol americano disponibles</span>
             </div>
             <div className={styles.courtButtonArrow}>→</div>
           </button>
         </div>
 
-        {/* 🔥 CARRUSEL CON DATOS REALES */}
+        {/* 🏈 CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
@@ -328,8 +383,8 @@ export default function FutbolAmericanoPage() {
               {errorEstadios && <span style={{ fontSize: '14px', marginLeft: '10px', color: 'red' }}>⚠️ Usando datos offline</span>}
             </h2>
             <div className={styles.carouselControls}>
-              <button
-                onClick={prevSlide}
+              <button 
+                onClick={prevSlide} 
                 className={styles.carouselButton}
                 disabled={currentSlide === 0 || loadingEstadios}
                 style={{ opacity: currentSlide === 0 || loadingEstadios ? 0.5 : 1 }}
@@ -339,8 +394,8 @@ export default function FutbolAmericanoPage() {
               <span className={styles.slideIndicator}>
                 {currentSlide + 1} / {totalSlides}
               </span>
-              <button
-                onClick={nextSlide}
+              <button 
+                onClick={nextSlide} 
                 className={styles.carouselButton}
                 disabled={currentSlide === totalSlides - 1 || loadingEstadios}
                 style={{ opacity: currentSlide === totalSlides - 1 || loadingEstadios ? 0.5 : 1 }}
@@ -349,25 +404,25 @@ export default function FutbolAmericanoPage() {
               </button>
             </div>
           </div>
-
+          
           <div className={styles.carouselContainer}>
             {loadingEstadios ? (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
-                <p>Cargando estadios...</p>
+                <p>Cargando estadios de fútbol americano...</p>
               </div>
             ) : (
-              <div
+              <div 
                 className={styles.courtsGrid}
                 style={{
                   transform: `translateX(-${currentSlide * (320 + 20)}px)`,
                 }}
               >
-                {topRatedStadiums.map((stadium, index) => (
-                  <CourtCard
-                    key={stadium.id || index}
-                    {...stadium}
+                {topRatedCourts.map((court, index) => (
+                  <CourtCard 
+                    key={court.id || index} 
+                    {...court} 
                     sport="futbol-americano"
-                    onClick={() => handleEstadioClick(stadium)}
+                    onClick={() => handleEstadioClick(court)}
                   />
                 ))}
               </div>
@@ -378,7 +433,7 @@ export default function FutbolAmericanoPage() {
         {/* Ubicación en el mapa */}
         <div className={styles.mapSection}>
           <h2 className={styles.sectionTitle}>Ubicación en el mapa de los estadios</h2>
-
+          
           <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>
               <span className={styles.locationIcon}>📍</span>
@@ -392,8 +447,8 @@ export default function FutbolAmericanoPage() {
             </div>
             <div className={styles.radiusContainer}>
               <span className={styles.radiusIcon}>📏</span>
-              <select
-                value={radiusKm}
+              <select 
+                value={radiusKm} 
                 onChange={(e) => setRadiusKm(e.target.value)}
                 className={styles.radiusSelect}
               >
@@ -408,7 +463,7 @@ export default function FutbolAmericanoPage() {
             </button>
           </div>
 
-          <LocationMap
+          <LocationMap 
             latitude={-38.7359}
             longitude={-72.5904}
             address="Temuco, Chile"

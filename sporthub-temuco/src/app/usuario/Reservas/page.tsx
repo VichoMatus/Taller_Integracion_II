@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './reserva.css';
 import { Button } from '../componentes/compUser';
 import UserLayout from '../UsuarioLayout';
@@ -10,24 +10,40 @@ import type { Reserva } from '@/types/reserva';
 
 // Función para mapear la respuesta de la API a tu tipo Reserva
 function mapApiReserva(r: any): Reserva {
+  console.log("Mapeando reserva individual:", r);
+  
+  // La API devuelve fecha_reserva, hora_inicio y hora_fin por separado
+  const fechaReserva = r.fecha_reserva || "";
+  const horaInicio = r.hora_inicio || "";
+  const horaFin = r.hora_fin || "";
+  
+  // Combinar fecha y hora para crear fechaInicio y fechaFin
+  const fechaInicio = fechaReserva && horaInicio 
+    ? `${fechaReserva}T${horaInicio}` 
+    : horaInicio || fechaReserva || "";
+  
+  const fechaFin = fechaReserva && horaFin 
+    ? `${fechaReserva}T${horaFin}` 
+    : horaFin || fechaReserva || "";
+  
   return {
-    id: r.id_reserva,
-    usuarioId: r.id_usuario,
-    canchaId: r.id_cancha,
-    complejoId: r.complejo_id ?? 0,
-    fechaInicio: r.hora_inicio || r.fecha_inicio || r.fecha_reserva || "",
-    fechaFin: r.hora_fin || r.fecha_fin || r.fecha_reserva || "",
-    estado: r.estado,
-    precioTotal: r.monto_total ?? 0,
-    metodoPago: r.metodo_pago,
-    pagado: r.pagado ?? false,
-    notas: r.notas,
-    fechaCreacion: r.fecha_creacion ?? "",
-    fechaActualizacion: r.fecha_actualizacion ?? "",
-    codigoConfirmacion: r.codigo_confirmacion,
-    usuario: r.usuario,
-    cancha: r.cancha,
-    complejo: r.complejo,
+    id: Number(r.id_reserva || r.id || 0),
+    usuarioId: Number(r.id_usuario || r.usuario_id || 0),
+    canchaId: Number(r.id_cancha || r.cancha_id || 0),
+    complejoId: Number(r.id_complejo || r.complejo_id || 0),
+    fechaInicio: fechaInicio,
+    fechaFin: fechaFin,
+    estado: r.estado || "pendiente",
+    precioTotal: Number(r.precio_total || r.monto_total || 0),
+    metodoPago: r.metodo_pago || undefined,
+    pagado: !!r.pagado,
+    notas: r.notas || undefined,
+    fechaCreacion: r.fecha_creacion || "",
+    fechaActualizacion: r.fecha_actualizacion || "",
+    codigoConfirmacion: r.codigo_confirmacion || undefined,
+    usuario: r.usuario || undefined,
+    cancha: r.cancha || undefined,
+    complejo: r.complejo || undefined,
   };
 }
 
@@ -37,39 +53,80 @@ export default function ReservaPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userName, setUserName] = useState("Usuario");
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+
+  const cargarReservas = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      // Cargar datos del usuario
+      const userData = await authService.me();
+      console.log("Usuario actual:", userData);
+      setUserName(`${userData.nombre ?? ''} ${userData.apellido ?? ''}`.trim() || 'Usuario');
+      
+      // Obtener reservas del usuario
+      console.log("Obteniendo reservas...");
+      const misReservasApi = await reservaService.getMisReservas();
+      console.log("Respuesta de API:", misReservasApi);
+      
+      // Verificar que sea un array
+      if (Array.isArray(misReservasApi)) {
+        console.log(`Se encontraron ${misReservasApi.length} reservas`);
+        
+        if (misReservasApi.length === 0) {
+          console.log("No hay reservas para mostrar");
+          setReservas([]);
+        } else {
+          // Mapear las reservas
+          const reservasMapeadas = misReservasApi.map((reserva, index) => {
+            console.log(`Mapeando reserva ${index + 1}:`, reserva);
+            return mapApiReserva(reserva);
+          });
+          
+          console.log("Reservas mapeadas:", reservasMapeadas);
+          setReservas(reservasMapeadas);
+        }
+      } else {
+        console.warn("La respuesta no es un array:", misReservasApi);
+        setReservas([]);
+      }
+    } catch (error: any) {
+      console.error("Error al cargar reservas:", error);
+      console.error("Error completo:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      
+      // Guardar info del error para debug
+      setDebugInfo({
+        error: {
+          message: error.message || "Error desconocido",
+          response: error.response?.data || {},
+          status: error.response?.status,
+        },
+        timestamp: new Date().toISOString()
+      });
+      
+      if (error.response?.status === 401) {
+        setError("Tu sesión ha expirado. Por favor inicia sesión nuevamente.");
+      } else if (error.response?.status === 404) {
+        // 404 puede significar que no hay reservas
+        console.log("No se encontraron reservas (404)");
+        setReservas([]);
+        setError(null);
+      } else {
+        setError("No se pudieron cargar tus reservas. Por favor, intenta de nuevo.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    async function cargarDatos() {
-      try {
-        // Cargar datos del usuario
-        const userData = await authService.me();
-        setUserName(`${userData.nombre} ${userData.apellido}`);
-
-        // Cargar reservas del usuario
-        const misReservasApi = await reservaService.getMisReservas();
-        const misReservas: Reserva[] = Array.isArray(misReservasApi)
-          ? misReservasApi.map(mapApiReserva)
-          : [];
-
-        if (misReservas.length > 0) {
-          setReservas(misReservas);
-          setReservaActiva(misReservas[0]);
-        } else {
-          setReservas([]);
-          setReservaActiva(null);
-        }
-      } catch (error) {
-        console.error("Error al cargar datos:", error);
-        setError("No se pudieron cargar las reservas. Intente más tarde.");
-        setReservas([]);
-        setReservaActiva(null);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    cargarDatos();
-  }, []);
+    cargarReservas();
+  }, [cargarReservas]);
 
   // Función para cancelar una reserva
   const handleCancelarReserva = async (id: number) => {
@@ -80,32 +137,18 @@ export default function ReservaPage() {
     try {
       setIsLoading(true);
       await reservaService.cancelarReserva(id);
-
-      // Recargar datos después de cancelar
-      const misReservasApi = await reservaService.getMisReservas();
-      const misReservas: Reserva[] = Array.isArray(misReservasApi)
-        ? misReservasApi.map(mapApiReserva)
-        : [];
-
-      if (misReservas.length > 0) {
-        setReservas(misReservas);
-        setReservaActiva(misReservas[0]);
-      } else {
-        setReservas([]);
-        setReservaActiva(null);
-      }
-
+      await cargarReservas();
       alert("Reserva cancelada con éxito");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al cancelar reserva:", error);
-      alert("Error al cancelar la reserva. Intente nuevamente.");
+      alert(error?.response?.data?.detail || error?.message || "Error al cancelar la reserva. Intente nuevamente.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const getEstadoColor = (estado: string) => {
-    const estadoLower = estado.toLowerCase();
+    const estadoLower = (estado || '').toLowerCase();
     if (estadoLower.includes('confirm')) return 'estado-confirmada';
     if (estadoLower.includes('pendiente')) return 'estado-pendiente';
     if (estadoLower.includes('cancel')) return 'estado-cancelada';
@@ -126,6 +169,8 @@ export default function ReservaPage() {
     if (!dateString) return "Fecha no disponible";
     try {
       const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      
       return date.toLocaleDateString('es-CL', {
         day: 'numeric',
         month: 'long',
@@ -136,6 +181,23 @@ export default function ReservaPage() {
     }
   };
 
+  // Formatear hora
+  const formatTime = (timeString: string) => {
+    if (!timeString) return "-";
+    
+    // Si es una fecha completa (contiene T), extraer solo la hora
+    if (timeString.includes('T')) {
+      return timeString.split('T')[1]?.slice(0, 5) || timeString;
+    }
+    
+    // Si ya es solo hora (HH:MM:SS), tomar solo HH:MM
+    if (timeString.includes(':')) {
+      return timeString.slice(0, 5);
+    }
+    
+    return timeString;
+  };
+
   return (
     <UserLayout userName={userName} notificationCount={2}>
       <div className="reserva-wrapper">
@@ -143,6 +205,32 @@ export default function ReservaPage() {
           <h1 className="reserva-titulo">Mis Reservas</h1>
           <p className="reserva-subtitulo">Gestiona y revisa tus reservas activas</p>
         </div>
+
+        {/* Botón de recarga */}
+        <div style={{textAlign: 'right', marginBottom: '10px'}}>
+          <Button onClick={cargarReservas} disabled={isLoading}>
+            {isLoading ? '⏳ Cargando...' : '↻ Recargar'}
+          </Button>
+        </div>
+
+        {/* Panel de debug - Solo visible en desarrollo */}
+        {process.env.NODE_ENV !== 'production' && debugInfo && (
+          <div style={{
+            background: '#111', 
+            color: '#eee', 
+            padding: '10px', 
+            borderRadius: '5px',
+            marginBottom: '15px',
+            fontSize: '12px',
+            maxHeight: '200px',
+            overflow: 'auto'
+          }}>
+            <strong>DEBUG INFO:</strong>
+            <pre style={{whiteSpace: 'pre-wrap', wordBreak: 'break-word'}}>
+              {JSON.stringify(debugInfo, null, 2)}
+            </pre>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="loading-container">
@@ -152,7 +240,7 @@ export default function ReservaPage() {
         ) : error ? (
           <div className="error-container">
             <p className="error-message">{error}</p>
-            <Button className="btn-retry" onClick={() => window.location.reload()}>
+            <Button className="btn-retry" onClick={cargarReservas}>
               Intentar nuevamente
             </Button>
           </div>
@@ -197,7 +285,7 @@ export default function ReservaPage() {
                         <div className="detail-item">
                           <span className="detail-label">⏰ Horario:</span>
                           <span>
-                            {reserva.fechaInicio.slice(11, 16)} - {reserva.fechaFin.slice(11, 16)}
+                            {formatTime(reserva.fechaInicio)} - {formatTime(reserva.fechaFin)}
                           </span>
                         </div>
                         <div className="detail-item">
@@ -237,7 +325,7 @@ export default function ReservaPage() {
                       <div className="info-item">
                         <span className="info-label">⏰ Horario:</span>
                         <span>
-                          {reservaActiva.fechaInicio.slice(11, 16)} - {reservaActiva.fechaFin.slice(11, 16)}
+                          {formatTime(reservaActiva.fechaInicio)} - {formatTime(reservaActiva.fechaFin)}
                         </span>
                       </div>
                       <div className="info-item">
@@ -245,14 +333,23 @@ export default function ReservaPage() {
                         <span className="precio-detalle">{formatPrice(reservaActiva.precioTotal)}</span>
                       </div>
                       <div className="info-item">
-                        <span className="info-label">ID Cancha:</span>
+                        <span className="info-label">🏟️ ID Cancha:</span>
                         <span>{reservaActiva.canchaId}</span>
                       </div>
+                      {reservaActiva.notas && (
+                        <div className="info-item" style={{gridColumn: '1 / -1'}}>
+                          <span className="info-label">📝 Notas:</span>
+                          <span>{reservaActiva.notas}</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="reserva-metadata">
                       <div>ID Reserva: <strong>{reservaActiva.id}</strong></div>
                       <div>ID Usuario: <strong>{reservaActiva.usuarioId}</strong></div>
+                      {reservaActiva.codigoConfirmacion && (
+                        <div>Código: <strong>{reservaActiva.codigoConfirmacion}</strong></div>
+                      )}
                     </div>
                   </div>
 
@@ -261,9 +358,9 @@ export default function ReservaPage() {
                     <Button
                       className="btn-anular"
                       onClick={() => handleCancelarReserva(reservaActiva.id)}
-                      disabled={reservaActiva.estado.toLowerCase().includes('cancel')}
+                      disabled={(reservaActiva.estado || '').toLowerCase().includes('cancel')}
                     >
-                      {reservaActiva.estado.toLowerCase().includes('cancel')
+                      {(reservaActiva.estado || '').toLowerCase().includes('cancel')
                         ? '❌ Reserva Cancelada'
                         : '❌ Cancelar Reserva'
                       }

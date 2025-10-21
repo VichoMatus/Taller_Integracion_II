@@ -1,154 +1,204 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStatus } from '../../../hooks/useAuthStatus';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import StatsCard from '../../../components/charts/StatsCard';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
+import { canchaService } from '@/services/canchaService';
+import { complejosService } from '@/services/complejosService';
 import styles from './karting.module.css';
 
-// 🔥 IMPORTAR SERVICIO
-import { canchaService } from '../../../services/canchaService';
-
-// 🏎️ DATOS PARA LAS ESTADÍSTICAS DE KARTING (SERÁN ACTUALIZADOS CON DATOS REALES)
+// 🏁 DATOS PARA LAS ESTADÍSTICAS DE KARTING
 const kartingStats = [
   {
     title: "Pistas Disponibles Hoy",
-    value: "4",
-    icon: "🏎️",
-    subtitle: "Listas para carreras",
+    value: "6",
+    icon: "🏁",
+    subtitle: "Listas para correr",
     trend: { value: 1, isPositive: true }
   },
   {
     title: "Rango de Precios",
-    value: "$20-50",
+    value: "$30-60",
     icon: "💰",
-    subtitle: "Por carrera",
+    subtitle: "Por sesión",
     trend: { value: 5, isPositive: true }
   },
   {
     title: "Calificación Promedio",
-    value: "4.6⭐",
+    value: "4.7⭐",
     icon: "🏆",
     subtitle: "De nuestras pistas",
-    trend: { value: 0.1, isPositive: true }
+    trend: { value: 0.3, isPositive: true }
   },
   {
-    title: "Pilotos Activos",
+    title: "Pilotos en Pista",
     value: "18",
     icon: "👥",
     subtitle: "Ahora mismo",
-    trend: { value: 2, isPositive: true }
+    trend: { value: 6, isPositive: true }
   }
 ];
 
+// 🏁 FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO DE KARTING
+const getStaticComplejoData = (establecimientoId: number) => {
+  const staticComplejos = {
+    1: {
+      nombre: "Kartódromo Norte",
+      direccion: "Av. Alemania 1234, Temuco, Chile"
+    },
+    2: {
+      nombre: "Kartódromo Centro", 
+      direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+    },
+    3: {
+      nombre: "Kartódromo Sur",
+      direccion: "Calle Montt 890, Temuco, Chile"
+    },
+    default: {
+      nombre: "Kartódromo",
+      direccion: "Av. Alemania 1234, Temuco, Chile"
+    }
+  };
+
+  return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+};
+
 export default function KartingPage() {
-  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
-  const [radiusKm, setRadiusKm] = useState('10');
+  const [radiusKm, setRadiusKm] = useState('5');
   const [currentSlide, setCurrentSlide] = useState(0);
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
-  // 🔥 ESTADOS PARA PISTAS DEL BACKEND
+  // 🏁 ESTADOS PARA PISTAS DEL BACKEND
   const [pistas, setPistas] = useState<any[]>([]);
   const [loadingPistas, setLoadingPistas] = useState(true);
   const [errorPistas, setErrorPistas] = useState<string | null>(null);
 
-  // 🔥 CARGAR PISTAS DEL BACKEND
+  // 🏁 Hook de autenticación
+  const { buttonProps } = useAuthStatus();
+
+  // 🏁 CARGAR PISTAS DEL BACKEND CON DATOS DE COMPLEJO
   useEffect(() => {
     const loadPistas = async () => {
       try {
         setLoadingPistas(true);
         setErrorPistas(null);
         
-        console.log('🔄 [Karting] Cargando pistas individuales del backend...');
+        console.log('🔄 [KartingPage] Cargando TODAS las pistas del backend...');
         
-        // 🔥 IDs de las pistas de karting que quieres mostrar
-        const kartingPistaIds = [1, 2, 3, 4, 5, 6, 7];
+        // 🏁 OBTENER TODAS LAS PISTAS
+        const todasLasPistas = await canchaService.getCanchas();
+        console.log('✅ [KartingPage] Todas las pistas obtenidas:', todasLasPistas);
         
-        const pistasPromises = kartingPistaIds.map(async (id) => {
-          try {
-            console.log(`🔍 [Karting] Cargando pista ID: ${id}`);
-            const pista = await canchaService.getCanchaById(id);
-            console.log(`✅ [Karting] Pista ${id} obtenida:`, pista);
+        // 🏁 FILTRAR PISTAS DE KARTING
+        const pistasDeKarting = todasLasPistas.filter((pista: any) => {
+          console.log(`🔍 [KartingPage] Evaluando pista ID ${pista.id}: tipo="${pista.tipo}"`);
+          return ['karting', 'kart', 'automovilismo'].includes(pista.tipo);
+        });
+        
+        console.log('🏁 [KartingPage] Pistas de karting encontradas:', pistasDeKarting.length);
+        
+        // 🏁 OBTENER DATOS DE COMPLEJOS PARA CADA PISTA
+        const pistasMapeadas = await Promise.all(
+          pistasDeKarting.map(async (pista: any) => {
+            let complejoData = null;
+            let addressInfo = `Kartódromo ${pista.establecimientoId}`;
             
-            // 🔥 FILTRAR SOLO PISTAS DE KARTING
-            if (pista.tipo !== 'karting') {
-              console.log(`⚠️ [Karting] Pista ${id} no es de karting (${pista.tipo}), saltando...`);
-              return null;
+            // 🏁 INTENTAR OBTENER DATOS DEL COMPLEJO
+            if (pista.establecimientoId) {
+              try {
+                console.log(`🔍 [KartingPage] Cargando complejo ID ${pista.establecimientoId} para pista ${pista.id}`);
+                complejoData = await complejosService.getComplejoById(pista.establecimientoId);
+                
+                if (complejoData) {
+                  addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                  console.log(`✅ [KartingPage] Complejo cargado: ${addressInfo}`);
+                }
+                
+              } catch (complejoError: any) {
+                console.warn(`⚠️ [KartingPage] Error cargando complejo ${pista.establecimientoId}:`, complejoError.message);
+                // Usar datos de fallback
+                const staticComplejo = getStaticComplejoData(pista.establecimientoId);
+                addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+              }
             }
             
-            // Mapear al formato requerido por CourtCard
+            // 🏁 MAPEAR PISTA CON DATOS DEL COMPLEJO
             const mappedPista = {
               id: pista.id,
-              imageUrl: `/sports/karting/canchas/Pista${pista.id}.png`,
+              imageUrl: `/sports/karting/pistas/Pista${pista.id}.png`,
               name: pista.nombre,
-              address: `Circuito ${pista.establecimientoId}`,
-              rating: pista.rating || 4.6,
+              address: addressInfo, // 🏁 USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
+              rating: pista.rating || 4.7,
               tags: [
-                pista.techada ? "Pista techada" : "Pista al aire libre",
+                pista.techada ? "Pista cubierta" : "Pista exterior",
                 pista.activa ? "Disponible" : "No disponible",
-                "Karts incluidos",
-                "Cronometraje digital"
+                "Karting",
+                "Cronómetro"
               ],
               description: `Pista de karting ${pista.nombre} - ID: ${pista.id}`,
-              price: pista.precioPorHora?.toString() || "35",
+              price: pista.precioPorHora?.toString() || "45",
               nextAvailable: pista.activa ? "Disponible ahora" : "No disponible",
               sport: "karting"
             };
             
-            console.log('🗺️ [Karting] Pista mapeada:', mappedPista);
+            console.log('🗺️ [KartingPage] Pista mapeada:', mappedPista);
             return mappedPista;
-            
-          } catch (error) {
-            console.log(`❌ [Karting] Error cargando pista ${id}:`, error);
-            return null;
-          }
-        });
+          })
+        );
         
-        const pistasResults = await Promise.all(pistasPromises);
-        const pistasValidas = pistasResults.filter(pista => pista !== null);
-        
-        console.log('🎉 [Karting] Pistas de karting cargadas exitosamente:', pistasValidas.length);
-        console.log('📋 [Karting] Pistas finales:', pistasValidas);
-        
-        setPistas(pistasValidas);
+        console.log('🎉 [KartingPage] Pistas con datos de complejo cargadas:', pistasMapeadas.length);
+        setPistas(pistasMapeadas);
         
       } catch (error: any) {
-        console.error('❌ [Karting] ERROR DETALLADO cargando pistas:', error);
+        console.error('❌ [KartingPage] ERROR cargando pistas:', error);
         setErrorPistas(`Error: ${error.message}`);
         
-        // 🔥 FALLBACK
-        console.log('🚨 [Karting] USANDO FALLBACK - Error en el API');
-        setPistas([
+        // 🏁 FALLBACK CON DATOS ESTÁTICOS DE KARTING
+        const pistasEstaticas = [
           {
             id: 1,
-            imageUrl: "/sports/karting/canchas/Pista1.png",
-            name: "🚨 FALLBACK - Kartódromo Velocidad",
-            address: "Norte, Centro, Sur",
-            rating: 4.7,
-            tags: ["DATOS OFFLINE", "Karts incluidos", "Cronometraje", "Seguridad"],
-            description: "🚨 Estos son datos de fallback - API no disponible",
-            price: "35",
-            nextAvailable: "20:00-21:00",
+            imageUrl: "/sports/karting/pistas/Pista1.png",
+            name: "🚨 FALLBACK - Kartódromo Norte",
+            address: "Kartódromo Norte - Av. Alemania 1234, Temuco",
+            rating: 4.8,
+            tags: ["DATOS OFFLINE", "Cronómetro", "Karting Pro"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "45",
+            nextAvailable: "15:00-16:00",
           },
           {
             id: 2,
-            imageUrl: "/sports/karting/canchas/Pista2.png",
-            name: "🚨 FALLBACK - Circuito Adrenalina",
-            address: "Sector Norte",
-            rating: 4.5,
-            tags: ["DATOS OFFLINE", "Pista techada", "Equipamiento completo"],
-            description: "🚨 Estos son datos de fallback - API no disponible",
-            price: "30",
-            nextAvailable: "14:30-15:30",
+            imageUrl: "/sports/karting/pistas/Pista2.png",
+            name: "🚨 FALLBACK - Kartódromo Centro",
+            address: "Kartódromo Centro - Av. Pedro de Valdivia 567, Temuco",
+            rating: 4.6,
+            tags: ["DATOS OFFLINE", "Pista Rápida", "Karting"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "40",
+            nextAvailable: "18:00-19:00", 
+          },
+          {
+            id: 3,
+            imageUrl: "/sports/karting/pistas/Pista3.png",
+            name: "🚨 FALLBACK - Kartódromo Sur",
+            address: "Kartódromo Sur - Calle Montt 890, Temuco",
+            rating: 4.7,
+            tags: ["DATOS OFFLINE", "Circuito Técnico", "Pro"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "50",
+            nextAvailable: "Mañana 10:00-11:00",
           }
-        ]);
+        ];
+        
+        setPistas(pistasEstaticas);
       } finally {
         setLoadingPistas(false);
       }
@@ -159,14 +209,14 @@ export default function KartingPage() {
 
   useEffect(() => {
     setIsClient(true);
-
+    
     const calculateCardsToShow = () => {
       const screenWidth = window.innerWidth;
       const cardWidth = 320;
       const gap = 20;
       const sidebarWidth = 240;
       const padding = 40;
-
+      
       const availableWidth = screenWidth - sidebarWidth - padding;
       return Math.max(1, Math.min(4, Math.floor(availableWidth / (cardWidth + gap))));
     };
@@ -184,8 +234,8 @@ export default function KartingPage() {
     };
   }, []);
 
-  // 🔥 USAR PISTAS REALES PARA EL CARRUSEL
-  const topRatedTracks = pistas.slice(0, 6);
+  // 🏁 USAR PISTAS REALES PARA EL CARRUSEL
+  const topRatedTracks = pistas.slice(0, 6); // Máximo 6 pistas para el carrusel
   const totalSlides = Math.max(1, topRatedTracks.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -213,24 +263,30 @@ export default function KartingPage() {
     router.push(`/sports/karting/canchas/canchaseleccionada?id=${track.id}`);
   };
 
+  // 🏁 Manejador del botón de usuario
   const handleUserButtonClick = () => {
-    if (isAuthenticated) {
-      router.push('/usuario/EditarPerfil');
-    } else {
-      router.push('/login');
+    if (!buttonProps.disabled) {
+      router.push(buttonProps.href);
     }
   };
 
-  // 🔥 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
+  // 🏁 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
   const updatedStats = [
     {
       ...kartingStats[0],
       value: pistas.filter(p => p.nextAvailable !== "No disponible").length.toString()
     },
-    kartingStats[1], // Mantener precio por defecto
+    {
+      ...kartingStats[1],
+      value: pistas.length > 0 ? 
+        `$${Math.min(...pistas.map(p => parseInt(p.price || '0')))}-${Math.max(...pistas.map(p => parseInt(p.price || '0')))}` : 
+        "$30-60"
+    },
     {
       ...kartingStats[2],
-      value: `${(pistas.reduce((acc, p) => acc + p.rating, 0) / pistas.length || 4.6).toFixed(1)}⭐`
+      value: pistas.length > 0 ? 
+        `${(pistas.reduce((acc, p) => acc + p.rating, 0) / pistas.length).toFixed(1)}⭐` : 
+        "4.7⭐"
     },
     kartingStats[3] // Mantener pilotos por defecto
   ];
@@ -255,7 +311,7 @@ export default function KartingPage() {
       <div className={styles.mainContent}>
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerIcon}>🏎️</div>
+            <div className={styles.headerIcon}>🏁</div>
             <h1 className={styles.headerTitle}>Karting</h1>
           </div>
           <div className={styles.headerRight}>
@@ -263,8 +319,8 @@ export default function KartingPage() {
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre de la pista..."
-              sport="karting"
+              placeholder="Nombre del kartódromo..."
+              sport="karting" 
             />
             <button 
               className={styles.userButton}
@@ -277,7 +333,7 @@ export default function KartingPage() {
           </div>
         </div>
 
-        {/* 🔥 STATS CARDS CON DATOS ACTUALIZADOS */}
+        {/* 🏁 STATS CARDS CON DATOS ACTUALIZADOS */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
             <span className={styles.statsTitleIcon}>📊</span>
@@ -305,31 +361,31 @@ export default function KartingPage() {
         </div>
 
         <div className={styles.quickAccessSection}>
-          <button
+          <button 
             className={styles.mainCourtButton}
             onClick={() => window.location.href = '/sports/karting/canchas/'}
           >
-            <div className={styles.courtButtonIcon}>🏎️</div>
+            <div className={styles.courtButtonIcon}>🏁</div>
             <div className={styles.courtButtonText}>
-              <span className={styles.courtButtonTitle}>Explorar Pistas</span>
+              <span className={styles.courtButtonTitle}>Explorar Kartódromos</span>
               <span className={styles.courtButtonSubtitle}>Ver todas las pistas disponibles</span>
             </div>
             <div className={styles.courtButtonArrow}>→</div>
           </button>
         </div>
 
-        {/* 🔥 CARRUSEL CON DATOS REALES */}
+        {/* 🏁 CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>⭐</span>
-              Pistas mejor calificadas
+              Kartódromos mejor calificados
               {loadingPistas && <span style={{ fontSize: '14px', marginLeft: '10px' }}>Cargando...</span>}
               {errorPistas && <span style={{ fontSize: '14px', marginLeft: '10px', color: 'red' }}>⚠️ Usando datos offline</span>}
             </h2>
             <div className={styles.carouselControls}>
-              <button
-                onClick={prevSlide}
+              <button 
+                onClick={prevSlide} 
                 className={styles.carouselButton}
                 disabled={currentSlide === 0 || loadingPistas}
                 style={{ opacity: currentSlide === 0 || loadingPistas ? 0.5 : 1 }}
@@ -339,8 +395,8 @@ export default function KartingPage() {
               <span className={styles.slideIndicator}>
                 {currentSlide + 1} / {totalSlides}
               </span>
-              <button
-                onClick={nextSlide}
+              <button 
+                onClick={nextSlide} 
                 className={styles.carouselButton}
                 disabled={currentSlide === totalSlides - 1 || loadingPistas}
                 style={{ opacity: currentSlide === totalSlides - 1 || loadingPistas ? 0.5 : 1 }}
@@ -349,23 +405,23 @@ export default function KartingPage() {
               </button>
             </div>
           </div>
-
+          
           <div className={styles.carouselContainer}>
             {loadingPistas ? (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
-                <p>Cargando pistas...</p>
+                <p>Cargando kartódromos...</p>
               </div>
             ) : (
-              <div
+              <div 
                 className={styles.courtsGrid}
                 style={{
                   transform: `translateX(-${currentSlide * (320 + 20)}px)`,
                 }}
               >
                 {topRatedTracks.map((track, index) => (
-                  <CourtCard
-                    key={track.id || index}
-                    {...track}
+                  <CourtCard 
+                    key={track.id || index} 
+                    {...track} 
                     sport="karting"
                     onClick={() => handlePistaClick(track)}
                   />
@@ -377,8 +433,8 @@ export default function KartingPage() {
 
         {/* Ubicación en el mapa */}
         <div className={styles.mapSection}>
-          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las pistas</h2>
-
+          <h2 className={styles.sectionTitle}>Ubicación en el mapa de los kartódromos</h2>
+          
           <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>
               <span className={styles.locationIcon}>📍</span>
@@ -392,15 +448,15 @@ export default function KartingPage() {
             </div>
             <div className={styles.radiusContainer}>
               <span className={styles.radiusIcon}>📏</span>
-              <select
-                value={radiusKm}
+              <select 
+                value={radiusKm} 
                 onChange={(e) => setRadiusKm(e.target.value)}
                 className={styles.radiusSelect}
               >
+                <option value="1">Radio 1km</option>
+                <option value="3">Radio 3km</option>
                 <option value="5">Radio 5km</option>
                 <option value="10">Radio 10km</option>
-                <option value="15">Radio 15km</option>
-                <option value="25">Radio 25km</option>
               </select>
             </div>
             <button onClick={handleLocationSearch} className={styles.searchLocationButton}>
@@ -408,7 +464,7 @@ export default function KartingPage() {
             </button>
           </div>
 
-          <LocationMap
+          <LocationMap 
             latitude={-38.7359}
             longitude={-72.5904}
             address="Temuco, Chile"

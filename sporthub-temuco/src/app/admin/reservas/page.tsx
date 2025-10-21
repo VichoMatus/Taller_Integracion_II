@@ -16,23 +16,62 @@ export default function ReservasPage() {
   const [selectedEstado, setSelectedEstado] = useState<EstadoReserva | ''>('');
   const itemsPerPage = 10;
 
-  // Cargar reservas desde el backend
+  // Cargar reservas desde el backend usando endpoint admin
   const loadReservas = async () => {
     try {
       setLoading(true);
       setError(null);
-      const filters = {
-        page: currentPage,
-        pageSize: itemsPerPage,
-        ...(searchTerm && { q: searchTerm }),
-        ...(selectedEstado && { estado: selectedEstado })
-      };
-      const data = await reservaService.getReservas(filters);
-      setReservas(data);
+      
+      const data = await reservaService.getAdminReservas();
+      
+      console.log("Datos recibidos:", data);
+      
+      // Asegurarse de que data sea siempre un array
+      if (Array.isArray(data)) {
+        if (data.length === 0) {
+          // Si no hay datos, usar reservas mock
+          setReservas([
+            {
+              id: 1,
+              usuarioId: 1,
+              canchaId: 1,
+              complejoId: 1,
+              fechaInicio: new Date().toISOString(),
+              fechaFin: new Date(Date.now() + 3600000).toISOString(),
+              estado: 'confirmada' as EstadoReserva,
+              precioTotal: 25000,
+              pagado: true,
+              fechaCreacion: new Date().toISOString(),
+              fechaActualizacion: new Date().toISOString(),
+              usuario: { id: 1, email: 'miguel.chamo@email.com', nombre: 'Miguel', apellido: 'Chamo' },
+              cancha: { id: 1, nombre: 'Cancha Central', tipo: 'futbol', precioPorHora: 25000 }
+            },
+            {
+              id: 2,
+              usuarioId: 2,
+              canchaId: 2,
+              complejoId: 1,
+              fechaInicio: new Date(Date.now() + 86400000).toISOString(),
+              fechaFin: new Date(Date.now() + 86400000 + 3600000).toISOString(),
+              estado: 'pendiente' as EstadoReserva,
+              precioTotal: 20000,
+              pagado: false,
+              fechaCreacion: new Date().toISOString(),
+              fechaActualizacion: new Date().toISOString(),
+              usuario: { id: 2, email: 'ana.garcia@email.com', nombre: 'Ana', apellido: 'García' },
+              cancha: { id: 2, nombre: 'Cancha Norte', tipo: 'basquet', precioPorHora: 20000 }
+            }
+          ]);
+        } else {
+          setReservas(data);
+        }
+      } else {
+        setReservas([]); // Si no es array, establecer array vacío
+      }
     } catch (err: any) {
-      console.warn('Backend no disponible, usando datos mock:', err);
-      setError('Conectando con datos de desarrollo (backend no disponible)');
-      // Usar datos mock en caso de error para development
+      console.error('Error al cargar reservas:', err);
+      setError('Error al cargar reservas del servidor');
+      // En caso de error, usar reservas mock
       setReservas([
         {
           id: 1,
@@ -85,16 +124,30 @@ export default function ReservasPage() {
     router.push('/admin/reservas/crear');
   };
 
-  // Función para eliminar reserva
+  // Función para eliminar reserva (como admin)
   const deleteReservation = async (reservationId: number) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar esta reserva?')) {
+    if (window.confirm('¿Estás seguro de que deseas eliminar esta reserva? Esta acción no se puede deshacer.')) {
       try {
-        await reservaService.deleteReserva(reservationId);
+        await reservaService.deleteReservaAdmin(reservationId);
         alert('Reserva eliminada exitosamente');
         loadReservas(); // Recargar la lista
       } catch (err: any) {
-        console.warn('No se pudo eliminar (backend no disponible):', err);
-        alert('No se puede eliminar en modo desarrollo (backend no disponible)');
+        console.error('Error al eliminar reserva:', err);
+        alert(err.message || 'No se pudo eliminar la reserva');
+      }
+    }
+  };
+
+  // Función para cancelar reserva como administrador (forzar cancelación)
+  const cancelReservationAdmin = async (reservationId: number) => {
+    if (window.confirm('¿Deseas cancelar esta reserva como administrador? Esta acción es permanente.')) {
+      try {
+        await reservaService.cancelarReservaAdmin(reservationId);
+        alert('Reserva cancelada exitosamente');
+        loadReservas(); // Recargar la lista
+      } catch (err: any) {
+        console.error('Error al cancelar reserva:', err);
+        alert(err.message || 'No se pudo cancelar la reserva');
       }
     }
   };
@@ -168,7 +221,9 @@ export default function ReservasPage() {
           <div className="info-icon">ℹ️</div>
           <p>{error}</p>
         </div>
-      )}      {/* Contenedor Principal de la Tabla */}
+      )}
+
+      {/* Contenedor Principal de la Tabla */}
       <div className="admin-table-container">
         {/* Header de la Tabla */}
         <div className="admin-table-header">
@@ -273,6 +328,20 @@ export default function ReservasPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                         </svg>
                       </button>
+                      
+                      {/* Botón Cancelar (solo si no está cancelada o completada) */}
+                      {reserva.estado !== 'cancelada' && reserva.estado !== 'completada' && (
+                        <button 
+                          className="btn-action" 
+                          title="Cancelar Reserva"
+                          onClick={() => cancelReservationAdmin(reserva.id)}
+                          style={{ backgroundColor: 'var(--warning)', color: 'white' }}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
                       
                       {/* Botón Eliminar */}
                       <button 

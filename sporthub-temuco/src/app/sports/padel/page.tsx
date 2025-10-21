@@ -1,51 +1,73 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStatus } from '../../../hooks/useAuthStatus';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import StatsCard from '../../../components/charts/StatsCard';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
+import { canchaService } from '@/services/canchaService';
+import { complejosService } from '@/services/complejosService';
 import styles from './page.module.css';
 
-// 🔥 IMPORTAR SERVICIO
-import { canchaService } from '../../../services/canchaService';
-
-// 🎾 DATOS PARA LAS ESTADÍSTICAS DE PÁDEL (SERÁN ACTUALIZADOS CON DATOS REALES)
+// 🎾 DATOS PARA LAS ESTADÍSTICAS DE PÁDEL
 const padelStats = [
   {
     title: "Canchas Disponibles Hoy",
-    value: "8",
+    value: "12",
     icon: "🎾",
-    subtitle: "Listas para jugar",
-    trend: { value: 2, isPositive: true }
+    subtitle: "Listas para reservar",
+    trend: { value: 3, isPositive: true }
   },
   {
     title: "Rango de Precios",
     value: "$25-45",
     icon: "💰",
     subtitle: "Por hora",
-    trend: { value: 3, isPositive: true }
+    trend: { value: 5, isPositive: true }
   },
   {
     title: "Calificación Promedio",
-    value: "4.8⭐",
+    value: "4.7⭐",
     icon: "🏆",
     subtitle: "De nuestras canchas",
-    trend: { value: 0.2, isPositive: true }
+    trend: { value: 0.3, isPositive: true }
   },
   {
-    title: "Jugadores Activos",
-    value: "48",
+    title: "Jugadores en Cancha",
+    value: "8",
     icon: "👥",
     subtitle: "Ahora mismo",
-    trend: { value: 8, isPositive: true }
+    trend: { value: 4, isPositive: true }
   }
 ];
 
+// 🎾 FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO
+const getStaticComplejoData = (establecimientoId: number) => {
+  const staticComplejos = {
+    1: {
+      nombre: "Club Padel Elite",
+      direccion: "Av. Alemania 1234, Temuco, Chile"
+    },
+    2: {
+      nombre: "Centro Padel Los Andes", 
+      direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+    },
+    3: {
+      nombre: "Padel Universidad",
+      direccion: "Calle Montt 890, Temuco, Chile"
+    },
+    default: {
+      nombre: "Club de Pádel",
+      direccion: "Av. Alemania 1234, Temuco, Chile"
+    }
+  };
+
+  return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+};
+
 export default function PadelPage() {
-  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
@@ -54,101 +76,128 @@ export default function PadelPage() {
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
-  // 🔥 ESTADOS PARA CANCHAS DEL BACKEND
+  // 🎾 ESTADOS PARA CANCHAS DEL BACKEND
   const [canchas, setCanchas] = useState<any[]>([]);
   const [loadingCanchas, setLoadingCanchas] = useState(true);
   const [errorCanchas, setErrorCanchas] = useState<string | null>(null);
 
-  // 🔥 CARGAR CANCHAS DEL BACKEND
+  // 🎾 Hook de autenticación
+  const { buttonProps } = useAuthStatus();
+
+  // 🎾 CARGAR CANCHAS DEL BACKEND CON DATOS DE COMPLEJO
   useEffect(() => {
     const loadCanchas = async () => {
       try {
         setLoadingCanchas(true);
         setErrorCanchas(null);
         
-        console.log('🔄 [Padel] Cargando canchas individuales del backend...');
+        console.log('🔄 [PadelPage] Cargando TODAS las canchas del backend...');
         
-        // 🔥 IDs de las canchas de pádel que quieres mostrar
-        const padelCanchaIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        // 🎾 OBTENER TODAS LAS CANCHAS
+        const todasLasCanchas = await canchaService.getCanchas();
+        console.log('✅ [PadelPage] Todas las canchas obtenidas:', todasLasCanchas);
         
-        const canchasPromises = padelCanchaIds.map(async (id) => {
-          try {
-            console.log(`🔍 [Padel] Cargando cancha ID: ${id}`);
-            const cancha = await canchaService.getCanchaById(id);
-            console.log(`✅ [Padel] Cancha ${id} obtenida:`, cancha);
+        // 🎾 FILTRAR CANCHAS DE PÁDEL
+        const canchasDePadel = todasLasCanchas.filter((cancha: any) => {
+          console.log(`🔍 [PadelPage] Evaluando cancha ID ${cancha.id}: tipo="${cancha.tipo}"`);
+          return ['padel', 'paddle', 'pádel'].includes(cancha.tipo.toLowerCase());
+        });
+        
+        console.log('🎾 [PadelPage] Canchas de pádel encontradas:', canchasDePadel.length);
+        
+        // 🎾 OBTENER DATOS DE COMPLEJOS PARA CADA CANCHA
+        const canchasMapeadas = await Promise.all(
+          canchasDePadel.map(async (cancha: any) => {
+            let complejoData = null;
+            let addressInfo = `Complejo ${cancha.establecimientoId}`;
             
-            // 🔥 FILTRAR SOLO CANCHAS DE PÁDEL
-            if (cancha.tipo !== 'padel') {
-              console.log(`⚠️ [Padel] Cancha ${id} no es de pádel (${cancha.tipo}), saltando...`);
-              return null;
+            // 🎾 INTENTAR OBTENER DATOS DEL COMPLEJO
+            if (cancha.establecimientoId) {
+              try {
+                console.log(`🔍 [PadelPage] Cargando complejo ID ${cancha.establecimientoId} para cancha ${cancha.id}`);
+                complejoData = await complejosService.getComplejoById(cancha.establecimientoId);
+                
+                if (complejoData) {
+                  addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                  console.log(`✅ [PadelPage] Complejo cargado: ${addressInfo}`);
+                }
+                
+              } catch (complejoError: any) {
+                console.warn(`⚠️ [PadelPage] Error cargando complejo ${cancha.establecimientoId}:`, complejoError.message);
+                // Usar datos de fallback
+                const staticComplejo = getStaticComplejoData(cancha.establecimientoId);
+                addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+              }
             }
             
-            // Mapear al formato requerido por CourtCard
+            // 🎾 MAPEAR CANCHA CON DATOS DEL COMPLEJO
             const mappedCancha = {
               id: cancha.id,
               imageUrl: `/sports/padel/canchas/Cancha${cancha.id}.png`,
               name: cancha.nombre,
-              address: `Complejo ${cancha.establecimientoId}`,
-              rating: cancha.rating || 4.8,
+              address: addressInfo, // 🎾 USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
+              rating: cancha.rating || 4.7,
               tags: [
-                cancha.techada ? "Cancha techada" : "Cancha al aire libre",
+                cancha.techada ? "Techada" : "Al aire libre",
                 cancha.activa ? "Disponible" : "No disponible",
-                "Palas disponibles",
-                "Iluminación nocturna"
+                "Cristal Templado"
               ],
-              description: `Cancha de pádel ${cancha.nombre} - ID: ${cancha.id}`,
-              price: cancha.precioPorHora?.toString() || "35",
+              description: `Cancha de ${cancha.tipo} ${cancha.nombre} - ID: ${cancha.id}`,
+              price: cancha.precioPorHora?.toString() || "30",
               nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
-              sport: "padel"
+              sport: cancha.tipo
             };
             
-            console.log('🗺️ [Padel] Cancha mapeada:', mappedCancha);
+            console.log('🗺️ [PadelPage] Cancha mapeada:', mappedCancha);
             return mappedCancha;
-            
-          } catch (error) {
-            console.log(`❌ [Padel] Error cargando cancha ${id}:`, error);
-            return null;
-          }
-        });
+          })
+        );
         
-        const canchasResults = await Promise.all(canchasPromises);
-        const canchasValidas = canchasResults.filter(cancha => cancha !== null);
-        
-        console.log('🎉 [Padel] Canchas de pádel cargadas exitosamente:', canchasValidas.length);
-        console.log('📋 [Padel] Canchas finales:', canchasValidas);
-        
-        setCanchas(canchasValidas);
+        console.log('🎉 [PadelPage] Canchas con datos de complejo cargadas:', canchasMapeadas.length);
+        setCanchas(canchasMapeadas);
         
       } catch (error: any) {
-        console.error('❌ [Padel] ERROR DETALLADO cargando canchas:', error);
+        console.error('❌ [PadelPage] ERROR cargando canchas:', error);
         setErrorCanchas(`Error: ${error.message}`);
         
-        // 🔥 FALLBACK
-        console.log('🚨 [Padel] USANDO FALLBACK - Error en el API');
-        setCanchas([
+        // 🎾 FALLBACK CON DATOS ESTÁTICOS MEJORADOS
+        const canchasEstaticas = [
           {
             id: 1,
-            imageUrl: "/sports/padel/canchas/Cancha1.png",
-            name: "🚨 FALLBACK - Pádel Center Temuco",
-            address: "Norte, Centro, Sur",
-            rating: 4.9,
-            tags: ["DATOS OFFLINE", "Palas disponibles", "Iluminación", "Vestuarios"],
-            description: "🚨 Estos son datos de fallback - API no disponible",
-            price: "35",
-            nextAvailable: "20:00-22:00",
+            imageUrl: "/sports/padel/padel.png",
+            name: "🚨 FALLBACK - Club Padel Elite",
+            address: "Club Padel Elite - Av. Alemania 1234, Temuco", // 🎾 FORMATO MEJORADO
+            rating: 4.8,
+            tags: ["DATOS OFFLINE", "Cristal Templado", "Iluminación"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "30",
+            nextAvailable: "20:00-21:00",
           },
           {
             id: 2,
-            imageUrl: "/sports/padel/canchas/Cancha2.png",
-            name: "🚨 FALLBACK - Club Raqueta Dorada",
-            address: "Sector Norte",
+            imageUrl: "/sports/padel/padel.png",
+            name: "🚨 FALLBACK - Centro Padel Los Andes",
+            address: "Centro Padel Los Andes - Av. Pedro de Valdivia 567, Temuco",
+            rating: 4.6,
+            tags: ["DATOS OFFLINE", "Vestuarios VIP", "Techada"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "25",
+            nextAvailable: "14:30-15:30", 
+          },
+          {
+            id: 3,
+            imageUrl: "/sports/padel/padel.png",
+            name: "🚨 FALLBACK - Padel Universidad",
+            address: "Padel Universidad - Calle Montt 890, Temuco",
             rating: 4.7,
-            tags: ["DATOS OFFLINE", "Cancha techada", "Torneos"],
-            description: "🚨 Estos son datos de fallback - API no disponible",
-            price: "30",
-            nextAvailable: "16:00-18:00",
+            tags: ["DATOS OFFLINE", "Sistema Drenaje", "Premium"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "35",
+            nextAvailable: "Mañana 09:00-10:00",
           }
-        ]);
+        ];
+        
+        setCanchas(canchasEstaticas);
       } finally {
         setLoadingCanchas(false);
       }
@@ -159,14 +208,14 @@ export default function PadelPage() {
 
   useEffect(() => {
     setIsClient(true);
-
+    
     const calculateCardsToShow = () => {
       const screenWidth = window.innerWidth;
       const cardWidth = 320;
       const gap = 20;
       const sidebarWidth = 240;
       const padding = 40;
-
+      
       const availableWidth = screenWidth - sidebarWidth - padding;
       return Math.max(1, Math.min(4, Math.floor(availableWidth / (cardWidth + gap))));
     };
@@ -184,8 +233,8 @@ export default function PadelPage() {
     };
   }, []);
 
-  // 🔥 USAR CANCHAS REALES PARA EL CARRUSEL
-  const topRatedCourts = canchas.slice(0, 6);
+  // 🎾 USAR CANCHAS REALES PARA EL CARRUSEL
+  const topRatedCourts = canchas.slice(0, 6); // Máximo 6 canchas para el carrusel
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -213,24 +262,30 @@ export default function PadelPage() {
     router.push(`/sports/padel/canchas/canchaseleccionada?id=${court.id}`);
   };
 
+  // 🎾 Manejador del botón de usuario
   const handleUserButtonClick = () => {
-    if (isAuthenticated) {
-      router.push('/usuario/EditarPerfil');
-    } else {
-      router.push('/login');
+    if (!buttonProps.disabled) {
+      router.push(buttonProps.href);
     }
   };
 
-  // 🔥 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
+  // 🎾 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
   const updatedStats = [
     {
       ...padelStats[0],
       value: canchas.filter(c => c.nextAvailable !== "No disponible").length.toString()
     },
-    padelStats[1], // Mantener precio por defecto
+    {
+      ...padelStats[1],
+      value: canchas.length > 0 ? 
+        `$${Math.min(...canchas.map(c => parseInt(c.price || '0')))}-${Math.max(...canchas.map(c => parseInt(c.price || '0')))}` : 
+        "$25-45"
+    },
     {
       ...padelStats[2],
-      value: `${(canchas.reduce((acc, c) => acc + c.rating, 0) / canchas.length || 4.8).toFixed(1)}⭐`
+      value: canchas.length > 0 ? 
+        `${(canchas.reduce((acc, c) => acc + c.rating, 0) / canchas.length).toFixed(1)}⭐` : 
+        "4.7⭐"
     },
     padelStats[3] // Mantener jugadores por defecto
   ];
@@ -264,7 +319,7 @@ export default function PadelPage() {
               onChange={handleSearchChange}
               onSearch={handleSearch}
               placeholder="Nombre de la cancha..."
-              sport="padel"
+              sport="padel" 
             />
             <button 
               className={styles.userButton}
@@ -277,7 +332,7 @@ export default function PadelPage() {
           </div>
         </div>
 
-        {/* 🔥 STATS CARDS CON DATOS ACTUALIZADOS */}
+        {/* 🎾 STATS CARDS CON DATOS ACTUALIZADOS */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
             <span className={styles.statsTitleIcon}>📊</span>
@@ -305,31 +360,31 @@ export default function PadelPage() {
         </div>
 
         <div className={styles.quickAccessSection}>
-          <button
+          <button 
             className={styles.mainCourtButton}
             onClick={() => window.location.href = '/sports/padel/canchas/'}
           >
             <div className={styles.courtButtonIcon}>🎾</div>
             <div className={styles.courtButtonText}>
               <span className={styles.courtButtonTitle}>Explorar Canchas</span>
-              <span className={styles.courtButtonSubtitle}>Ver todas las canchas disponibles</span>
+              <span className={styles.courtButtonSubtitle}>Ver todas las canchas de pádel disponibles</span>
             </div>
             <div className={styles.courtButtonArrow}>→</div>
           </button>
         </div>
 
-        {/* 🔥 CARRUSEL CON DATOS REALES */}
+        {/* 🎾 CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>⭐</span>
-              Canchas mejor calificadas
+              Canchas de pádel mejor calificadas
               {loadingCanchas && <span style={{ fontSize: '14px', marginLeft: '10px' }}>Cargando...</span>}
               {errorCanchas && <span style={{ fontSize: '14px', marginLeft: '10px', color: 'red' }}>⚠️ Usando datos offline</span>}
             </h2>
             <div className={styles.carouselControls}>
-              <button
-                onClick={prevSlide}
+              <button 
+                onClick={prevSlide} 
                 className={styles.carouselButton}
                 disabled={currentSlide === 0 || loadingCanchas}
                 style={{ opacity: currentSlide === 0 || loadingCanchas ? 0.5 : 1 }}
@@ -339,8 +394,8 @@ export default function PadelPage() {
               <span className={styles.slideIndicator}>
                 {currentSlide + 1} / {totalSlides}
               </span>
-              <button
-                onClick={nextSlide}
+              <button 
+                onClick={nextSlide} 
                 className={styles.carouselButton}
                 disabled={currentSlide === totalSlides - 1 || loadingCanchas}
                 style={{ opacity: currentSlide === totalSlides - 1 || loadingCanchas ? 0.5 : 1 }}
@@ -349,23 +404,23 @@ export default function PadelPage() {
               </button>
             </div>
           </div>
-
+          
           <div className={styles.carouselContainer}>
             {loadingCanchas ? (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
-                <p>Cargando canchas...</p>
+                <p>Cargando canchas de pádel...</p>
               </div>
             ) : (
-              <div
+              <div 
                 className={styles.courtsGrid}
                 style={{
                   transform: `translateX(-${currentSlide * (320 + 20)}px)`,
                 }}
               >
                 {topRatedCourts.map((court, index) => (
-                  <CourtCard
-                    key={court.id || index}
-                    {...court}
+                  <CourtCard 
+                    key={court.id || index} 
+                    {...court} 
                     sport="padel"
                     onClick={() => handleCanchaClick(court)}
                   />
@@ -377,8 +432,8 @@ export default function PadelPage() {
 
         {/* Ubicación en el mapa */}
         <div className={styles.mapSection}>
-          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las canchas</h2>
-
+          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las canchas de pádel</h2>
+          
           <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>
               <span className={styles.locationIcon}>📍</span>
@@ -392,8 +447,8 @@ export default function PadelPage() {
             </div>
             <div className={styles.radiusContainer}>
               <span className={styles.radiusIcon}>📏</span>
-              <select
-                value={radiusKm}
+              <select 
+                value={radiusKm} 
                 onChange={(e) => setRadiusKm(e.target.value)}
                 className={styles.radiusSelect}
               >
@@ -408,7 +463,7 @@ export default function PadelPage() {
             </button>
           </div>
 
-          <LocationMap
+          <LocationMap 
             latitude={-38.7359}
             longitude={-72.5904}
             address="Temuco, Chile"

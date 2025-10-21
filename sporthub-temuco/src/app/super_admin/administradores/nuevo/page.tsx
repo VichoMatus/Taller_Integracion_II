@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createAdministrador } from '@/services/usuariosService';
+import { usuariosService } from '@/services/usuariosService';
 
 export default function NuevoAdministrador() {
   const router = useRouter();
@@ -25,8 +25,8 @@ export default function NuevoAdministrador() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createAdministrador(formData);
-      router.push('/superadmin/administradores');
+      await usuariosService.createAdministrador(formData);
+      router.push('/super_admin/administradores');
       router.refresh();
     } catch (error) {
       setError('Error al crear el administrador');

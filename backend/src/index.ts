@@ -12,7 +12,7 @@
   console.log(`   - POST /api/auth/register`);
   console.log(`   - POST /api/auth/login`);
   console.log(`   - GET  /api/auth/me`);
-  console.log(`   - GET  /api/superadmin/users`);
+  console.log(`   - GET  /api/super_admin/users`);
   console.log(`   - Y muchos más...`);BFF entre el frontend y la API FastAPI.
  */
 
@@ -27,7 +27,7 @@ import notificacionesRoutes from './notificaciones/routes/notificacionesRoutes';
 import favoritosRoutes from './favoritos/routes/favoritosRoute';
 import adminRoutes from './admin/presentation/routes/admin.routes';
 import bloqueoRoutes from './bloqueos/presentation/routes/bloqueos.routes';
-import reservasRoutes from './reservas/presentation/routes/reservas.routes.new';
+import reservasRoutes from './reservas/presentation/routes/reservas.routes';
 import disponibilidadRoutes from './disponibilidad/presentation/routes/disponibilidad.routes';
 import pricingRoutes from './pricing/presentation/routes/pricing.routes';
 import pagosRoutes from './pagos/presentation/routes/pagos.routes';
@@ -80,7 +80,7 @@ app.get('/', (req, res) => {
       info: '/api',
       health: '/health',
       auth: '/api/auth',
-      admin: '/api/superadmin',
+      admin: '/api/super_admin',
       usuarios: '/api/usuarios',
       reservas: '/api/reservas',
       resenas: '/api/resenas',
@@ -88,7 +88,7 @@ app.get('/', (req, res) => {
       favoritos: '/api/favoritos',
       bloqueos: '/api/bloqueos',
       uploads: '/api/uploads',
-      superadmin: '/api/superadmin'
+      super_admin: '/api/super_admin'
     }
   });
 });
@@ -137,7 +137,19 @@ app.use('/api/canchas', canchasRoutes);
 app.use('/api/complejos', complejosRoutes);
 
 // Rutas de administración (legacy)
-app.use('/api/superadmin', superAdminRoutes);
+app.use('/api/super_admin', superAdminRoutes);
+
+// Ruta de prueba para debugging
+app.get('/api/super_admin/test', (req, res) => {
+  res.json({
+    ok: true,
+    message: 'SuperAdmin endpoint funcionando',
+    timestamp: new Date().toISOString(),
+    headers: {
+      authorization: req.headers.authorization ? `Bearer ${req.headers.authorization.substring(7, 27)}...` : 'No token'
+    }
+  });
+});
 
 // Middleware de debug para ver todas las rutas
 app.use((req, res, next) => {
@@ -169,7 +181,7 @@ app.get('/api', (req, res) => {
     endpoints: {
       health: '/health',
       auth: '/api/auth/*',
-      superadmin: '/api/superadmin/*',
+      super_admin: '/api/super_admin/*',
       usuarios: '/api/usuarios/*',
       reservas: '/api/reservas/*',
       resenas: '/api/resenas/*',
@@ -254,7 +266,7 @@ app.listen(PORT, () => {
   console.log(`   - POST /api/auth/register`);
   console.log(`   - POST /api/auth/login`);
   console.log(`   - GET  /api/auth/me`);
-  console.log(`   - GET  /api/superadmin/users`);
+  console.log(`   - GET  /api/super_admin/users`);
   console.log(`   - GET  /api/usuarios`);
   console.log(`   - GET  /api/reservas`);
   console.log(`   - GET  /api/resenas`);

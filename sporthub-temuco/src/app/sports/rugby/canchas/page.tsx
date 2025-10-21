@@ -7,8 +7,9 @@ import SearchBar from '../../../../components/SearchBar';
 import LocationMap from '../../../../components/LocationMap';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
+import { complejosService } from '../../../../services/complejosService';
 
-// 🔥 IMPORTAR SERVICIO
+// 🏉 IMPORTAR SERVICIO
 import { canchaService } from '../../../../services/canchaService';
 
 export default function Page() {
@@ -16,111 +17,159 @@ export default function Page() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   
-  // 🔥 ESTADOS PARA LA API
+  // 🏉 ESTADOS PARA LA API
   const [canchas, setCanchas] = useState<any[]>([]);
   const [filteredCanchas, setFilteredCanchas] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [isLoadingCanchas, setIsLoadingCanchas] = useState(true);
   const [error, setError] = useState<string>('');
 
-  // 🔥 FUNCIÓN PARA CARGAR CANCHAS DE RUGBY
+  // 🏉 FUNCIÓN PARA CARGAR CANCHAS MODIFICADA PARA RUGBY
   const cargarCanchas = async () => {
     try {
       setIsLoadingCanchas(true);
       setError('');
       
-      console.log('🔄 [CanchasRugby] Cargando canchas individuales del backend...');
+      console.log('🔄 [CanchasRugby] Cargando TODAS las canchas del backend...');
       
-      // 🔥 IDs de las canchas de rugby que quieres mostrar
-      const rugbyCanchaIds = [1, 2, 3, 4, 5, 6, 7, 8];
+      const todasLasCanchas = await canchaService.getCanchas();
+      console.log('✅ [CanchasRugby] Todas las canchas obtenidas:', todasLasCanchas);
       
-      const canchasPromises = rugbyCanchaIds.map(async (id) => {
-        try {
-          console.log(`🔍 [CanchasRugby] Cargando cancha ID: ${id}`);
-          const cancha = await canchaService.getCanchaById(id);
-          console.log(`✅ [CanchasRugby] Cancha ${id} obtenida:`, cancha);
+      // 🏉 FILTRAR CANCHAS DE RUGBY
+      const canchasDeRugby = todasLasCanchas.filter((cancha: any) => {
+        return ['rugby', 'rugby 7', 'rugby 15'].includes(cancha.tipo.toLowerCase());
+      });
+      
+      console.log('🏉 [CanchasRugby] Canchas de rugby encontradas:', canchasDeRugby.length);
+      
+      // 🏉 OBTENER DATOS DE COMPLEJOS PARA CADA CANCHA
+      const canchasMapeadas = await Promise.all(
+        canchasDeRugby.map(async (cancha: any) => {
+          let complejoData = null;
+          let addressInfo = `Complejo ${cancha.establecimientoId}`;
           
-          // 🔥 FILTRAR SOLO CANCHAS DE RUGBY
-          if (cancha.tipo !== 'rugby') {
-            console.log(`⚠️ [CanchasRugby] Cancha ${id} no es de rugby (${cancha.tipo}), saltando...`);
-            return null;
+          // 🏉 INTENTAR OBTENER DATOS DEL COMPLEJO
+          if (cancha.establecimientoId) {
+            try {
+              console.log(`🔍 [CanchasRugby] Cargando complejo ID ${cancha.establecimientoId} para cancha ${cancha.id}`);
+              complejoData = await complejosService.getComplejoById(cancha.establecimientoId);
+              
+              if (complejoData) {
+                addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                console.log(`✅ [CanchasRugby] Complejo cargado: ${addressInfo}`);
+              }
+              
+            } catch (complejoError: any) {
+              console.warn(`⚠️ [CanchasRugby] Error cargando complejo ${cancha.establecimientoId}:`, complejoError.message);
+              // Usar datos de fallback
+              const staticComplejo = getStaticComplejoData(cancha.establecimientoId);
+              addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+            }
           }
           
-          // Mapear al formato requerido por CourtCard
+          // 🏉 MAPEAR CANCHA CON DATOS DEL COMPLEJO
           const mappedCancha = {
             id: cancha.id,
             imageUrl: `/sports/rugby/canchas/Cancha${cancha.id}.png`,
             name: cancha.nombre,
-            address: `Complejo ${cancha.establecimientoId}`,
-            rating: cancha.rating || 4.6,
+            address: addressInfo, // 🏉 USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
+            rating: cancha.rating || 4.7,
             tags: [
-              cancha.techada ? "Campo techado" : "Campo al aire libre",
+              cancha.techada ? "Techada" : "Al aire libre",
               cancha.activa ? "Disponible" : "No disponible",
-              "Césped natural",
-              "Vestuarios incluidos"
+              "Postes H Profesionales"
             ],
-            description: `Cancha de rugby ${cancha.nombre} - ID: ${cancha.id}`,
-            price: cancha.precioPorHora?.toString() || "40",
+            description: `Cancha de ${cancha.tipo} ${cancha.nombre} - ID: ${cancha.id}`,
+            price: cancha.precioPorHora?.toString() || "35",
             nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
-            sport: "rugby"
+            sport: cancha.tipo
           };
           
           console.log('🗺️ [CanchasRugby] Cancha mapeada:', mappedCancha);
           return mappedCancha;
-          
-        } catch (error) {
-          console.log(`❌ [CanchasRugby] Error cargando cancha ${id}:`, error);
-          return null;
-        }
-      });
+        })
+      );
       
-      const canchasResults = await Promise.all(canchasPromises);
-      const canchasValidas = canchasResults.filter(cancha => cancha !== null);
-      
-      console.log('🎉 [CanchasRugby] Canchas de rugby cargadas exitosamente:', canchasValidas.length);
-      console.log('📋 [CanchasRugby] Canchas finales:', canchasValidas);
-      
-      setCanchas(canchasValidas);
-      setFilteredCanchas(canchasValidas);
+      console.log('🎉 [CanchasRugby] Canchas con datos de complejo cargadas:', canchasMapeadas.length);
+      setCanchas(canchasMapeadas);
+      setFilteredCanchas(canchasMapeadas);
       
     } catch (error: any) {
-      console.error('❌ [CanchasRugby] ERROR DETALLADO cargando canchas:', error);
+      console.error('❌ [CanchasRugby] ERROR cargando canchas:', error);
       setError(`Error: ${error.message}`);
       
-      // 🔥 FALLBACK
-      console.log('🚨 [CanchasRugby] USANDO FALLBACK - Error en el API');
-      const canchasEstaticas = [
+      // 🏉 Fallback con datos estáticos de rugby
+      const fallbackCanchas = [
         {
           id: 1,
-          imageUrl: "/sports/rugby/canchas/Cancha1.png",
-          name: "🚨 FALLBACK - Campo Rugby Temuco",
-          address: "Norte, Centro, Sur",
-          rating: 4.7,
-          tags: ["DATOS OFFLINE", "Césped natural", "Vestuarios"],
-          description: "🚨 Estos son datos de fallback - API no disponible",
-          price: "40",
-          nextAvailable: "15:00-17:00",
+          imageUrl: "/sports/rugby/rugby.png",
+          name: "Club Rugby Elite",
+          address: "Club Rugby Elite - Av. Alemania 1234, Temuco, Chile",
+          rating: 4.8,
+          tags: ["Al aire libre", "Disponible", "Postes H Profesionales"],
+          description: "Cancha de rugby profesional con postes H reglamentarios",
+          price: "35",
+          nextAvailable: "Disponible ahora",
+          sport: "rugby"
         },
         {
           id: 2,
-          imageUrl: "/sports/rugby/canchas/Cancha2.png",
-          name: "🚨 FALLBACK - Club Rugby Sur",
-          address: "Sector Sur",
-          rating: 4.5,
-          tags: ["DATOS OFFLINE", "Campo reglamentario", "Graderías"],
-          description: "🚨 Estos son datos de fallback - API no disponible",
-          price: "35",
-          nextAvailable: "18:00-20:00",
+          imageUrl: "/sports/rugby/rugby.png",
+          name: "Centro Deportivo Rugby",
+          address: "Centro Deportivo Rugby - Av. Pedro de Valdivia 567, Temuco, Chile",
+          rating: 4.6,
+          tags: ["Al aire libre", "Disponible", "Rugby 7"],
+          description: "Cancha de rugby adaptada para Rugby 7",
+          price: "30",
+          nextAvailable: "Disponible ahora",
+          sport: "rugby"
+        },
+        {
+          id: 3,
+          imageUrl: "/sports/rugby/rugby.png",
+          name: "Rugby Club Temuco",
+          address: "Rugby Club Temuco - Calle Montt 890, Temuco, Chile",
+          rating: 4.9,
+          tags: ["Al aire libre", "Disponible", "Rugby 15"],
+          description: "Cancha de rugby profesional para Rugby 15",
+          price: "40",
+          nextAvailable: "Disponible ahora",
+          sport: "rugby"
         }
       ];
       
-      setCanchas(canchasEstaticas);
-      setFilteredCanchas(canchasEstaticas);
+      setCanchas(fallbackCanchas);
+      setFilteredCanchas(fallbackCanchas);
     } finally {
       setIsLoadingCanchas(false);
     }
   };
 
+  // 🏉 FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO
+  const getStaticComplejoData = (establecimientoId: number) => {
+    const staticComplejos = {
+      1: {
+        nombre: "Club Rugby Elite",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      },
+      2: {
+        nombre: "Centro Deportivo Rugby", 
+        direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+      },
+      3: {
+        nombre: "Rugby Club Temuco",
+        direccion: "Calle Montt 890, Temuco, Chile"
+      },
+      default: {
+        nombre: "Club de Rugby",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      }
+    };
+    
+    return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+  };
+
+  // 🏉 CARGAR CANCHAS AL MONTAR EL COMPONENTE
   useEffect(() => {
     cargarCanchas();
   }, []);
@@ -158,10 +207,12 @@ export default function Page() {
     }
   };
 
+  // 🏉 FUNCIÓN PARA REFRESCAR DATOS
   const handleRefresh = () => {
     cargarCanchas();
   };
 
+  // 🏉 MANEJADOR DE CLICK EN CANCHA
   const handleCanchaClick = (court: any) => {
     console.log('Navegando a cancha:', court);
     router.push(`/sports/rugby/canchas/canchaseleccionada?id=${court.id}`);
@@ -208,7 +259,7 @@ export default function Page() {
           </button>
         </div>
 
-        {/* Mensajes de estado */}
+        {/* 🏉 MENSAJE DE ERROR CON INDICADOR DE FALLBACK */}
         {error && (
           <div className={styles.errorMessage}>
             <span>⚠️</span>
@@ -217,6 +268,7 @@ export default function Page() {
           </div>
         )}
 
+        {/* 🏉 MENSAJE DE CARGA */}
         {isLoadingCanchas && (
           <div className={styles.loadingMessage}>
             <span>🏉</span>
@@ -230,7 +282,7 @@ export default function Page() {
           <div className={styles.filtersGrid}>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#22c55e'}}>📍</span>
+                <span style={{color: '#dc2626'}}>📍</span>
                 <span>Ubicación o barrio</span>
               </label>
               <input
@@ -241,7 +293,7 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#22c55e'}}>📅</span>
+                <span style={{color: '#dc2626'}}>📅</span>
                 <span>Fecha</span>
               </label>
               <input
@@ -252,27 +304,26 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#16a34a'}}>💰</span>
-                <span>Precio (max por hora)</span>
+                <span style={{color: '#b91c1c'}}>💰</span>
+                <span>Precio (max $hr)</span>
               </label>
               <input
                 type="range"
                 min="0"
-                max="80"
+                max="60"
                 className={styles.priceSlider}
               />
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#15803d'}}>🏉</span>
-                <span>Tipo de campo</span>
+                <span style={{color: '#991b1b'}}>🏉</span>
+                <span>Tipo de rugby</span>
               </label>
               <select className={styles.filterSelect}>
-                <option>Todos los campos</option>
-                <option>Campo reglamentario</option>
-                <option>Campo de entrenamiento</option>
-                <option>Campo con graderías</option>
-                <option>Campo césped natural</option>
+                <option>Tipo de rugby</option>
+                <option>Rugby 15</option>
+                <option>Rugby 7</option>
+                <option>Rugby Touch</option>
               </select>
             </div>
           </div>
@@ -284,7 +335,7 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Mensajes de no resultados */}
+        {/* Mensaje de no resultados */}
         {filteredCanchas.length === 0 && searchTerm && !isLoadingCanchas && (
           <div className={styles.noResults}>
             <h3>No se encontraron canchas de rugby para &quot;{searchTerm}&quot;</h3>
@@ -295,11 +346,15 @@ export default function Page() {
           </div>
         )}
 
+        {/* 🏉 MENSAJE CUANDO NO HAY CANCHAS EN LA BD */}
         {filteredCanchas.length === 0 && !searchTerm && !isLoadingCanchas && !error && (
           <div className={styles.noData}>
-            <h3>🏉 No hay canchas de rugby registradas</h3>
-            <p>Aún no se han registrado canchas de rugby en el sistema</p>
-            <button onClick={handleRefresh}>Actualizar</button>
+            <div className={styles.noDataContainer}>
+              <div className={styles.noDataIcon}>🏉</div>
+              <h3 className={styles.noDataTitle}>No hay canchas de rugby registradas</h3>
+              <p className={styles.noDataText}>Aún no se han registrado canchas de rugby en el sistema</p>
+              <button className={styles.refreshButton} onClick={handleRefresh}>Actualizar</button>
+            </div>
           </div>
         )}
 
