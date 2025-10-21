@@ -28,11 +28,11 @@ const getBackendUrl = () => {
     // Autodetección por hostname del frontend
     // Si el frontend contiene develop/staging/test → backend develop
     if (hostname.includes('develop') || hostname.includes('staging') || hostname.includes('test')) {
-      return 'https://backend-develop-0kbdnu-ec3ee3-168-232-167-73.traefik.me';
+      return 'http://backend-develop-0kbdnu-ec3ee3-168-232-167-73.traefik.me';
     }
     
     // Por defecto: backend main (producción)
-    return 'https://backend-mn66n6-82bd05-168-232-167-73.traefik.me';
+    return 'http://backend-mn66n6-82bd05-168-232-167-73.traefik.me';
   }
   
   // Prioridad 3: En servidor, localhost por defecto
