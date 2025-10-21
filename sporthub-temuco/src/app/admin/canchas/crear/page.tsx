@@ -1,74 +1,186 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { canchaService } from '@/services/canchaService';
-import { CreateCanchaInput } from '@/types/cancha';
-import '../../dashboard.css';
+import { complejosService } from '@/services/complejosService';
+import '@/app/admin/dashboard.css';
 
-export default function CreateCanchaPage() {
+// Tipos de cancha disponibles (mantenemos en minúscula como el backend)
+const TIPOS_CANCHA = [
+  'futbol',
+  'basquet', 
+  'tenis',
+  'padel',
+  'volley',
+  'futbol_sala'
+];
+
+interface Complejo {
+  id: number;
+  nombre: string;
+  direccion?: string;
+  comuna?: string;
+}
+
+export default function NuevaCanchaPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingComplejos, setIsLoadingComplejos] = useState(true);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [complejos, setComplejos] = useState<Complejo[]>([]);
+  const [userId, setUserId] = useState<number | null>(null);
 
-  // Estado del formulario - SOLO campos que acepta FastAPI CREATE
-  const [formData, setFormData] = useState<CreateCanchaInput>({
+  // Estado del formulario
+  const [formData, setFormData] = useState({
     nombre: '',
     tipo: 'futbol',
     techada: false,
-    establecimientoId: 1, // Por ahora hardcodeado, después se puede obtener del usuario logueado
-    // Campos UI internos (no se envían al backend):
+    establecimientoId: 0,
     precioPorHora: 0,
-    descripcion: '',
-    capacidad: 1,
-    imagenUrl: ''
+    capacidad: 10,
+    descripcion: ''
   });
 
-  // Manejar cambios en el formulario
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    const { name, value, type, checked } = e.target as HTMLInputElement;
-    
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'number' ? parseFloat(value) || 0 : 
-               type === 'checkbox' ? checked : 
-               value
-    }));
-  };
+  // Cargar complejos del administrador al montar el componente
+  useEffect(() => {
+    loadUserComplejos();
+  }, []);
 
-  // Crear nueva cancha
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const loadUserComplejos = async () => {
     try {
-      setLoading(true);
-      setError(null);
+      setIsLoadingComplejos(true);
       
-      // Validaciones básicas - SOLO para campos requeridos por FastAPI
-      if (!formData.nombre.trim()) {
-        setError('El nombre de la cancha es requerido');
+      // Obtener datos del usuario desde localStorage
+      const userDataString = localStorage.getItem('userData');
+      if (!userDataString) {
+        setError('No se encontró información del usuario. Por favor, inicia sesión nuevamente.');
         return;
       }
+
+      const userData = JSON.parse(userDataString);
+      const adminId = userData.id_usuario || userData.id;
       
-      if (!formData.establecimientoId) {
-        setError('El ID del establecimiento es requerido');
+      if (!adminId) {
+        setError('No se pudo obtener el ID del usuario.');
         return;
       }
+
+      setUserId(adminId);
+      console.log('👤 [CrearCancha] Cargando complejos del admin ID:', adminId);
+
+      // Cargar complejos del administrador
+      const complejosData = await complejosService.getComplejosByAdmin(adminId);
       
-      await canchaService.createCancha(formData);
+      console.log('📋 [CrearCancha] Complejos cargados:', complejosData);
       
-      // Mostrar mensaje de éxito y redirigir
-      alert('Cancha creada exitosamente');
-      router.push('/admin/canchas');
+      // Adaptar formato si es necesario
+      let complejosArray = [];
+      if (Array.isArray(complejosData)) {
+        complejosArray = complejosData;
+      } else if (complejosData?.items) {
+        complejosArray = complejosData.items;
+      } else if (complejosData?.data) {
+        complejosArray = Array.isArray(complejosData.data) ? complejosData.data : complejosData.data.items || [];
+      }
+
+      // Mapear a formato esperado
+      const complejosFormateados = complejosArray.map((c: any) => ({
+        id: c.id || c.id_complejo,
+        nombre: c.nombre,
+        direccion: c.direccion,
+        comuna: c.comuna
+      }));
+
+      setComplejos(complejosFormateados);
+
+      // Si solo hay un complejo, seleccionarlo automáticamente
+      if (complejosFormateados.length === 1) {
+        setFormData(prev => ({
+          ...prev,
+          establecimientoId: complejosFormateados[0].id
+        }));
+        console.log('✅ [CrearCancha] Auto-seleccionado complejo único:', complejosFormateados[0].nombre);
+      } 
+      // No mostrar error si no hay complejos, permitir ingreso manual de ID
+
     } catch (err: any) {
-      console.error('Error creando cancha:', err);
-      setError(err.message || 'Error al crear la cancha');
+      console.error('❌ [CrearCancha] Error cargando complejos:', err);
+      console.warn('⚠️ [CrearCancha] Endpoint no disponible. Permitiendo ingreso manual de ID.');
+      // No mostrar error visual, solo permitir ingreso manual
+      setComplejos([]); // Array vacío activará el input manual
     } finally {
-      setLoading(false);
+      setIsLoadingComplejos(false);
     }
   };
 
-  // Cancelar y volver
+  // Manejar cambios en el formulario
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value, type } = e.target;
+    
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
+               type === 'number' ? Number(value) : value
+    }));
+  };
+
+  // Manejar envío del formulario
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      console.log('📤 Enviando datos para crear cancha:', formData);
+      
+      // Validaciones básicas
+      if (!formData.nombre.trim()) {
+        throw new Error('El nombre de la cancha es requerido');
+      }
+
+      if (!formData.establecimientoId || formData.establecimientoId === 0 || formData.establecimientoId < 1) {
+        throw new Error('Debes seleccionar un complejo deportivo o ingresar un ID válido');
+      }
+
+      if (formData.precioPorHora < 0) {
+        throw new Error('El precio por hora no puede ser negativo');
+      }
+
+      if (formData.capacidad < 1) {
+        throw new Error('La capacidad debe ser al menos 1');
+      }
+
+      // Crear la cancha usando el servicio
+      const nuevaCancha = await canchaService.createCancha({
+        nombre: formData.nombre.trim(),
+        tipo: formData.tipo as any,
+        techada: formData.techada,
+        establecimientoId: formData.establecimientoId,
+        precioPorHora: formData.precioPorHora,
+        capacidad: formData.capacidad,
+        descripcion: formData.descripcion.trim() || undefined
+      });
+
+      console.log('✅ Cancha creada exitosamente:', nuevaCancha);
+      
+      setSuccess('Cancha creada exitosamente');
+      
+      // Redirigir después de 2 segundos
+      setTimeout(() => {
+        router.push('/admin/canchas');
+      }, 2000);
+
+    } catch (err: any) {
+      console.error('❌ Error al crear cancha:', err);
+      setError(err.message || 'Error al crear la cancha. Por favor, intenta nuevamente.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleCancel = () => {
     router.push('/admin/canchas');
   };
@@ -92,12 +204,12 @@ export default function CreateCanchaPage() {
             type="submit" 
             form="create-cancha-form"
             className="btn-guardar" 
-            disabled={loading}
+            disabled={isLoading}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            {loading ? 'Creando...' : 'Crear Cancha'}
+            {isLoading ? 'Creando...' : 'Crear Cancha'}
           </button>
         </div>
       </div>
@@ -105,7 +217,14 @@ export default function CreateCanchaPage() {
       {/* Error Message */}
       {error && (
         <div className="error-container">
-          <p>{error}</p>
+          <p><strong>Error:</strong> {error}</p>
+        </div>
+      )}
+
+      {/* Success Message */}
+      {success && (
+        <div className="success-container">
+          <p><strong>Éxito:</strong> {success}</p>
         </div>
       )}
 
@@ -123,10 +242,11 @@ export default function CreateCanchaPage() {
                   id="nombre"
                   name="nombre"
                   value={formData.nombre}
-                  onChange={handleInputChange}
+                  onChange={handleChange}
                   className="edit-form-input"
-                  placeholder="Ej: Cancha Principal"
+                  placeholder="Ej: Cancha Central de Fútbol"
                   required
+                  disabled={isLoading}
                 />
               </div>
               
@@ -136,34 +256,124 @@ export default function CreateCanchaPage() {
                   id="tipo"
                   name="tipo"
                   value={formData.tipo}
-                  onChange={handleInputChange}
+                  onChange={handleChange}
                   className="edit-form-select"
                   required
+                  disabled={isLoading}
                 >
-                  <option value="futbol">Fútbol</option>
-                  <option value="basquet">Básquet</option>
-                  <option value="tenis">Tenis</option>
-                  <option value="padel">Padel</option>
-                  <option value="volley">Volley</option>
+                  {TIPOS_CANCHA.map(tipo => (
+                    <option key={tipo} value={tipo}>
+                      {tipo.charAt(0).toUpperCase() + tipo.slice(1).replace('_', ' ')}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div className="edit-form-group">
-                <label htmlFor="establecimientoId" className="edit-form-label">ID Complejo: *</label>
+                <label htmlFor="establecimientoId" className="edit-form-label">Complejo Deportivo: *</label>
+                {isLoadingComplejos ? (
+                  <div className="edit-form-input" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span>Cargando complejos...</span>
+                  </div>
+                ) : complejos.length === 0 ? (
+                  <div>
+                    <input
+                      type="number"
+                      id="establecimientoId"
+                      name="establecimientoId"
+                      value={formData.establecimientoId || ''}
+                      onChange={handleChange}
+                      className="edit-form-input"
+                      min="1"
+                      placeholder="Ingresa el ID del complejo"
+                      required
+                      disabled={isLoading}
+                    />
+                    <small style={{ color: '#f59e0b', fontSize: '0.8rem', display: 'block', marginTop: '0.25rem' }}>
+                      ⚠️ Modo temporal: Ingresa manualmente el ID del complejo (esperando endpoint de la API)
+                    </small>
+                  </div>
+                ) : (
+                  <>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                      <div style={{ flex: 1 }}>
+                        <select
+                          id="establecimientoId"
+                          name="establecimientoId"
+                          value={formData.establecimientoId}
+                          onChange={handleChange}
+                          className="edit-form-select"
+                          required
+                          disabled={isLoading || complejos.length === 0}
+                        >
+                          <option value={0} disabled>Selecciona un complejo</option>
+                          {complejos.map(complejo => (
+                            <option key={complejo.id} value={complejo.id}>
+                              {complejo.nombre} {complejo.comuna ? `- ${complejo.comuna}` : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div style={{ width: '120px' }}>
+                        <input
+                          type="number"
+                          name="establecimientoId"
+                          value={formData.establecimientoId || ''}
+                          onChange={handleChange}
+                          className="edit-form-input"
+                          min="1"
+                          placeholder="ID"
+                          title="ID del complejo"
+                          disabled={isLoading}
+                          style={{ fontSize: '0.9rem' }}
+                        />
+                      </div>
+                    </div>
+                    <small style={{ color: 'var(--text-gray)', fontSize: '0.8rem' }}>
+                      Solo se muestran tus complejos asociados (o ingresa ID manualmente)
+                    </small>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Configuración de Precios y Capacidad */}
+          <div className="edit-section">
+            <h3 className="edit-section-title">Configuración de Precios y Capacidad</h3>
+            <div className="edit-form-grid">
+              <div className="edit-form-group">
+                <label htmlFor="precioPorHora" className="edit-form-label">Precio por Hora (CLP): *</label>
                 <input
                   type="number"
-                  id="establecimientoId"
-                  name="establecimientoId"
-                  value={formData.establecimientoId}
-                  onChange={handleInputChange}
+                  id="precioPorHora"
+                  name="precioPorHora"
+                  value={formData.precioPorHora}
+                  onChange={handleChange}
+                  className="edit-form-input"
+                  min="0"
+                  step="1000"
+                  placeholder="Ej: 15000"
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="edit-form-group">
+                <label htmlFor="capacidad" className="edit-form-label">Capacidad de Jugadores: *</label>
+                <input
+                  type="number"
+                  id="capacidad"
+                  name="capacidad"
+                  value={formData.capacidad}
+                  onChange={handleChange}
                   className="edit-form-input"
                   min="1"
-                  placeholder="Ej: 1"
+                  max="50"
+                  placeholder="Ej: 10"
                   required
+                  disabled={isLoading}
                 />
-                <small style={{ color: 'var(--text-gray)', fontSize: '0.8rem' }}>
-                  ID del complejo deportivo al que pertenece esta cancha
-                </small>
               </div>
             </div>
           </div>
@@ -178,7 +388,8 @@ export default function CreateCanchaPage() {
                     type="checkbox"
                     name="techada"
                     checked={formData.techada}
-                    onChange={handleInputChange}
+                    onChange={handleChange}
+                    disabled={isLoading}
                     style={{ marginRight: '0.5rem' }}
                   />
                   Cancha techada/cubierta
@@ -187,15 +398,22 @@ export default function CreateCanchaPage() {
             </div>
           </div>
 
-          {/* Información adicional */}
+          {/* Descripción */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Información</h3>
-            <div className="edit-info-item">
-              <p style={{ color: 'var(--text-gray)', fontSize: '0.9rem' }}>
-                <strong>Campos obligatorios:</strong> Nombre e ID del complejo.<br />
-                <strong>Nota:</strong> Precio, capacidad, descripción e imagen se configuran desde el backend 
-                o en módulos específicos. Esta creación básica permite registrar la cancha en el sistema.
-              </p>
+            <h3 className="edit-section-title">Descripción</h3>
+            <div className="edit-form-group">
+              <label htmlFor="descripcion" className="edit-form-label">Descripción (Opcional):</label>
+              <textarea
+                id="descripcion"
+                name="descripcion"
+                value={formData.descripcion}
+                onChange={handleChange}
+                disabled={isLoading}
+                rows={4}
+                className="edit-form-input"
+                placeholder="Describe las características de la cancha..."
+                style={{ minHeight: '100px', resize: 'vertical' }}
+              />
             </div>
           </div>
         </form>

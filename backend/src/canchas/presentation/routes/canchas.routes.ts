@@ -52,18 +52,18 @@ router.get("/disponibles", (req, res) => ctrl(req).getDisponibles(req, res));
 router.get("/:id", (req, res) => ctrl(req).get(req, res));
 
 // === Endpoints Administrativos ===
-// Requieren rol admin o superadmin
+// Requieren rol admin o super_admin
 
 /** POST /canchas - Crea nueva cancha */
-router.post("/", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).create(req, res));
+router.post("/", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).create(req, res));
 
 /** PATCH /canchas/:id - Actualiza cancha */
-router.patch("/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).update(req, res));
+router.patch("/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).update(req, res));
 
 /** DELETE /canchas/:id - Elimina cancha */
-router.delete("/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).delete(req, res));
+router.delete("/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).delete(req, res));
 
 /** PATCH /canchas/:id/estado - Cambia estado de cancha */
-router.patch("/:id/estado", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).cambiarEstado(req, res));
+router.patch("/:id/estado", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).cambiarEstado(req, res));
 
 export default router;

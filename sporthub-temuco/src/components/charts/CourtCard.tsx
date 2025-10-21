@@ -34,7 +34,7 @@ interface CourtCardProps {
   description: string;
   price: string;
   nextAvailable: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje' | 'escalada' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
+  sport?: 'basquetbol' | 'futbol' | 'futsal' | 'futbolito' | 'tenis' | 'voleibol' | 'padel' | 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje' | 'escalada' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
   onClick?: () => void;
 }
 
@@ -62,6 +62,8 @@ const CourtCard: React.FC<CourtCardProps> = ({
       case 'basquetbol':
         return '/sports/basquetbol/Basquet.png';
       case 'futbol':
+      case 'futsal':
+      case 'futbolito':
         return '/sports/futbol/futbol.png';
       case 'tenis':
         return '/sports/tenis/tenis.png';
@@ -127,6 +129,8 @@ const CourtCard: React.FC<CourtCardProps> = ({
       case 'basquetbol':
         return basquetbolStyles;
       case 'futbol':
+      case 'futsal':
+      case 'futbolito':
         return futbolStyles;
       case 'tenis':
         return tenisStyles;
@@ -214,8 +218,10 @@ const CourtCard: React.FC<CourtCardProps> = ({
         case 'karting':
           router.push('/sports/karting/canchas/canchaseleccionada');
           break;
-          
+
         case 'futbol':
+        case 'futsal':
+        case 'futbolito':
           router.push('/sports/futbol/canchas/canchaseleccionada');
           break;
           
@@ -312,7 +318,11 @@ const CourtCard: React.FC<CourtCardProps> = ({
     switch (sport) {
       case 'basquetbol':
         return '🏀';
-      case 'futbol':
+      case 'futbol' :
+        return '⚽';
+      case 'futsal':
+        return '⚽';
+      case 'futbolito':
         return '⚽';
       case 'tenis':
         return '🎾';

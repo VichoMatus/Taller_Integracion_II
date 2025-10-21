@@ -7,8 +7,9 @@ import SearchBar from '../../../../components/SearchBar';
 import LocationMap from '../../../../components/LocationMap';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
+import { complejosService } from '../../../../services/complejosService';
 
-// 🔥 IMPORTAR SERVICIO
+// 🏊‍♂️ IMPORTAR SERVICIO
 import { canchaService } from '../../../../services/canchaService';
 
 export default function Page() {
@@ -16,113 +17,161 @@ export default function Page() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   
-  // 🔥 ESTADOS PARA LA API
-  const [piletas, setPiletas] = useState<any[]>([]);
-  const [filteredPiletas, setFilteredPiletas] = useState<any[]>([]);
+  // 🏊‍♂️ ESTADOS PARA LA API
+  const [canchas, setCanchas] = useState<any[]>([]);
+  const [filteredCanchas, setFilteredCanchas] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [isLoadingPiletas, setIsLoadingPiletas] = useState(true);
+  const [isLoadingCanchas, setIsLoadingCanchas] = useState(true);
   const [error, setError] = useState<string>('');
 
-  // 🔥 FUNCIÓN PARA CARGAR PILETAS DE NATACIÓN
-  const cargarPiletas = async () => {
+  // 🏊‍♂️ FUNCIÓN PARA CARGAR PILETAS MODIFICADA PARA NATACIÓN
+  const cargarCanchas = async () => {
     try {
-      setIsLoadingPiletas(true);
+      setIsLoadingCanchas(true);
       setError('');
       
-      console.log('🔄 [PiletasNatacion] Cargando piletas individuales del backend...');
+      console.log('🔄 [PiletasNatacion] Cargando TODAS las canchas del backend...');
       
-      // 🔥 IDs de las piletas de natación que quieres mostrar
-      const natacionPiletaIds = [1, 2, 3, 4, 5, 6, 7, 8];
+      const todasLasCanchas = await canchaService.getCanchas();
+      console.log('✅ [PiletasNatacion] Todas las canchas obtenidas:', todasLasCanchas);
       
-      const piletasPromises = natacionPiletaIds.map(async (id) => {
-        try {
-          console.log(`🔍 [PiletasNatacion] Cargando pileta ID: ${id}`);
-          const pileta = await canchaService.getCanchaById(id);
-          console.log(`✅ [PiletasNatacion] Pileta ${id} obtenida:`, pileta);
-          
-          // 🔥 FILTRAR SOLO PILETAS DE NATACIÓN
-          if (pileta.tipo !== 'natacion') {
-            console.log(`⚠️ [PiletasNatacion] Pileta ${id} no es de natación (${pileta.tipo}), saltando...`);
-            return null;
-          }
-          
-          // Mapear al formato requerido por CourtCard
-          const mappedPileta = {
-            id: pileta.id,
-            imageUrl: `/sports/natacion/piletas/Pileta${pileta.id}.png`,
-            name: pileta.nombre,
-            address: `Centro Acuático ${pileta.establecimientoId}`,
-            rating: pileta.rating || 4.6,
-            tags: [
-              pileta.techada ? "Pileta techada" : "Pileta al aire libre",
-              pileta.activa ? "Disponible" : "No disponible",
-              "Agua climatizada",
-              "Vestuarios disponibles"
-            ],
-            description: `Pileta de natación ${pileta.nombre} - ID: ${pileta.id}`,
-            price: pileta.precioPorHora?.toString() || "18",
-            nextAvailable: pileta.activa ? "Disponible ahora" : "No disponible",
-            sport: "natacion"
-          };
-          
-          console.log('🗺️ [PiletasNatacion] Pileta mapeada:', mappedPileta);
-          return mappedPileta;
-          
-        } catch (error) {
-          console.log(`❌ [PiletasNatacion] Error cargando pileta ${id}:`, error);
-          return null;
-        }
+      // 🏊‍♂️ FILTRAR PILETAS DE NATACIÓN
+      const piletasDeNatacion = todasLasCanchas.filter((cancha: any) => {
+        return ['natacion', 'swimming', 'pileta', 'piscina'].includes(cancha.tipo.toLowerCase());
       });
       
-      const piletasResults = await Promise.all(piletasPromises);
-      const piletasValidas = piletasResults.filter(pileta => pileta !== null);
+      console.log('🏊‍♂️ [PiletasNatacion] Piletas de natación encontradas:', piletasDeNatacion.length);
       
-      console.log('🎉 [PiletasNatacion] Piletas de natación cargadas exitosamente:', piletasValidas.length);
-      console.log('📋 [PiletasNatacion] Piletas finales:', piletasValidas);
+      // 🏊‍♂️ OBTENER DATOS DE COMPLEJOS PARA CADA PILETA
+      const canchasMapeadas = await Promise.all(
+        piletasDeNatacion.map(async (cancha: any) => {
+          let complejoData = null;
+          let addressInfo = `Complejo ${cancha.establecimientoId}`;
+          
+          // 🏊‍♂️ INTENTAR OBTENER DATOS DEL COMPLEJO
+          if (cancha.establecimientoId) {
+            try {
+              console.log(`🔍 [PiletasNatacion] Cargando complejo ID ${cancha.establecimientoId} para pileta ${cancha.id}`);
+              complejoData = await complejosService.getComplejoById(cancha.establecimientoId);
+              
+              if (complejoData) {
+                addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                console.log(`✅ [PiletasNatacion] Complejo cargado: ${addressInfo}`);
+              }
+              
+            } catch (complejoError: any) {
+              console.warn(`⚠️ [PiletasNatacion] Error cargando complejo ${cancha.establecimientoId}:`, complejoError.message);
+              // Usar datos de fallback
+              const staticComplejo = getStaticComplejoData(cancha.establecimientoId);
+              addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+            }
+          }
+          
+          // 🏊‍♂️ MAPEAR PILETA CON DATOS DEL COMPLEJO
+          const mappedCancha = {
+            id: cancha.id,
+            imageUrl: `/sports/natacion/piletas/Pileta${cancha.id}.png`,
+            name: cancha.nombre,
+            address: addressInfo, // 🏊‍♂️ USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
+            rating: cancha.rating || 4.6,
+            tags: [
+              cancha.techada ? "Pileta Techada" : "Pileta Exterior",
+              cancha.activa ? "Disponible" : "No disponible",
+              "Agua Climatizada"
+            ],
+            description: `Pileta de ${cancha.tipo} ${cancha.nombre} - ID: ${cancha.id}`,
+            price: cancha.precioPorHora?.toString() || "20",
+            nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
+            sport: cancha.tipo
+          };
+          
+          console.log('🗺️ [PiletasNatacion] Pileta mapeada:', mappedCancha);
+          return mappedCancha;
+        })
+      );
       
-      setPiletas(piletasValidas);
-      setFilteredPiletas(piletasValidas);
+      console.log('🎉 [PiletasNatacion] Piletas con datos de complejo cargadas:', canchasMapeadas.length);
+      setCanchas(canchasMapeadas);
+      setFilteredCanchas(canchasMapeadas);
       
     } catch (error: any) {
-      console.error('❌ [PiletasNatacion] ERROR DETALLADO cargando piletas:', error);
+      console.error('❌ [PiletasNatacion] ERROR cargando piletas:', error);
       setError(`Error: ${error.message}`);
       
-      // 🔥 FALLBACK
-      console.log('🚨 [PiletasNatacion] USANDO FALLBACK - Error en el API');
-      const piletasEstaticas = [
+      // 🏊‍♂️ Fallback con datos estáticos de natación
+      const fallbackPiletas = [
         {
           id: 1,
-          imageUrl: "/sports/natacion/piletas/Pileta1.png",
-          name: "🚨 FALLBACK - Aqua Center Temuco",
-          address: "Norte, Centro, Sur",
+          imageUrl: "/sports/natacion/natacion.png",
+          name: "Centro Acuático Elite",
+          address: "Centro Acuático Norte - Av. Alemania 1234, Temuco, Chile",
           rating: 4.7,
-          tags: ["DATOS OFFLINE", "Agua climatizada", "Vestuarios"],
-          description: "🚨 Estos son datos de fallback - API no disponible",
-          price: "18",
-          nextAvailable: "20:00-21:00",
+          tags: ["Techada", "Disponible", "Agua Climatizada"],
+          description: "Pileta olímpica profesional con agua climatizada",
+          price: "20",
+          nextAvailable: "Disponible ahora",
+          sport: "natacion"
         },
         {
           id: 2,
-          imageUrl: "/sports/natacion/piletas/Pileta2.png",
-          name: "🚨 FALLBACK - Piscina Municipal",
-          address: "Sector Norte",
-          rating: 4.4,
-          tags: ["DATOS OFFLINE", "Pileta olimpica", "Clases grupales"],
-          description: "🚨 Estos son datos de fallback - API no disponible",
-          price: "15",
-          nextAvailable: "14:30-15:30",
+          imageUrl: "/sports/natacion/natacion.png",
+          name: "Pileta Olímpica Central",
+          address: "Complejo Natación Centro - Av. Pedro de Valdivia 567, Temuco, Chile",
+          rating: 4.5,
+          tags: ["Exterior", "Disponible", "50 metros"],
+          description: "Pileta olímpica de 50 metros con 8 carriles",
+          price: "25",
+          nextAvailable: "Disponible ahora",
+          sport: "natacion"
+        },
+        {
+          id: 3,
+          imageUrl: "/sports/natacion/natacion.png",
+          name: "Pileta Semi-Olímpica Sur",
+          address: "Club Acuático Sur - Calle Montt 890, Temuco, Chile",
+          rating: 4.8,
+          tags: ["Techada", "Disponible", "25 metros"],
+          description: "Pileta semi-olímpica ideal para entrenamiento",
+          price: "18",
+          nextAvailable: "Disponible ahora",
+          sport: "natacion"
         }
       ];
       
-      setPiletas(piletasEstaticas);
-      setFilteredPiletas(piletasEstaticas);
+      setCanchas(fallbackPiletas);
+      setFilteredCanchas(fallbackPiletas);
     } finally {
-      setIsLoadingPiletas(false);
+      setIsLoadingCanchas(false);
     }
   };
 
+  // 🏊‍♂️ FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO
+  const getStaticComplejoData = (establecimientoId: number) => {
+    const staticComplejos = {
+      1: {
+        nombre: "Centro Acuático Norte",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      },
+      2: {
+        nombre: "Complejo Natación Centro", 
+        direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+      },
+      3: {
+        nombre: "Club Acuático Sur",
+        direccion: "Calle Montt 890, Temuco, Chile"
+      },
+      default: {
+        nombre: "Centro Acuático",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      }
+    };
+    
+    return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+  };
+
+  // 🏊‍♂️ CARGAR PILETAS AL MONTAR EL COMPONENTE
   useEffect(() => {
-    cargarPiletas();
+    cargarCanchas();
   }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,13 +180,13 @@ export default function Page() {
 
   const handleSearch = () => {
     if (searchTerm.trim() === '') {
-      setFilteredPiletas(piletas);
+      setFilteredCanchas(canchas);
     } else {
-      const filtered = piletas.filter(pileta =>
-        pileta.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        pileta.address.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = canchas.filter(cancha =>
+        cancha.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cancha.address.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setFilteredPiletas(filtered);
+      setFilteredCanchas(filtered);
     }
   };
 
@@ -145,9 +194,9 @@ export default function Page() {
     router.push('/sports/natacion');
   };
 
-  const availableNow = filteredPiletas.filter(pileta => 
-    pileta.nextAvailable !== "No disponible hoy" && 
-    !pileta.nextAvailable.includes("Mañana")
+  const availableNow = filteredCanchas.filter(cancha => 
+    cancha.nextAvailable !== "No disponible hoy" && 
+    !cancha.nextAvailable.includes("Mañana")
   ).length;
 
   const handleUserButtonClick = () => {
@@ -158,13 +207,15 @@ export default function Page() {
     }
   };
 
+  // 🏊‍♂️ FUNCIÓN PARA REFRESCAR DATOS
   const handleRefresh = () => {
-    cargarPiletas();
+    cargarCanchas();
   };
 
-  const handlePiletaClick = (pool: any) => {
-    console.log('Navegando a pileta:', pool);
-    router.push(`/sports/natacion/piletas/piletaseleccionada?id=${pool.id}`);
+  // 🏊‍♂️ MANEJADOR DE CLICK EN PILETA
+  const handleCanchaClick = (court: any) => {
+    console.log('Navegando a pileta:', court);
+    router.push(`/sports/natacion/piletas/piletaseleccionada?id=${court.id}`);
   };
 
   return (
@@ -175,7 +226,7 @@ export default function Page() {
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerIcon}>🏊</div>
+            <div className={styles.headerIcon}>🏊‍♂️</div>
             <h1 className={styles.headerTitle}>Natación</h1>
           </div>
           <div className={styles.headerRight}>
@@ -208,7 +259,7 @@ export default function Page() {
           </button>
         </div>
 
-        {/* Mensajes de estado */}
+        {/* 🏊‍♂️ MENSAJE DE ERROR CON INDICADOR DE FALLBACK */}
         {error && (
           <div className={styles.errorMessage}>
             <span>⚠️</span>
@@ -217,9 +268,10 @@ export default function Page() {
           </div>
         )}
 
-        {isLoadingPiletas && (
+        {/* 🏊‍♂️ MENSAJE DE CARGA */}
+        {isLoadingCanchas && (
           <div className={styles.loadingMessage}>
-            <span>🏊</span>
+            <span>🏊‍♂️</span>
             <span>Cargando piletas de natación...</span>
           </div>
         )}
@@ -230,7 +282,7 @@ export default function Page() {
           <div className={styles.filtersGrid}>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#22c55e'}}>📍</span>
+                <span style={{color: '#3b82f6'}}>📍</span>
                 <span>Ubicación o barrio</span>
               </label>
               <input
@@ -241,7 +293,7 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#22c55e'}}>📅</span>
+                <span style={{color: '#3b82f6'}}>📅</span>
                 <span>Fecha</span>
               </label>
               <input
@@ -252,8 +304,8 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#16a34a'}}>💰</span>
-                <span>Precio (max por hora)</span>
+                <span style={{color: '#2563eb'}}>💰</span>
+                <span>Precio (max $hr)</span>
               </label>
               <input
                 type="range"
@@ -264,15 +316,14 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#15803d'}}>🏊</span>
+                <span style={{color: '#1d4ed8'}}>🏊‍♂️</span>
                 <span>Tipo de pileta</span>
               </label>
               <select className={styles.filterSelect}>
                 <option>Tipo de pileta</option>
-                <option>Pileta olímpica</option>
-                <option>Pileta recreativa</option>
-                <option>Pileta infantil</option>
-                <option>Pileta techada</option>
+                <option>Olímpica (50m)</option>
+                <option>Semi-olímpica (25m)</option>
+                <option>Recreativa</option>
               </select>
             </div>
           </div>
@@ -284,35 +335,39 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Mensajes de no resultados */}
-        {filteredPiletas.length === 0 && searchTerm && !isLoadingPiletas && (
+        {/* Mensaje de no resultados */}
+        {filteredCanchas.length === 0 && searchTerm && !isLoadingCanchas && (
           <div className={styles.noResults}>
             <h3>No se encontraron piletas de natación para &quot;{searchTerm}&quot;</h3>
             <p>Intenta con otros términos de búsqueda o ubicaciones</p>
-            <button onClick={() => {setSearchTerm(''); setFilteredPiletas(piletas);}}>
+            <button onClick={() => {setSearchTerm(''); setFilteredCanchas(canchas);}}>
               Ver todas las piletas de natación
             </button>
           </div>
         )}
 
-        {filteredPiletas.length === 0 && !searchTerm && !isLoadingPiletas && !error && (
+        {/* 🏊‍♂️ MENSAJE CUANDO NO HAY PILETAS EN LA BD */}
+        {filteredCanchas.length === 0 && !searchTerm && !isLoadingCanchas && !error && (
           <div className={styles.noData}>
-            <h3>🏊 No hay piletas de natación registradas</h3>
-            <p>Aún no se han registrado piletas de natación en el sistema</p>
-            <button onClick={handleRefresh}>Actualizar</button>
+            <div className={styles.noDataContainer}>
+              <div className={styles.noDataIcon}>🏊‍♂️</div>
+              <h3 className={styles.noDataTitle}>No hay piletas de natación registradas</h3>
+              <p className={styles.noDataText}>Aún no se han registrado piletas de natación en el sistema</p>
+              <button className={styles.refreshButton} onClick={handleRefresh}>Actualizar</button>
+            </div>
           </div>
         )}
 
         {/* Contenedor de tarjetas */}
-        {!isLoadingPiletas && filteredPiletas.length > 0 && (
+        {!isLoadingCanchas && filteredCanchas.length > 0 && (
           <div className={styles.cardsContainer}>
             <div className={styles.cardsGrid}>
-              {filteredPiletas.map((pileta, idx) => (
+              {filteredCanchas.map((cancha, idx) => (
                 <CourtCard 
-                  key={pileta.id || idx} 
-                  {...pileta} 
+                  key={cancha.id || idx} 
+                  {...cancha} 
                   sport="natacion"
-                  onClick={() => handlePiletaClick(pileta)}
+                  onClick={() => handleCanchaClick(cancha)}
                 />
               ))}
             </div>

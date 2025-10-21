@@ -7,8 +7,9 @@ import SearchBar from '../../../../components/SearchBar';
 import LocationMap from '../../../../components/LocationMap';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
+import { complejosService } from '../../../../services/complejosService';
 
-// 🔥 IMPORTAR SERVICIO
+// 🛹 IMPORTAR SERVICIO
 import { canchaService } from '../../../../services/canchaService';
 
 export default function Page() {
@@ -16,113 +17,159 @@ export default function Page() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   
-  // 🔥 ESTADOS PARA LA API
-  const [skateparks, setSkateparks] = useState<any[]>([]);
-  const [filteredSkateparks, setFilteredSkateparks] = useState<any[]>([]);
+  // 🛹 ESTADOS PARA LA API
+  const [pistas, setPistas] = useState<any[]>([]);
+  const [filteredPistas, setFilteredPistas] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [isLoadingSkateparks, setIsLoadingSkateparks] = useState(true);
+  const [isLoadingPistas, setIsLoadingPistas] = useState(true);
   const [error, setError] = useState<string>('');
 
-  // 🔥 FUNCIÓN PARA CARGAR SKATEPARKS
-  const cargarSkateparks = async () => {
+  // 🛹 FUNCIÓN PARA CARGAR PISTAS MODIFICADA PARA SKATE
+  const cargarPistas = async () => {
     try {
-      setIsLoadingSkateparks(true);
+      setIsLoadingPistas(true);
       setError('');
       
-      console.log('🔄 [SkateparksPage] Cargando skateparks individuales del backend...');
+      console.log('🔄 [PistasSkate] Cargando TODAS las pistas del backend...');
       
-      // 🔥 IDs de los skateparks que quieres mostrar
-      const skateparkIds = [1, 2, 3, 4, 5, 6, 7, 8];
+      const todasLasPistas = await canchaService.getCanchas();
+      console.log('✅ [PistasSkate] Todas las pistas obtenidas:', todasLasPistas);
       
-      const skateparksPromises = skateparkIds.map(async (id) => {
-        try {
-          console.log(`🔍 [SkateparksPage] Cargando skatepark ID: ${id}`);
-          const skatepark = await canchaService.getCanchaById(id);
-          console.log(`✅ [SkateparksPage] Skatepark ${id} obtenido:`, skatepark);
+      // 🛹 FILTRAR PISTAS DE SKATE
+      const pistasDeSkate = todasLasPistas.filter((pista: any) => {
+        return ['skate', 'skateboard', 'skatepark'].includes(pista.tipo);
+      });
+      
+      console.log('🛹 [PistasSkate] Pistas de skate encontradas:', pistasDeSkate.length);
+      
+      // 🛹 OBTENER DATOS DE COMPLEJOS PARA CADA PISTA
+      const pistasMapeadas = await Promise.all(
+        pistasDeSkate.map(async (pista: any) => {
+          let complejoData = null;
+          let addressInfo = `Complejo ${pista.establecimientoId}`;
           
-          // 🔥 FILTRAR SOLO SKATEPARKS
-          if (skatepark.tipo !== 'skate') {
-            console.log(`⚠️ [SkateparksPage] Skatepark ${id} no es de skate (${skatepark.tipo}), saltando...`);
-            return null;
+          // 🛹 INTENTAR OBTENER DATOS DEL COMPLEJO
+          if (pista.establecimientoId) {
+            try {
+              console.log(`🔍 [PistasSkate] Cargando complejo ID ${pista.establecimientoId} para pista ${pista.id}`);
+              complejoData = await complejosService.getComplejoById(pista.establecimientoId);
+              
+              if (complejoData) {
+                addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                console.log(`✅ [PistasSkate] Complejo cargado: ${addressInfo}`);
+              }
+              
+            } catch (complejoError: any) {
+              console.warn(`⚠️ [PistasSkate] Error cargando complejo ${pista.establecimientoId}:`, complejoError.message);
+              // Usar datos de fallback
+              const staticComplejo = getStaticComplejoData(pista.establecimientoId);
+              addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+            }
           }
           
-          // Mapear al formato requerido por CourtCard
-          const mappedSkatepark = {
-            id: skatepark.id,
-            imageUrl: `/sports/skate/canchas/Skatepark${skatepark.id}.png`,
-            name: skatepark.nombre,
-            address: `Complejo ${skatepark.establecimientoId}`,
-            rating: skatepark.rating || 4.5,
+          // 🛹 MAPEAR PISTA CON DATOS DEL COMPLEJO
+          const mappedPista = {
+            id: pista.id,
+            imageUrl: `/sports/skate/pistas/Pista${pista.id}.png`,
+            name: pista.nombre,
+            address: addressInfo, // 🛹 USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
+            rating: pista.rating || 4.6,
             tags: [
-              skatepark.techada ? "Skatepark cubierto" : "Skatepark al aire libre",
-              skatepark.activa ? "Disponible" : "No disponible",
-              "Rampas incluidas",
-              "Equipo de seguridad"
+              pista.techada ? "Pista cubierta" : "Pista exterior",
+              pista.activa ? "Disponible" : "No disponible",
+              "Skatepark",
+              "Rampas"
             ],
-            description: `Skatepark ${skatepark.nombre} - ID: ${skatepark.id}`,
-            price: skatepark.precioPorHora?.toString() || "20",
-            nextAvailable: skatepark.activa ? "Disponible ahora" : "No disponible",
+            description: `Pista de skate ${pista.nombre} - ID: ${pista.id}`,
+            price: pista.precioPorHora?.toString() || "15",
+            nextAvailable: pista.activa ? "Disponible ahora" : "No disponible",
             sport: "skate"
           };
           
-          console.log('🗺️ [SkateparksPage] Skatepark mapeado:', mappedSkatepark);
-          return mappedSkatepark;
-          
-        } catch (error) {
-          console.log(`❌ [SkateparksPage] Error cargando skatepark ${id}:`, error);
-          return null;
-        }
-      });
+          console.log('🗺️ [PistasSkate] Pista mapeada:', mappedPista);
+          return mappedPista;
+        })
+      );
       
-      const skateparksResults = await Promise.all(skateparksPromises);
-      const skateparksValidos = skateparksResults.filter(skatepark => skatepark !== null);
-      
-      console.log('🎉 [SkateparksPage] Skateparks cargados exitosamente:', skateparksValidos.length);
-      console.log('📋 [SkateparksPage] Skateparks finales:', skateparksValidos);
-      
-      setSkateparks(skateparksValidos);
-      setFilteredSkateparks(skateparksValidos);
+      console.log('🎉 [PistasSkate] Pistas con datos de complejo cargadas:', pistasMapeadas.length);
+      setPistas(pistasMapeadas);
+      setFilteredPistas(pistasMapeadas);
       
     } catch (error: any) {
-      console.error('❌ [SkateparksPage] ERROR DETALLADO cargando skateparks:', error);
+      console.error('❌ [PistasSkate] ERROR cargando pistas:', error);
       setError(`Error: ${error.message}`);
       
-      // 🔥 FALLBACK
-      console.log('🚨 [SkateparksPage] USANDO FALLBACK - Error en el API');
-      const skateparksEstaticos = [
+      // 🛹 Fallback con datos estáticos de skate
+      const pistasEstaticas = [
         {
           id: 1,
-          imageUrl: "/sports/skate/canchas/Skatepark1.png",
-          name: "🚨 FALLBACK - Skatepark Centro",
-          address: "Norte, Centro, Sur",
-          rating: 4.6,
-          tags: ["DATOS OFFLINE", "Rampas incluidas", "Bowl"],
+          imageUrl: "/sports/skate/pistas/Pista1.png",
+          name: "🚨 FALLBACK - Skatepark Norte",
+          address: "Skatepark Norte - Av. Alemania 1234, Temuco",
+          rating: 4.7,
+          tags: ["DATOS OFFLINE", "Bowl", "Street"],
           description: "🚨 Estos son datos de fallback - API no disponible",
-          price: "20",
-          nextAvailable: "16:00-18:00",
+          price: "15",
+          nextAvailable: "10:00-11:00",
         },
         {
           id: 2,
-          imageUrl: "/sports/skate/canchas/Skatepark2.png",
-          name: "🚨 FALLBACK - Skate Plaza Norte",
-          address: "Sector Norte",
-          rating: 4.4,
-          tags: ["DATOS OFFLINE", "Skatepark al aire libre", "Mini ramps"],
+          imageUrl: "/sports/skate/pistas/Pista2.png",
+          name: "🚨 FALLBACK - Skatepark Centro",
+          address: "Skatepark Centro - Av. Pedro de Valdivia 567, Temuco",
+          rating: 4.5,
+          tags: ["DATOS OFFLINE", "Mini Ramp", "Street"],
           description: "🚨 Estos son datos de fallback - API no disponible",
-          price: "15",
-          nextAvailable: "14:00-16:00",
+          price: "12",
+          nextAvailable: "14:00-15:00",
+        },
+        {
+          id: 3,
+          imageUrl: "/sports/skate/pistas/Pista3.png",
+          name: "🚨 FALLBACK - Skatepark Sur",
+          address: "Skatepark Sur - Calle Montt 890, Temuco",
+          rating: 4.4,
+          tags: ["DATOS OFFLINE", "Pool", "Vert"],
+          description: "🚨 Estos son datos de fallback - API no disponible",
+          price: "18",
+          nextAvailable: "Mañana 09:00-10:00",
         }
       ];
       
-      setSkateparks(skateparksEstaticos);
-      setFilteredSkateparks(skateparksEstaticos);
+      setPistas(pistasEstaticas);
+      setFilteredPistas(pistasEstaticas);
     } finally {
-      setIsLoadingSkateparks(false);
+      setIsLoadingPistas(false);
     }
   };
 
+  // 🛹 FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO DE SKATE
+  const getStaticComplejoData = (establecimientoId: number) => {
+    const staticComplejos = {
+      1: {
+        nombre: "Skatepark Norte",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      },
+      2: {
+        nombre: "Skatepark Centro", 
+        direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+      },
+      3: {
+        nombre: "Skatepark Sur",
+        direccion: "Calle Montt 890, Temuco, Chile"
+      },
+      default: {
+        nombre: "Skatepark",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      }
+    };
+    
+    return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+  };
+
+  // 🛹 CARGAR PISTAS AL MONTAR EL COMPONENTE
   useEffect(() => {
-    cargarSkateparks();
+    cargarPistas();
   }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,13 +178,13 @@ export default function Page() {
 
   const handleSearch = () => {
     if (searchTerm.trim() === '') {
-      setFilteredSkateparks(skateparks);
+      setFilteredPistas(pistas);
     } else {
-      const filtered = skateparks.filter(skatepark =>
-        skatepark.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        skatepark.address.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = pistas.filter(pista =>
+        pista.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        pista.address.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setFilteredSkateparks(filtered);
+      setFilteredPistas(filtered);
     }
   };
 
@@ -145,9 +192,9 @@ export default function Page() {
     router.push('/sports/skate');
   };
 
-  const availableNow = filteredSkateparks.filter(skatepark => 
-    skatepark.nextAvailable !== "No disponible hoy" && 
-    !skatepark.nextAvailable.includes("Mañana")
+  const availableNow = filteredPistas.filter(pista => 
+    pista.nextAvailable !== "No disponible hoy" && 
+    !pista.nextAvailable.includes("Mañana")
   ).length;
 
   const handleUserButtonClick = () => {
@@ -158,11 +205,13 @@ export default function Page() {
     }
   };
 
+  // 🛹 FUNCIÓN PARA REFRESCAR DATOS
   const handleRefresh = () => {
-    cargarSkateparks();
+    cargarPistas();
   };
 
-  const handleSkateparkClick = (park: any) => {
+  // 🛹 MANEJADOR DE CLICK EN PISTA
+  const handlePistaClick = (park: any) => {
     console.log('Navegando a skatepark:', park);
     router.push(`/sports/skate/canchas/canchaseleccionada?id=${park.id}`);
   };
@@ -175,7 +224,7 @@ export default function Page() {
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerIcon}>🛹</div>
+            <div className={styles.headerIcon}></div>
             <h1 className={styles.headerTitle}>Skate</h1>
           </div>
           <div className={styles.headerRight}>
@@ -208,7 +257,7 @@ export default function Page() {
           </button>
         </div>
 
-        {/* Mensajes de estado */}
+        {/* 🛹 MENSAJE DE ERROR CON INDICADOR DE FALLBACK */}
         {error && (
           <div className={styles.errorMessage}>
             <span>⚠️</span>
@@ -217,7 +266,8 @@ export default function Page() {
           </div>
         )}
 
-        {isLoadingSkateparks && (
+        {/* 🛹 MENSAJE DE CARGA */}
+        {isLoadingPistas && (
           <div className={styles.loadingMessage}>
             <span>🛹</span>
             <span>Cargando skateparks...</span>
@@ -230,18 +280,18 @@ export default function Page() {
           <div className={styles.filtersGrid}>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#22c55e'}}>📍</span>
+                <span style={{color: '#FF6B35'}}>📍</span>
                 <span>Ubicación o barrio</span>
               </label>
               <input
                 type="text"
-                placeholder="Norte, Centro, Sur, Oeste..."
+                placeholder="Norte, Centro, Sur, Skatepark..."
                 className={styles.filterInput}
               />
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#22c55e'}}>📅</span>
+                <span style={{color: '#FF6B35'}}>📅</span>
                 <span>Fecha</span>
               </label>
               <input
@@ -252,27 +302,28 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#16a34a'}}>💰</span>
-                <span>Precio (max por sesión)</span>
+                <span style={{color: '#E55100'}}>💰</span>
+                <span>Precio (max $hr)</span>
               </label>
               <input
                 type="range"
                 min="0"
-                max="50"
+                max="30"
                 className={styles.priceSlider}
               />
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#15803d'}}>🛹</span>
-                <span>Tipo de skatepark</span>
+                <span style={{color: '#D84315'}}>🛹</span>
+                <span>Tipo de pista</span>
               </label>
               <select className={styles.filterSelect}>
-                <option>Todos los tipos</option>
-                <option>Street plaza</option>
-                <option>Bowl/Pool</option>
-                <option>Vert ramp</option>
-                <option>Mini ramp</option>
+                <option>Tipo de pista</option>
+                <option>Bowl</option>
+                <option>Street</option>
+                <option>Vert</option>
+                <option>Mini Ramp</option>
+                <option>Pool</option>
               </select>
             </div>
           </div>
@@ -284,18 +335,19 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Mensajes de no resultados */}
-        {filteredSkateparks.length === 0 && searchTerm && !isLoadingSkateparks && (
+        {/* Mensaje de no resultados */}
+        {filteredPistas.length === 0 && searchTerm && !isLoadingPistas && (
           <div className={styles.noResults}>
             <h3>No se encontraron skateparks para &quot;{searchTerm}&quot;</h3>
-            <p>Intenta con otros términos de búsqueda o ubicaciones</p>
-            <button onClick={() => {setSearchTerm(''); setFilteredSkateparks(skateparks);}}>
+            <p>Intenta con otros términos de búsqueda o ubicaciones específicas</p>
+            <button onClick={() => {setSearchTerm(''); setFilteredPistas(pistas);}}>
               Ver todos los skateparks
             </button>
           </div>
         )}
 
-        {filteredSkateparks.length === 0 && !searchTerm && !isLoadingSkateparks && !error && (
+        {/* 🛹 MENSAJE CUANDO NO HAY PISTAS EN LA BD */}
+        {filteredPistas.length === 0 && !searchTerm && !isLoadingPistas && !error && (
           <div className={styles.noData}>
             <h3>🛹 No hay skateparks registrados</h3>
             <p>Aún no se han registrado skateparks en el sistema</p>
@@ -304,15 +356,15 @@ export default function Page() {
         )}
 
         {/* Contenedor de tarjetas */}
-        {!isLoadingSkateparks && filteredSkateparks.length > 0 && (
+        {!isLoadingPistas && filteredPistas.length > 0 && (
           <div className={styles.cardsContainer}>
             <div className={styles.cardsGrid}>
-              {filteredSkateparks.map((skatepark, idx) => (
+              {filteredPistas.map((pista, idx) => (
                 <CourtCard 
-                  key={skatepark.id || idx} 
-                  {...skatepark} 
+                  key={pista.id || idx} 
+                  {...pista} 
                   sport="skate"
-                  onClick={() => handleSkateparkClick(skatepark)}
+                  onClick={() => handlePistaClick(pista)}
                 />
               ))}
             </div>

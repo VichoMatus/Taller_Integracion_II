@@ -11,13 +11,31 @@ import axios from 'axios';
 // Configuración centralizada de URLs
 // Detecta automáticamente el entorno
 const getBackendUrl = () => {
-  // En cliente: detecta por hostname
-  if (typeof window !== 'undefined') {
-    return window.location.hostname === 'localhost' 
-      ? 'http://localhost:4000'
-      : 'https://backend-mn66n6-82bd05-168-232-167-73.traefik.me';
+  // Prioridad 1: Variable de entorno explícita
+  if (process.env.NEXT_PUBLIC_BACKEND_URL) {
+    return process.env.NEXT_PUBLIC_BACKEND_URL;
   }
-  // En servidor: usa variable de entorno o localhost por defecto
+  
+  // Prioridad 2: En cliente, detecta por hostname
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    
+    // Desarrollo local
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return 'http://localhost:4000';
+    }
+    
+    // Autodetección por hostname del frontend
+    // Si el frontend contiene develop/staging/test → backend develop
+    if (hostname.includes('develop') || hostname.includes('staging') || hostname.includes('test')) {
+      return 'https://backend-develop-0kbdnu-ec3ee3-168-232-167-73.traefik.me';
+    }
+    
+    // Por defecto: backend main (producción)
+    return 'https://backend-mn66n6-82bd05-168-232-167-73.traefik.me';
+  }
+  
+  // Prioridad 3: En servidor, localhost por defecto
   return 'http://localhost:4000';
 };
 
@@ -35,6 +53,10 @@ export const apiBackend = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Configuración para manejar certificados SSL en desarrollo/staging
+  validateStatus: function (status) {
+    return status >= 200 && status < 500; // Permite códigos de error para mejor debugging
+  }
 });
 
 // Interceptor para agregar token automáticamente
@@ -65,10 +87,31 @@ apiBackend.interceptors.request.use(
 // Interceptor para manejar respuestas del BFF
 apiBackend.interceptors.response.use(
   (response) => {
+    // Log para debugging de respuestas
+    console.log('📥 [apiBackend] Response:', {
+      url: response.config.url,
+      status: response.status,
+      dataType: typeof response.data,
+      isArray: Array.isArray(response.data),
+      hasOkProperty: response.data && typeof response.data === 'object' && 'ok' in response.data
+    });
+
+    // Para el endpoint de reservas, dejar pasar la respuesta sin procesar
+    // La API devuelve directamente un array, no un objeto con { ok, data }
+    if (response.config.url?.includes('/reservas')) {
+      console.log('[apiBackend] Respuesta de reservas (sin procesar):', response.data);
+      return response;
+    }
+
+    // Para contraseñas, SIEMPRE devolver la respuesta tal cual
+    if (response.config.url?.includes('/password')) {
+      return response;
+    }
+    
     // Si el BFF retorna { ok: true, data: ... }, extraer los datos
     if (response.data && typeof response.data === 'object' && 'ok' in response.data) {
       if (response.data.ok === false) {
-        throw new Error(response.data.error || 'Error del servidor');
+        throw new Error(response.data.error || response.data.message || 'Error del servidor');
       }
       // Retornar los datos útiles
       return {
@@ -76,9 +119,19 @@ apiBackend.interceptors.response.use(
         data: response.data.data || response.data
       };
     }
+    
     return response;
   },
   (error) => {
+    // Logging detallado del error
+    console.error('❌ [apiBackend] Error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data
+    });
+
     // NO limpiar localStorage aquí - eso lo maneja useAdminProtection
     // Solo loguear el error para debugging
     if (error.response?.status === 401) {

@@ -1,22 +1,29 @@
-# Dockerfile para Next.js
-FROM node:20-alpine AS base
+# Dockerfile para Next.js - DESARROLLO ÚNICAMENTE
+FROM node:20-alpine
+
 WORKDIR /app
+
+# Copiar archivos de dependencias
 COPY package.json package-lock.json ./
-RUN npm install --frozen-lockfile
+
+# 🔥 INSTALAR TODAS LAS DEPENDENCIAS (incluyendo devDependencies)
+RUN npm ci --silent
+
+# Copiar el código fuente
 COPY . .
 
-# Build sin lint check
+# 🔥 CONFIGURACIÓN PARA DESARROLLO
+ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV DISABLE_ESLINT_PLUGIN=true
-# Variable de entorno para la URL del backend en producción
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-RUN npm run build
 
-# Producción
-FROM node:20-alpine AS production
-WORKDIR /app
-COPY --from=base /app .
-ENV NODE_ENV=production
+# Variables de entorno para desarrollo
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_BACKEND_URL
+
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+
 EXPOSE 3000
-CMD ["npm", "start"]
+
+# 🔥 USAR COMANDO DE DESARROLLO
+CMD ["npm", "run", "dev"]

@@ -4,13 +4,13 @@ import { useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { apiBackend } from '@/config/backend';
 
-type UserRole = 'admin' | 'superadmin' | 'super_admin' | 'usuario';
+type UserRole = 'admin' | 'super_admin' | 'usuario';
 
 interface UserData {
   id_usuario: number;
   nombre: string;
   email: string;
-  rol: string;
+  rol: UserRole;
 }
 
 export const useAuthProtection = (allowedRoles: UserRole[]) => {
@@ -20,14 +20,14 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
   const hasCheckedRef = useRef(false);
 
   useEffect(() => {
-    // Reset hasChecked when pathname changes
     hasCheckedRef.current = false;
   }, [pathname]);
 
   useEffect(() => {
-    if (isCheckingRef.current || hasCheckedRef.current) {
-      return;
-    }
+    // Solo ejecutar en el cliente
+    if (typeof window === 'undefined') return;
+    
+    if (isCheckingRef.current || hasCheckedRef.current) return;
 
     const checkAuth = async () => {
       if (isCheckingRef.current) return;
@@ -36,14 +36,21 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
       console.log('🔍 [useAuthProtection] Iniciando verificación...', { pathname, allowedRoles });
       
       try {
+        // Intentar obtener el token
         const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+        console.log('🔐 [useAuthProtection] Estado del token:', {
+          hasAccessToken: !!localStorage.getItem('access_token'),
+          hasLegacyToken: !!localStorage.getItem('token'),
+          finalToken: !!token
+        });
+
         if (!token) {
-          console.log('❌ [useAuthProtection] No hay token');
+          console.log('❌ [useAuthProtection] No hay token - Redirigiendo a login');
           router.push('/login');
           return;
         }
 
-        const storedRole = localStorage.getItem('user_role');
+        const storedRole = localStorage.getItem('user_role') as UserRole | null;
         const storedUserData = localStorage.getItem('userData');
         
         console.log('🔍 [useAuthProtection] Datos almacenados:', { 
@@ -51,16 +58,13 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
           hasStoredData: !!storedUserData 
         });
 
-        if (storedRole && storedUserData) {
-          // 🔥 CORREGIDO: Normalizar roles ('super_admin' → 'superadmin')
-          const normalizedStoredRole = storedRole === 'super_admin' ? 'superadmin' : storedRole;
-          const isRoleAllowed = allowedRoles.includes(normalizedStoredRole as UserRole);
-          if (isRoleAllowed) {
-            console.log('✅ [useAuthProtection] Usando datos almacenados');
-            return;
-          }
+        // Verificar rol almacenado sin normalización
+        if (storedRole && storedUserData && allowedRoles.includes(storedRole)) {
+          console.log('✅ [useAuthProtection] Rol permitido:', storedRole);
+          return;
         }
 
+        // Verificar con el backend si no hay rol válido almacenado
         console.log('🔍 [useAuthProtection] Verificando con /auth/me...');
         const response = await apiBackend.get('/auth/me');
         const userData = response.data?.data || response.data;
@@ -71,40 +75,59 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
 
         console.log('📦 [useAuthProtection] Datos recibidos:', userData);
 
-        // 🔥 CORREGIDO: Normalizar rol del backend
-        const normalizedRole = userData.rol === 'super_admin' ? 'superadmin' : userData.rol.toLowerCase();
-        const isRoleAllowed = allowedRoles.includes(normalizedRole as UserRole);
+        // Verificar rol sin normalización
+        const userRole = userData.rol as UserRole;
+        const isRoleAllowed = allowedRoles.includes(userRole);
 
         if (!isRoleAllowed) {
           console.log('❌ [useAuthProtection] Rol no permitido:', {
-            rol: normalizedRole,
+            rol: userRole,
             rolesPermitidos: allowedRoles
           });
 
-          localStorage.removeItem('token');
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
+          // En lugar de limpiar todo el localStorage, solo limpiamos los datos del usuario
           localStorage.removeItem('userData');
           localStorage.removeItem('user_role');
-
-          if (normalizedRole === 'admin') {
+          
+          // Redirigir según el rol
+          if (userRole === 'admin') {
             router.push('/admin');
-          } else if (normalizedRole === 'usuario') {
+          } else if (userRole === 'usuario') {
             router.push('/sports');
           } else {
+            // Antes de redirigir a login, limpiamos los tokens
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('token');
             router.push('/login');
           }
           return;
         }
 
-        // 🔥 CORREGIDO: Guardar rol normalizado
-        localStorage.setItem('userData', JSON.stringify(userData));
-        localStorage.setItem('user_role', normalizedRole);
+        // Guardar datos exactamente como vienen del backend y el token actual
+        try {
+          // Primero verificar el token actual
+          const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+          if (!token) {
+            throw new Error('Token no encontrado después de /auth/me');
+          }
 
-        console.log('✅ [useAuthProtection] Acceso autorizado:', {
-          rol: normalizedRole,
-          rolesPermitidos: allowedRoles
-        });
+          // Guardar o actualizar datos
+          localStorage.setItem('access_token', token);
+          localStorage.setItem('token', token); // Mantener compatibilidad
+          localStorage.setItem('userData', JSON.stringify(userData));
+          localStorage.setItem('user_role', userRole);
+
+          console.log('✅ [useAuthProtection] Datos actualizados:', {
+            rol: userRole,
+            rolesPermitidos: allowedRoles,
+            token: true,
+            userData: true
+          });
+        } catch (err) {
+          console.error('❌ [useAuthProtection] Error guardando datos:', err);
+          router.push('/login');
+          return;
+        }
 
       } catch (error) {
         console.error('❌ [useAuthProtection] Error:', error);

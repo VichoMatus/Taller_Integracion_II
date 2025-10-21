@@ -1,69 +1,195 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import Sidebar from '../../../../../components/layout/Sidebar'; 
-import SearchBar from '../../../../../components/SearchBar'; 
-import LocationMap from '../../../../../components/LocationMap'; 
+import { useRouter, useSearchParams } from 'next/navigation';
+import Sidebar from '@/components/layout/Sidebar'; 
+import SearchBar from '@/components/SearchBar'; 
+import LocationMap from '@/components/LocationMap'; 
 import styles from './page.module.css';
 
 import { useAuthStatus } from '@/hooks/useAuthStatus';
-export default function CentroSeleccionadoPage() {
+import { canchaService } from '../../../../../services/canchaService';
+import { complejosService } from '../../../../../services/complejosService';
+
+// 🧗‍♂️ DATOS ESTÁTICOS PARA CAMPOS NO DISPONIBLES EN LA API
+const staticContactData = {
+  phone: "(45) 555-1234",
+  instagram: "@centroescaladatemuco",
+  reviewsList: [
+    {
+      name: "Carlos M.",
+      rating: 5,
+      date: "hace 3 días",
+      comment: "Excelente centro de escalada! Los muros están en perfecto estado y tienen rutas para todos los niveles."
+    },
+    {
+      name: "Ana G.",
+      rating: 4,
+      date: "hace 1 semana", 
+      comment: "Muy buen rocódromo, vestuarios limpios y personal muy amable. Las rutas de boulder son fantásticas."
+    },
+    {
+      name: "Roberto L.",
+      rating: 5,
+      date: "hace 2 semanas",
+      comment: "El mejor centro de escalada de Temuco. Equipamiento de primera y rutas bien marcadas por dificultad."
+    }
+  ]
+};
+
+// 🧗‍♂️ COMPONENTE PRINCIPAL CON SUSPENSE
+function EscaladaCentroSeleccionadoContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
+  
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [dataLoading, setDataLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
-  
-  // 🔥 DATOS ESTÁTICOS DE ESCALADA - Sin parámetros URL
-  const centro = {
-    id: 1,
-    name: "Escalada Vertical Centro",
-    location: "Av. Alemania 1234, Temuco, Chile",
-    coordinates: { lat: -38.7359, lng: -72.5904 },
-    phone: "(45) 555-1234",
-    instagram: "@escaladaverticaltemuco",
-    description: "Centro de escalada indoor con rutas de diferentes niveles, boulder y alquiler de equipos completo. Muros de hasta 15 metros con certificación internacional.",
-    schedule: "Lunes a Domingo • 07:00 a 22:00",
-    capacity: "25 escaladores simultáneos",
-    rating: 4.7,
-    reviews: 89,
-    priceFrom: 18000,
-    images: [
-      "/sports/escalada/centros/Centro1.png",
-      "/sports/escalada/centros/Centro2.png",
-      "/sports/escalada/escalada.png"
-    ],
-    amenities: ["Equipos Incluidos", "Boulder", "Instructores", "Zona Entrenamiento"],
-    reviewsList: [
-      {
-        name: "María E.",
-        rating: 5,
-        date: "hace 2 días",
-        comment: "Excelentes rutas de escalada para todos los niveles. Los instructores son muy profesionales y el equipo está en perfecto estado."
-      },
-      {
-        name: "Diego R.",
-        rating: 5,
-        date: "hace 5 días", 
-        comment: "Increíble centro de boulder. Las rutas están muy bien diseñadas y el ambiente es genial para entrenar."
-      },
-      {
-        name: "Camila S.",
-        rating: 4,
-        date: "hace 1 semana",
-        comment: "Muy buen centro de escalada. Las paredes son altas y desafiantes. Volveré definitivamente para mejorar mi técnica."
-      }
-    ]
-  };
-  
-  useEffect(() => {
-    // Simular carga
-    const timer = setTimeout(() => setDataLoading(false), 1200);
-    
+  const [centro, setCentro] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
 
-    return () => clearTimeout(timer);
-  }, []);
+  // 🧗‍♂️ OBTENER ID DEL CENTRO DESDE URL
+  const centroId = searchParams?.get('id') || searchParams?.get('centro');
+
+  useEffect(() => {
+    const loadCentroData = async () => {
+      if (!centroId) {
+        setError('No se especificó ID de centro');
+        setDataLoading(false);
+        return;
+      }
+
+      try {
+        setDataLoading(true);
+        setError(null);
+        
+        console.log('🔍 Cargando centro ID:', centroId);
+        
+        // 🧗‍♂️ LLAMADA A LA API PARA OBTENER EL CENTRO (SIN FILTRO ESTRICTO)
+        const centroData = await canchaService.getCanchaById(parseInt(centroId));
+        console.log('✅ Centro cargado:', centroData);
+
+        // 🧗‍♂️ OBTENER DATOS DEL COMPLEJO
+        let complejoData = null;
+        let locationInfo = "Av. Alemania 1234, Temuco, Chile"; // Fallback estático
+        let coordinates = { lat: -38.7359, lng: -72.5904 }; // Fallback estático
+
+        if (centroData.establecimientoId) {
+          try {
+            console.log('🔍 Cargando complejo ID:', centroData.establecimientoId);
+            complejoData = await complejosService.getComplejoById(centroData.establecimientoId);
+            console.log('✅ Complejo cargado:', complejoData);
+            
+            // 🧗‍♂️ USAR DIRECCIÓN REAL DEL COMPLEJO
+            if (complejoData.direccion) {
+              locationInfo = complejoData.direccion;
+              console.log('📍 Dirección obtenida del complejo:', locationInfo);
+            }
+            
+            // 🧗‍♂️ USAR COORDENADAS DEL COMPLEJO SI ESTÁN DISPONIBLES
+            if (complejoData.latitud && complejoData.longitud) {
+              coordinates = {
+                lat: parseFloat(complejoData.latitud),
+                lng: parseFloat(complejoData.longitud)
+              };
+              console.log('🗺️ Coordenadas obtenidas del complejo:', coordinates);
+            }
+            
+          } catch (complejoError: any) {
+            console.error('⚠️ Error cargando complejo, usando datos estáticos:', complejoError.message);
+            // Mantener valores de fallback
+          }
+        }
+
+        // 🧗‍♂️ MAPEAR DATOS DE LA API CON INFORMACIÓN DEL COMPLEJO
+        const mappedCentro = {
+          id: centroData.id,
+          name: `${centroData.nombre} (Adaptado para Escalada)`,
+          
+          // 🧗‍♂️ USAR UBICACIÓN REAL DEL COMPLEJO
+          location: locationInfo,
+          coordinates: coordinates,
+          
+          // 🧗‍♂️ DESCRIPCIÓN ADAPTADA
+          description: `${centroData.nombre} - Instalación deportiva ${complejoData ? `en ${complejoData.nombre}` : ''} adaptada para actividades de escalada. Perfecta para entrenamientos y práctica de climbing.`,
+          
+          // 🧗‍♂️ HORARIOS - USAR DEL COMPLEJO SI ESTÁ DISPONIBLE
+          schedule: complejoData?.horarioAtencion || "Lunes a Domingo • 09:00 a 22:00",
+          
+          // 🧗‍♂️ CAPACIDAD ESPECÍFICA PARA ESCALADA
+          capacity: "20 escaladores simultáneos",
+          
+          // 🧗‍♂️ DATOS REALES DE LA API
+          rating: centroData.rating || 4.7,
+          reviews: 67, // Estático por ahora
+          priceFrom: centroData.precioPorHora || 18000,
+          
+          // 🧗‍♂️ IMÁGENES ESPECÍFICAS DE ESCALADA
+          images: [
+            `/sports/escalada/escalada.png` // Solo una imagen por defecto
+          ],
+          
+          // 🧗‍♂️ AMENIDADES BÁSICAS CON DATOS REALES
+          amenities: [
+            centroData.activa ? "Disponible" : "No disponible",
+            centroData.techada ? "Instalación Techada" : "Instalación Exterior",
+            "Adaptado para Escalada",
+            "Muros de Diferentes Niveles",
+            "Equipamiento de Seguridad",
+            "Vestuarios Disponibles"
+          ],
+          
+          // 🧗‍♂️ CONTACTO ESTÁTICO (hasta implementar en complejo)
+          phone: staticContactData.phone,
+          instagram: staticContactData.instagram,
+          reviewsList: staticContactData.reviewsList,
+
+          // 🧗‍♂️ INFORMACIÓN ADICIONAL REAL
+          establecimientoId: centroData.establecimientoId,
+          tipo: centroData.tipo,
+          techada: centroData.techada,
+          activa: centroData.activa,
+          
+          // 🧗‍♂️ INFORMACIÓN DEL COMPLEJO
+          complejoNombre: complejoData?.nombre || `Complejo ${centroData.establecimientoId}`
+        };
+
+        setCentro(mappedCentro);
+        
+      } catch (error: any) {
+        console.error('❌ Error cargando centro:', error);
+        setError(`Error cargando centro: ${error.message}`);
+        
+        // 🧗‍♂️ FALLBACK SIMPLE
+        setCentro({
+          id: centroId,
+          name: `Instalación Deportiva #${centroId} (Escalada)`,
+          location: "Av. Alemania 1234, Temuco, Chile",
+          coordinates: { lat: -38.7359, lng: -72.5904 },
+          phone: staticContactData.phone,
+          instagram: staticContactData.instagram,
+          description: `Instalación deportiva adaptada para escalada - ID: ${centroId}`,
+          schedule: "Lunes a Domingo • 09:00 a 22:00",
+          capacity: "20 escaladores simultáneos",
+          rating: 4.7,
+          reviews: 67,
+          priceFrom: 18000,
+          images: ["/sports/escalada/escalada.png"],
+          amenities: ["Datos offline", "Adaptado para Escalada", "Muros Variados", "Vestuarios"],
+          reviewsList: staticContactData.reviewsList,
+          activa: true,
+          complejoNombre: "Centro de Escalada"
+        });
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    loadCentroData();
+  }, [centroId]);
+
+  // 🧗‍♂️ RESTO DE FUNCIONES SIN CAMBIOS
   const handleUserButtonClick = () => {
     if (isAuthenticated) {
       router.push('/usuario/EditarPerfil');
@@ -77,18 +203,14 @@ export default function CentroSeleccionadoPage() {
   };
 
   const nextImage = () => {
-    if (centro && centro.images.length > 0) {
-      setCurrentImageIndex((prev) => 
-        prev === centro.images.length - 1 ? 0 : prev + 1
-      );
+    if (centro && centro.images.length > 1) {
+      setCurrentImageIndex((prev) => (prev + 1) % centro.images.length);
     }
   };
 
   const prevImage = () => {
-    if (centro && centro.images.length > 0) {
-      setCurrentImageIndex((prev) => 
-        prev === 0 ? centro.images.length - 1 : prev - 1
-      );
+    if (centro && centro.images.length > 1) {
+      setCurrentImageIndex((prev) => (prev - 1 + centro.images.length) % centro.images.length);
     }
   };
 
@@ -112,30 +234,31 @@ export default function CentroSeleccionadoPage() {
   };
 
   const handleReserve = () => {
-    router.push('/sports/reservacentro');
+    router.push(`/sports/reservacancha?canchaId=${centro.id}`);
   };
 
   const handleCall = () => {
-    window.open(`tel:${centro.phone}`, '_self');
+    window.open(`tel:${centro?.phone}`, '_self');
   };
 
   const handleInstagram = () => {
-    window.open(`https://instagram.com/${centro.instagram.replace('@', '')}`, '_blank');
+    window.open(`https://instagram.com/${centro?.instagram.replace('@', '')}`, '_blank');
   };
 
   const handleDirections = () => {
-    const query = encodeURIComponent(centro.location);
+    const query = encodeURIComponent(centro?.location || '');
     window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
   };
 
   const handleHelp = () => {
-    alert('¿Necesitas ayuda? Contáctanos al (45) 555-0000 o envía un email a ayuda@sporthub.cl');
+    alert(`¿Necesitas ayuda con escalada? Contáctanos al ${centro?.phone} o envía un email a escalada@sporthub.cl`);
   };
 
   const handleWriteReview = () => {
-    alert('Función de escribir reseña próximamente...');
+    alert(`Función de escribir reseña de escalada próximamente...`);
   };
 
+  // 🧗‍♂️ LOADING Y ERROR
   if (dataLoading) {
     return (
       <div className={styles.pageContainer}>
@@ -143,12 +266,26 @@ export default function CentroSeleccionadoPage() {
         <div className={styles.loading}>
           <div className={styles.loadingSpinner}>🧗‍♂️</div>
           <p>Cargando información del centro de escalada...</p>
+          {error && <p style={{color: 'red', marginTop: '10px'}}>⚠️ {error}</p>}
         </div>
       </div>
     );
   }
 
-  
+  if (!centro) {
+    return (
+      <div className={styles.pageContainer}>
+        <Sidebar userRole="usuario" sport="escalada" />
+        <div className={styles.loading}>
+          <div className={styles.loadingSpinner}>❌</div>
+          <p>No se pudo cargar la información del centro de escalada</p>
+          <button onClick={() => router.push('/sports/escalada/centros')}>
+            Volver a centros
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.pageContainer}>
@@ -192,9 +329,19 @@ export default function CentroSeleccionadoPage() {
         {/* Court Info Card */}
         <div className={styles.courtInfoCard}>
           <div className={styles.courtHeader}>
-            <h2 className={styles.courtTitle}>{centro.name} - Centro Escalada</h2>
-            <button className={styles.reserveButton} onClick={handleReserve}>
-              🧗‍♀️ Reservar sesión
+            <h2 className={styles.courtTitle}>
+              {centro.name}
+            </h2>
+            <button 
+              className={styles.reserveButton} 
+              onClick={handleReserve}
+              disabled={!centro.activa}
+              style={{ 
+                opacity: centro.activa ? 1 : 0.6,
+                cursor: centro.activa ? 'pointer' : 'not-allowed'
+              }}
+            >
+              🧗‍♂️ {centro.activa ? 'Reservar' : 'No disponible'}
             </button>
           </div>
           
@@ -205,25 +352,29 @@ export default function CentroSeleccionadoPage() {
             </div>
             <div className={styles.detailItem}>
               <span className={styles.detailIcon}>💰</span>
-              <span>Desde {formatPrice(centro.priceFrom)}/sesión</span>
+              <span>Desde {formatPrice(centro.priceFrom)}/h</span>
+            </div>
+            <div className={styles.detailItem}>
+              <span className={styles.detailIcon}>🏢</span>
+              <span>{centro.complejoNombre}</span>
             </div>
           </div>
 
           <div className={styles.courtTabs}>
-            {centro.amenities.map((amenity, index) => (
-              <button 
-                key={index}
-                className={`${styles.tab} ${activeTab === index ? styles.tabActive : ''}`}
-                onClick={() => setActiveTab(index)}
-              >
-                {amenity}
-              </button>
-            ))}
+            {centro.amenities.map((amenity: string, index: number) => (
+                <button 
+                  key={index}
+                  className={`${styles.tab} ${activeTab === index ? styles.tabActive : ''}`}
+                  onClick={() => setActiveTab(index)}
+                >
+                  {amenity}
+                </button>
+              ))}
           </div>
 
           {/* Description Section */}
           <div className={styles.descriptionSection}>
-            <h3 className={styles.sectionTitle}>🏔️ Descripción del centro</h3>
+            <h3 className={styles.sectionTitle}>Descripción del Centro de Escalada</h3>
             <div className={styles.descriptionCard}>
               <span className={styles.descriptionIcon}>🧗‍♂️</span>
               <p className={styles.descriptionText}>{centro.description}</p>
@@ -232,7 +383,7 @@ export default function CentroSeleccionadoPage() {
 
           {/* Availability Section */}
           <div className={styles.availabilitySection}>
-            <h3 className={styles.sectionTitle}>🕐 Horarios y capacidad</h3>
+            <h3 className={styles.sectionTitle}>Disponibilidad</h3>
             <div className={styles.availabilityCard}>
               <div className={styles.availabilityItem}>
                 <span className={styles.availabilityIcon}>🕒</span>
@@ -250,7 +401,7 @@ export default function CentroSeleccionadoPage() {
         <div className={styles.locationImagesContainer}>
           {/* Location Section */}
           <div className={styles.locationSection}>
-            <h3 className={styles.sectionTitle}>📍 Ubicación</h3>
+            <h3 className={styles.sectionTitle}>Ubicación del Centro</h3>
             <div className={styles.mapContainer}>
               <LocationMap 
                 latitude={centro.coordinates.lat} 
@@ -269,16 +420,18 @@ export default function CentroSeleccionadoPage() {
             </div>
           </div>
 
-          {/* Images Section */}
+          {/* Images Section - SIMPLIFICADA */}
           <div className={styles.imagesSection}>
-            <h3 className={styles.sectionTitle}>📸 Imágenes del centro</h3>
+            <h3 className={styles.sectionTitle}>Fotos del Centro</h3>
             <div className={styles.imageCarousel}>
-              <button className={styles.carouselButton} onClick={prevImage}>
-                ←
-              </button>
+              {centro.images.length > 1 && (
+                <button className={styles.carouselButton} onClick={prevImage}>
+                  ←
+                </button>
+              )}
               <div className={styles.imageContainer}>
                 <Image 
-                  src={centro.images[currentImageIndex] || "/sports/escalada/centros/Centro1.png"} 
+                  src={centro.images[currentImageIndex] || "/sports/escalada/escalada.png"} 
                   alt={`${centro.name} - Imagen ${currentImageIndex + 1}`}
                   className={styles.courtImage}
                   width={600}
@@ -287,31 +440,37 @@ export default function CentroSeleccionadoPage() {
                     e.target.src = "/sports/escalada/escalada.png";
                   }}
                 />
-                <div className={styles.imageOverlay}>
-                  <span className={styles.imageCounter}>
-                    {currentImageIndex + 1} / {centro.images.length}
-                  </span>
-                </div>
+                {centro.images.length > 1 && (
+                  <div className={styles.imageOverlay}>
+                    <span className={styles.imageCounter}>
+                      {currentImageIndex + 1} / {centro.images.length}
+                    </span>
+                  </div>
+                )}
               </div>
-              <button className={styles.carouselButton} onClick={nextImage}>
-                →
-              </button>
+              {centro.images.length > 1 && (
+                <button className={styles.carouselButton} onClick={nextImage}>
+                  →
+                </button>
+              )}
             </div>
-            <div className={styles.imageIndicators}>
-              {centro.images.map((_, index) => (
-                <button
-                  key={index}
-                  className={`${styles.imageIndicator} ${index === currentImageIndex ? styles.imageIndicatorActive : ''}`}
-                  onClick={() => setCurrentImageIndex(index)}
-                />
-              ))}
-            </div>
+            {centro.images.length > 1 && (
+              <div className={styles.imageIndicators}>
+                {centro.images.map((_: string, index: number) => (
+                  <button
+                    key={index}
+                    className={`${styles.imageIndicator} ${index === currentImageIndex ? styles.imageIndicatorActive : ''}`}
+                    onClick={() => setCurrentImageIndex(index)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Contact Section */}
         <div className={styles.contactSection}>
-          <h3 className={styles.sectionTitle}>📞 Contacto</h3>
+          <h3 className={styles.sectionTitle}>Contacto Centro de Escalada</h3>
           <div className={styles.contactCard}>
             <div className={styles.contactInfo}>
               <div className={styles.contactItem}>
@@ -328,7 +487,7 @@ export default function CentroSeleccionadoPage() {
                 📞 Llamar
               </button>
               <button className={styles.contactButton} onClick={handleInstagram}>
-                💬 Abrir
+                📱 Seguir
               </button>
             </div>
           </div>
@@ -339,7 +498,7 @@ export default function CentroSeleccionadoPage() {
           <div className={styles.reviewsHeader}>
             <div className={styles.reviewsTitle}>
               <span className={styles.reviewsIcon}>⭐</span>
-              <span>{centro.rating} • {centro.reviews} reseñas</span>
+              <span>{centro.rating.toFixed(1)} • {centro.reviews} reseñas de escalada</span>
             </div>
             <button className={styles.writeReviewButton} onClick={handleWriteReview}>
               ✏️ Escribir reseña
@@ -347,25 +506,25 @@ export default function CentroSeleccionadoPage() {
           </div>
 
           <div className={styles.reviewsList}>
-            {centro.reviewsList.map((review, index) => (
-              <div key={index} className={styles.reviewCard}>
-                <div className={styles.reviewHeader}>
-                  <div className={styles.reviewUser}>
-                    <div className={styles.userAvatar}>
-                      {review.name.charAt(0)}
-                    </div>
-                    <div className={styles.userInfo}>
-                      <span className={styles.userName}>{review.name}</span>
-                      <div className={styles.reviewStars}>
-                        {renderStars(review.rating)}
+            {centro.reviewsList.map((review: any, index: number) => (
+                <div key={index} className={styles.reviewCard}>
+                  <div className={styles.reviewHeader}>
+                    <div className={styles.reviewUser}>
+                      <div className={styles.userAvatar}>
+                        {review.name.charAt(0)}
+                      </div>
+                      <div className={styles.userInfo}>
+                        <span className={styles.userName}>{review.name}</span>
+                        <div className={styles.reviewStars}>
+                          {renderStars(review.rating)}
+                        </div>
                       </div>
                     </div>
+                    <span className={styles.reviewDate}>{review.date}</span>
                   </div>
-                  <span className={styles.reviewDate}>{review.date}</span>
+                  <p className={styles.reviewComment}>{review.comment}</p>
                 </div>
-                <p className={styles.reviewComment}>{review.comment}</p>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
 
@@ -377,5 +536,14 @@ export default function CentroSeleccionadoPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// 🔥 COMPONENTE PRINCIPAL CON SUSPENSE (RESUELVE EL ERROR DEL BUILD)
+export default function EscaladaCentroSeleccionado() {
+  return (
+    <Suspense fallback={<div>Cargando centro de escalada...</div>}>
+      <EscaladaCentroSeleccionadoContent />
+    </Suspense>
   );
 }
