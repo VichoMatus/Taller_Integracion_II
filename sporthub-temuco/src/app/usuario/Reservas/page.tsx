@@ -1,5 +1,3 @@
-//MiniResumen: El apartado de reservas no muestra datos por que por lo visto no existe el Endpoint, preguntandole a copilot deduje que este era el problema, pero por ahora se dejara asi hasta recibir respuesta del backend
-
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -12,24 +10,40 @@ import type { Reserva } from '@/types/reserva';
 
 // Función para mapear la respuesta de la API a tu tipo Reserva
 function mapApiReserva(r: any): Reserva {
+  console.log("Mapeando reserva individual:", r);
+  
+  // La API devuelve fecha_reserva, hora_inicio y hora_fin por separado
+  const fechaReserva = r.fecha_reserva || "";
+  const horaInicio = r.hora_inicio || "";
+  const horaFin = r.hora_fin || "";
+  
+  // Combinar fecha y hora para crear fechaInicio y fechaFin
+  const fechaInicio = fechaReserva && horaInicio 
+    ? `${fechaReserva}T${horaInicio}` 
+    : horaInicio || fechaReserva || "";
+  
+  const fechaFin = fechaReserva && horaFin 
+    ? `${fechaReserva}T${horaFin}` 
+    : horaFin || fechaReserva || "";
+  
   return {
-    id: r.id_reserva ?? r.id ?? 0,
-    usuarioId: r.id_usuario ?? r.usuario_id ?? 0,
-    canchaId: r.id_cancha ?? r.cancha_id ?? 0,
-    complejoId: r.complejo_id ?? 0,
-    fechaInicio: r.hora_inicio ?? r.fecha_inicio ?? r.fecha_reserva ?? "",
-    fechaFin: r.hora_fin ?? r.fecha_fin ?? r.fecha_reserva ?? "",
-    estado: r.estado ?? "pendiente",
-    precioTotal: r.monto_total ?? r.precio_total ?? 0,
-    metodoPago: r.metodo_pago,
-    pagado: r.pagado ?? false,
-    notas: r.notas,
-    fechaCreacion: r.fecha_creacion ?? "",
-    fechaActualizacion: r.fecha_actualizacion ?? "",
-    codigoConfirmacion: r.codigo_confirmacion,
-    usuario: r.usuario,
-    cancha: r.cancha,
-    complejo: r.complejo,
+    id: Number(r.id_reserva || r.id || 0),
+    usuarioId: Number(r.id_usuario || r.usuario_id || 0),
+    canchaId: Number(r.id_cancha || r.cancha_id || 0),
+    complejoId: Number(r.id_complejo || r.complejo_id || 0),
+    fechaInicio: fechaInicio,
+    fechaFin: fechaFin,
+    estado: r.estado || "pendiente",
+    precioTotal: Number(r.precio_total || r.monto_total || 0),
+    metodoPago: r.metodo_pago || undefined,
+    pagado: !!r.pagado,
+    notas: r.notas || undefined,
+    fechaCreacion: r.fecha_creacion || "",
+    fechaActualizacion: r.fecha_actualizacion || "",
+    codigoConfirmacion: r.codigo_confirmacion || undefined,
+    usuario: r.usuario || undefined,
+    cancha: r.cancha || undefined,
+    complejo: r.complejo || undefined,
   };
 }
 
@@ -41,8 +55,6 @@ export default function ReservaPage() {
   const [userName, setUserName] = useState("Usuario");
   const [debugInfo, setDebugInfo] = useState<any>(null);
 
-  // ...existing code...
-  // ...existing code...
   const cargarReservas = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -50,37 +62,67 @@ export default function ReservaPage() {
     try {
       // Cargar datos del usuario
       const userData = await authService.me();
+      console.log("Usuario actual:", userData);
       setUserName(`${userData.nombre ?? ''} ${userData.apellido ?? ''}`.trim() || 'Usuario');
       
-      // Intentar obtener reservas con el endpoint principal
-      let misReservasApi = [];
-      try {
-        misReservasApi = await reservaService.getMisReservas();
-      } catch (endpointError) {
-        console.warn("Error con endpoint principal, intentando alternativa:", endpointError.message);
-        
-        // Plan B: Intentar con el endpoint general filtrando por usuario
-        misReservasApi = await reservaService.getReservas({
-          usuarioId: userData.id // O el campo que use tu API
-        });
-      }
+      // Obtener reservas del usuario
+      console.log("Obteniendo reservas...");
+      const misReservasApi = await reservaService.getMisReservas();
+      console.log("Respuesta de API:", misReservasApi);
       
-      console.log("Reservas obtenidas:", misReservasApi);
-      
+      // Verificar que sea un array
       if (Array.isArray(misReservasApi)) {
-        // Mapear y procesar las reservas
-        setReservas(misReservasApi.map(mapApiReserva));
+        console.log(`Se encontraron ${misReservasApi.length} reservas`);
+        
+        if (misReservasApi.length === 0) {
+          console.log("No hay reservas para mostrar");
+          setReservas([]);
+        } else {
+          // Mapear las reservas
+          const reservasMapeadas = misReservasApi.map((reserva, index) => {
+            console.log(`Mapeando reserva ${index + 1}:`, reserva);
+            return mapApiReserva(reserva);
+          });
+          
+          console.log("Reservas mapeadas:", reservasMapeadas);
+          setReservas(reservasMapeadas);
+        }
       } else {
         console.warn("La respuesta no es un array:", misReservasApi);
         setReservas([]);
       }
     } catch (error: any) {
-      // ...existing error handling code...
+      console.error("Error al cargar reservas:", error);
+      console.error("Error completo:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
+      
+      // Guardar info del error para debug
+      setDebugInfo({
+        error: {
+          message: error.message || "Error desconocido",
+          response: error.response?.data || {},
+          status: error.response?.status,
+        },
+        timestamp: new Date().toISOString()
+      });
+      
+      if (error.response?.status === 401) {
+        setError("Tu sesión ha expirado. Por favor inicia sesión nuevamente.");
+      } else if (error.response?.status === 404) {
+        // 404 puede significar que no hay reservas
+        console.log("No se encontraron reservas (404)");
+        setReservas([]);
+        setError(null);
+      } else {
+        setError("No se pudieron cargar tus reservas. Por favor, intenta de nuevo.");
+      }
     } finally {
       setIsLoading(false);
     }
   }, []);
-  // ...existing code...
 
   useEffect(() => {
     cargarReservas();
@@ -127,6 +169,8 @@ export default function ReservaPage() {
     if (!dateString) return "Fecha no disponible";
     try {
       const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+      
       return date.toLocaleDateString('es-CL', {
         day: 'numeric',
         month: 'long',
@@ -135,6 +179,23 @@ export default function ReservaPage() {
     } catch {
       return dateString;
     }
+  };
+
+  // Formatear hora
+  const formatTime = (timeString: string) => {
+    if (!timeString) return "-";
+    
+    // Si es una fecha completa (contiene T), extraer solo la hora
+    if (timeString.includes('T')) {
+      return timeString.split('T')[1]?.slice(0, 5) || timeString;
+    }
+    
+    // Si ya es solo hora (HH:MM:SS), tomar solo HH:MM
+    if (timeString.includes(':')) {
+      return timeString.slice(0, 5);
+    }
+    
+    return timeString;
   };
 
   return (
@@ -147,7 +208,9 @@ export default function ReservaPage() {
 
         {/* Botón de recarga */}
         <div style={{textAlign: 'right', marginBottom: '10px'}}>
-          <Button onClick={cargarReservas}>↻ Recargar</Button>
+          <Button onClick={cargarReservas} disabled={isLoading}>
+            {isLoading ? '⏳ Cargando...' : '↻ Recargar'}
+          </Button>
         </div>
 
         {/* Panel de debug - Solo visible en desarrollo */}
@@ -222,7 +285,7 @@ export default function ReservaPage() {
                         <div className="detail-item">
                           <span className="detail-label">⏰ Horario:</span>
                           <span>
-                            {reserva.fechaInicio?.slice(11, 16) || '-'} - {reserva.fechaFin?.slice(11, 16) || '-'}
+                            {formatTime(reserva.fechaInicio)} - {formatTime(reserva.fechaFin)}
                           </span>
                         </div>
                         <div className="detail-item">
@@ -262,7 +325,7 @@ export default function ReservaPage() {
                       <div className="info-item">
                         <span className="info-label">⏰ Horario:</span>
                         <span>
-                          {reservaActiva.fechaInicio?.slice(11, 16) || '-'} - {reservaActiva.fechaFin?.slice(11, 16) || '-'}
+                          {formatTime(reservaActiva.fechaInicio)} - {formatTime(reservaActiva.fechaFin)}
                         </span>
                       </div>
                       <div className="info-item">
@@ -270,14 +333,23 @@ export default function ReservaPage() {
                         <span className="precio-detalle">{formatPrice(reservaActiva.precioTotal)}</span>
                       </div>
                       <div className="info-item">
-                        <span className="info-label">ID Cancha:</span>
+                        <span className="info-label">🏟️ ID Cancha:</span>
                         <span>{reservaActiva.canchaId}</span>
                       </div>
+                      {reservaActiva.notas && (
+                        <div className="info-item" style={{gridColumn: '1 / -1'}}>
+                          <span className="info-label">📝 Notas:</span>
+                          <span>{reservaActiva.notas}</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="reserva-metadata">
                       <div>ID Reserva: <strong>{reservaActiva.id}</strong></div>
                       <div>ID Usuario: <strong>{reservaActiva.usuarioId}</strong></div>
+                      {reservaActiva.codigoConfirmacion && (
+                        <div>Código: <strong>{reservaActiva.codigoConfirmacion}</strong></div>
+                      )}
                     </div>
                   </div>
 

@@ -21,20 +21,57 @@ export default function ReservasPage() {
     try {
       setLoading(true);
       setError(null);
-      const filters = {
-        page: currentPage,
-        pageSize: itemsPerPage,
-        ...(searchTerm && { q: searchTerm }),
-        ...(selectedEstado && { estado: selectedEstado })
-      };
       
-      // Usar endpoint específico de admin que filtra por permisos del usuario
-      const data = await reservaService.getAdminReservas(filters);
-      setReservas(data);
+      const data = await reservaService.getAdminReservas();
+      
+      console.log("Datos recibidos:", data);
+      
+      // Asegurarse de que data sea siempre un array
+      if (Array.isArray(data)) {
+        if (data.length === 0) {
+          // Si no hay datos, usar reservas mock
+          setReservas([
+            {
+              id: 1,
+              usuarioId: 1,
+              canchaId: 1,
+              complejoId: 1,
+              fechaInicio: new Date().toISOString(),
+              fechaFin: new Date(Date.now() + 3600000).toISOString(),
+              estado: 'confirmada' as EstadoReserva,
+              precioTotal: 25000,
+              pagado: true,
+              fechaCreacion: new Date().toISOString(),
+              fechaActualizacion: new Date().toISOString(),
+              usuario: { id: 1, email: 'miguel.chamo@email.com', nombre: 'Miguel', apellido: 'Chamo' },
+              cancha: { id: 1, nombre: 'Cancha Central', tipo: 'futbol', precioPorHora: 25000 }
+            },
+            {
+              id: 2,
+              usuarioId: 2,
+              canchaId: 2,
+              complejoId: 1,
+              fechaInicio: new Date(Date.now() + 86400000).toISOString(),
+              fechaFin: new Date(Date.now() + 86400000 + 3600000).toISOString(),
+              estado: 'pendiente' as EstadoReserva,
+              precioTotal: 20000,
+              pagado: false,
+              fechaCreacion: new Date().toISOString(),
+              fechaActualizacion: new Date().toISOString(),
+              usuario: { id: 2, email: 'ana.garcia@email.com', nombre: 'Ana', apellido: 'García' },
+              cancha: { id: 2, nombre: 'Cancha Norte', tipo: 'basquet', precioPorHora: 20000 }
+            }
+          ]);
+        } else {
+          setReservas(data);
+        }
+      } else {
+        setReservas([]); // Si no es array, establecer array vacío
+      }
     } catch (err: any) {
-      console.warn('Backend no disponible, usando datos mock:', err);
-      setError('Conectando con datos de desarrollo (backend no disponible)');
-      // Usar datos mock en caso de error para development
+      console.error('Error al cargar reservas:', err);
+      setError('Error al cargar reservas del servidor');
+      // En caso de error, usar reservas mock
       setReservas([
         {
           id: 1,
@@ -184,7 +221,9 @@ export default function ReservasPage() {
           <div className="info-icon">ℹ️</div>
           <p>{error}</p>
         </div>
-      )}      {/* Contenedor Principal de la Tabla */}
+      )}
+
+      {/* Contenedor Principal de la Tabla */}
       <div className="admin-table-container">
         {/* Header de la Tabla */}
         <div className="admin-table-header">
