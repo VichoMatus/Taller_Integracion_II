@@ -70,13 +70,18 @@ export default function EditCourtPage() {
       setSaving(true);
       setError(null);
       
+      console.log('💾 Guardando cambios de cancha:', formData);
       await canchaService.updateCancha(parseInt(courtId), formData);
+      console.log('✅ Cancha actualizada exitosamente');
       
       // Mostrar mensaje de éxito y redirigir
-      alert('Cancha actualizada exitosamente');
-      router.push('/admin/canchas');
+      alert('Cancha actualizada exitosamente. La lista se recargará.');
+      
+      // Redirigir con un parámetro para forzar recarga
+      router.push('/admin/canchas?refresh=true');
+      router.refresh(); // Forzar recarga de la página
     } catch (err: any) {
-      console.error('Error guardando cancha:', err);
+      console.error('❌ Error guardando cancha:', err);
       setError(err.message || 'Error al guardar los cambios');
     } finally {
       setSaving(false);

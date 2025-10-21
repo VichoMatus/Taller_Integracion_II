@@ -10,11 +10,11 @@ import { fail } from "../../../interfaces/apiEnvelope";
  *
  * @example
  * ```typescript
- * router.get("/admin-only", requireRole("admin", "superadmin"), handler);
+ * router.get("/admin-only", requireRole("admin", "super_admin"), handler);
  * ```
  */
 export const requireRole =
-  (...roles: Array<"admin" | "superadmin">) =>
+  (...roles: Array<"admin" | "super_admin">) =>
   (req: Request, res: Response, next: NextFunction) => {
     // Obtiene el rol del usuario autenticado o header de prueba
     const role =
@@ -30,4 +30,4 @@ export const requireRole =
  * Middleware específico para owners de complejos.
  * Verifica que el usuario sea dueño o admin.
  */
-export const requireOwner = requireRole("admin", "superadmin");
+export const requireOwner = requireRole("admin", "super_admin");

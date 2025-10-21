@@ -1,156 +1,175 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { useAuthStatus } from '@/hooks/useAuthStatus';
 import { useRouter } from 'next/navigation';
+import { useAuthStatus } from '../../../../hooks/useAuthStatus';
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
+import LocationMap from '../../../../components/LocationMap';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
+import { complejosService } from '../../../../services/complejosService';
 
-// 🔥 IMPORTAR SERVICIO
+// 🚴‍♂️ IMPORTAR SERVICIO
 import { canchaService } from '../../../../services/canchaService';
 
 export default function Page() {
-  const router = useRouter();
   const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   
-  // 🔥 ESTADOS PARA LA API (usando la misma lógica de /sports/ciclismo/page.tsx)
-  const [rutas, setRutas] = useState<any[]>([]);
-  const [filteredRutas, setFilteredRutas] = useState<any[]>([]);
+  // 🚴‍♂️ ESTADOS PARA LA API
+  const [pistas, setPistas] = useState<any[]>([]);
+  const [filteredPistas, setFilteredPistas] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [isLoadingRutas, setIsLoadingRutas] = useState(true);
+  const [isLoadingPistas, setIsLoadingPistas] = useState(true);
   const [error, setError] = useState<string>('');
 
-  // 🔥 FUNCIÓN PARA CARGAR RUTAS (copiada exactamente de /sports/ciclismo/page.tsx)
-  const cargarRutas = async () => {
+  // 🚴‍♂️ FUNCIÓN PARA CARGAR PISTAS MODIFICADA PARA CICLISMO
+  const cargarPistas = async () => {
     try {
-      setIsLoadingRutas(true);
+      setIsLoadingPistas(true);
       setError('');
       
-      console.log('🔄 [RutasCiclismo] Cargando rutas individuales del backend...');
+      console.log('🔄 [PistasCiclismo] Cargando TODAS las pistas del backend...');
       
-      // 🔥 IDs de las rutas de ciclismo que quieres mostrar
-      const ciclismoRutaIds = [1, 2, 3, 4, 5, 6];
+      const todasLasPistas = await canchaService.getCanchas();
+      console.log('✅ [PistasCiclismo] Todas las pistas obtenidas:', todasLasPistas);
       
-      const rutasPromises = ciclismoRutaIds.map(async (id) => {
-        try {
-          console.log(`🔍 [RutasCiclismo] Cargando ruta ID: ${id}`);
-          const ruta = await canchaService.getCanchaById(id);
-          console.log(`✅ [RutasCiclismo] Ruta ${id} obtenida:`, ruta);
+      // 🚴‍♂️ FILTRAR PISTAS DE CICLISMO
+      const pistasDeCiclismo = todasLasPistas.filter((pista: any) => {
+        return ['ciclismo', 'velodromo', 'bicicleta', 'cycling'].includes(pista.tipo);
+      });
+      
+      console.log('🚴‍♂️ [PistasCiclismo] Pistas de ciclismo encontradas:', pistasDeCiclismo.length);
+      
+      // 🚴‍♂️ OBTENER DATOS DE COMPLEJOS PARA CADA PISTA
+      const pistasMapeadas = await Promise.all(
+        pistasDeCiclismo.map(async (pista: any) => {
+          let complejoData = null;
+          let addressInfo = `Complejo ${pista.establecimientoId}`;
           
-          // 🔥 FILTRAR SOLO RUTAS DE CICLISMO
-          if (ruta.tipo !== 'ciclismo') {
-            console.log(`⚠️ [RutasCiclismo] Ruta ${id} no es de ciclismo (${ruta.tipo}), saltando...`);
-            return null;
+          // 🚴‍♂️ INTENTAR OBTENER DATOS DEL COMPLEJO
+          if (pista.establecimientoId) {
+            try {
+              console.log(`🔍 [PistasCiclismo] Cargando complejo ID ${pista.establecimientoId} para pista ${pista.id}`);
+              complejoData = await complejosService.getComplejoById(pista.establecimientoId);
+              
+              if (complejoData) {
+                addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                console.log(`✅ [PistasCiclismo] Complejo cargado: ${addressInfo}`);
+              }
+              
+            } catch (complejoError: any) {
+              console.warn(`⚠️ [PistasCiclismo] Error cargando complejo ${pista.establecimientoId}:`, complejoError.message);
+              // Usar datos de fallback
+              const staticComplejo = getStaticComplejoData(pista.establecimientoId);
+              addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+            }
           }
           
-          // Mapear al formato requerido por CourtCard
-          const mappedRuta = {
-            id: ruta.id,
-            imageUrl: `/sports/ciclismo/rutas/Ruta${ruta.id}.png`,
-            name: ruta.nombre,
-            address: `Zona ${ruta.establecimientoId}`,
-            rating: ruta.rating || 4.6,
+          // 🚴‍♂️ MAPEAR PISTA CON DATOS DEL COMPLEJO
+          const mappedPista = {
+            id: pista.id,
+            imageUrl: `/sports/ciclismo/pistas/Pista${pista.id}.png`,
+            name: pista.nombre,
+            address: addressInfo, // 🚴‍♂️ USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
+            rating: pista.rating || 4.7,
             tags: [
-              ruta.techada ? "Ruta techada" : "Sendero natural",
-              ruta.activa ? "Disponible" : "No disponible",
-              "Bicicletas disponibles",
-              "Guía incluido"
+              pista.techada ? "Pista cubierta" : "Pista exterior",
+              pista.activa ? "Disponible" : "No disponible",
+              "Velódromo",
+              "Cronometraje"
             ],
-            description: `Ruta de ciclismo ${ruta.nombre} - ID: ${ruta.id}`,
-            price: ruta.precioPorHora?.toString() || "15",
-            nextAvailable: ruta.activa ? "Disponible ahora" : "No disponible",
+            description: `Pista de ciclismo ${pista.nombre} - ID: ${pista.id}`,
+            price: pista.precioPorHora?.toString() || "18",
+            nextAvailable: pista.activa ? "Disponible ahora" : "No disponible",
             sport: "ciclismo"
           };
           
-          console.log('🗺️ [RutasCiclismo] Ruta mapeada:', mappedRuta);
-          return mappedRuta;
-          
-        } catch (error) {
-          console.log(`❌ [RutasCiclismo] Error cargando ruta ${id}:`, error);
-          return null;
-        }
-      });
+          console.log('🗺️ [PistasCiclismo] Pista mapeada:', mappedPista);
+          return mappedPista;
+        })
+      );
       
-      // Esperar a que todas las promesas se resuelvan
-      const rutasResults = await Promise.all(rutasPromises);
-      
-      // Filtrar las rutas null (que no existen o no son de ciclismo)
-      const rutasValidas = rutasResults.filter(ruta => ruta !== null);
-      
-      console.log('🎉 [RutasCiclismo] Rutas de ciclismo cargadas exitosamente:', rutasValidas.length);
-      console.log('📋 [RutasCiclismo] Rutas finales:', rutasValidas);
-      
-      setRutas(rutasValidas);
-      setFilteredRutas(rutasValidas);
+      console.log('🎉 [PistasCiclismo] Pistas con datos de complejo cargadas:', pistasMapeadas.length);
+      setPistas(pistasMapeadas);
+      setFilteredPistas(pistasMapeadas);
       
     } catch (error: any) {
-      console.error('❌ [RutasCiclismo] ERROR DETALLADO cargando rutas:');
-      console.error('- Message:', error.message);
-      console.error('- Full error:', error);
-      
+      console.error('❌ [PistasCiclismo] ERROR cargando pistas:', error);
       setError(`Error: ${error.message}`);
       
-      // 🔥 FALLBACK: USAR DATOS ESTÁTICOS SI FALLA LA API
-      console.log('🚨 [RutasCiclismo] USANDO FALLBACK - Error en el API');
-      const rutasEstaticas = [
+      // 🚴‍♂️ Fallback con datos estáticos de ciclismo
+      const pistasEstaticas = [
         {
           id: 1,
-          imageUrl: "/sports/ciclismo/rutas/Ruta1.png",
-          name: "🚨 FALLBACK - Sendero Bosque",
-          address: "Parque Nacional, Zona Norte",
-          rating: 4.7,
-          tags: ["DATOS OFFLINE", "Sendero natural", "Dificultad media", "Paisajes"],
+          imageUrl: "/sports/ciclismo/pistas/Pista1.png",
+          name: "🚨 FALLBACK - Velódromo Principal",
+          address: "Velódromo Norte - Av. Alemania 1234, Temuco",
+          rating: 4.8,
+          tags: ["DATOS OFFLINE", "Velódromo", "250m"],
           description: "🚨 Estos son datos de fallback - API no disponible",
-          price: "15",
-          nextAvailable: "08:00-09:00",
+          price: "20",
+          nextAvailable: "06:00-07:00",
         },
         {
           id: 2,
-          imageUrl: "/sports/ciclismo/rutas/Ruta2.png",
-          name: "🚨 FALLBACK - Ruta Urbana",
-          address: "Centro Ciudad",
-          rating: 4.4,
-          tags: ["DATOS OFFLINE", "Ciclovía urbana", "Fácil acceso"],
+          imageUrl: "/sports/ciclismo/pistas/Pista2.png",
+          name: "🚨 FALLBACK - Pista de Entrenamiento",
+          address: "Pista de Ciclismo Centro - Av. Pedro de Valdivia 567, Temuco",
+          rating: 4.5,
+          tags: ["DATOS OFFLINE", "Entrenamiento", "400m"],
           description: "🚨 Estos son datos de fallback - API no disponible",
-          price: "8",
+          price: "15",
           nextAvailable: "16:00-17:00",
         },
         {
           id: 3,
-          imageUrl: "/sports/ciclismo/rutas/Ruta3.png",
-          name: "🚨 FALLBACK - Sendero Lago",
-          address: "Orilla del Lago",
-          rating: 4.8,
-          tags: ["DATOS OFFLINE", "Vista al lago", "Dificultad alta"],
+          imageUrl: "/sports/ciclismo/pistas/Pista3.png",
+          name: "🚨 FALLBACK - Circuito BMX",
+          address: "Circuito Ciclístico Sur - Calle Montt 890, Temuco",
+          rating: 4.6,
+          tags: ["DATOS OFFLINE", "BMX", "Obstáculos"],
           description: "🚨 Estos son datos de fallback - API no disponible",
-          price: "20",
-          nextAvailable: "10:30-11:30",
-        },
-        {
-          id: 4,
-          imageUrl: "/sports/ciclismo/rutas/Ruta4.png",
-          name: "🚨 FALLBACK - Ruta Cordillera",
-          address: "Zona Montañosa",
-          rating: 4.9,
-          tags: ["DATOS OFFLINE", "Alta montaña", "Dificultad extrema"],
-          description: "🚨 Estos son datos de fallback - API no disponible",
-          price: "35",
-          nextAvailable: "06:00-07:00",
+          price: "12",
+          nextAvailable: "Mañana 08:00-09:00",
         }
       ];
       
-      setRutas(rutasEstaticas);
-      setFilteredRutas(rutasEstaticas);
+      setPistas(pistasEstaticas);
+      setFilteredPistas(pistasEstaticas);
     } finally {
-      setIsLoadingRutas(false);
+      setIsLoadingPistas(false);
     }
   };
 
-  // 🔥 CARGAR RUTAS AL MONTAR EL COMPONENTE
+  // 🚴‍♂️ FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO DE CICLISMO
+  const getStaticComplejoData = (establecimientoId: number) => {
+    const staticComplejos = {
+      1: {
+        nombre: "Velódromo Norte",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      },
+      2: {
+        nombre: "Pista de Ciclismo Centro", 
+        direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+      },
+      3: {
+        nombre: "Circuito Ciclístico Sur",
+        direccion: "Calle Montt 890, Temuco, Chile"
+      },
+      default: {
+        nombre: "Centro de Ciclismo",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      }
+    };
+    
+    return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+  };
+
+  // 🚴‍♂️ CARGAR PISTAS AL MONTAR EL COMPONENTE
   useEffect(() => {
-    cargarRutas();
+    cargarPistas();
   }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,13 +178,13 @@ export default function Page() {
 
   const handleSearch = () => {
     if (searchTerm.trim() === '') {
-      setFilteredRutas(rutas);
+      setFilteredPistas(pistas);
     } else {
-      const filtered = rutas.filter(ruta =>
-        ruta.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        ruta.address.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = pistas.filter(pista =>
+        pista.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        pista.address.toLowerCase().includes(searchTerm.toLowerCase())
       );
-      setFilteredRutas(filtered);
+      setFilteredPistas(filtered);
     }
   };
 
@@ -173,9 +192,9 @@ export default function Page() {
     router.push('/sports/ciclismo');
   };
 
-  const availableNow = filteredRutas.filter(ruta => 
-    ruta.nextAvailable === "Disponible ahora" || 
-    ruta.nextAvailable.includes("Hoy")
+  const availableNow = filteredPistas.filter(pista => 
+    pista.nextAvailable !== "No disponible hoy" && 
+    !pista.nextAvailable.includes("Mañana")
   ).length;
 
   const handleUserButtonClick = () => {
@@ -186,15 +205,15 @@ export default function Page() {
     }
   };
 
-  // 🔥 FUNCIÓN PARA REFRESCAR DATOS
+  // 🚴‍♂️ FUNCIÓN PARA REFRESCAR DATOS
   const handleRefresh = () => {
-    cargarRutas();
+    cargarPistas();
   };
 
-  // 🔥 MANEJADOR DE CLICK EN RUTA (como en la página principal)
-  const handleRutaClick = (ruta: any) => {
-    console.log('Navegando a ruta:', ruta);
-    router.push(`/sports/ciclismo/canchas/canchaseleccionada?id=${ruta.id}`);
+  // 🚴‍♂️ MANEJADOR DE CLICK EN PISTA
+  const handlePistaClick = (track: any) => {
+    console.log('Navegando a pista:', track);
+    router.push(`/sports/ciclismo/canchas/canchaseleccionada?id=${track.id}`);
   };
 
   return (
@@ -205,24 +224,15 @@ export default function Page() {
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerIcon}>🚴‍♂️</div>
+            <div className={styles.headerIcon}></div>
             <h1 className={styles.headerTitle}>Ciclismo</h1>
-            {/* 🔥 BOTÓN DE REFRESCAR */}
-            <button 
-              onClick={handleRefresh}
-              className={styles.refreshButton}
-              disabled={isLoadingRutas}
-              title="Actualizar rutas"
-            >
-              🔄
-            </button>
           </div>
           <div className={styles.headerRight}>
             <SearchBar
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre de la ruta o ubicación..."
+              placeholder="Nombre de la pista"
               sport="ciclismo" 
             />
             <button 
@@ -243,110 +253,119 @@ export default function Page() {
             onClick={handleBackToCiclismo}
           >
             <span>←</span>
-            <span>Volver a Ciclismo</span>
+            <span>Ciclismo</span>
           </button>
         </div>
 
-        {/* 🔥 MOSTRAR ERROR SI EXISTE */}
+        {/* 🚴‍♂️ MENSAJE DE ERROR CON INDICADOR DE FALLBACK */}
         {error && (
-          <div className={styles.errorBanner}>
-            <span>⚠️ {error}</span>
+          <div className={styles.errorMessage}>
+            <span>⚠️</span>
+            <span>Error: {error} - Mostrando datos offline</span>
             <button onClick={handleRefresh}>Reintentar</button>
           </div>
         )}
 
-        {/* 🔥 MOSTRAR LOADING */}
-        {isLoadingRutas && (
-          <div className={styles.loadingContainer}>
-            <div className={styles.loadingSpinner}>🚴‍♂️</div>
-            <p>Cargando rutas de ciclismo...</p>
+        {/* 🚴‍♂️ MENSAJE DE CARGA */}
+        {isLoadingPistas && (
+          <div className={styles.loadingMessage}>
+            <span>🚴‍♂️</span>
+            <span>Cargando pistas de ciclismo...</span>
           </div>
         )}
 
-        {/* Filtros específicos para ciclismo */}
+        {/* Filtros */}
         <div className={styles.filtersContainer}>
-          <h3 className={styles.filtersTitle}>Filtrar rutas de ciclismo</h3>
+          <h3 className={styles.filtersTitle}>Filtrar pistas de ciclismo</h3>
           <div className={styles.filtersGrid}>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#16a34a'}}>📍</span>
-                <span>Ubicación o zona</span>
+                <span style={{color: '#FF6B35'}}>📍</span>
+                <span>Ubicación o barrio</span>
               </label>
               <input
                 type="text"
-                placeholder="Parque, sendero, urbano..."
+                placeholder="Norte, Centro, Sur, Velódromo..."
                 className={styles.filterInput}
               />
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#16a34a'}}>⚡</span>
-                <span>Nivel de dificultad</span>
+                <span style={{color: '#FF6B35'}}>📅</span>
+                <span>Fecha</span>
               </label>
-              <select className={styles.filterSelect}>
-                <option value="">Todas las dificultades</option>
-                <option value="facil">Fácil</option>
-                <option value="medio">Medio</option>
-                <option value="dificil">Difícil</option>
-                <option value="extremo">Extremo</option>
-              </select>
+              <input
+                type="text"
+                placeholder="dd - mm - aaaa"
+                className={styles.filterInput}
+              />
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#16a34a'}}>💰</span>
-                <span>Rango de precios</span>
+                <span style={{color: '#E55100'}}>💰</span>
+                <span>Precio (max $hr)</span>
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="30"
+                className={styles.priceSlider}
+              />
+            </div>
+            <div className={styles.filterField}>
+              <label className={styles.filterLabel}>
+                <span style={{color: '#D84315'}}>🚴‍♂️</span>
+                <span>Tipo de pista</span>
               </label>
               <select className={styles.filterSelect}>
-                <option value="">Todos los precios</option>
-                <option value="0-15">$0 - $15</option>
-                <option value="15-25">$15 - $25</option>
-                <option value="25+">$25+</option>
+                <option>Tipo de pista</option>
+                <option>Velódromo</option>
+                <option>Pista de entrenamiento</option>
+                <option>Circuito BMX</option>
+                <option>Pista de ruta</option>
               </select>
             </div>
           </div>
+          <div className={styles.filtersActions}>
+            <button className={styles.searchButton}>
+              <span>🔍</span>
+              <span>Buscar pistas</span>
+            </button>
+          </div>
         </div>
 
-        {/* 🔥 MENSAJE CUANDO NO HAY RESULTADOS DE BÚSQUEDA */}
-        {filteredRutas.length === 0 && searchTerm && !isLoadingRutas && (
+        {/* Mensaje de no resultados */}
+        {filteredPistas.length === 0 && searchTerm && !isLoadingPistas && (
           <div className={styles.noResults}>
-            <h3>No se encontraron rutas para &quot;{searchTerm}&quot;</h3>
+            <h3>No se encontraron pistas de ciclismo para &quot;{searchTerm}&quot;</h3>
             <p>Intenta con otros términos de búsqueda o ubicaciones específicas</p>
-            <button onClick={() => {setSearchTerm(''); setFilteredRutas(rutas);}}>
-              Ver todas las rutas
+            <button onClick={() => {setSearchTerm(''); setFilteredPistas(pistas);}}>
+              Ver todas las pistas de ciclismo
             </button>
           </div>
         )}
 
-        {/* 🔥 MENSAJE CUANDO NO HAY RUTAS */}
-        {filteredRutas.length === 0 && !searchTerm && !isLoadingRutas && !error && (
-          <div className={styles.noResults}>
-            <h3>🚴‍♂️ No hay rutas de ciclismo registradas</h3>
-            <p>Aún no se han registrado rutas de ciclismo en el sistema</p>
+        {/* 🚴‍♂️ MENSAJE CUANDO NO HAY PISTAS EN LA BD */}
+        {filteredPistas.length === 0 && !searchTerm && !isLoadingPistas && !error && (
+          <div className={styles.noData}>
+            <h3>🚴‍♂️ No hay pistas de ciclismo registradas</h3>
+            <p>Aún no se han registrado pistas de ciclismo en el sistema</p>
             <button onClick={handleRefresh}>Actualizar</button>
           </div>
         )}
 
         {/* Contenedor de tarjetas */}
-        {!isLoadingRutas && filteredRutas.length > 0 && (
+        {!isLoadingPistas && filteredPistas.length > 0 && (
           <div className={styles.cardsContainer}>
             <div className={styles.cardsGrid}>
-              {filteredRutas.map((ruta, idx) => (
-                <CourtCard
-                  key={ruta.id || idx}
-                  {...ruta}
+              {filteredPistas.map((pista, idx) => (
+                <CourtCard 
+                  key={pista.id || idx} 
+                  {...pista} 
                   sport="ciclismo"
-                  onClick={() => handleRutaClick(ruta)}
+                  onClick={() => handlePistaClick(pista)}
                 />
               ))}
-            </div>
-            
-            {/* Mensaje de disponibilidad */}
-            <div className={styles.availabilityMessage}>
-              <div className={styles.availabilityCard}>
-                <span className={styles.availabilityText}>
-                  Rutas de Ciclismo Disponibles ahora: <span className={styles.availabilityNumber}> {availableNow}</span>
-                </span>
-              </div>
             </div>
           </div>
         )}

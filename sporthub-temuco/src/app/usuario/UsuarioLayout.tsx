@@ -9,7 +9,8 @@ import './UserLayout.css';
 interface UserLayoutProps {
   children: React.ReactNode;
   userName: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | undefined;
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | undefined; //Por ahora quiza solo esta esto asi
+  // pero en un futuoro la idea es que se muestre el deporte para que el usuario vea su deporte favorito, esto si aun no se implementa
   notificationCount?: number;
 }
 
@@ -37,9 +38,6 @@ const UserLayout = ({
           {children}
         </main>
       </div>
-
-      {/* Footer */}
-      <Footer />
     </div>
   );
 };

@@ -87,10 +87,31 @@ apiBackend.interceptors.request.use(
 // Interceptor para manejar respuestas del BFF
 apiBackend.interceptors.response.use(
   (response) => {
+    // Log para debugging de respuestas
+    console.log('📥 [apiBackend] Response:', {
+      url: response.config.url,
+      status: response.status,
+      dataType: typeof response.data,
+      isArray: Array.isArray(response.data),
+      hasOkProperty: response.data && typeof response.data === 'object' && 'ok' in response.data
+    });
+
+    // Para el endpoint de reservas, dejar pasar la respuesta sin procesar
+    // La API devuelve directamente un array, no un objeto con { ok, data }
+    if (response.config.url?.includes('/reservas')) {
+      console.log('[apiBackend] Respuesta de reservas (sin procesar):', response.data);
+      return response;
+    }
+
+    // Para contraseñas, SIEMPRE devolver la respuesta tal cual
+    if (response.config.url?.includes('/password')) {
+      return response;
+    }
+    
     // Si el BFF retorna { ok: true, data: ... }, extraer los datos
     if (response.data && typeof response.data === 'object' && 'ok' in response.data) {
       if (response.data.ok === false) {
-        throw new Error(response.data.error || 'Error del servidor');
+        throw new Error(response.data.error || response.data.message || 'Error del servidor');
       }
       // Retornar los datos útiles
       return {
@@ -98,9 +119,19 @@ apiBackend.interceptors.response.use(
         data: response.data.data || response.data
       };
     }
+    
     return response;
   },
   (error) => {
+    // Logging detallado del error
+    console.error('❌ [apiBackend] Error:', {
+      url: error.config?.url,
+      method: error.config?.method,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data
+    });
+
     // NO limpiar localStorage aquí - eso lo maneja useAdminProtection
     // Solo loguear el error para debugging
     if (error.response?.status === 401) {

@@ -37,7 +37,7 @@ export default function PerfilSuperAdministrador() {
   ];
 
   if (loading) return (
-    <AdminLayout userRole="superadmin" userName="Super Admin" notificationCount={3}>
+    <AdminLayout userRole="super_admin" userName="Super Admin" notificationCount={3}>
       <div className="superadmin-container">
         <div className="profile-card">
           <div>Cargando perfil...</div>
@@ -47,7 +47,7 @@ export default function PerfilSuperAdministrador() {
   );
 
   if (!user) return (
-    <AdminLayout userRole="superadmin" userName="Super Admin" notificationCount={3}>
+    <AdminLayout userRole="super_admin" userName="Super Admin" notificationCount={3}>
       <div className="superadmin-container">
         <div className="profile-card">
           <div>No se pudo cargar el perfil.</div>
@@ -57,7 +57,7 @@ export default function PerfilSuperAdministrador() {
   );
 
   return (
-    <AdminLayout userRole="superadmin" userName={user.nombre || "Super Admin"} notificationCount={3}>
+    <AdminLayout userRole="super_admin" userName={user.nombre || "Super Admin"} notificationCount={3}>
       <div className="superadmin-container">
         {/* Panel Izquierdo - Perfil */}
         <div className="profile-card">
@@ -97,7 +97,7 @@ export default function PerfilSuperAdministrador() {
           <div className="superadmin-actions">
             <button
               className="action-button secondary"
-              onClick={() => router.push("/superadmin/cambiocontra")}
+              onClick={() => router.push("/super_admin/cambiocontra")}
             >
               <span className="action-icon">🔑</span>
               Cambiar Contraseña
@@ -185,7 +185,7 @@ export default function PerfilSuperAdministrador() {
                   </div>
                   <button
                     className="security-action-btn"
-                    onClick={() => router.push("/superadmin/cambiocontra")}
+                    onClick={() => router.push("/super_admin/cambiocontra")}
                   >
                     Cambiar Contraseña
                   </button>

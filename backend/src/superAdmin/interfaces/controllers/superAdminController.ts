@@ -11,20 +11,20 @@
  * - Retorna respuestas estandarizadas
  * 
  * Endpoints disponibles:
- * - POST /api/superadmin/auth/login - Autenticación
- * - POST /api/superadmin/auth/logout - Cerrar sesión
- * - GET /api/superadmin/users - Listar usuarios
- * - GET /api/superadmin/users/:id - Obtener usuario
- * - PATCH /api/superadmin/users/:id - Actualizar usuario
- * - DELETE /api/superadmin/users/:id - Eliminar usuario
- * - GET /api/superadmin/complejos - Listar complejos
- * - GET /api/superadmin/complejos/:id - Obtener complejo
- * - GET /api/superadmin/complejos/:id/canchas - Canchas del complejo
- * - POST /api/superadmin/system/parameters - Configuración sistema
- * - GET /api/superadmin/system/statistics - Estadísticas
- * - GET /api/superadmin/system/logs - Logs del sistema
- * - GET /api/superadmin/dashboard - Datos del dashboard
- * - GET /api/superadmin/search?q=term - Búsqueda global
+ * - POST /api/super_admin/auth/login - Autenticación
+ * - POST /api/super_admin/auth/logout - Cerrar sesión
+ * - GET /api/super_admin/users - Listar usuarios
+ * - GET /api/super_admin/users/:id - Obtener usuario
+ * - PATCH /api/super_admin/users/:id - Actualizar usuario
+ * - DELETE /api/super_admin/users/:id - Eliminar usuario
+ * - GET /api/super_admin/complejos - Listar complejos
+ * - GET /api/super_admin/complejos/:id - Obtener complejo
+ * - GET /api/super_admin/complejos/:id/canchas - Canchas del complejo
+ * - POST /api/super_admin/system/parameters - Configuración sistema
+ * - GET /api/super_admin/system/statistics - Estadísticas
+ * - GET /api/super_admin/system/logs - Logs del sistema
+ * - GET /api/super_admin/dashboard - Datos del dashboard
+ * - GET /api/super_admin/search?q=term - Búsqueda global
  */
 
 import { Request, Response } from 'express';
@@ -92,9 +92,20 @@ export class SuperAdminController {
    */
   getUsers = async (req: Request, res: Response): Promise<void> => {
     try {
-      const result = await this.service.getUsers(req.query);
+      // Extraer el token del header Authorization
+      const authHeader = req.headers.authorization;
+      const token = authHeader?.split(' ')[1]; // Remover "Bearer " del token
+      
+      console.log('🔍 [SuperAdminController] getUsers - Token extraído:', {
+        hasAuthHeader: !!authHeader,
+        hasToken: !!token,
+        tokenPreview: token ? `${token.substring(0, 20)}...` : 'No token'
+      });
+
+      const result = await this.service.getUsers(req.query, token);
       res.status(200).json(result);
     } catch (error) {
+      console.error('❌ [SuperAdminController] Error en getUsers:', error);
       res.status(500).json({ ok: false, error: 'Error interno del servidor' });
     }
   };
@@ -102,7 +113,8 @@ export class SuperAdminController {
   getUserById = async (req: Request, res: Response): Promise<void> => {
     try {
       const id = parseInt(req.params.id);
-      const result = await this.service.getUserById(id);
+      const token = req.headers.authorization?.split(' ')[1];
+      const result = await this.service.getUserById(id, token);
       
       const status = result.ok ? 200 : 404;
       res.status(status).json(result);
@@ -114,7 +126,8 @@ export class SuperAdminController {
   updateUser = async (req: Request, res: Response): Promise<void> => {
     try {
       const id = parseInt(req.params.id);
-      const result = await this.service.updateUser(id, req.body);
+      const token = req.headers.authorization?.split(' ')[1];
+      const result = await this.service.updateUser(id, req.body, token);
       
       const status = result.ok ? 200 : 400;
       res.status(status).json(result);
@@ -126,7 +139,8 @@ export class SuperAdminController {
   deleteUser = async (req: Request, res: Response): Promise<void> => {
     try {
       const id = parseInt(req.params.id);
-      const result = await this.service.deleteUser(id);
+      const token = req.headers.authorization?.split(' ')[1];
+      const result = await this.service.deleteUser(id, token);
       
       const status = result.ok ? 200 : 400;
       res.status(status).json(result);

@@ -45,6 +45,74 @@ export class AuthService {
   private authToken: string | null = null; // Token JWT almacenado en memoria
 
   /**
+   * Normaliza el rol del usuario a minúsculas y convierte variantes
+   * @param rol - Rol del usuario (puede venir en mayúsculas, minúsculas o mixto)
+   * @returns string - Rol normalizado en minúsculas
+   */
+  private normalizeRole(rol: string): string {
+    const normalized = rol.toLowerCase().trim();
+    
+    // Mapear roles específicos para mantener consistencia
+    switch (normalized) {
+      case 'admin':
+        return 'admin';
+      case 'super_admin':
+      case 'superadmin':
+        return 'super_admin';
+      case 'usuario':
+      case 'user':
+        return 'usuario';
+      default:
+        return normalized;
+    }
+  }
+
+
+
+  /**
+   * Normaliza los datos del usuario, especialmente el rol
+   * @param userData - Datos del usuario que pueden venir con rol en cualquier formato
+   * @returns UserPublic - Datos del usuario con rol normalizado
+   */
+  private async normalizeUserDataAsync(userData: any): Promise<any> {
+    if (!userData) return userData;
+    
+    console.log('🔍 [AuthService.normalizeUserDataAsync] Datos recibidos completos:', {
+      id_usuario: userData.id_usuario,
+      id: userData.id,
+      nombre: userData.nombre,
+      email: userData.email,
+      rol: userData.rol,
+      rolTipo: typeof userData.rol,
+      todosLosCampos: Object.keys(userData)
+    });
+    
+    const normalizedRole = userData.rol ? this.normalizeRole(userData.rol) : userData.rol;
+    
+    console.log('🔄 [AuthService.normalizeUserDataAsync] Normalización de rol:', {
+      original: userData.rol,
+      normalizado: normalizedRole
+    });
+    
+    return {
+      ...userData,
+      rol: normalizedRole
+    };
+  }
+
+  /**
+   * Versión síncrona para compatibilidad
+   */
+  private normalizeUserData(userData: any): any {
+    if (!userData) return userData;
+    
+    return {
+      ...userData,
+      rol: userData.rol ? this.normalizeRole(userData.rol) : userData.rol
+    };
+  }
+
+  /**
    * CONSTRUCTOR - Configuración inicial
    * ===================================
    * Inicializa el cliente HTTP con configuración base y interceptors
@@ -129,7 +197,13 @@ export class AuthService {
         this.authToken = response.data.access_token;
       }
       
-      return { ok: true, data: response.data };
+      // 🔥 NORMALIZAR ROL: Convertir a minúsculas y super_admin → super_admin
+      const normalizedData = {
+        ...response.data,
+        user: response.data.user ? this.normalizeUserData(response.data.user) : response.data.user
+      };
+      
+      return { ok: true, data: normalizedData };
     } catch (error: any) {
       console.error('❌ AuthService: Error en verificación de registro:', {
         message: error.message,
@@ -164,15 +238,54 @@ export class AuthService {
    */
   async login(credentials: UserLogin): Promise<ApiResponse<TokenResponse>> {
     try {
+      console.log('🔄 [AuthService.login] Iniciando login con credenciales:', {
+        email: credentials.email,
+        url: `${API_CONFIG.baseURL}${API_ENDPOINTS.auth.login}`
+      });
+      
       const response = await this.apiClient.post(API_ENDPOINTS.auth.login, credentials);
+      
+      console.log('🔍 [AuthService.login] Respuesta COMPLETA de FastAPI:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+        dataCompleta: response.data
+      });
+      
+      console.log('🔍 [AuthService.login] Usuario específico de la respuesta:', {
+        user: response.data.user,
+        rolRecibido: response.data.user?.rol,
+        rolTipo: typeof response.data.user?.rol,
+        idUsuario: response.data.user?.id_usuario || response.data.user?.id,
+        email: response.data.user?.email
+      });
       
       // Almacenar token para futuras peticiones
       if (response.data.access_token) {
         this.authToken = response.data.access_token;
       }
       
-      return { ok: true, data: response.data };
+      // 🔥 NORMALIZAR ROL: Aplicar correcciones y normalización
+      const normalizedData = {
+        ...response.data,
+        user: response.data.user ? await this.normalizeUserDataAsync(response.data.user) : response.data.user
+      };
+      
+      console.log('✅ [AuthService.login] Resultado final después de normalización:', {
+        originalRol: response.data.user?.rol,
+        normalizedRol: normalizedData.user?.rol,
+        userId: normalizedData.user?.id_usuario || normalizedData.user?.id
+      });
+      
+      return { ok: true, data: normalizedData };
     } catch (error: any) {
+      console.error('❌ [AuthService.login] Error en login:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+      
       return { 
         ok: false, 
         error: error.response?.data?.detail || 'Error de autenticación' 
@@ -238,7 +351,16 @@ export class AuthService {
   async getMe(): Promise<ApiResponse<UserPublic>> {
     try {
       const response = await this.apiClient.get(API_ENDPOINTS.auth.me);
-      return { ok: true, data: response.data };
+      
+      // 🔥 NORMALIZAR ROL: Convertir a minúsculas y super_admin → super_admin
+      const normalizedData = this.normalizeUserData(response.data);
+      
+      console.log('🔄 [AuthService.getMe] Rol normalizado:', {
+        original: response.data?.rol,
+        normalizado: normalizedData?.rol
+      });
+      
+      return { ok: true, data: normalizedData };
     } catch (error: any) {
       return { 
         ok: false, 
@@ -255,7 +377,11 @@ export class AuthService {
   async updateMe(updateData: UserUpdate): Promise<ApiResponse<UserPublic>> {
     try {
       const response = await this.apiClient.patch(API_ENDPOINTS.auth.updateMe, updateData);
-      return { ok: true, data: response.data };
+      
+      // 🔥 NORMALIZAR ROL: Convertir a minúsculas y super_admin → super_admin
+      const normalizedData = this.normalizeUserData(response.data);
+      
+      return { ok: true, data: normalizedData };
     } catch (error: any) {
       return { 
         ok: false, 
