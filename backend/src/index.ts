@@ -52,14 +52,69 @@ const PORT = process.env.BFF_PORT || process.env.PORT || 4000;
 
 // CORS - Permitir requests desde múltiples orígenes (desarrollo y producción)
 const allowedOrigins = [
+  // Desarrollo local
   'http://localhost:3000',
+  'http://127.0.0.1:3000',
+  
+  // Frontend Main (producción)
   'https://frontend-cdrhos-0246e7-168-232-167-73.traefik.me',
-  process.env.FRONTEND_URL
+  
+  // Frontend Develop 
+  'https://frontend-develop-yqgrkr-0246e7-168-232-167-73.traefik.me',
+  
+  // Variables de entorno dinámicas
+  process.env.FRONTEND_URL,
+  process.env.FRONTEND_MAIN_URL,
+  process.env.FRONTEND_DEVELOP_URL
 ].filter(Boolean) as string[];
 
+console.log('🌐 CORS configurado para orígenes:', allowedOrigins);
+
 app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
+  origin: (origin, callback) => {
+    console.log('🔍 CORS Request from origin:', origin);
+    
+    // Permitir requests sin origin (como Postman, curl, etc.)
+    if (!origin) {
+      console.log('✅ CORS: Permitiendo request sin origin');
+      return callback(null, true);
+    }
+    
+    // Verificar si el origin está en la lista permitida exacta
+    if (allowedOrigins.includes(origin)) {
+      console.log('✅ CORS: Origin permitido (lista exacta):', origin);
+      return callback(null, true);
+    }
+    
+    // Para desarrollo, permitir localhost con cualquier puerto
+    if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+      console.log('✅ CORS: Permitiendo localhost para desarrollo:', origin);
+      return callback(null, true);
+    }
+    
+    // Permitir cualquier subdominio de traefik.me (para producción/staging flexibles)
+    if (origin.includes('traefik.me')) {
+      console.log('✅ CORS: Permitiendo traefik.me subdomain:', origin);
+      return callback(null, true);
+    }
+    
+    // Permitir dominios de Dokploy (formato típico)
+    if (origin.includes('168.232.167.73') || origin.includes('dokploy')) {
+      console.log('✅ CORS: Permitiendo dominio Dokploy:', origin);
+      return callback(null, true);
+    }
+    
+    console.log('❌ CORS: Origin NO permitido:', origin);
+    console.log('📋 Origins permitidos explícitos:', allowedOrigins);
+    console.log('📋 Patrones permitidos: localhost:*, *.traefik.me, *168.232.167.73*');
+    
+    const corsError = new Error(`CORS policy: Origin ${origin} is not allowed`);
+    return callback(corsError);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  optionsSuccessStatus: 200
 }));
 
 // Parse JSON bodies
@@ -151,9 +206,25 @@ app.get('/api/super_admin/test', (req, res) => {
   });
 });
 
-// Middleware de debug para ver todas las rutas
+// Middleware de debug para ver todas las rutas y headers CORS
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Original URL: ${req.originalUrl}`);
+  const timestamp = new Date().toISOString();
+  const origin = req.headers.origin;
+  const referer = req.headers.referer;
+  
+  console.log(`${timestamp} - ${req.method} ${req.path}`);
+  if (origin) {
+    console.log(`  🌐 Origin: ${origin}`);
+  }
+  if (referer) {
+    console.log(`  🔗 Referer: ${referer}`);
+  }
+  
+  // Loggear headers importantes para CORS
+  if (req.method === 'OPTIONS') {
+    console.log(`  ✋ PREFLIGHT REQUEST - Origin: ${origin}`);
+  }
+  
   next();
 });
 
