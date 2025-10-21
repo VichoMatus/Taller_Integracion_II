@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import '@/app/admin/dashboard.css';
-import { usuariosService } from '@/services/usuariosService';
+import { superAdminService } from '@/services/superAdminService';
 import { Usuario } from '@/types/usuarios';
 
 //import { useAuthProtection } from '@/hooks/useAuthProtection';
@@ -60,7 +60,7 @@ export default function AdministradoresPage() {
   // Estado para almacenar todos los usuarios sin filtrar
   const [todosUsuarios, setTodosUsuarios] = useState<Usuario[]>([]);
 
-  // Función para cargar usuarios
+  // Función para cargar administradores
   const cargarUsuarios = async () => {
     if (!mounted) return; // 🔥 No ejecutar si no está montado
     
@@ -68,15 +68,15 @@ export default function AdministradoresPage() {
     setError('');
     
     try {
-      console.log('🔍 [AdministradoresPage] Iniciando carga de usuarios...');
+      console.log('🔍 [AdministradoresPage] Iniciando carga de administradores...');
       const userRole = localStorage.getItem('user_role');
       console.log('👤 [AdministradoresPage] Rol actual:', userRole);
 
-      const data = await usuariosService.listar({
-        rol: 'admin'
-      });
+      // 🎯 Usar superAdminService para obtener solo administradores
+      const data = await superAdminService.listarAdministradores();
       
-      console.log('✅ [AdministradoresPage] Usuarios cargados:', data);
+      console.log('✅ [AdministradoresPage] Administradores cargados:', data);
+      console.log('📊 [AdministradoresPage] Cantidad de administradores:', data.length);
       setTodosUsuarios(Array.isArray(data) ? data : []);
     } catch (error: any) {
       console.error('❌ [AdministradoresPage] Error:', error);
@@ -90,7 +90,7 @@ export default function AdministradoresPage() {
         setError('Sesión expirada. Por favor, inicia sesión nuevamente.');
         setTimeout(() => router.push('/login'), 2000);
       } else {
-        setError(error.message || 'Error al cargar usuarios');
+        setError(error.message || 'Error al cargar administradores');
       }
       
       setTodosUsuarios([]); // Limpiar la lista en caso de error
@@ -136,7 +136,7 @@ export default function AdministradoresPage() {
   const desactivarAdmin = async (adminId: string | number) => {
     if (window.confirm('¿Estás seguro de que deseas desactivar este administrador?')) {
       try {
-        await usuariosService.actualizar(adminId, { esta_activo: false });
+        await superAdminService.actualizarUsuario(adminId, { esta_activo: false });
         cargarUsuarios(); // Recargar la lista
       } catch (error: any) {
         setError(error.message || 'Error al desactivar administrador');
