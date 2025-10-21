@@ -63,11 +63,28 @@ const getBackendUrl = () => {
     return 'http://localhost:4000';
   }
   
-  // Prioridad 3: En servidor, localhost por defecto
-  console.log('🖥️ [getBackendUrl] Entorno SERVIDOR (SSR) → localhost:4000');
+  // Prioridad 3: En servidor (SSR) - detectar por variables de entorno del build
+  // Si hay NODE_ENV=production o no estamos en localhost, usar producción
+  const nodeEnv = process.env.NODE_ENV;
+  if (nodeEnv === 'production') {
+    console.log('🖥️ [getBackendUrl] NODE_ENV=production detectado → PRODUCCIÓN');
+    return 'https://backend-mn66n6-82bd05-168-232-167-73.traefik.me';
+  }
+  
+  console.log('🖥️ [getBackendUrl] Entorno SERVIDOR (SSR) desarrollo → localhost');
   return 'http://localhost:4000';
 };
 
+// FUNCIÓN DINÁMICA que recalcula la URL en cada llamada (para evitar problemas de hidratación)
+export const getDynamicBackendUrl = () => {
+  return getBackendUrl();
+};
+
+export const getDynamicApiUrl = () => {
+  return `${getDynamicBackendUrl()}/api`;
+};
+
+// URLs estáticas para compatibilidad (pero preferir las dinámicas)
 const BACKEND_BASE_URL = getBackendUrl();
 
 export const BACKEND_URL = BACKEND_BASE_URL; // Para uso directo
@@ -81,7 +98,7 @@ console.log('  - NEXT_PUBLIC_BACKEND_URL:', process.env.NEXT_PUBLIC_BACKEND_URL 
 
 // Instancia de axios apuntando al Backend for Frontend (BFF)
 export const apiBackend = axios.create({
-  baseURL: API_BASE_URL,
+  // NO usar baseURL estática, se configurará dinámicamente en el interceptor
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
@@ -92,18 +109,28 @@ export const apiBackend = axios.create({
   }
 });
 
-// Interceptor para agregar token automáticamente
+// Interceptor para agregar token automáticamente y configurar URL dinámica
 apiBackend.interceptors.request.use(
   (config) => {
+    // CONFIGURAR URL DINÁMICA EN CADA REQUEST
+    const dynamicApiUrl = getDynamicApiUrl();
+    
+    // Si la URL es relativa, agregar la baseURL dinámica
+    if (config.url && !config.url.startsWith('http')) {
+      config.url = `${dynamicApiUrl}${config.url.startsWith('/') ? '' : '/'}${config.url}`;
+    }
+    
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('access_token') || localStorage.getItem('token');
       
       // Log para debugging
       console.log('🔐 [apiBackend] Interceptor request:', {
-        url: config.url,
+        originalUrl: config.url,
+        finalUrl: config.url,
         method: config.method,
         hasToken: !!token,
-        tokenPreview: token ? `${token.substring(0, 20)}...` : 'No token'
+        tokenPreview: token ? `${token.substring(0, 20)}...` : 'No token',
+        dynamicBaseUrl: dynamicApiUrl
       });
       
       if (token) {
@@ -111,7 +138,13 @@ apiBackend.interceptors.request.use(
       } else {
         console.warn('⚠️ [apiBackend] No se encontró token en localStorage para:', config.url);
       }
+    } else {
+      console.log('🖥️ [apiBackend] Request desde servidor SSR:', {
+        url: config.url,
+        dynamicBaseUrl: dynamicApiUrl
+      });
     }
+    
     return config;
   },
   (error) => Promise.reject(error)
