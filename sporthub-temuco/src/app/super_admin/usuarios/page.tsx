@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { superAdminService } from '@/services/superAdminService';
 import { Usuario, UserDisplay } from '@/types/usuarios';
 import { useSuperAdminProtection } from '@/hooks/useSuperAdminProtection';
-import '@/app/admin/dashboard.css';
+import '@/app/super_admin/dashboard.css';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -159,24 +159,24 @@ export default function UsuariosPage() {
   const getTypeBadgeClass = (type: string) => {
     switch (type) {
       case 'Premium':
-        return 'bg-purple-100 text-purple-800';
+        return 'status-premium';
       case 'Regular':
-        return 'bg-blue-100 text-blue-800';
+        return 'status-regular';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return '';
     }
   };
 
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'Activo':
-        return 'bg-green-100 text-green-800';
+        return 'status-active';
       case 'Inactivo':
-        return 'bg-red-100 text-red-800';
+        return 'status-inactive';
       case 'Por revisar':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'status-pending';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return '';
     }
   };
 
@@ -198,134 +198,118 @@ export default function UsuariosPage() {
 
   // Render
   return (
-    <div className="admin-dashboard-container">
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-6">Panel de Gestión de Usuarios</h1>
-        
-        <div className="flex justify-between items-center mb-6">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Buscar usuarios..."
-              className="input-search px-4 py-2 pr-10 rounded-lg border focus:outline-none focus:ring-2"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
+    <div className="admin-page-layout">
+      <div className="admin-main-header">
+        <div className="admin-header-nav">
+          <h1 className="admin-page-title">Panel de Gestión de Usuarios</h1>
         </div>
+        <div className="search-bar">
+          <input
+            type="text"
+            placeholder="Buscar usuarios..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
+          />
+        </div>
+      </div>
 
-        {error && (
-          <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
-            <p className="text-red-700">{error}</p>
-          </div>
-        )}
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-400 p-4">
+          <p className="text-red-700">{error}</p>
+        </div>
+      )}
 
-        {isLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <p>Cargando usuarios...</p>
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto bg-white rounded-lg shadow">
-              <table className="min-w-full">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Nombre
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tipo
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Estado
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Última Actividad
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {paginatedUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{user.email}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getTypeBadgeClass(user.type)}`}>
-                          {user.type}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(user.status)}`}>
-                          {user.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {user.lastAccess}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleEditUser(user.id)}
-                            className="text-indigo-600 hover:text-indigo-900"
-                          >
-                            ✏️
-                          </button>
-                          <button
-                            onClick={() => handleDeleteUser(user.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            🗑️
-                          </button>
-                          {user.status === 'Por revisar' && (
-                            <button
-                              onClick={() => handleApproveUser(user.id)}
-                              className="text-green-600 hover:text-green-900"
-                            >
-                              ✓
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <p>Cargando usuarios...</p>
+        </div>
+      ) : (
+        <div className="users-table-container">
+          <table className="users-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Email</th>
+                <th>Tipo</th>
+                <th>Estado</th>
+                <th>Última Actividad</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedUsers.map((user) => (
+                <tr key={user.id}>
+                  <td>{user.name}</td>
+                  <td>{user.email}</td>
+                  <td>
+                    <span className={`status-badge ${getTypeBadgeClass(user.type)}`}>
+                      {user.type}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`status-badge ${getStatusBadgeClass(user.status)}`}>
+                      {user.status}
+                    </span>
+                  </td>
+                  <td>{user.lastAccess}</td>
+                  <td>
+                    <div className="action-buttons">
+                      <button
+                        onClick={() => handleEditUser(user.id)}
+                        className="btn-edit"
+                        title="Editar usuario"
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(user.id)}
+                        className="btn-delete"
+                        title="Eliminar usuario"
+                      >
+                        🗑️
+                      </button>
+                      {user.status === 'Por revisar' && (
+                        <button
+                          onClick={() => handleApproveUser(user.id)}
+                          className="btn-approve"
+                          title="Aprobar usuario"
+                        >
+                          ✓
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
 
-            <div className="flex justify-between items-center mt-4">
-              <div className="text-sm text-gray-700">
+          {filteredUsers.length > 0 && (
+            <div className="table-footer">
+              <div className="table-info">
                 Mostrando {startIndex + 1} a {Math.min(endIndex, filteredUsers.length)} de {filteredUsers.length} usuarios
               </div>
-              <div className="flex space-x-2">
+              <div className="pagination-buttons">
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 border rounded-md disabled:opacity-50"
+                  className="btn-pagination"
                 >
                   Anterior
                 </button>
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage >= totalPages}
-                  className="px-3 py-1 border rounded-md disabled:opacity-50"
+                  className="btn-pagination"
                 >
                   Siguiente
                 </button>
               </div>
             </div>
-          </>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
