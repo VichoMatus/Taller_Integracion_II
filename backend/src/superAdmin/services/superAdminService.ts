@@ -108,23 +108,51 @@ export class SuperAdminService {
   /**
    * Obtener lista de usuarios con paginación y filtros
    * @param params - Parámetros de consulta (page, page_size, filtros)
+   * @param token - Token JWT del usuario autenticado
    * @returns Promise<ApiResponse> - Lista paginada de usuarios
    */
-  async getUsers(params: any = {}): Promise<ApiResponse> {
+  async getUsers(params: any = {}, token?: string): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.get(API_ENDPOINTS.usuarios.base, { params });
+      // Preparar headers con token si está disponible
+      const headers: any = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      
+      console.log('🔍 [SuperAdminService] Haciendo petición a FastAPI:', {
+        url: `${API_CONFIG.baseURL}${API_ENDPOINTS.usuarios.base}`,
+        params,
+        hasToken: !!token
+      });
+
+      const response = await this.apiClient.get(API_ENDPOINTS.usuarios.base, { 
+        params,
+        headers
+      });
+      
+      console.log('✅ [SuperAdminService] Respuesta de FastAPI recibida:', response.status);
       return { ok: true, data: response.data };
     } catch (error: any) {
-      return { ok: false, error: error.response?.data?.message || 'Error al obtener usuarios' };
+      console.error('❌ [SuperAdminService] Error al obtener usuarios:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      return { ok: false, error: error.response?.data?.message || error.message || 'Error al obtener usuarios' };
     }
   }
 
   /**
    * Obtener usuario específico por ID
    */
-  async getUserById(id: number): Promise<ApiResponse> {
+  async getUserById(id: number, token?: string): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.get(API_ENDPOINTS.usuarios.byId(id));
+      const headers: any = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await this.apiClient.get(API_ENDPOINTS.usuarios.byId(id), { headers });
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al obtener usuario' };
@@ -134,9 +162,14 @@ export class SuperAdminService {
   /**
    * Actualizar datos de usuario
    */
-  async updateUser(id: number, data: any): Promise<ApiResponse> {
+  async updateUser(id: number, data: any, token?: string): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.patch(API_ENDPOINTS.usuarios.byId(id), data);
+      const headers: any = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await this.apiClient.patch(API_ENDPOINTS.usuarios.byId(id), data, { headers });
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al actualizar usuario' };
@@ -146,9 +179,14 @@ export class SuperAdminService {
   /**
    * Desactivar/eliminar usuario (soft delete)
    */
-  async deleteUser(id: number): Promise<ApiResponse> {
+  async deleteUser(id: number, token?: string): Promise<ApiResponse> {
     try {
-      await this.apiClient.delete(API_ENDPOINTS.usuarios.byId(id));
+      const headers: any = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      await this.apiClient.delete(API_ENDPOINTS.usuarios.byId(id), { headers });
       return { ok: true, message: 'Usuario desactivado correctamente' };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al desactivar usuario' };

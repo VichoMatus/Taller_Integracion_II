@@ -57,7 +57,7 @@ export const requireSuperAdmin = (req: Request, res: Response, next: NextFunctio
     // 2. Extraer rol del usuario
     let userRole = user.rol;
     if (!userRole) {
-      console.warn(`[SuperAdmin Security] Acceso denegado - Rol no definido para usuario ${user.id} en ${req.method} ${req.path}`);
+      console.warn(`[SuperAdmin Security] Acceso denegado - Rol no definido para usuario ${user.sub || user.id} en ${req.method} ${req.path}`);
       return res.status(403).json(fail(403, "Rol de usuario no definido"));
     }
 

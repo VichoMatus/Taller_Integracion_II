@@ -1,6 +1,8 @@
 // src/usuario/route/usuarioRoute.ts
 import { Router } from "express";
 import { UsuarioController } from "../interfaces/controllers/usuarioControllers";
+import { authMiddleware } from "../../auth/middlewares/authMiddleware";
+import { requireSuperAdmin } from "../../superAdmin/guards/superAdminGuards";
 
 const router = Router();
 const controller = new UsuarioController();
@@ -10,25 +12,25 @@ const controller = new UsuarioController();
  * app.use("/api/usuarios", usuarioRouter)
  */
 
-// Crear
-router.post("/", controller.crear);
+// Crear (requiere autenticación y permisos de SuperAdmin)
+router.post("/", authMiddleware, requireSuperAdmin, controller.crear);
 
-// Listar (filtros: q, rol, esta_activo, verificado, page, size)
-router.get("/", controller.listar);
+// Listar (requiere autenticación y permisos de SuperAdmin)
+router.get("/", authMiddleware, requireSuperAdmin, controller.listar);
 
-// Obtener uno por id
-router.get("/:id", controller.obtener);
+// Obtener uno por id (requiere autenticación y permisos de SuperAdmin)
+router.get("/:id", authMiddleware, requireSuperAdmin, controller.obtener);
 
-// Actualizar por id
-router.put("/:id", controller.actualizar);
+// Actualizar por id (requiere autenticación y permisos de SuperAdmin)
+router.put("/:id", authMiddleware, requireSuperAdmin, controller.actualizar);
 
-// Eliminar por id
-router.delete("/:id", controller.eliminar);
+// Eliminar por id (requiere autenticación y permisos de SuperAdmin)
+router.delete("/:id", authMiddleware, requireSuperAdmin, controller.eliminar);
 
-// Activar/Desactivar/Verificar
-router.patch("/:id/activar", controller.activar);
-router.patch("/:id/desactivar", controller.desactivar);
-router.patch("/:id/verificar", controller.verificar);
+// Activar/Desactivar/Verificar (requiere autenticación y permisos de SuperAdmin)
+router.patch("/:id/activar", authMiddleware, requireSuperAdmin, controller.activar);
+router.patch("/:id/desactivar", authMiddleware, requireSuperAdmin, controller.desactivar);
+router.patch("/:id/verificar", authMiddleware, requireSuperAdmin, controller.verificar);
 
 /** GET /usuarios/status - Verifica estado y conectividad del módulo usuarios */
 router.get("/status", async (req, res) => {

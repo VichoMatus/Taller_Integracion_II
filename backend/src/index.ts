@@ -139,6 +139,18 @@ app.use('/api/complejos', complejosRoutes);
 // Rutas de administración (legacy)
 app.use('/api/super_admin', superAdminRoutes);
 
+// Ruta de prueba para debugging
+app.get('/api/super_admin/test', (req, res) => {
+  res.json({
+    ok: true,
+    message: 'SuperAdmin endpoint funcionando',
+    timestamp: new Date().toISOString(),
+    headers: {
+      authorization: req.headers.authorization ? `Bearer ${req.headers.authorization.substring(7, 27)}...` : 'No token'
+    }
+  });
+});
+
 // Middleware de debug para ver todas las rutas
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Original URL: ${req.originalUrl}`);

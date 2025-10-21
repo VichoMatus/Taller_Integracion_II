@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { usuariosService } from '@/services/usuariosService';
+import { superAdminService } from '@/services/superAdminService';
 import { Usuario, UserDisplay } from '@/types/usuarios';
 import { useSuperAdminProtection } from '@/hooks/useSuperAdminProtection';
 import '@/app/admin/dashboard.css';
@@ -45,7 +45,7 @@ export default function UsuariosPage() {
     lastAccess: new Date(usuario.fecha_actualizacion).toLocaleDateString('es-CL')
   });
 
-  // Función principal para cargar usuarios
+    // Función principal para cargar usuarios
   const cargarUsuarios = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -61,12 +61,32 @@ export default function UsuariosPage() {
         return;
       }
 
-      // La verificación del rol ahora la maneja useSuperAdminProtection
+      // PRUEBA DE CONECTIVIDAD PRIMERO
+      try {
+        console.log('🧪 Probando conectividad con backend...');
+        const testResponse = await fetch('http://localhost:4000/api/super_admin/test', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (testResponse.ok) {
+          const testData = await testResponse.json();
+          console.log('✅ Conectividad OK:', testData);
+        } else {
+          console.error('❌ Test de conectividad falló:', testResponse.status, testResponse.statusText);
+        }
+      } catch (testError) {
+        console.error('❌ Error en test de conectividad:', testError);
+        setError(`Error de conexión: ${testError instanceof Error ? testError.message : 'Desconocido'}`);
+        return;
+      }
 
       // Obtener usuarios
       console.log('🔄 Iniciando petición de usuarios...');
       try {
-        const usuariosReales = await usuariosService.listar();
+        const usuariosReales = await superAdminService.listarUsuarios();
         console.log('✅ Usuarios obtenidos:', usuariosReales);
         
         // Mapear usuarios al formato de visualización
@@ -99,7 +119,7 @@ export default function UsuariosPage() {
   const handleDeleteUser = async (userId: string) => {
     if (window.confirm('¿Estás seguro de que deseas eliminar este usuario?')) {
       try {
-        await usuariosService.eliminar(userId);
+        await superAdminService.eliminarUsuario(userId);
         cargarUsuarios();
       } catch (error: any) {
         setError('Error al eliminar usuario: ' + error.message);
@@ -109,7 +129,7 @@ export default function UsuariosPage() {
 
   const handleApproveUser = async (userId: string) => {
     try {
-      await usuariosService.actualizar(userId, { verificado: true });
+      await superAdminService.actualizarUsuario(userId, { verificado: true });
       cargarUsuarios();
     } catch (error: any) {
       setError('Error al aprobar usuario: ' + error.message);
