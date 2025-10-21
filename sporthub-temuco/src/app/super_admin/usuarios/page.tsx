@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { superAdminService } from '@/services/superAdminService';
 import { Usuario, UserDisplay } from '@/types/usuarios';
 import { useSuperAdminProtection } from '@/hooks/useSuperAdminProtection';
-import '@/app/super_admin/dashboard.css';
+import '@/app/admin/dashboard.css';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -21,6 +21,16 @@ export default function UsuariosPage() {
   const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+
+  // Event handlers
+  const handleCreateUser = () => {
+    router.push('/super_admin/usuarios/crear');
+  };
+
+  const handleExportReport = () => {
+    // TODO: Implementar la exportación del informe
+    console.log('Exportando informe de usuarios...');
+  };
 
   // Helper functions
   const getUserType = (rol: string): 'Regular' | 'Premium' => {
@@ -155,31 +165,6 @@ export default function UsuariosPage() {
     }
   };
 
-  // Funciones para clases CSS
-  const getTypeBadgeClass = (type: string) => {
-    switch (type) {
-      case 'Premium':
-        return 'status-premium';
-      case 'Regular':
-        return 'status-regular';
-      default:
-        return '';
-    }
-  };
-
-  const getStatusBadgeClass = (status: string) => {
-    switch (status) {
-      case 'Activo':
-        return 'status-active';
-      case 'Inactivo':
-        return 'status-inactive';
-      case 'Por revisar':
-        return 'status-pending';
-      default:
-        return '';
-    }
-  };
-
   // Filtrar y paginar usuarios
   const filteredUsers = users.filter(user => {
     const searchLower = searchTerm.toLowerCase();
@@ -198,99 +183,160 @@ export default function UsuariosPage() {
 
   // Render
   return (
-    <div className="admin-page-layout">
-      <div className="admin-main-header">
-        <div className="admin-header-nav">
-          <h1 className="admin-page-title">Panel de Gestión de Usuarios</h1>
-        </div>
-        <div className="search-bar">
-          <input
-            type="text"
-            placeholder="Buscar usuarios..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
+    <div className="admin-dashboard-container">
+      {/* Header Principal */}
+      <div className="estadisticas-header">
+        <h1 className="text-2xl font-bold text-gray-900">Panel de Gestión de Usuarios</h1>
+        
+        <div className="admin-controls">
+          <button className="export-button" onClick={handleExportReport}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Exportar informe
+          </button>
+          
+          <button className="export-button" onClick={handleCreateUser}>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Crear Usuario
+          </button>
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-50 border-l-4 border-red-400 p-4">
-          <p className="text-red-700">{error}</p>
+        <div className="error-message">
+          <p>{error}</p>
         </div>
       )}
 
       {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <p>Cargando usuarios...</p>
+        <div className="flex items-center justify-center py-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Cargando usuarios...</p>
+          </div>
         </div>
       ) : (
-        <div className="users-table-container">
-          <table className="users-table">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Email</th>
-                <th>Tipo</th>
-                <th>Estado</th>
-                <th>Última Actividad</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedUsers.map((user) => (
-                <tr key={user.id}>
-                  <td>{user.name}</td>
-                  <td>{user.email}</td>
-                  <td>
-                    <span className={`status-badge ${getTypeBadgeClass(user.type)}`}>
-                      {user.type}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`status-badge ${getStatusBadgeClass(user.status)}`}>
-                      {user.status}
-                    </span>
-                  </td>
-                  <td>{user.lastAccess}</td>
-                  <td>
-                    <div className="action-buttons">
-                      <button
-                        onClick={() => handleEditUser(user.id)}
-                        className="btn-edit"
-                        title="Editar usuario"
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="btn-delete"
-                        title="Eliminar usuario"
-                      >
-                        🗑️
-                      </button>
-                      {user.status === 'Por revisar' && (
-                        <button
-                          onClick={() => handleApproveUser(user.id)}
-                          className="btn-approve"
-                          title="Aprobar usuario"
-                        >
-                          ✓
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {filteredUsers.length > 0 && (
-            <div className="table-footer">
-              <div className="table-info">
-                Mostrando {startIndex + 1} a {Math.min(endIndex, filteredUsers.length)} de {filteredUsers.length} usuarios
+        <>
+          {/* Contenedor Principal de la Tabla */}
+          <div className="admin-table-container">
+            {/* Header de la Tabla */}
+            <div className="admin-table-header">
+              <h2 className="admin-table-title">Lista de Usuarios ({filteredUsers.length})</h2>
+              
+              <div className="admin-search-filter">
+                {/* Búsqueda */}
+                <div className="admin-search-container">
+                  <input
+                    type="text"
+                    placeholder="Buscar por nombre o email"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="admin-search-input"
+                  />
+                  <svg className="admin-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                
+                {/* Filtro */}
+                <button className="btn-filtrar">
+                  Filtrar
+                </button>
               </div>
-              <div className="pagination-buttons">
+            </div>
+            
+            {/* Tabla Principal */}
+            <div className="overflow-x-auto">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Tipo</th>
+                    <th>Estado</th>
+                    <th>Última Actividad</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedUsers.map((user) => (
+                    <tr key={user.id}>
+                      <td>
+                        <div className="admin-cell-title">{user.name}</div>
+                      </td>
+                      <td>
+                        <div className="admin-cell-subtitle">{user.email}</div>
+                      </td>
+                      <td>
+                        <div className="admin-cell-text">
+                          {user.type}
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`status-badge ${
+                          user.status === 'Activo' ? 'status-activo' :
+                          user.status === 'Inactivo' ? 'status-inactivo' :
+                          'status-por-revisar'
+                        }`}>
+                          {user.status}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="admin-cell-text">
+                          {user.lastAccess}
+                        </div>
+                      </td>
+                      <td>
+                        <div className="admin-actions-container">
+                          <button 
+                            className="btn-action btn-editar" 
+                            title="Editar"
+                            onClick={() => handleEditUser(user.id)}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
+                          
+                          <button 
+                            className="btn-action btn-eliminar" 
+                            title="Eliminar"
+                            onClick={() => handleDeleteUser(user.id)}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                          
+                          {user.status === 'Por revisar' && (
+                            <button 
+                              className="btn-action btn-aprobar" 
+                              title="Aprobar"
+                              onClick={() => handleApproveUser(user.id)}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            {/* Paginación */}
+            <div className="admin-pagination-container">
+              <div className="admin-pagination-info">
+                mostrando {startIndex + 1} - {Math.min(endIndex, filteredUsers.length)} de {filteredUsers.length} usuarios
+              </div>
+              
+              <div className="admin-pagination-controls">
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
@@ -298,17 +344,30 @@ export default function UsuariosPage() {
                 >
                   Anterior
                 </button>
+                
+                <div className="admin-pagination-numbers">
+                  {[...Array(totalPages)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`btn-pagination ${currentPage === i + 1 ? 'active' : ''}`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+                
                 <button
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage >= totalPages}
+                  disabled={currentPage === totalPages}
                   className="btn-pagination"
                 >
                   Siguiente
                 </button>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
