@@ -24,7 +24,8 @@ export default function UsuariosPage() {
 
   // Helper functions
   const getUserType = (rol: string): 'Regular' | 'Premium' => {
-    return (rol === 'admin' || rol === 'super_admin') ? 'Premium' : 'Regular';
+    // En esta vista solo mostramos usuarios regulares
+    return 'Regular';
   };
 
   const getUserStatus = (esta_activo: boolean, verificado: boolean): 'Activo' | 'Inactivo' | 'Por revisar' => {
@@ -87,11 +88,29 @@ export default function UsuariosPage() {
       console.log('🔄 Iniciando petición de usuarios...');
       try {
         const usuariosReales = await superAdminService.listarUsuarios();
-        console.log('✅ Usuarios obtenidos:', usuariosReales);
+        console.log('✅ Usuarios obtenidos del servicio:', usuariosReales);
+        console.log('📊 Tipo de usuarios obtenidos:', typeof usuariosReales, Array.isArray(usuariosReales));
+        console.log('📊 Cantidad de usuarios:', usuariosReales?.length || 0);
+        
+        if (!usuariosReales || !Array.isArray(usuariosReales)) {
+          console.warn('⚠️ Los usuarios no son un array válido');
+          setUsers([]);
+          return;
+        }
+        
+        if (usuariosReales.length === 0) {
+          console.warn('⚠️ Array de usuarios vacío');
+          setUsers([]);
+          return;
+        }
         
         // Mapear usuarios al formato de visualización
-        const usersMapeados = usuariosReales.map(mapUsuarioToDisplay);
-        console.log('📋 Usuarios mapeados:', usersMapeados);
+        console.log('🔄 Iniciando mapeo de usuarios...');
+        const usersMapeados = usuariosReales.map((usuario, index) => {
+          console.log(`👤 Mapeando usuario ${index + 1}:`, usuario);
+          return mapUsuarioToDisplay(usuario);
+        });
+        console.log('📋 Usuarios mapeados correctamente:', usersMapeados);
         setUsers(usersMapeados);
       } catch (err) {
         console.error('❌ Error al listar usuarios:', err);

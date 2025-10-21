@@ -2,7 +2,32 @@
  * SERVICIO SUPERADMIN - CLIENTE HTTP PARA API FASTAPI
  * ===================================================
  * 
- * Este servicio actúa como un cliente HTTP que consume la API FastAPI hosteada en OpenCloud.
+ * Este servicio actúa como un cliente HTTP que consume la API FastAPI hosteada en   async getUsers(params: any = {}): Promise<ApiResponse> {
+    try {
+      console.log('🔄 [SuperAdminService] Consultando usuarios a FastAPI con params:', params);
+      
+      // 🎯 Asegurar que el filtro por rol se aplique correctamente
+      const filteredParams = {
+        ...params,
+        rol: params.rol || 'usuario'  // Por defecto, solo usuarios regulares
+      };
+      
+      console.log('🎯 [SuperAdminService] Parámetros con filtro aplicado:', filteredParams);
+      
+      const response = await this.apiClient.get(API_ENDPOINTS.usuarios.base, { params: filteredParams });
+      console.log('✅ [SuperAdminService] Respuesta de FastAPI recibida:', response.status);
+      console.log('📊 [SuperAdminService] Datos de FastAPI:', JSON.stringify(response.data, null, 2));
+      
+      return { ok: true, data: response.data };
+    } catch (error: any) {
+      console.error('❌ [SuperAdminService] Error consultando FastAPI:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      return { ok: false, error: error.response?.data?.message || 'Error al obtener usuarios' };
+    }
+  }d.
  * Implementa el patrón Backend-for-Frontend (BFF), actuando como proxy entre el frontend
  * React/Next.js y la API externa.
  * 

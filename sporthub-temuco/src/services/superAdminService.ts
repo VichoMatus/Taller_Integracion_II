@@ -95,9 +95,13 @@ class SuperAdminService {
     
     console.log('🔑 Token encontrado:', token.substring(0, 20) + '...');
     
-    if (params?.rol) {
-      params.rol = params.rol.toLowerCase() as any;
-    }
+    // 🎯 FILTRO IMPORTANTE: Solo obtener usuarios con rol 'usuario' (no admins ni super_admins)
+    const filteredParams = {
+      ...params,
+      rol: 'usuario'  // Forzar filtro por rol usuario
+    };
+    
+    console.log('🎯 Parámetros de filtro aplicados:', filteredParams);
 
     // Crear headers
     const headers = this.getAuthHeaders();
@@ -107,26 +111,75 @@ class SuperAdminService {
     });
 
     try {
-      console.log('📡 Realizando petición GET a /super_admin/users');
+      console.log('📡 Realizando petición GET a /super_admin/users con filtro de usuarios');
       const response = await apiBackend.get<any>("/super_admin/users", { 
-        params,
+        params: filteredParams,
         headers
       });
       
       console.log('✅ Respuesta recibida:', response.status);
       console.log('📊 Datos de respuesta:', response.data);
       
-      // El backend SuperAdmin devuelve un formato ApiResponse con { ok: boolean, data: Usuario[] }
-      if (response.data.ok && response.data.data) {
-        // Si la respuesta tiene paginación, extraer los usuarios del array
-        const users = response.data.data.users || response.data.data;
-        console.log('👥 Usuarios extraídos:', users);
-        return Array.isArray(users) ? users : [];
-      } else if (Array.isArray(response.data)) {
-        // Si la respuesta es directamente un array
-        return response.data;
+      // Manejar diferentes formatos de respuesta
+      console.log('📊 Estructura completa de la respuesta:', JSON.stringify(response.data, null, 2));
+      
+      let usuarios = [];
+      
+      // Caso 1: Respuesta con formato ApiResponse { ok: true, data: {...} }
+      if (response.data && typeof response.data === 'object' && response.data.ok) {
+        console.log('📋 Formato ApiResponse detectado');
+        const responseData = response.data.data;
+        
+        // Subcase: datos paginados { users: [...], total: X, page: Y }
+        if (responseData && responseData.users && Array.isArray(responseData.users)) {
+          usuarios = responseData.users;
+          console.log('👥 Usuarios extraídos de paginación:', usuarios.length);
+        }
+        // Subcase: array directo de usuarios
+        else if (Array.isArray(responseData)) {
+          usuarios = responseData;
+          console.log('👥 Usuarios extraídos de array directo:', usuarios.length);
+        }
+        // Subcase: objeto único de usuario
+        else if (responseData && responseData.id_usuario) {
+          usuarios = [responseData];
+          console.log('� Usuario único extraído:', usuarios.length);
+        }
+      }
+      // Caso 2: Respuesta directa como array
+      else if (Array.isArray(response.data)) {
+        usuarios = response.data;
+        console.log('👥 Array directo de usuarios:', usuarios.length);
+      }
+      // Caso 3: Respuesta con formato FastAPI directo { users: [...] }
+      else if (response.data && response.data.users && Array.isArray(response.data.users)) {
+        usuarios = response.data.users;
+        console.log('👥 Usuarios extraídos de FastAPI directo:', usuarios.length);
+      }
+      // Caso 4: Respuesta con items (formato alternativo de paginación)
+      else if (response.data && response.data.items && Array.isArray(response.data.items)) {
+        usuarios = response.data.items;
+        console.log('👥 Usuarios extraídos de items:', usuarios.length);
+      }
+      
+      // 🎯 FILTRO DOBLE: Asegurar que solo se muestren usuarios con rol 'usuario'
+      const usuariosFiltrados = usuarios.filter((usuario: any) => {
+        const rolValido = usuario.rol === 'usuario' || usuario.rol === 'user';
+        if (!rolValido) {
+          console.log(`🚫 Filtrando usuario con rol '${usuario.rol}':`, usuario.email);
+        }
+        return rolValido;
+      });
+      
+      // Validar que tenemos usuarios válidos
+      if (usuariosFiltrados.length > 0) {
+        console.log('✅ Usuarios filtrados encontrados:', usuariosFiltrados.length);
+        console.log('👥 Primeros usuarios:', usuariosFiltrados.slice(0, 2).map((u: any) => ({ email: u.email, rol: u.rol })));
+        return usuariosFiltrados;
       } else {
-        console.warn('⚠️ Formato de respuesta inesperado:', response.data);
+        console.warn('⚠️ No se encontraron usuarios con rol "usuario" en la respuesta');
+        console.warn('📊 Total de usuarios antes del filtro:', usuarios.length);
+        console.warn('📊 Roles encontrados:', usuarios.map((u: any) => u.rol));
         return [];
       }
     } catch (error: any) {
