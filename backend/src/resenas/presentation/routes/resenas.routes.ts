@@ -153,12 +153,12 @@ router.post("/:id/reportar", (req, res) => ctrl(req).reportar(req, res));
 router.post("/:id/responder", (req, res) => ctrl(req).responder(req, res));
 
 // === Endpoints Administrativos ===
-// Requieren rol admin o superadmin
+// Requieren rol admin o super_admin
 
 /** GET /resenas - Lista todas las reseñas con filtros */
-router.get("/", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).list(req, res));
+router.get("/", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).list(req, res));
 
 /** DELETE /resenas/:id - Elimina reseña */
-router.delete("/:id", authMiddleware, requireRole("admin", "superadmin"), (req, res) => ctrl(req).delete(req, res));
+router.delete("/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).delete(req, res));
 
 export default router;

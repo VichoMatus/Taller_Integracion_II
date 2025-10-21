@@ -7,8 +7,9 @@ import SearchBar from '../../../../components/SearchBar';
 import LocationMap from '../../../../components/LocationMap';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './canchas.module.css';
+import { complejosService } from '../../../../services/complejosService';
 
-// 🔥 IMPORTAR SERVICIO
+// 🏁 IMPORTAR SERVICIO
 import { canchaService } from '../../../../services/canchaService';
 
 export default function Page() {
@@ -16,101 +17,122 @@ export default function Page() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   
-  // 🔥 ESTADOS PARA LA API
+  // 🏁 ESTADOS PARA LA API
   const [pistas, setPistas] = useState<any[]>([]);
   const [filteredPistas, setFilteredPistas] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [isLoadingPistas, setIsLoadingPistas] = useState(true);
   const [error, setError] = useState<string>('');
 
-  // 🔥 FUNCIÓN PARA CARGAR PISTAS DE KARTING
+  // 🏁 FUNCIÓN PARA CARGAR PISTAS MODIFICADA PARA KARTING
   const cargarPistas = async () => {
     try {
       setIsLoadingPistas(true);
       setError('');
       
-      console.log('🔄 [PistasKarting] Cargando pistas individuales del backend...');
+      console.log('🔄 [PistasKarting] Cargando TODAS las pistas del backend...');
       
-      // 🔥 IDs de las pistas de karting que quieres mostrar
-      const kartingPistaIds = [1, 2, 3, 4, 5, 6, 7];
+      const todasLasPistas = await canchaService.getCanchas();
+      console.log('✅ [PistasKarting] Todas las pistas obtenidas:', todasLasPistas);
       
-      const pistasPromises = kartingPistaIds.map(async (id) => {
-        try {
-          console.log(`🔍 [PistasKarting] Cargando pista ID: ${id}`);
-          const pista = await canchaService.getCanchaById(id);
-          console.log(`✅ [PistasKarting] Pista ${id} obtenida:`, pista);
+      // 🏁 FILTRAR PISTAS DE KARTING
+      const pistasDeKarting = todasLasPistas.filter((pista: any) => {
+        return ['karting', 'kart', 'automovilismo'].includes(pista.tipo);
+      });
+      
+      console.log('🏁 [PistasKarting] Pistas de karting encontradas:', pistasDeKarting.length);
+      
+      // 🏁 OBTENER DATOS DE COMPLEJOS PARA CADA PISTA
+      const pistasMapeadas = await Promise.all(
+        pistasDeKarting.map(async (pista: any) => {
+          let complejoData = null;
+          let addressInfo = `Kartódromo ${pista.establecimientoId}`;
           
-          // 🔥 FILTRAR SOLO PISTAS DE KARTING
-          if (pista.tipo !== 'karting') {
-            console.log(`⚠️ [PistasKarting] Pista ${id} no es de karting (${pista.tipo}), saltando...`);
-            return null;
+          // 🏁 INTENTAR OBTENER DATOS DEL COMPLEJO
+          if (pista.establecimientoId) {
+            try {
+              console.log(`🔍 [PistasKarting] Cargando complejo ID ${pista.establecimientoId} para pista ${pista.id}`);
+              complejoData = await complejosService.getComplejoById(pista.establecimientoId);
+              
+              if (complejoData) {
+                addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                console.log(`✅ [PistasKarting] Complejo cargado: ${addressInfo}`);
+              }
+              
+            } catch (complejoError: any) {
+              console.warn(`⚠️ [PistasKarting] Error cargando complejo ${pista.establecimientoId}:`, complejoError.message);
+              // Usar datos de fallback
+              const staticComplejo = getStaticComplejoData(pista.establecimientoId);
+              addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+            }
           }
           
-          // Mapear al formato requerido por CourtCard
+          // 🏁 MAPEAR PISTA CON DATOS DEL COMPLEJO
           const mappedPista = {
             id: pista.id,
-            imageUrl: `/sports/karting/canchas/Pista${pista.id}.png`,
+            imageUrl: `/sports/karting/pistas/Pista${pista.id}.png`,
             name: pista.nombre,
-            address: `Circuito ${pista.establecimientoId}`,
-            rating: pista.rating || 4.6,
+            address: addressInfo, // 🏁 USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
+            rating: pista.rating || 4.7,
             tags: [
-              pista.techada ? "Pista techada" : "Pista al aire libre",
+              pista.techada ? "Pista cubierta" : "Pista exterior",
               pista.activa ? "Disponible" : "No disponible",
-              "Karts incluidos",
-              "Cronometraje digital"
+              "Karting",
+              "Cronómetro"
             ],
             description: `Pista de karting ${pista.nombre} - ID: ${pista.id}`,
-            price: pista.precioPorHora?.toString() || "35",
+            price: pista.precioPorHora?.toString() || "45",
             nextAvailable: pista.activa ? "Disponible ahora" : "No disponible",
             sport: "karting"
           };
           
           console.log('🗺️ [PistasKarting] Pista mapeada:', mappedPista);
           return mappedPista;
-          
-        } catch (error) {
-          console.log(`❌ [PistasKarting] Error cargando pista ${id}:`, error);
-          return null;
-        }
-      });
+        })
+      );
       
-      const pistasResults = await Promise.all(pistasPromises);
-      const pistasValidas = pistasResults.filter(pista => pista !== null);
-      
-      console.log('🎉 [PistasKarting] Pistas de karting cargadas exitosamente:', pistasValidas.length);
-      console.log('📋 [PistasKarting] Pistas finales:', pistasValidas);
-      
-      setPistas(pistasValidas);
-      setFilteredPistas(pistasValidas);
+      console.log('🎉 [PistasKarting] Pistas con datos de complejo cargadas:', pistasMapeadas.length);
+      setPistas(pistasMapeadas);
+      setFilteredPistas(pistasMapeadas);
       
     } catch (error: any) {
-      console.error('❌ [PistasKarting] ERROR DETALLADO cargando pistas:', error);
+      console.error('❌ [PistasKarting] ERROR cargando pistas:', error);
       setError(`Error: ${error.message}`);
       
-      // 🔥 FALLBACK
-      console.log('🚨 [PistasKarting] USANDO FALLBACK - Error en el API');
+      // 🏁 Fallback con datos estáticos de karting
       const pistasEstaticas = [
         {
           id: 1,
-          imageUrl: "/sports/karting/canchas/Pista1.png",
-          name: "🚨 FALLBACK - Kartódromo Velocidad",
-          address: "Norte, Centro, Sur",
-          rating: 4.7,
-          tags: ["DATOS OFFLINE", "Karts incluidos", "Cronometraje"],
+          imageUrl: "/sports/karting/pistas/Pista1.png",
+          name: "🚨 FALLBACK - Kartódromo Norte",
+          address: "Kartódromo Norte - Av. Alemania 1234, Temuco",
+          rating: 4.8,
+          tags: ["DATOS OFFLINE", "Cronómetro", "Karting Pro"],
           description: "🚨 Estos son datos de fallback - API no disponible",
-          price: "35",
-          nextAvailable: "20:00-21:00",
+          price: "45",
+          nextAvailable: "15:00-16:00",
         },
         {
           id: 2,
-          imageUrl: "/sports/karting/canchas/Pista2.png",
-          name: "🚨 FALLBACK - Circuito Adrenalina",
-          address: "Sector Norte",
-          rating: 4.5,
-          tags: ["DATOS OFFLINE", "Pista techada", "Equipamiento completo"],
+          imageUrl: "/sports/karting/pistas/Pista2.png",
+          name: "🚨 FALLBACK - Kartódromo Centro",
+          address: "Kartódromo Centro - Av. Pedro de Valdivia 567, Temuco",
+          rating: 4.6,
+          tags: ["DATOS OFFLINE", "Pista Rápida", "Karting"],
           description: "🚨 Estos son datos de fallback - API no disponible",
-          price: "30",
-          nextAvailable: "14:30-15:30",
+          price: "40",
+          nextAvailable: "18:00-19:00",
+        },
+        {
+          id: 3,
+          imageUrl: "/sports/karting/pistas/Pista3.png",
+          name: "🚨 FALLBACK - Kartódromo Sur",
+          address: "Kartódromo Sur - Calle Montt 890, Temuco",
+          rating: 4.7,
+          tags: ["DATOS OFFLINE", "Circuito Técnico", "Pro"],
+          description: "🚨 Estos son datos de fallback - API no disponible",
+          price: "50",
+          nextAvailable: "Mañana 10:00-11:00",
         }
       ];
       
@@ -121,6 +143,31 @@ export default function Page() {
     }
   };
 
+  // 🏁 FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO DE KARTING
+  const getStaticComplejoData = (establecimientoId: number) => {
+    const staticComplejos = {
+      1: {
+        nombre: "Kartódromo Norte",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      },
+      2: {
+        nombre: "Kartódromo Centro", 
+        direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+      },
+      3: {
+        nombre: "Kartódromo Sur",
+        direccion: "Calle Montt 890, Temuco, Chile"
+      },
+      default: {
+        nombre: "Kartódromo",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      }
+    };
+    
+    return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+  };
+
+  // 🏁 CARGAR PISTAS AL MONTAR EL COMPONENTE
   useEffect(() => {
     cargarPistas();
   }, []);
@@ -158,12 +205,14 @@ export default function Page() {
     }
   };
 
+  // 🏁 FUNCIÓN PARA REFRESCAR DATOS
   const handleRefresh = () => {
     cargarPistas();
   };
 
+  // 🏁 MANEJADOR DE CLICK EN PISTA
   const handlePistaClick = (track: any) => {
-    console.log('Navegando a pista:', track);
+    console.log('Navegando a kartódromo:', track);
     router.push(`/sports/karting/canchas/canchaseleccionada?id=${track.id}`);
   };
 
@@ -175,7 +224,7 @@ export default function Page() {
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerIcon}>🏎️</div>
+            <div className={styles.headerIcon}>🏁</div>
             <h1 className={styles.headerTitle}>Karting</h1>
           </div>
           <div className={styles.headerRight}>
@@ -183,7 +232,7 @@ export default function Page() {
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre de la pista"
+              placeholder="Nombre del kartódromo"
               sport="karting" 
             />
             <button 
@@ -208,7 +257,7 @@ export default function Page() {
           </button>
         </div>
 
-        {/* Mensajes de estado */}
+        {/* 🏁 MENSAJE DE ERROR CON INDICADOR DE FALLBACK */}
         {error && (
           <div className={styles.errorMessage}>
             <span>⚠️</span>
@@ -217,31 +266,32 @@ export default function Page() {
           </div>
         )}
 
+        {/* 🏁 MENSAJE DE CARGA */}
         {isLoadingPistas && (
           <div className={styles.loadingMessage}>
-            <span>🏎️</span>
-            <span>Cargando pistas de karting...</span>
+            <span>🏁</span>
+            <span>Cargando kartódromos...</span>
           </div>
         )}
 
         {/* Filtros */}
         <div className={styles.filtersContainer}>
-          <h3 className={styles.filtersTitle}>Filtrar pistas de karting</h3>
+          <h3 className={styles.filtersTitle}>Filtrar kartódromos</h3>
           <div className={styles.filtersGrid}>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#22c55e'}}>📍</span>
+                <span style={{color: '#FF6B00'}}>📍</span>
                 <span>Ubicación o barrio</span>
               </label>
               <input
                 type="text"
-                placeholder="Norte, Centro, Sur, Oeste..."
+                placeholder="Norte, Centro, Sur, Kartódromo..."
                 className={styles.filterInput}
               />
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#22c55e'}}>📅</span>
+                <span style={{color: '#FF6B00'}}>📅</span>
                 <span>Fecha</span>
               </label>
               <input
@@ -252,8 +302,8 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#16a34a'}}>💰</span>
-                <span>Precio (max por carrera)</span>
+                <span style={{color: '#E65100'}}>💰</span>
+                <span>Precio (max $sesión)</span>
               </label>
               <input
                 type="range"
@@ -264,40 +314,42 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#15803d'}}>🏎️</span>
-                <span>Tipo de pista</span>
+                <span style={{color: '#D84315'}}>🏁</span>
+                <span>Tipo de kart</span>
               </label>
               <select className={styles.filterSelect}>
-                <option>Tipo de pista</option>
-                <option>Pista indoor</option>
-                <option>Pista outdoor</option>
-                <option>Circuito mixto</option>
+                <option>Tipo de kart</option>
+                <option>Kart recreativo</option>
+                <option>Kart profesional</option>
+                <option>Kart eléctrico</option>
+                <option>Kart de competición</option>
               </select>
             </div>
           </div>
           <div className={styles.filtersActions}>
             <button className={styles.searchButton}>
               <span>🔍</span>
-              <span>Buscar pistas</span>
+              <span>Buscar kartódromos</span>
             </button>
           </div>
         </div>
 
-        {/* Mensajes de no resultados */}
+        {/* Mensaje de no resultados */}
         {filteredPistas.length === 0 && searchTerm && !isLoadingPistas && (
           <div className={styles.noResults}>
-            <h3>No se encontraron pistas de karting para &quot;{searchTerm}&quot;</h3>
-            <p>Intenta con otros términos de búsqueda o ubicaciones</p>
+            <h3>No se encontraron kartódromos para &quot;{searchTerm}&quot;</h3>
+            <p>Intenta con otros términos de búsqueda o ubicaciones específicas</p>
             <button onClick={() => {setSearchTerm(''); setFilteredPistas(pistas);}}>
-              Ver todas las pistas de karting
+              Ver todos los kartódromos
             </button>
           </div>
         )}
 
+        {/* 🏁 MENSAJE CUANDO NO HAY PISTAS EN LA BD */}
         {filteredPistas.length === 0 && !searchTerm && !isLoadingPistas && !error && (
           <div className={styles.noData}>
-            <h3>🏎️ No hay pistas de karting registradas</h3>
-            <p>Aún no se han registrado pistas de karting en el sistema</p>
+            <h3>🏁 No hay kartódromos registrados</h3>
+            <p>Aún no se han registrado kartódromos en el sistema</p>
             <button onClick={handleRefresh}>Actualizar</button>
           </div>
         )}

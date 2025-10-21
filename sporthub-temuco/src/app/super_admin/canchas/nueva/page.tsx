@@ -83,7 +83,7 @@ export default function NuevaCanchaPage() {
       
       // Redirigir después de 2 segundos
       setTimeout(() => {
-        router.push('/superadmin/canchas');
+        router.push('/super_admin/canchas');
       }, 2000);
 
     } catch (err: any) {
@@ -95,7 +95,7 @@ export default function NuevaCanchaPage() {
   };
 
   const handleCancel = () => {
-    router.push('/superadmin/canchas');
+    router.push('/super_admin/canchas');
   };
 
   return (

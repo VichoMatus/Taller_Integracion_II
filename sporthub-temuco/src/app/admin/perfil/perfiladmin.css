@@ -20,8 +20,7 @@
   padding: 2rem;
   margin-left: -256px;
   margin-top: 70px;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  min-height: calc(100vh - 70px);
+  background: #ffffff;
 }
 
 /* Panel Izquierdo */

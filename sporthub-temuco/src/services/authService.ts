@@ -16,6 +16,51 @@ import {
 export const authService = {
   
   // ========================================
+  // MÉTODOS DE VALIDACIÓN DE TOKEN
+  // ========================================
+  
+  verifyToken() {
+    const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+    if (!token) return null;
+
+    try {
+      // Decodificar el token
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const payload = JSON.parse(window.atob(base64));
+
+      // Verificar expiración
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        console.error('Token expirado');
+        this.clearAuth();
+        return null;
+      }
+
+      return payload;
+    } catch (e) {
+      console.error('Error decodificando token:', e);
+      this.clearAuth();
+      return null;
+    }
+  },
+
+  clearAuth() {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user_role');
+    localStorage.removeItem('userData');
+  },
+
+  // ========================================
+  // HELPER: Normalizar roles
+  // ========================================
+  
+  normalizeRole(rol: string): string {
+    // No hacer ninguna normalización - mantener el rol exacto
+    return rol;
+  },
+
+  // ========================================
   // MÉTODOS LEGACY (mantener compatibilidad)
   // ========================================
   
@@ -28,18 +73,53 @@ export const authService = {
     
     const data = await api.post<BFFTokenResponse>("/auth/login", bffPayload).then(r => r.data);
     
+    // 🔥 NORMALIZAR ROL antes de guardar en localStorage
+    const normalizedRole = data?.user?.rol ? this.normalizeRole(data.user.rol) : '';
+    
+    console.log('🔄 [authService.login] Rol normalizado:', {
+      original: data?.user?.rol,
+      normalizado: normalizedRole
+    });
+    
     // Guardar tokens, rol y datos del usuario en localStorage
     if (data?.access_token && data?.user) {
-      localStorage.setItem("token", data.access_token);
-      localStorage.setItem("access_token", data.access_token);
-      localStorage.setItem("user_role", data.user.rol);
-      localStorage.setItem("userData", JSON.stringify({
-        id_usuario: data.user.id_usuario,
-        nombre: data.user.nombre || '',
-        apellido: data.user.apellido || '',
-        email: data.user.email,
-        rol: data.user.rol
-      }));
+      try {
+        // Intentar guardar el token
+        localStorage.setItem("access_token", data.access_token);
+        localStorage.setItem("token", data.access_token);
+
+        // Verificar que se guardó correctamente
+        const savedToken = localStorage.getItem('access_token');
+        console.log('🔐 [authService.login] Token guardado:', {
+          tokenGuardado: !!savedToken,
+          tokenPreview: savedToken ? `${savedToken.substring(0, 20)}...` : 'No token'
+        });
+
+        // Guardar rol y datos del usuario
+        localStorage.setItem("user_role", normalizedRole);
+        const userData = {
+          id_usuario: data.user.id_usuario,
+          nombre: data.user.nombre || '',
+          apellido: data.user.apellido || '',
+          email: data.user.email,
+          rol: normalizedRole
+        };
+        localStorage.setItem("userData", JSON.stringify(userData));
+
+        console.log('✅ [authService.login] Datos guardados:', {
+          token: true,
+          role: normalizedRole,
+          userData: true
+        });
+      } catch (error) {
+        console.error('❌ [authService.login] Error guardando datos:', error);
+        throw error;
+      }
+    } else {
+      console.error('❌ [authService.login] Datos inválidos:', { 
+        tieneToken: !!data?.access_token, 
+        tieneUser: !!data?.user 
+      });
     }
     
     // Retornar en el formato legacy esperado
@@ -50,7 +130,7 @@ export const authService = {
         nombre: data.user.nombre || '',
         apellido: data.user.apellido || '',
         email: data.user.email,
-        rol: data.user.rol
+        rol: normalizedRole
       }
     } as LoginResponse;
   },
@@ -67,10 +147,21 @@ export const authService = {
     
     const data = await api.post<BFFTokenResponse>("/auth/register", bffPayload).then(r => r.data);
     
-    // Guardar tokens
-    if (data?.access_token) {
+    // 🔥 NORMALIZAR ROL antes de guardar en localStorage
+    const normalizedRole = data?.user?.rol ? this.normalizeRole(data.user.rol) : 'usuario';
+    
+    // Guardar tokens y datos del usuario
+    if (data?.access_token && data?.user) {
       localStorage.setItem("token", data.access_token);
       localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("user_role", normalizedRole);
+      localStorage.setItem("userData", JSON.stringify({
+        id_usuario: data.user.id_usuario,
+        nombre: data.user.nombre || '',
+        apellido: data.user.apellido || '',
+        email: data.user.email,
+        rol: normalizedRole
+      }));
     }
     
     // Retornar en el formato legacy esperado
@@ -81,7 +172,7 @@ export const authService = {
         nombre: data.user.nombre || '',
         apellido: data.user.apellido || '',
         email: data.user.email,
-        rol: data.user.rol
+        rol: normalizedRole
       }
     } as LoginResponse;
   },

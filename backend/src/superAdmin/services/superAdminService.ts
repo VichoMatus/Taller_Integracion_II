@@ -2,7 +2,32 @@
  * SERVICIO SUPERADMIN - CLIENTE HTTP PARA API FASTAPI
  * ===================================================
  * 
- * Este servicio actúa como un cliente HTTP que consume la API FastAPI hosteada en OpenCloud.
+ * Este servicio actúa como un cliente HTTP que consume la API FastAPI hosteada en   async getUsers(params: any = {}): Promise<ApiResponse> {
+    try {
+      console.log('🔄 [SuperAdminService] Consultando usuarios a FastAPI con params:', params);
+      
+      // 🎯 Asegurar que el filtro por rol se aplique correctamente
+      const filteredParams = {
+        ...params,
+        rol: params.rol || 'usuario'  // Por defecto, solo usuarios regulares
+      };
+      
+      console.log('🎯 [SuperAdminService] Parámetros con filtro aplicado:', filteredParams);
+      
+      const response = await this.apiClient.get(API_ENDPOINTS.usuarios.base, { params: filteredParams });
+      console.log('✅ [SuperAdminService] Respuesta de FastAPI recibida:', response.status);
+      console.log('📊 [SuperAdminService] Datos de FastAPI:', JSON.stringify(response.data, null, 2));
+      
+      return { ok: true, data: response.data };
+    } catch (error: any) {
+      console.error('❌ [SuperAdminService] Error consultando FastAPI:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      return { ok: false, error: error.response?.data?.message || 'Error al obtener usuarios' };
+    }
+  }d.
  * Implementa el patrón Backend-for-Frontend (BFF), actuando como proxy entre el frontend
  * React/Next.js y la API externa.
  * 
@@ -73,7 +98,7 @@ export class SuperAdminService {
       const response = await this.apiClient.post(API_ENDPOINTS.auth.login, credentials);
       
       // Verificar que el usuario tiene permisos de administrador
-      if (response.data.user.rol !== 'superadmin' && response.data.user.rol !== 'admin') {
+      if (response.data.user.rol !== 'super_admin' && response.data.user.rol !== 'admin') {
         return { ok: false, error: 'Usuario no autorizado para el panel de administración' };
       }
 
@@ -108,23 +133,51 @@ export class SuperAdminService {
   /**
    * Obtener lista de usuarios con paginación y filtros
    * @param params - Parámetros de consulta (page, page_size, filtros)
+   * @param token - Token JWT del usuario autenticado
    * @returns Promise<ApiResponse> - Lista paginada de usuarios
    */
-  async getUsers(params: any = {}): Promise<ApiResponse> {
+  async getUsers(params: any = {}, token?: string): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.get(API_ENDPOINTS.usuarios.base, { params });
+      // Preparar headers con token si está disponible
+      const headers: any = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+      
+      console.log('🔍 [SuperAdminService] Haciendo petición a FastAPI:', {
+        url: `${API_CONFIG.baseURL}${API_ENDPOINTS.usuarios.base}`,
+        params,
+        hasToken: !!token
+      });
+
+      const response = await this.apiClient.get(API_ENDPOINTS.usuarios.base, { 
+        params,
+        headers
+      });
+      
+      console.log('✅ [SuperAdminService] Respuesta de FastAPI recibida:', response.status);
       return { ok: true, data: response.data };
     } catch (error: any) {
-      return { ok: false, error: error.response?.data?.message || 'Error al obtener usuarios' };
+      console.error('❌ [SuperAdminService] Error al obtener usuarios:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      return { ok: false, error: error.response?.data?.message || error.message || 'Error al obtener usuarios' };
     }
   }
 
   /**
    * Obtener usuario específico por ID
    */
-  async getUserById(id: number): Promise<ApiResponse> {
+  async getUserById(id: number, token?: string): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.get(API_ENDPOINTS.usuarios.byId(id));
+      const headers: any = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await this.apiClient.get(API_ENDPOINTS.usuarios.byId(id), { headers });
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al obtener usuario' };
@@ -134,9 +187,14 @@ export class SuperAdminService {
   /**
    * Actualizar datos de usuario
    */
-  async updateUser(id: number, data: any): Promise<ApiResponse> {
+  async updateUser(id: number, data: any, token?: string): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.patch(API_ENDPOINTS.usuarios.byId(id), data);
+      const headers: any = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      const response = await this.apiClient.patch(API_ENDPOINTS.usuarios.byId(id), data, { headers });
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al actualizar usuario' };
@@ -146,9 +204,14 @@ export class SuperAdminService {
   /**
    * Desactivar/eliminar usuario (soft delete)
    */
-  async deleteUser(id: number): Promise<ApiResponse> {
+  async deleteUser(id: number, token?: string): Promise<ApiResponse> {
     try {
-      await this.apiClient.delete(API_ENDPOINTS.usuarios.byId(id));
+      const headers: any = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      await this.apiClient.delete(API_ENDPOINTS.usuarios.byId(id), { headers });
       return { ok: true, message: 'Usuario desactivado correctamente' };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al desactivar usuario' };
@@ -191,7 +254,7 @@ export class SuperAdminService {
   // SuperAdmin específico
   async updateSystemParameters(parametros: any): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.post(API_ENDPOINTS.superadmin.parametros, parametros);
+      const response = await this.apiClient.post(API_ENDPOINTS.super_admin.parametros, parametros);
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al actualizar parámetros' };
@@ -200,7 +263,7 @@ export class SuperAdminService {
 
   async getSystemStatistics(): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.get(API_ENDPOINTS.superadmin.estadisticas);
+      const response = await this.apiClient.get(API_ENDPOINTS.super_admin.estadisticas);
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al obtener estadísticas' };
@@ -209,7 +272,7 @@ export class SuperAdminService {
 
   async getSystemLogs(): Promise<ApiResponse> {
     try {
-      const response = await this.apiClient.get(API_ENDPOINTS.superadmin.logs);
+      const response = await this.apiClient.get(API_ENDPOINTS.super_admin.logs);
       return { ok: true, data: response.data };
     } catch (error: any) {
       return { ok: false, error: error.response?.data?.message || 'Error al obtener logs' };

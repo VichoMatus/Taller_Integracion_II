@@ -7,8 +7,9 @@ import SearchBar from '../../../../components/SearchBar';
 import LocationMap from '../../../../components/LocationMap';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
+import { complejosService } from '../../../../services/complejosService';
 
-// 🔥 IMPORTAR SERVICIO
+// 🎾 IMPORTAR SERVICIO
 import { canchaService } from '../../../../services/canchaService';
 
 export default function Page() {
@@ -16,111 +17,171 @@ export default function Page() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   
-  // 🔥 ESTADOS PARA LA API
+  // 🎾 ESTADOS PARA LA API 
   const [canchas, setCanchas] = useState<any[]>([]);
   const [filteredCanchas, setFilteredCanchas] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [isLoadingCanchas, setIsLoadingCanchas] = useState(true);
   const [error, setError] = useState<string>('');
 
-  // 🔥 FUNCIÓN PARA CARGAR CANCHAS DE TENIS
+  // 🎾 FUNCIÓN PARA CARGAR CANCHAS MODIFICADA PARA TENIS
   const cargarCanchas = async () => {
     try {
       setIsLoadingCanchas(true);
       setError('');
       
-      console.log('🔄 [CanchasTenis] Cargando canchas individuales del backend...');
+      console.log('🔄 [CanchasTenis] Cargando TODAS las canchas del backend...');
       
-      // 🔥 IDs de las canchas de tenis que quieres mostrar
-      const tenisCanchaIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+      const todasLasCanchas = await canchaService.getCanchas();
+      console.log('✅ [CanchasTenis] Todas las canchas obtenidas:', todasLasCanchas);
       
-      const canchasPromises = tenisCanchaIds.map(async (id) => {
-        try {
-          console.log(`🔍 [CanchasTenis] Cargando cancha ID: ${id}`);
-          const cancha = await canchaService.getCanchaById(id);
-          console.log(`✅ [CanchasTenis] Cancha ${id} obtenida:`, cancha);
+      // 🎾 FILTRAR CANCHAS DE TENIS
+      const canchasDeTenis = todasLasCanchas.filter((cancha: any) => {
+        return ['tenis', 'tennis'].includes(cancha.tipo.toLowerCase());
+      });
+      
+      console.log('🎾 [CanchasTenis] Canchas de tenis encontradas:', canchasDeTenis.length);
+      
+      // 🎾 OBTENER DATOS DE COMPLEJOS PARA CADA CANCHA
+      const canchasMapeadas = await Promise.all(
+        canchasDeTenis.map(async (cancha: any) => {
+          let complejoData = null;
+          let addressInfo = `Complejo ${cancha.establecimientoId}`;
           
-          // 🔥 FILTRAR SOLO CANCHAS DE TENIS
-          if (cancha.tipo !== 'tenis') {
-            console.log(`⚠️ [CanchasTenis] Cancha ${id} no es de tenis (${cancha.tipo}), saltando...`);
-            return null;
+          // 🎾 INTENTAR OBTENER DATOS DEL COMPLEJO
+          if (cancha.establecimientoId) {
+            try {
+              console.log(`🔍 [CanchasTenis] Cargando complejo ID ${cancha.establecimientoId} para cancha ${cancha.id}`);
+              complejoData = await complejosService.getComplejoById(cancha.establecimientoId);
+              
+              if (complejoData) {
+                addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                console.log(`✅ [CanchasTenis] Complejo cargado: ${addressInfo}`);
+              }
+              
+            } catch (complejoError: any) {
+              console.warn(`⚠️ [CanchasTenis] Error cargando complejo ${cancha.establecimientoId}:`, complejoError.message);
+              // Usar datos de fallback
+              const staticComplejo = getStaticComplejoData(cancha.establecimientoId);
+              addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+            }
           }
           
-          // Mapear al formato requerido por CourtCard
+          // 🎾 MAPEAR CANCHA CON DATOS DEL COMPLEJO
           const mappedCancha = {
             id: cancha.id,
             imageUrl: `/sports/tenis/canchas/Cancha${cancha.id}.png`,
             name: cancha.nombre,
-            address: `Complejo ${cancha.establecimientoId}`,
-            rating: cancha.rating || 4.7,
+            address: addressInfo, // 🎾 USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
+            rating: cancha.rating || 4.8,
             tags: [
-              cancha.techada ? "Cancha cubierta" : "Cancha al aire libre",
+              cancha.techada ? "Techada" : "Al aire libre",
               cancha.activa ? "Disponible" : "No disponible",
-              "Raquetas disponibles",
-              "Iluminación nocturna"
+              "Superficie Profesional"
             ],
-            description: `Cancha de tenis ${cancha.nombre} - ID: ${cancha.id}`,
-            price: cancha.precioPorHora?.toString() || "30",
+            description: `Cancha de ${cancha.tipo} ${cancha.nombre} - ID: ${cancha.id}`,
+            price: cancha.precioPorHora?.toString() || "20",
             nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
-            sport: "tenis"
+            sport: cancha.tipo
           };
           
           console.log('🗺️ [CanchasTenis] Cancha mapeada:', mappedCancha);
           return mappedCancha;
-          
-        } catch (error) {
-          console.log(`❌ [CanchasTenis] Error cargando cancha ${id}:`, error);
-          return null;
-        }
-      });
+        })
+      );
       
-      const canchasResults = await Promise.all(canchasPromises);
-      const canchasValidas = canchasResults.filter(cancha => cancha !== null);
-      
-      console.log('🎉 [CanchasTenis] Canchas de tenis cargadas exitosamente:', canchasValidas.length);
-      console.log('📋 [CanchasTenis] Canchas finales:', canchasValidas);
-      
-      setCanchas(canchasValidas);
-      setFilteredCanchas(canchasValidas);
+      console.log('🎉 [CanchasTenis] Canchas con datos de complejo cargadas:', canchasMapeadas.length);
+      setCanchas(canchasMapeadas);
+      setFilteredCanchas(canchasMapeadas);
       
     } catch (error: any) {
-      console.error('❌ [CanchasTenis] ERROR DETALLADO cargando canchas:', error);
+      console.error('❌ [CanchasTenis] ERROR cargando canchas:', error);
       setError(`Error: ${error.message}`);
       
-      // 🔥 FALLBACK
-      console.log('🚨 [CanchasTenis] USANDO FALLBACK - Error en el API');
-      const canchasEstaticas = [
+      // 🎾 Fallback con datos estáticos de tenis
+      const fallbackCanchas = [
         {
           id: 1,
-          imageUrl: "/sports/tenis/canchas/Cancha1.png",
-          name: "🚨 FALLBACK - Club Tenis Temuco",
-          address: "Norte, Centro, Sur",
+          imageUrl: "/sports/tenis/tenis.png",
+          name: "Club Tenis Elite",
+          address: "Club Tenis Elite - Av. Alemania 1234, Temuco, Chile",
           rating: 4.8,
-          tags: ["DATOS OFFLINE", "Cancha cubierta", "Raquetas disponibles"],
-          description: "🚨 Estos son datos de fallback - API no disponible",
-          price: "30",
-          nextAvailable: "14:00-16:00",
+          tags: ["Techada", "Disponible", "Superficie Dura"],
+          description: "Cancha de tenis profesional con superficie dura",
+          price: "20",
+          nextAvailable: "Disponible ahora",
+          sport: "tenis"
         },
         {
           id: 2,
-          imageUrl: "/sports/tenis/canchas/Cancha2.png",
-          name: "🚨 FALLBACK - Tennis Center",
-          address: "Sector Norte",
+          imageUrl: "/sports/tenis/tenis.png",
+          name: "Centro Deportivo Tenis",
+          address: "Centro Deportivo Tenis - Av. Pedro de Valdivia 567, Temuco, Chile",
           rating: 4.6,
-          tags: ["DATOS OFFLINE", "Cancha al aire libre", "Torneos"],
-          description: "🚨 Estos son datos de fallback - API no disponible",
+          tags: ["Al aire libre", "Disponible", "Arcilla"],
+          description: "Cancha de tenis con superficie de arcilla",
           price: "25",
-          nextAvailable: "18:00-20:00",
+          nextAvailable: "Disponible ahora",
+          sport: "tenis"
+        },
+        {
+          id: 3,
+          imageUrl: "/sports/tenis/tenis.png",
+          name: "Tenis Club Temuco",
+          address: "Tenis Club Temuco - Calle Montt 890, Temuco, Chile",
+          rating: 4.9,
+          tags: ["Techada", "Disponible", "Césped"],
+          description: "Cancha de tenis premium con césped natural",
+          price: "35",
+          nextAvailable: "Disponible ahora",
+          sport: "tenis"
+        },
+        {
+          id: 4,
+          imageUrl: "/sports/tenis/tenis.png",
+          name: "Tenis Center Premium",
+          address: "Tenis Center Premium - Av. Balmaceda 456, Temuco, Chile",
+          rating: 4.7,
+          tags: ["Techada", "Disponible", "Premium"],
+          description: "Cancha de tenis premium con todas las comodidades",
+          price: "30",
+          nextAvailable: "Disponible ahora",
+          sport: "tenis"
         }
       ];
       
-      setCanchas(canchasEstaticas);
-      setFilteredCanchas(canchasEstaticas);
+      setCanchas(fallbackCanchas);
+      setFilteredCanchas(fallbackCanchas);
     } finally {
       setIsLoadingCanchas(false);
     }
   };
 
+  // 🎾 FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO
+  const getStaticComplejoData = (establecimientoId: number) => {
+    const staticComplejos = {
+      1: {
+        nombre: "Club Tenis Elite",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      },
+      2: {
+        nombre: "Centro Deportivo Tenis", 
+        direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+      },
+      3: {
+        nombre: "Tenis Club Temuco",
+        direccion: "Calle Montt 890, Temuco, Chile"
+      },
+      default: {
+        nombre: "Club de Tenis",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      }
+    };
+    
+    return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+  };
+
+  // 🎾 CARGAR CANCHAS AL MONTAR EL COMPONENTE
   useEffect(() => {
     cargarCanchas();
   }, []);
@@ -158,10 +219,12 @@ export default function Page() {
     }
   };
 
+  // 🎾 FUNCIÓN PARA REFRESCAR DATOS
   const handleRefresh = () => {
     cargarCanchas();
   };
 
+  // 🎾 MANEJADOR DE CLICK EN CANCHA
   const handleCanchaClick = (court: any) => {
     console.log('Navegando a cancha:', court);
     router.push(`/sports/tenis/canchas/canchaseleccionada?id=${court.id}`);
@@ -208,7 +271,7 @@ export default function Page() {
           </button>
         </div>
 
-        {/* Mensajes de estado */}
+        {/* 🎾 MENSAJE DE ERROR CON INDICADOR DE FALLBACK */}
         {error && (
           <div className={styles.errorMessage}>
             <span>⚠️</span>
@@ -217,6 +280,7 @@ export default function Page() {
           </div>
         )}
 
+        {/* 🎾 MENSAJE DE CARGA */}
         {isLoadingCanchas && (
           <div className={styles.loadingMessage}>
             <span>🎾</span>
@@ -230,7 +294,7 @@ export default function Page() {
           <div className={styles.filtersGrid}>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#22c55e'}}>📍</span>
+                <span style={{color: '#f59e0b'}}>📍</span>
                 <span>Ubicación o barrio</span>
               </label>
               <input
@@ -241,7 +305,7 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#22c55e'}}>📅</span>
+                <span style={{color: '#f59e0b'}}>📅</span>
                 <span>Fecha</span>
               </label>
               <input
@@ -252,27 +316,26 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#16a34a'}}>💰</span>
-                <span>Precio (max por hora)</span>
+                <span style={{color: '#d97706'}}>💰</span>
+                <span>Precio (max $hr)</span>
               </label>
               <input
                 type="range"
                 min="0"
-                max="60"
+                max="50"
                 className={styles.priceSlider}
               />
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#15803d'}}>🎾</span>
-                <span>Superficie</span>
+                <span style={{color: '#b45309'}}>🎾</span>
+                <span>Tipo de superficie</span>
               </label>
               <select className={styles.filterSelect}>
-                <option>Todas las superficies</option>
+                <option>Tipo de superficie</option>
+                <option>Superficie dura</option>
                 <option>Arcilla</option>
                 <option>Césped</option>
-                <option>Dura</option>
-                <option>Sintética</option>
               </select>
             </div>
           </div>
@@ -284,7 +347,7 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Mensajes de no resultados */}
+        {/* Mensaje de no resultados */}
         {filteredCanchas.length === 0 && searchTerm && !isLoadingCanchas && (
           <div className={styles.noResults}>
             <h3>No se encontraron canchas de tenis para &quot;{searchTerm}&quot;</h3>
@@ -295,11 +358,15 @@ export default function Page() {
           </div>
         )}
 
+        {/* 🎾 MENSAJE CUANDO NO HAY CANCHAS EN LA BD */}
         {filteredCanchas.length === 0 && !searchTerm && !isLoadingCanchas && !error && (
           <div className={styles.noData}>
-            <h3>🎾 No hay canchas de tenis registradas</h3>
-            <p>Aún no se han registrado canchas de tenis en el sistema</p>
-            <button onClick={handleRefresh}>Actualizar</button>
+            <div className={styles.noDataContainer}>
+              <div className={styles.noDataIcon}>🎾</div>
+              <h3 className={styles.noDataTitle}>No hay canchas de tenis registradas</h3>
+              <p className={styles.noDataText}>Aún no se han registrado canchas de tenis en el sistema</p>
+              <button className={styles.refreshButton} onClick={handleRefresh}>Actualizar</button>
+            </div>
           </div>
         )}
 

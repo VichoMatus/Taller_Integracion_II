@@ -74,7 +74,7 @@ export default function CambiarContrasenaSuperAdminPage() {
       });
 
       setTimeout(() => {
-        router.push("/superadmin/perfil");
+        router.push("/super_admin/perfil");
       }, 2000);
 
     } catch (err: any) {
@@ -108,14 +108,14 @@ export default function CambiarContrasenaSuperAdminPage() {
     formData.currentPassword !== formData.newPassword;
 
   return (
-    <AdminLayout userRole="superadmin" userName="Super Admin" notificationCount={3}>
+    <AdminLayout userRole="super_admin" userName="Super Admin" notificationCount={3}>
       <div className="change-password-container">
         <div className="change-password-card">
           <div className="card-left">
             <div className="back-button-container">
               <button
                 className="back-button"
-                onClick={() => router.push("/superadmin/perfil")}
+                onClick={() => router.push("/super_admin/perfil")}
                 disabled={loading}
               >
                 ← Volver al Perfil
@@ -124,7 +124,7 @@ export default function CambiarContrasenaSuperAdminPage() {
 
             <div className="password-header">
               <h1 className="title">Cambiar Contraseña</h1>
-              <p className="subtitle">Actualiza tu contraseña de superadministrador</p>
+              <p className="subtitle">Actualiza tu contraseña de super_administrador</p>
             </div>
 
             {error && (
@@ -272,7 +272,7 @@ export default function CambiarContrasenaSuperAdminPage() {
 
               <div className="security-notice">
                 <p>
-                  <strong>Importante:</strong> Como superadministrador, tu contraseña es crítica para la seguridad del sistema.
+                  <strong>Importante:</strong> Como super_administrador, tu contraseña es crítica para la seguridad del sistema.
                   No uses datos personales ni contraseñas anteriores.
                 </p>
               </div>

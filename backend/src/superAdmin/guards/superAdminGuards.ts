@@ -6,8 +6,8 @@
  * Proporciona validación de roles y permisos para rutas administrativas críticas.
  * 
  * Diferencias con Admin Guards:
- * - Solo acepta rol 'superadmin' (máximo nivel de privilegios)
- * - Maneja normalización de roles desde auth (super_admin → superadmin)
+ * - Solo acepta rol 'super_admin' (máximo nivel de privilegios)
+ * - Maneja normalización de roles desde auth (super_admin → super_admin)
  * - Incluye logging de seguridad para auditoría
  * 
  * Uso:
@@ -41,8 +41,8 @@ const fail = (code: number, message: string) => ({
  * Flujo:
  * 1. Verifica que req.user existe (authMiddleware ya ejecutado)
  * 2. Extrae el rol del usuario
- * 3. Normaliza roles inconsistentes (super_admin → superadmin)
- * 4. Valida que el rol sea exactamente 'superadmin'
+ * 3. Normaliza roles inconsistentes (super_admin → super_admin)
+ * 4. Valida que el rol sea exactamente 'super_admin'
  * 5. Log de auditoría para accesos de seguridad
  */
 export const requireSuperAdmin = (req: Request, res: Response, next: NextFunction) => {
@@ -57,7 +57,7 @@ export const requireSuperAdmin = (req: Request, res: Response, next: NextFunctio
     // 2. Extraer rol del usuario
     let userRole = user.rol;
     if (!userRole) {
-      console.warn(`[SuperAdmin Security] Acceso denegado - Rol no definido para usuario ${user.id} en ${req.method} ${req.path}`);
+      console.warn(`[SuperAdmin Security] Acceso denegado - Rol no definido para usuario ${user.sub || user.id} en ${req.method} ${req.path}`);
       return res.status(403).json(fail(403, "Rol de usuario no definido"));
     }
 
@@ -65,7 +65,7 @@ export const requireSuperAdmin = (req: Request, res: Response, next: NextFunctio
     const normalizedRole = normalizeRole(userRole);
 
     // 4. Validar rol SuperAdmin
-    if (normalizedRole !== 'superadmin') {
+    if (normalizedRole !== 'super_admin') {
       console.warn(`[SuperAdmin Security] Acceso denegado - Rol insuficiente: ${userRole} (normalizado: ${normalizedRole}) para usuario ${user.id} en ${req.method} ${req.path}`);
       return res.status(403).json(fail(403, "Permisos insuficientes - Se requiere rol SuperAdmin"));
     }
@@ -87,18 +87,17 @@ export const requireSuperAdmin = (req: Request, res: Response, next: NextFunctio
  * 
  * Maneja las inconsistencias entre los diferentes módulos del sistema:
  * - Auth module usa: 'super_admin' (con guion bajo)
- * - SuperAdmin module espera: 'superadmin' (sin guion bajo)
+ * - SuperAdmin module espera: 'super_admin' (sin guion bajo)
  * 
  * @param role - Rol original del usuario
  * @returns Rol normalizado compatible con SuperAdmin
  */
 const normalizeRole = (role: string): string => {
   const roleMap: Record<string, string> = {
-    'super_admin': 'superadmin',  // Auth module → SuperAdmin module
-    'superadmin': 'superadmin',   // Ya normalizado
-    'admin': 'admin',             // Admin regular (NO es superadmin)
+    'super_admin': 'super_admin',  // Auth module → SuperAdmin module
+    'admin': 'admin',             // Admin regular (NO es super_admin)
     // 'dueno' rol eliminado - ahora se usa 'admin'
-    'usuario': 'usuario'         // Usuario regular (NO es superadmin)
+    'usuario': 'usuario'         // Usuario regular (NO es super_admin)
   };
 
   return roleMap[role] || role;
@@ -111,7 +110,7 @@ const normalizeRole = (role: string): string => {
  * Middleware más flexible que permite SuperAdmin o roles del sistema.
  * Útil para endpoints que pueden ser usados por procesos automáticos.
  * 
- * @param allowedRoles - Lista de roles permitidos además de superadmin
+ * @param allowedRoles - Lista de roles permitidos además de super_admin
  */
 export const requireSuperAdminOrSystemRole = (...allowedRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -123,8 +122,8 @@ export const requireSuperAdminOrSystemRole = (...allowedRoles: string[]) => {
 
       const normalizedRole = normalizeRole(user.rol);
       
-      // Permitir superadmin o roles específicos del sistema
-      if (normalizedRole === 'superadmin' || allowedRoles.includes(normalizedRole)) {
+      // Permitir super_admin o roles específicos del sistema
+      if (normalizedRole === 'super_admin' || allowedRoles.includes(normalizedRole)) {
         console.log(`[SuperAdmin Security] Acceso autorizado (flexible) - Usuario ${user.id} (${user.rol}) accede a ${req.method} ${req.path}`);
         next();
       } else {

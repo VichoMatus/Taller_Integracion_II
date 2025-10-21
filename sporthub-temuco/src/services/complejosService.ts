@@ -13,7 +13,7 @@ export const complejosService = {
    */
   async getComplejos(filters?: ComplejoFilters) {
     try {
-      const response = await apiBackend.get('/api/complejos', { params: filters });
+      const response = await apiBackend.get('/complejos', { params: filters });
       return response.data;
     } catch (error: any) {
       throw new Error('Error al obtener complejos: ' + (error.response?.data?.message || error.message));
@@ -25,7 +25,7 @@ export const complejosService = {
    */
   async getComplejoById(id: number) {
     try {
-      const response = await apiBackend.get(`/api/complejos/${id}`);
+      const response = await apiBackend.get(`/complejos/${id}`);
       return response.data;
     } catch (error: any) {
       throw new Error('Error al obtener el complejo: ' + (error.response?.data?.message || error.message));
@@ -113,6 +113,22 @@ export const complejosService = {
       return response.data as ResumenComplejo;
     } catch (error: any) {
       throw new Error('Error al obtener resumen del complejo: ' + (error.response?.data?.message || error.message));
+    }
+  },
+
+  /**
+   * Obtener complejos de un administrador/dueño específico
+   * @param adminId - ID del administrador/dueño
+   */
+  async getComplejosByAdmin(adminId: number) {
+    try {
+      console.log(`📍 [complejosService] Obteniendo complejos del admin ID: ${adminId}`);
+      const response = await apiBackend.get(`/api/complejos/admin/${adminId}`);
+      console.log(`✅ [complejosService] Complejos obtenidos:`, response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error(`❌ [complejosService] Error al obtener complejos del admin:`, error);
+      throw new Error('Error al obtener complejos del administrador: ' + (error.response?.data?.message || error.message));
     }
   }
 };

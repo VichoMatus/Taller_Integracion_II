@@ -83,13 +83,13 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ reservation, onSubmit
       
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <div>
-          <label htmlFor="user" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="usuario" className="block text-sm font-medium text-gray-700 mb-1">
             Usuario
           </label>
           <input
             type="text"
-            id="user"
-            name="user"
+            id="usuario"
+            name="usuario"
             value={formData.user}
             onChange={handleChange}
             required

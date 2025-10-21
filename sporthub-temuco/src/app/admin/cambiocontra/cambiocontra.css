@@ -1,12 +1,11 @@
-/* cambiocontra.css - Versión Corregida */
-
 :root {
-  --primary: #5a6993;
-  --primary-dark: #4a587c;
-  --success: #4caf50;
+  --primary: #8B5FBF;
+  --primary-dark: #6B46C1;
+  --accent: #9F7AEA;
+  --success: #48BB78;
   --success-dark: #45a049;
-  --warning: #ff9800;
-  --error: #f44336;
+  --warning: #ED8936;
+  --error: #F56565;
   --text-dark: #2d3748;
   --text-light: #718096;
   --bg-white: #ffffff;
@@ -15,6 +14,7 @@
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
+/* Estructura principal igual al perfil superadmin */
 .change-password-container {
   display: flex;
   justify-content: center;
@@ -22,11 +22,12 @@
   padding: 2rem;
   margin-left: -256px;
   margin-top: 70px;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: var(--bg-white);
   min-height: calc(100vh - 70px);
   animation: fadeIn 0.8s ease;
 }
 
+/* Tarjeta de cambio de contraseña */
 .change-password-card {
   background: var(--bg-white);
   border-radius: 20px;
@@ -38,7 +39,7 @@
   position: relative;
 }
 
-/* Contenedor del botón de volver - SEPARADO del header */
+/* Contenedor del botón de volver */
 .back-button-container {
   position: absolute;
   top: 1.5rem;
@@ -64,10 +65,10 @@
   color: white;
   border-color: var(--primary);
   transform: translateX(-3px);
-  box-shadow: 0 4px 12px rgba(90, 105, 147, 0.3);
+  box-shadow: 0 4px 12px rgba(139, 95, 191, 0.3);
 }
 
-/* Header del formulario - AHORA SEPARADO del botón */
+/* Header del formulario */
 .password-header {
   text-align: center;
   margin-bottom: 2rem;
@@ -119,7 +120,7 @@
 .password-input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(90, 105, 147, 0.1);
+  box-shadow: 0 0 0 3px rgba(139, 95, 191, 0.1);
 }
 
 .password-strength {
@@ -231,8 +232,8 @@
 }
 
 .security-notice {
-  background: rgba(255, 152, 0, 0.1);
-  border: 1px solid rgba(255, 152, 0, 0.2);
+  background: rgba(237, 137, 54, 0.1);
+  border: 1px solid rgba(237, 137, 54, 0.2);
   border-radius: 8px;
   padding: 1rem;
   margin-top: 1rem;
@@ -367,7 +368,7 @@
   }
 }
 
-/* Agrega esto a tu archivo cambiocontra.css */
+/* Input error y éxito */
 .input-error {
   border-color: #ef4444 !important;
   background-color: #fef2f2 !important;

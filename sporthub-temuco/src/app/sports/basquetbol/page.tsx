@@ -1,32 +1,31 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStatus } from '../../../hooks/useAuthStatus';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import StatsCard from '../../../components/charts/StatsCard';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
+import { canchaService } from '@/services/canchaService';
+import { complejosService } from '@/services/complejosService';
 import styles from './page.module.css';
 
-// 🔥 IMPORTAR SERVICIO
-import { canchaService } from '../../../services/canchaService';
-
-// 🏀 DATOS PARA LAS ESTADÍSTICAS DE BASQUETBOL (SERÁN ACTUALIZADOS CON DATOS REALES)
-const basquetbolStats = [
+// 🏀 DATOS PARA LAS ESTADÍSTICAS DE BÁSQUETBOL
+const basketballStats = [
   {
     title: "Canchas Disponibles Hoy",
-    value: "12",
+    value: "8",
     icon: "🏀",
-    subtitle: "Listas para jugar",
-    trend: { value: 3, isPositive: true }
+    subtitle: "Listas para reservar",
+    trend: { value: 2, isPositive: true }
   },
   {
     title: "Rango de Precios",
     value: "$18-35",
     icon: "💰",
     subtitle: "Por hora",
-    trend: { value: 4, isPositive: true }
+    trend: { value: 5, isPositive: true }
   },
   {
     title: "Calificación Promedio",
@@ -36,16 +35,39 @@ const basquetbolStats = [
     trend: { value: 0.3, isPositive: true }
   },
   {
-    title: "Jugadores Activos",
-    value: "38",
+    title: "Jugadores en Cancha",
+    value: "10",
     icon: "👥",
     subtitle: "Ahora mismo",
     trend: { value: 6, isPositive: true }
   }
 ];
 
+// 🏀 FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO
+const getStaticComplejoData = (establecimientoId: number) => {
+  const staticComplejos = {
+    1: {
+      nombre: "Gimnasio Municipal Norte",
+      direccion: "Av. Alemania 1234, Temuco, Chile"
+    },
+    2: {
+      nombre: "Centro Deportivo Los Andes", 
+      direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+    },
+    3: {
+      nombre: "Polideportivo Universidad",
+      direccion: "Calle Montt 890, Temuco, Chile"
+    },
+    default: {
+      nombre: "Gimnasio de Básquetbol",
+      direccion: "Av. Alemania 1234, Temuco, Chile"
+    }
+  };
+
+  return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+};
+
 export default function BasquetbolPage() {
-  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
@@ -54,101 +76,131 @@ export default function BasquetbolPage() {
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
-  // 🔥 ESTADOS PARA CANCHAS DEL BACKEND
+  // 🏀 ESTADOS PARA CANCHAS DEL BACKEND
   const [canchas, setCanchas] = useState<any[]>([]);
   const [loadingCanchas, setLoadingCanchas] = useState(true);
   const [errorCanchas, setErrorCanchas] = useState<string | null>(null);
 
-  // 🔥 CARGAR CANCHAS DEL BACKEND
+  // 🏀 Hook de autenticación
+  const { buttonProps } = useAuthStatus();
+
+  // 🏀 CARGAR CANCHAS DEL BACKEND CON DATOS DE COMPLEJO
   useEffect(() => {
     const loadCanchas = async () => {
       try {
         setLoadingCanchas(true);
         setErrorCanchas(null);
         
-        console.log('🔄 [Basquetbol] Cargando canchas individuales del backend...');
+        console.log('🔄 [BasquetbolPage] Cargando TODAS las canchas del backend...');
         
-        // 🔥 IDs de las canchas de basquetbol que quieres mostrar
-        const basquetbolCanchaIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        // 🏀 OBTENER TODAS LAS CANCHAS
+        const todasLasCanchas = await canchaService.getCanchas();
+        console.log('✅ [BasquetbolPage] Todas las canchas obtenidas:', todasLasCanchas);
         
-        const canchasPromises = basquetbolCanchaIds.map(async (id) => {
-          try {
-            console.log(`🔍 [Basquetbol] Cargando cancha ID: ${id}`);
-            const cancha = await canchaService.getCanchaById(id);
-            console.log(`✅ [Basquetbol] Cancha ${id} obtenida:`, cancha);
+        // 🏀 FILTRAR CANCHAS DE BÁSQUETBOL Y BASKETBALL
+        const canchasDeBasquetbol = todasLasCanchas.filter((cancha: any) => {
+          console.log(`🔍 [BasquetbolPage] Evaluando cancha ID ${cancha.id}: tipo="${cancha.tipo}"`);
+          return ['basquetbol', 'basketball', 'basquet'].includes(cancha.tipo.toLowerCase());
+        });
+        
+        console.log('🏀 [BasquetbolPage] Canchas de básquetbol encontradas:', canchasDeBasquetbol.length);
+        
+        // 🏀 OBTENER DATOS DE COMPLEJOS PARA CADA CANCHA
+        const canchasMapeadas = await Promise.all(
+          canchasDeBasquetbol.map(async (cancha: any) => {
+            let complejoData = null;
+            let addressInfo = `Gimnasio ${cancha.establecimientoId}`;
             
-            // 🔥 FILTRAR SOLO CANCHAS DE BASQUETBOL
-            if (cancha.tipo !== 'basquetbol') {
-              console.log(`⚠️ [Basquetbol] Cancha ${id} no es de basquetbol (${cancha.tipo}), saltando...`);
-              return null;
+            // 🏀 INTENTAR OBTENER DATOS DEL COMPLEJO
+            if (cancha.establecimientoId) {
+              try {
+                console.log(`🔍 [BasquetbolPage] Cargando complejo ID ${cancha.establecimientoId} para cancha ${cancha.id}`);
+                complejoData = await complejosService.getComplejoById(cancha.establecimientoId);
+                
+                if (complejoData) {
+                  addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                  console.log(`✅ [BasquetbolPage] Complejo cargado: ${addressInfo}`);
+                }
+                
+              } catch (complejoError: any) {
+                console.warn(`⚠️ [BasquetbolPage] Error cargando complejo ${cancha.establecimientoId}:`, complejoError.message);
+                // Usar datos de fallback
+                const staticComplejo = getStaticComplejoData(cancha.establecimientoId);
+                addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+              }
             }
             
-            // Mapear al formato requerido por CourtCard
+            // 🏀 MAPEAR CANCHA CON DATOS DEL COMPLEJO
             const mappedCancha = {
               id: cancha.id,
               imageUrl: `/sports/basquetbol/canchas/Cancha${cancha.id}.png`,
               name: cancha.nombre,
-              address: `Complejo ${cancha.establecimientoId}`,
+              address: addressInfo, // 🏀 USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
               rating: cancha.rating || 4.6,
               tags: [
-                cancha.techada ? "Cancha techada" : "Cancha al aire libre",
+                cancha.techada ? "Cancha Techada" : "Cancha Exterior",
                 cancha.activa ? "Disponible" : "No disponible",
-                "Estacionamiento",
-                "Marcador"
+                cancha.tipo.charAt(0).toUpperCase() + cancha.tipo.slice(1) // Capitalizar tipo
               ],
-              description: `Cancha de basquetbol ${cancha.nombre} - ID: ${cancha.id}`,
-              price: cancha.precioPorHora?.toString() || "23",
+              description: `Cancha de ${cancha.tipo} ${cancha.nombre} - ID: ${cancha.id}`,
+              price: cancha.precioPorHora?.toString() || "22",
               nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
-              sport: cancha.tipo
+              sport: "basquetbol"
             };
             
-            console.log('🗺️ [Basquetbol] Cancha mapeada:', mappedCancha);
+            console.log('🗺️ [BasquetbolPage] Cancha mapeada:', mappedCancha);
             return mappedCancha;
-            
-          } catch (error) {
-            console.log(`❌ [Basquetbol] Error cargando cancha ${id}:`, error);
-            return null;
-          }
-        });
+          })
+        );
         
-        const canchasResults = await Promise.all(canchasPromises);
-        const canchasValidas = canchasResults.filter(cancha => cancha !== null);
-        
-        console.log('🎉 [Basquetbol] Canchas de basquetbol cargadas exitosamente:', canchasValidas.length);
-        console.log('📋 [Basquetbol] Canchas finales:', canchasValidas);
-        
-        setCanchas(canchasValidas);
+        console.log('🎉 [BasquetbolPage] Canchas con datos de complejo cargadas:', canchasMapeadas.length);
+        setCanchas(canchasMapeadas);
         
       } catch (error: any) {
-        console.error('❌ [Basquetbol] ERROR DETALLADO cargando canchas:', error);
+        console.error('❌ [BasquetbolPage] ERROR cargando canchas:', error);
         setErrorCanchas(`Error: ${error.message}`);
         
-        // 🔥 FALLBACK
-        console.log('🚨 [Basquetbol] USANDO FALLBACK - Error en el API');
-        setCanchas([
+        // 🏀 FALLBACK CON DATOS ESTÁTICOS MEJORADOS
+        const canchasEstaticas = [
           {
             id: 1,
-            imageUrl: "/sports/basquetbol/canchas/Cancha1.png",
+            imageUrl: "/sports/basquetbol/basquetbol.png",
             name: "🚨 FALLBACK - Basquetbol Centro",
-            address: "Norte, Centro, Sur",
-            rating: 4.4,
-            tags: ["DATOS OFFLINE", "Estacionamiento", "Iluminación", "Cafetería"],
-            description: "🚨 Estos son datos de fallback - API no disponible",
-            price: "23",
-            nextAvailable: "20:00-21:00",
+            address: "Gimnasio Municipal Norte - Av. Alemania 1234, Temuco", // 🏀 FORMATO MEJORADO
+            rating: 4.5,
+            tags: ["DATOS OFFLINE", "Cancha Techada", "Piso Sintético"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "22",
+            nextAvailable: "18:00-19:00",
+            sport: "basquetbol"
           },
           {
             id: 2,
-            imageUrl: "/sports/basquetbol/canchas/Cancha2.png",
-            name: "🚨 FALLBACK - Basquetbol Norte",
-            address: "Sector Norte",
-            rating: 4.6,
-            tags: ["DATOS OFFLINE", "Estacionamiento"],
-            description: "🚨 Estos son datos de fallback - API no disponible",
+            imageUrl: "/sports/basquetbol/basquetbol.png",
+            name: "🚨 FALLBACK - Basketball Norte",
+            address: "Centro Deportivo Los Andes - Av. Pedro de Valdivia 567, Temuco",
+            rating: 4.7,
+            tags: ["DATOS OFFLINE", "Cancha Techada", "Tableros Profesionales"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "25",
+            nextAvailable: "15:30-16:30",
+            sport: "basquetbol"
+          },
+          {
+            id: 3,
+            imageUrl: "/sports/basquetbol/basquetbol.png",
+            name: "🚨 FALLBACK - Basquet Sur",
+            address: "Polideportivo Universidad - Calle Montt 890, Temuco",
+            rating: 4.4,
+            tags: ["DATOS OFFLINE", "Cancha Exterior", "Concreto"],
+            description: "🚨 Datos de fallback - API no disponible",
             price: "18",
-            nextAvailable: "14:30-15:30",
+            nextAvailable: "Mañana 10:00-11:00",
+            sport: "basquetbol"
           }
-        ]);
+        ];
+        
+        setCanchas(canchasEstaticas);
       } finally {
         setLoadingCanchas(false);
       }
@@ -159,14 +211,14 @@ export default function BasquetbolPage() {
 
   useEffect(() => {
     setIsClient(true);
-
+    
     const calculateCardsToShow = () => {
       const screenWidth = window.innerWidth;
       const cardWidth = 320;
       const gap = 20;
       const sidebarWidth = 240;
       const padding = 40;
-
+      
       const availableWidth = screenWidth - sidebarWidth - padding;
       return Math.max(1, Math.min(4, Math.floor(availableWidth / (cardWidth + gap))));
     };
@@ -184,8 +236,8 @@ export default function BasquetbolPage() {
     };
   }, []);
 
-  // 🔥 USAR CANCHAS REALES PARA EL CARRUSEL
-  const topRatedCourts = canchas.slice(0, 6);
+  // 🏀 USAR CANCHAS REALES PARA EL CARRUSEL
+  const topRatedCourts = canchas.slice(0, 6); // Máximo 6 canchas para el carrusel
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -213,26 +265,32 @@ export default function BasquetbolPage() {
     router.push(`/sports/basquetbol/canchas/canchaseleccionada?id=${court.id}`);
   };
 
+  // 🏀 Manejador del botón de usuario
   const handleUserButtonClick = () => {
-    if (isAuthenticated) {
-      router.push('/usuario/EditarPerfil');
-    } else {
-      router.push('/login');
+    if (!buttonProps.disabled) {
+      router.push(buttonProps.href);
     }
   };
 
-  // 🔥 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
+  // 🏀 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
   const updatedStats = [
     {
-      ...basquetbolStats[0],
+      ...basketballStats[0],
       value: canchas.filter(c => c.nextAvailable !== "No disponible").length.toString()
     },
-    basquetbolStats[1], // Mantener precio por defecto
     {
-      ...basquetbolStats[2],
-      value: `${(canchas.reduce((acc, c) => acc + c.rating, 0) / canchas.length || 4.6).toFixed(1)}⭐`
+      ...basketballStats[1],
+      value: canchas.length > 0 ? 
+        `$${Math.min(...canchas.map(c => parseInt(c.price || '0')))}-${Math.max(...canchas.map(c => parseInt(c.price || '0')))}` : 
+        "$18-35"
     },
-    basquetbolStats[3] // Mantener jugadores por defecto
+    {
+      ...basketballStats[2],
+      value: canchas.length > 0 ? 
+        `${(canchas.reduce((acc, c) => acc + c.rating, 0) / canchas.length).toFixed(1)}⭐` : 
+        "4.6⭐"
+    },
+    basketballStats[3] // Mantener jugadores por defecto
   ];
 
   if (!isClient) {
@@ -256,7 +314,7 @@ export default function BasquetbolPage() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>🏀</div>
-            <h1 className={styles.headerTitle}>Basquetbol</h1>
+            <h1 className={styles.headerTitle}>Básquetbol</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar
@@ -264,7 +322,7 @@ export default function BasquetbolPage() {
               onChange={handleSearchChange}
               onSearch={handleSearch}
               placeholder="Nombre de la cancha..."
-              sport="basquetbol"
+              sport="basquetbol" 
             />
             <button 
               className={styles.userButton}
@@ -277,11 +335,11 @@ export default function BasquetbolPage() {
           </div>
         </div>
 
-        {/* 🔥 STATS CARDS CON DATOS ACTUALIZADOS */}
+        {/* 🏀 STATS CARDS CON DATOS ACTUALIZADOS */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
             <span className={styles.statsTitleIcon}>📊</span>
-            Estadísticas del Basquetbol en Temuco
+            Estadísticas del Básquetbol en Temuco
           </h2>
           <div className={styles.statsContainer}>
             {updatedStats.map((stat, index) => (
@@ -305,7 +363,7 @@ export default function BasquetbolPage() {
         </div>
 
         <div className={styles.quickAccessSection}>
-          <button
+          <button 
             className={styles.mainCourtButton}
             onClick={() => window.location.href = '/sports/basquetbol/canchas/'}
           >
@@ -318,7 +376,7 @@ export default function BasquetbolPage() {
           </button>
         </div>
 
-        {/* 🔥 CARRUSEL CON DATOS REALES */}
+        {/* 🏀 CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
@@ -328,8 +386,8 @@ export default function BasquetbolPage() {
               {errorCanchas && <span style={{ fontSize: '14px', marginLeft: '10px', color: 'red' }}>⚠️ Usando datos offline</span>}
             </h2>
             <div className={styles.carouselControls}>
-              <button
-                onClick={prevSlide}
+              <button 
+                onClick={prevSlide} 
                 className={styles.carouselButton}
                 disabled={currentSlide === 0 || loadingCanchas}
                 style={{ opacity: currentSlide === 0 || loadingCanchas ? 0.5 : 1 }}
@@ -339,8 +397,8 @@ export default function BasquetbolPage() {
               <span className={styles.slideIndicator}>
                 {currentSlide + 1} / {totalSlides}
               </span>
-              <button
-                onClick={nextSlide}
+              <button 
+                onClick={nextSlide} 
                 className={styles.carouselButton}
                 disabled={currentSlide === totalSlides - 1 || loadingCanchas}
                 style={{ opacity: currentSlide === totalSlides - 1 || loadingCanchas ? 0.5 : 1 }}
@@ -349,23 +407,23 @@ export default function BasquetbolPage() {
               </button>
             </div>
           </div>
-
+          
           <div className={styles.carouselContainer}>
             {loadingCanchas ? (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
                 <p>Cargando canchas...</p>
               </div>
             ) : (
-              <div
+              <div 
                 className={styles.courtsGrid}
                 style={{
                   transform: `translateX(-${currentSlide * (320 + 20)}px)`,
                 }}
               >
                 {topRatedCourts.map((court, index) => (
-                  <CourtCard
-                    key={court.id || index}
-                    {...court}
+                  <CourtCard 
+                    key={court.id || index} 
+                    {...court} 
                     sport="basquetbol"
                     onClick={() => handleCanchaClick(court)}
                   />
@@ -378,7 +436,7 @@ export default function BasquetbolPage() {
         {/* Ubicación en el mapa */}
         <div className={styles.mapSection}>
           <h2 className={styles.sectionTitle}>Ubicación en el mapa de las canchas</h2>
-
+          
           <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>
               <span className={styles.locationIcon}>📍</span>
@@ -392,8 +450,8 @@ export default function BasquetbolPage() {
             </div>
             <div className={styles.radiusContainer}>
               <span className={styles.radiusIcon}>📏</span>
-              <select
-                value={radiusKm}
+              <select 
+                value={radiusKm} 
                 onChange={(e) => setRadiusKm(e.target.value)}
                 className={styles.radiusSelect}
               >
@@ -408,7 +466,7 @@ export default function BasquetbolPage() {
             </button>
           </div>
 
-          <LocationMap
+          <LocationMap 
             latitude={-38.7359}
             longitude={-72.5904}
             address="Temuco, Chile"
