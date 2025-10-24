@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { canchaService } from '@/services/canchaService';
 import { complejosService } from '@/services/complejosService';
+import { apiBackend } from '@/config/backend';
 import '@/app/admin/dashboard.css';
 
 // Tipos de cancha disponibles (mantenemos en minúscula como el backend)
@@ -153,18 +154,29 @@ export default function NuevaCanchaPage() {
         throw new Error('La capacidad debe ser al menos 1');
       }
 
-      // Crear la cancha usando el servicio
-      const nuevaCancha = await canchaService.createCancha({
+      // TODO: Volver a usar /admin/canchas cuando backend corrija req.user.sub
+      // Temporalmente usando /canchas (no valida permisos de dueño)
+      console.log('📤 Enviando datos al endpoint temporal:', {
         nombre: formData.nombre.trim(),
-        tipo: formData.tipo as any,
+        tipo: formData.tipo,
         techada: formData.techada,
-        establecimientoId: formData.establecimientoId,
-        precioPorHora: formData.precioPorHora,
+        id_complejo: formData.establecimientoId,
+        precio_hora: formData.precioPorHora,
         capacidad: formData.capacidad,
         descripcion: formData.descripcion.trim() || undefined
       });
 
-      console.log('✅ Cancha creada exitosamente:', nuevaCancha);
+      const response = await apiBackend.post('/canchas', {
+        nombre: formData.nombre.trim(),
+        tipo: formData.tipo,
+        techada: formData.techada,
+        id_complejo: formData.establecimientoId,
+        precio_hora: formData.precioPorHora,
+        capacidad: formData.capacidad,
+        descripcion: formData.descripcion.trim() || undefined
+      });
+
+      console.log('✅ Cancha creada exitosamente:', response.data);
       
       setSuccess('Cancha creada exitosamente');
       

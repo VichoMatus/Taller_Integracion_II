@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { canchaService } from '@/services/canchaService';
+import { apiBackend } from '@/config/backend';
 import '../dashboard.css';
 
 interface Court {
@@ -22,39 +23,86 @@ export default function CanchasPage() {
   const [refreshKey, setRefreshKey] = useState(0); // Para forzar recargas
   const itemsPerPage = 4;
 
-  // 🔥 Cargar canchas reales de la API
+  // 🔥 Cargar canchas reales de la API usando endpoint de ADMIN
   const loadCourts = async () => {
     try {
       setIsLoading(true);
-      console.log('🔍 Cargando canchas desde la API...');
+      console.log('🔍 Cargando canchas desde /canchas (TEMPORAL - sin filtro de admin)...');
       
-      const canchasFromApi = await canchaService.getCanchas();
-      console.log('✅ Canchas cargadas:', canchasFromApi);
-      console.log('📊 Total de canchas (incluyendo inactivas):', canchasFromApi.length);
+      // TODO: Volver a usar /admin/canchas cuando backend corrija req.user.sub
+      // Temporalmente usando /canchas (muestra todas las canchas)
+      const response = await apiBackend.get('/canchas');
+      console.log('✅ Respuesta del servidor:', response.data);
       
-      // Adaptar datos de la API al formato del frontend - MUESTRA TODAS LAS CANCHAS
+      // Manejar formato de respuesta del BFF con envelope { ok: true, data: [...] }
+      let canchasFromApi = [];
+      
+      if (response.data?.ok && response.data?.data) {
+        // Formato envelope del BFF: { ok: true, data: [...] }
+        canchasFromApi = Array.isArray(response.data.data) ? response.data.data : [response.data.data];
+      } else if (response.data?.items) {
+        // Formato paginado: { items: [...] }
+        canchasFromApi = response.data.items;
+      } else if (Array.isArray(response.data)) {
+        // Array directo
+        canchasFromApi = response.data;
+      } else {
+        console.warn('Formato de respuesta inesperado:', response.data);
+        canchasFromApi = [];
+      }
+      
+      console.log('📊 Total de canchas del admin:', canchasFromApi.length);
+      
+      // Adaptar datos de la API al formato del frontend
       const adaptedCourts: Court[] = canchasFromApi.map((cancha: any) => {
-        console.log(`   - Cancha ${cancha.nombre}: activa=${cancha.activa}`);
+        const id = cancha.id_cancha || cancha.id;
+        const nombre = cancha.nombre;
+        const activa = cancha.activo !== undefined ? cancha.activo : cancha.activa !== undefined ? cancha.activa : true;
+        
+        console.log(`   - Cancha ${nombre} (ID: ${id}): activa=${activa}, deporte=${cancha.deporte}`);
+        
         return {
-          id: cancha.id.toString(),
-          name: cancha.nombre,
-          location: `Establecimiento ${cancha.establecimientoId}`,
-          status: cancha.activa ? 'Activo' : 'Inactivo',
-          type: cancha.tipo
+          id: id.toString(),
+          name: nombre,
+          location: `Complejo ${cancha.id_complejo || cancha.establecimientoId || 'N/A'}`,
+          status: activa ? 'Activo' : 'Inactivo',
+          type: cancha.deporte || cancha.tipo || 'Futbol'
         };
       });
       
       setCourts(adaptedCourts);
-      console.log('✅ Canchas adaptadas al frontend:', adaptedCourts.length);
+      console.log('✅ Canchas del admin cargadas:', adaptedCourts.length);
+      
+      if (adaptedCourts.length === 0) {
+        console.log('ℹ️ No hay canchas para este administrador. Debe crear canchas primero.');
+      }
     } catch (error: any) {
-      console.error('❌ Error cargando canchas:', error);
-      // Mantener datos de ejemplo como fallback
-      setCourts([
-        { id: '1', name: 'Cancha Central', location: 'Av. Principal 123', status: 'Activo', type: 'Futbol' },
-        { id: '2', name: 'Cancha Sur', location: 'Av. Sur 456', status: 'Inactivo', type: 'Futbol' },
-        { id: '3', name: 'Cancha Norte', location: 'Av. Norte 789', status: 'Por revisar', type: 'Tenis' },
-        { id: '4', name: 'Cancha Este', location: 'Av. Este 321', status: 'Activo', type: 'Voleibol' },
-      ]);
+      console.error('❌ Error cargando canchas del admin:', error);
+      
+      // Extraer mensaje de error de múltiples formatos
+      let errorMsg = 'Error desconocido';
+      if (error?.response?.data) {
+        const data = error.response.data;
+        // Si data es un objeto con mensaje
+        if (typeof data === 'object') {
+          errorMsg = data.message || data.error || JSON.stringify(data);
+        } else {
+          errorMsg = String(data);
+        }
+      } else if (error?.message) {
+        errorMsg = error.message;
+      }
+      
+      console.error('   Detalle completo:', {
+        errorMsg,
+        responseData: error?.response?.data,
+        status: error?.response?.status,
+        fullError: error
+      });
+      
+      // NO usar datos mock - mostrar error real
+      setCourts([]);
+      alert(`Error al cargar canchas: ${errorMsg}. Verifique que esté logueado como administrador.`);
     } finally {
       setIsLoading(false);
     }
@@ -89,12 +137,18 @@ export default function CanchasPage() {
     if (!confirm('¿Estás seguro de que deseas eliminar esta cancha?')) return;
     
     try {
-      await canchaService.deleteCancha(Number(courtId));
+      console.log('🗑️ Eliminando cancha ID:', courtId);
+      
+      // TODO: Volver a usar /admin/canchas/:id cuando backend corrija req.user.sub
+      // Temporalmente usando /canchas/:id (no valida permisos)
+      await apiBackend.delete(`/canchas/${courtId}`);
       setCourts(courts.filter(court => court.id !== courtId));
       alert('Cancha eliminada exitosamente');
-    } catch (error) {
-      console.error('Error eliminando cancha:', error);
-      alert('Error al eliminar la cancha');
+      console.log('✅ Cancha eliminada');
+    } catch (error: any) {
+      console.error('❌ Error eliminando cancha:', error);
+      const errorMsg = error?.response?.data?.message || error?.message || 'Error desconocido';
+      alert(`Error al eliminar la cancha: ${errorMsg}`);
     }
   };
 

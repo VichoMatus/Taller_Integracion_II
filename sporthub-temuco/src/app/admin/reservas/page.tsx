@@ -22,88 +22,66 @@ export default function ReservasPage() {
       setLoading(true);
       setError(null);
       
-      const data = await reservaService.getAdminReservas();
+      const response: any = await reservaService.getAdminReservas();
       
-      console.log("Datos recibidos:", data);
+      console.log("📥 Respuesta completa del servidor:", response);
       
-      // Asegurarse de que data sea siempre un array
-      if (Array.isArray(data)) {
-        if (data.length === 0) {
-          // Si no hay datos, usar reservas mock
-          setReservas([
-            {
-              id: 1,
-              usuarioId: 1,
-              canchaId: 1,
-              complejoId: 1,
-              fechaInicio: new Date().toISOString(),
-              fechaFin: new Date(Date.now() + 3600000).toISOString(),
-              estado: 'confirmada' as EstadoReserva,
-              precioTotal: 25000,
-              pagado: true,
-              fechaCreacion: new Date().toISOString(),
-              fechaActualizacion: new Date().toISOString(),
-              usuario: { id: 1, email: 'miguel.chamo@email.com', nombre: 'Miguel', apellido: 'Chamo' },
-              cancha: { id: 1, nombre: 'Cancha Central', tipo: 'futbol', precioPorHora: 25000 }
-            },
-            {
-              id: 2,
-              usuarioId: 2,
-              canchaId: 2,
-              complejoId: 1,
-              fechaInicio: new Date(Date.now() + 86400000).toISOString(),
-              fechaFin: new Date(Date.now() + 86400000 + 3600000).toISOString(),
-              estado: 'pendiente' as EstadoReserva,
-              precioTotal: 20000,
-              pagado: false,
-              fechaCreacion: new Date().toISOString(),
-              fechaActualizacion: new Date().toISOString(),
-              usuario: { id: 2, email: 'ana.garcia@email.com', nombre: 'Ana', apellido: 'García' },
-              cancha: { id: 2, nombre: 'Cancha Norte', tipo: 'basquet', precioPorHora: 20000 }
-            }
-          ]);
-        } else {
-          setReservas(data);
-        }
-      } else {
-        setReservas([]); // Si no es array, establecer array vacío
+      // Manejar diferentes formatos de respuesta
+      let reservasArray = [];
+      
+      // Formato envelope del BFF con paginación: { ok: true, data: { items: [...], page, pageSize, total } }
+      if (response?.ok && response?.data?.items && Array.isArray(response.data.items)) {
+        reservasArray = response.data.items;
+        console.log("✅ Formato detectado: Envelope BFF con paginación");
+      }
+      // Formato envelope del BFF con array directo: { ok: true, data: [...] }
+      else if (response?.ok && Array.isArray(response?.data)) {
+        reservasArray = response.data;
+        console.log("✅ Formato detectado: Envelope BFF con array directo");
+      }
+      // Formato directo con items: { items: [...] }
+      else if (response?.items && Array.isArray(response.items)) {
+        reservasArray = response.items;
+        console.log("✅ Formato detectado: Paginación directa");
+      } 
+      // Array directo de FastAPI
+      else if (Array.isArray(response)) {
+        reservasArray = response;
+        console.log("✅ Formato detectado: Array directo");
+      } 
+      // Formato con data: { data: [...] }
+      else if (response?.data && Array.isArray(response.data)) {
+        reservasArray = response.data;
+        console.log("✅ Formato detectado: Data wrapper");
+      }
+      else {
+        console.warn('⚠️ Formato inesperado de respuesta:', response);
+        console.warn('Estructura:', Object.keys(response || {}));
+        reservasArray = [];
+      }
+      
+      console.log("📊 Total de reservas procesadas:", reservasArray.length);
+      
+      setReservas(reservasArray);
+      
+      if (reservasArray.length === 0) {
+        setError('No hay reservas para mostrar. Las reservas aparecerán aquí.');
       }
     } catch (err: any) {
       console.error('Error al cargar reservas:', err);
-      setError('Error al cargar reservas del servidor');
-      // En caso de error, usar reservas mock
-      setReservas([
-        {
-          id: 1,
-          usuarioId: 1,
-          canchaId: 1,
-          complejoId: 1,
-          fechaInicio: new Date().toISOString(),
-          fechaFin: new Date(Date.now() + 3600000).toISOString(),
-          estado: 'confirmada' as EstadoReserva,
-          precioTotal: 25000,
-          pagado: true,
-          fechaCreacion: new Date().toISOString(),
-          fechaActualizacion: new Date().toISOString(),
-          usuario: { id: 1, email: 'miguel.chamo@email.com', nombre: 'Miguel', apellido: 'Chamo' },
-          cancha: { id: 1, nombre: 'Cancha Central', tipo: 'futbol', precioPorHora: 25000 }
-        },
-        {
-          id: 2,
-          usuarioId: 2,
-          canchaId: 2,
-          complejoId: 1,
-          fechaInicio: new Date(Date.now() + 86400000).toISOString(),
-          fechaFin: new Date(Date.now() + 86400000 + 3600000).toISOString(),
-          estado: 'pendiente' as EstadoReserva,
-          precioTotal: 20000,
-          pagado: false,
-          fechaCreacion: new Date().toISOString(),
-          fechaActualizacion: new Date().toISOString(),
-          usuario: { id: 2, email: 'ana.garcia@email.com', nombre: 'Ana', apellido: 'García' },
-          cancha: { id: 2, nombre: 'Cancha Norte', tipo: 'basquet', precioPorHora: 20000 }
-        }
-      ]);
+      
+      // Extraer mensaje del error
+      let errorMessage = 'Error al cargar reservas del servidor. Verifique su conexión.';
+      if (err?.message && typeof err.message === 'string') {
+        errorMessage = err.message;
+      } else if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      
+      setError(errorMessage);
+      setReservas([]);
     } finally {
       setLoading(false);
     }

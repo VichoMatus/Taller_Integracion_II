@@ -137,7 +137,20 @@ apiBackend.interceptors.response.use(
     // Si el BFF retorna { ok: true, data: ... }, extraer los datos
     if (response.data && typeof response.data === 'object' && 'ok' in response.data) {
       if (response.data.ok === false) {
-        throw new Error(response.data.error || response.data.message || 'Error del servidor');
+        // Extraer mensaje de error del objeto
+        let errorMessage = 'Error del servidor';
+        if (response.data.error) {
+          if (typeof response.data.error === 'object') {
+            errorMessage = response.data.error.message || JSON.stringify(response.data.error);
+          } else {
+            errorMessage = String(response.data.error);
+          }
+        } else if (response.data.message) {
+          errorMessage = response.data.message;
+        }
+        
+        console.error('❌ [apiBackend] Error del BFF:', errorMessage, response.data);
+        throw new Error(errorMessage);
       }
       // Retornar los datos útiles
       return {

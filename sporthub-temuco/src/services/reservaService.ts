@@ -168,7 +168,9 @@ export const reservaService = {
    */
   async getAdminReservas(filters?: ReservaFilters): Promise<Reserva[]> {
     try {
-      const { data } = await apiBackend.get('/api/admin/reservas', { params: filters });
+      // TODO: Cambiar a /admin/reservas cuando el backend corrija el bug de req.user.sub
+      // Temporalmente usando /reservas (muestra todas las reservas)
+      const { data } = await apiBackend.get('/reservas', { params: filters });
       return data;
     } catch (err) {
       handleApiError(err);
@@ -181,7 +183,7 @@ export const reservaService = {
    */
   async getAllReservasAdmin(filters?: ReservaFilters): Promise<Reserva[]> {
     try {
-      const { data } = await apiBackend.get('/api/reservas', { params: filters });
+      const { data } = await apiBackend.get('/reservas', { params: filters });
       return data;
     } catch (err) {
       handleApiError(err);
@@ -194,7 +196,7 @@ export const reservaService = {
    */
   async getReservasByCancha(canchaId: number, filters?: ReservaFilters): Promise<Reserva[]> {
     try {
-      const { data } = await apiBackend.get(`/api/reservas/admin/cancha/${canchaId}`, { params: filters });
+      const { data } = await apiBackend.get(`/reservas/admin/cancha/${canchaId}`, { params: filters });
       return data;
     } catch (err) {
       handleApiError(err);
@@ -207,7 +209,7 @@ export const reservaService = {
    */
   async getReservasByUsuarioAdmin(usuarioId: number, filters?: ReservaFilters): Promise<Reserva[]> {
     try {
-      const { data } = await apiBackend.get(`/api/reservas/admin/usuario/${usuarioId}`, { params: filters });
+      const { data } = await apiBackend.get(`/reservas/admin/usuario/${usuarioId}`, { params: filters });
       return data;
     } catch (err) {
       handleApiError(err);
