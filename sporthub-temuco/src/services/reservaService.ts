@@ -8,41 +8,74 @@ import {
   CotizacionResponse,
   ConfirmarReservaResponse,
   CheckInResponse,
-  NoShowResponse
+  NoShowResponse,
+  // Nuevos tipos actualizados
+  CreateReservaInputNew,
+  UpdateReservaInputNew,
+  CotizacionInputNew,
+  CotizacionResponseNew
 } from '../types/reserva';
 import { handleApiError } from "../services/ApiError";
 
 export const reservaService = {
+  /**
+   * Obtener todas las reservas con filtros (admin/superadmin)
+   * Actualizado para usar el nuevo endpoint
+   */
   async getReservas(filters?: ReservaFilters): Promise<Reserva[]> {
     try {
-      const { data } = await apiBackend.get('/api/v1/reservas', { params: filters });
+      const { data } = await apiBackend.get('/api/reservas', { params: filters });
       return data;
     } catch (err) {
       handleApiError(err);
     }
   },
 
+  /**
+   * Obtener una reserva por ID
+   * Actualizado para usar el nuevo endpoint
+   */
   async getReservaById(id: number): Promise<Reserva> {
     try {
-      const { data } = await apiBackend.get(`/api/v1/reservas/${id}`);
+      const { data } = await apiBackend.get(`/api/reservas/${id}`);
       return data;
     } catch (err) {
       handleApiError(err);
     }
   },
 
-  async createReserva(input: CreateReservaInput): Promise<Reserva> {
+  /**
+   * Crear nueva reserva (soporta ambos formatos: nuevo y legacy)
+   * Actualizado para usar el nuevo endpoint
+   */
+  async createReserva(input: CreateReservaInput | CreateReservaInputNew): Promise<Reserva> {
     try {
-      const { data } = await apiBackend.post('/api/v1/reservas', input);
+      const { data } = await apiBackend.post('/api/reservas', input);
       return data;
     } catch (err) {
       handleApiError(err);
     }
   },
 
-  async updateReserva(id: number, input: UpdateReservaInput): Promise<Reserva> {
+  /**
+   * Cotizar precio de reserva (NUEVO ENDPOINT)
+   */
+  async cotizarReserva(input: CotizacionInputNew): Promise<CotizacionResponseNew> {
     try {
-      const { data } = await apiBackend.patch(`/api/v1/reservas/${id}`, input);
+      const { data } = await apiBackend.post('/api/reservas/cotizar', input);
+      return data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  /**
+   * Actualizar/reprogramar reserva
+   * Actualizado para usar el nuevo endpoint
+   */
+  async updateReserva(id: number, input: UpdateReservaInput | UpdateReservaInputNew): Promise<Reserva> {
+    try {
+      const { data } = await apiBackend.patch(`/api/reservas/${id}`, input);
       return data;
     } catch (err) {
       handleApiError(err);
@@ -59,20 +92,17 @@ export const reservaService = {
 
 
 
-    // ...existing code...
+  /**
+   * Obtener mis reservas (usuario autenticado)
+   * Actualizado para usar el nuevo endpoint /api/reservas/mias
+   */
   async getMisReservas(): Promise<Reserva[]> {
     try {
-      console.log("Intentando acceder a endpoint:", '/api/v1/reservas/mias');
+      console.log("Intentando acceder a endpoint actualizado:", '/api/reservas/mias');
       
-      // Probar con la URL completa para evitar problemas de manipulación de URL
-      const url = '/api/v1/reservas/mias';
-      const { data } = await apiBackend.get(url, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        }
-      });
+      const { data } = await apiBackend.get('/api/reservas/mias');
       
-      console.log("Respuesta mis reservas:", data);
+      console.log("Respuesta mis reservas (endpoint actualizado):", data);
       return Array.isArray(data) ? data : (data.items || data.data || []);
     } catch (err: any) {
       console.error("Error detallado al obtener mis reservas:", {
@@ -86,9 +116,12 @@ export const reservaService = {
       return []; // Devuelve array vacío en caso de error
     }
   },
-  // ...existing code...
 
 
+  /**
+   * Confirmar reserva (admin/superadmin)
+   * Actualizado para usar el nuevo endpoint
+   */
   async confirmarReserva(id: number): Promise<ConfirmarReservaResponse> {
     try {
       const { data } = await apiBackend.post(`/api/reservas/${id}/confirmar`);
@@ -217,5 +250,57 @@ export const reservaService = {
     } catch (err) {
       handleApiError(err);
     }
+  },
+
+  // ==========================================
+  // MÉTODOS DE UTILIDAD Y ESTADO
+  // ==========================================
+
+  /**
+   * Verificar estado del módulo de reservas
+   * Nuevo método para verificar endpoints disponibles
+   */
+  async getReservasStatus(): Promise<any> {
+    try {
+      const { data } = await apiBackend.get('/api/reservas/status');
+      return data;
+    } catch (err) {
+      console.warn('No se pudo obtener el estado del módulo reservas:', err);
+      return { ok: false, error: 'Módulo no disponible' };
+    }
+  },
+
+  /**
+   * Método helper para convertir formato legacy a nuevo formato
+   */
+  convertirAFormatoNuevo(input: CreateReservaInput): CreateReservaInputNew {
+    // Extraer fecha y hora de las strings ISO
+    const fechaInicio = new Date(input.fechaInicio);
+    const fechaFin = new Date(input.fechaFin);
+    
+    return {
+      id_cancha: input.canchaId,
+      fecha: fechaInicio.toISOString().split('T')[0], // YYYY-MM-DD
+      inicio: fechaInicio.toTimeString().slice(0, 5), // HH:MM
+      fin: fechaFin.toTimeString().slice(0, 5), // HH:MM
+      notas: input.notas
+    };
+  },
+
+  /**
+   * Método helper para convertir formato nuevo a legacy
+   */
+  convertirAFormatoLegacy(input: CreateReservaInputNew): CreateReservaInput {
+    // Construir fechas ISO completas
+    const fechaInicio = `${input.fecha}T${input.inicio}:00`;
+    const fechaFin = `${input.fecha}T${input.fin}:00`;
+    
+    return {
+      usuarioId: 0, // Se debe asignar por el contexto del usuario
+      canchaId: input.id_cancha,
+      fechaInicio,
+      fechaFin,
+      notas: input.notas
+    };
   }
 };
