@@ -71,25 +71,24 @@ interface Reserva {
 
 ## Endpoints API
 
-### Endpoints Públicos
+### Endpoints Normales (Usuario/Admin/SuperAdmin)
 ```
-POST   /reservas/verificar-disponibilidad  # Verificar disponibilidad
-```
-
-### Endpoints de Usuario
-```
-GET    /reservas/usuario/:usuarioId    # Reservas de un usuario
-POST   /reservas                       # Crear nueva reserva
-GET    /reservas/:id                   # Obtener reserva específica
-PATCH  /reservas/:id                   # Actualizar reserva
-POST   /reservas/:id/confirmar-pago    # Confirmar pago
+GET    /reservas/mias                  # Mis reservas (usuario autenticado)
+GET    /reservas                       # Listado de reservas (admin/superadmin)
+GET    /reservas/:id                   # Detalle de reserva
+POST   /reservas/cotizar               # Cotizar reserva (precio)
+POST   /reservas                       # Crear reserva
+PATCH  /reservas/:id                   # Reprogramar/editar reserva
+POST   /reservas/:id/confirmar         # Confirmar reserva (admin/superadmin)
 POST   /reservas/:id/cancelar          # Cancelar reserva
 ```
 
-### Endpoints Administrativos
+### Endpoints Administrativos (Panel)
 ```
-GET    /reservas                       # Listar todas las reservas
-DELETE /reservas/:id                   # Eliminar reserva
+GET    /reservas/admin/cancha/:canchaId     # Reservas por cancha (panel admin)
+GET    /reservas/admin/usuario/:usuarioId   # Reservas por usuario (panel admin)  
+POST   /reservas/admin/crear                # Crear reserva como administrador
+POST   /reservas/admin/:id/cancelar         # Cancelar reserva como administrador
 ```
 
 ## Validaciones de Negocio
@@ -129,19 +128,35 @@ DELETE /reservas/:id                   # Eliminar reserva
 
 ## Ejemplos de Uso
 
-### Verificar disponibilidad
+### Cotizar reserva (nuevo)
 ```bash
-POST /reservas/verificar-disponibilidad
+POST /reservas/cotizar
 Content-Type: application/json
 
 {
-  "canchaId": 1,
-  "fechaInicio": "2024-12-20T10:00:00Z",
-  "fechaFin": "2024-12-20T12:00:00Z"
+  "id_cancha": 1,
+  "fecha": "2025-10-21",
+  "inicio": "19:00",
+  "fin": "20:30",
+  "cupon": "OCT-10"
 }
 ```
 
-### Crear nueva reserva
+### Crear nueva reserva (formato actualizado)
+```bash
+POST /reservas
+Content-Type: application/json
+
+{
+  "id_cancha": 1,
+  "fecha": "2025-10-21",
+  "inicio": "19:00", 
+  "fin": "20:30",
+  "notas": "Partido amistoso"
+}
+```
+
+### Crear nueva reserva (formato legacy - compatible)
 ```bash
 POST /reservas
 Content-Type: application/json
@@ -156,14 +171,11 @@ Content-Type: application/json
 }
 ```
 
-### Confirmar pago
+### Confirmar reserva (admin)
 ```bash
-POST /reservas/456/confirmar-pago
+POST /reservas/456/confirmar
 Content-Type: application/json
-
-{
-  "metodoPago": "tarjeta"
-}
+Authorization: Bearer <admin_token>
 ```
 
 ### Cancelar reserva
@@ -176,18 +188,40 @@ Content-Type: application/json
 }
 ```
 
-### Obtener reservas de usuario
+### Mis reservas
 ```bash
-GET /reservas/usuario/123?incluirPasadas=false
+GET /reservas/mias
+Authorization: Bearer <token>
+```
+
+### Crear reserva como admin
+```bash
+POST /reservas/admin/crear
+Content-Type: application/json
+Authorization: Bearer <admin_token>
+
+{
+  "id_usuario": 40,
+  "id_cancha": 7,
+  "fecha": "2025-10-22",
+  "inicio": "18:00",
+  "fin": "19:00"
+}
 ```
 
 ## Flujo de Reserva Típico
 
-1. **Usuario verifica disponibilidad** → `POST /verificar-disponibilidad`
+1. **Usuario cotiza reserva** → `POST /reservas/cotizar` (obtiene precio)
 2. **Usuario crea reserva** → `POST /reservas` (estado: pendiente)
-3. **Usuario confirma pago** → `POST /:id/confirmar-pago` (estado: confirmada)
+3. **Admin confirma reserva** → `POST /reservas/:id/confirmar` (estado: confirmada)
 4. **Sistema marca como completada** → automático después del horario
-5. **Opcional: Usuario cancela** → `POST /:id/cancelar` (estado: cancelada)
+5. **Opcional: Usuario cancela** → `POST /reservas/:id/cancelar` (estado: cancelada)
+
+## Flujo Administrativo
+
+1. **Admin crea reserva directa** → `POST /reservas/admin/crear` (para cualquier usuario)
+2. **Admin consulta reservas por cancha** → `GET /reservas/admin/cancha/:id`
+3. **Admin cancela si es necesario** → `POST /reservas/admin/:id/cancelar`
 
 ## Integración con FastAPI
 

@@ -83,10 +83,28 @@ export class ReservasController {
    */
   create = async (req: Request, res: Response) => {
     try {
+      // Soporte para ambos formatos: timestamp completo y fecha + hora
+      let fechaInicio: Date, fechaFin: Date;
+      
+      if (req.body.fechaInicio && req.body.fechaFin) {
+        // Formato timestamp completo (legacy)
+        fechaInicio = new Date(req.body.fechaInicio);
+        fechaFin = new Date(req.body.fechaFin);
+      } else if (req.body.fecha && req.body.inicio && req.body.fin) {
+        // Formato fecha + hora separada (nuevo, como Taller4)
+        fechaInicio = new Date(`${req.body.fecha}T${req.body.inicio}:00.000Z`);
+        fechaFin = new Date(`${req.body.fecha}T${req.body.fin}:00.000Z`);
+      } else {
+        return res.status(400).json(fail(400, "Debe proporcionar fechaInicio/fechaFin o fecha/inicio/fin"));
+      }
+      
       const input = {
-        ...req.body,
-        fechaInicio: new Date(req.body.fechaInicio),
-        fechaFin: new Date(req.body.fechaFin),
+        usuarioId: req.body.id_usuario || (req as any).user?.id_usuario,
+        canchaId: req.body.id_cancha || req.body.canchaId,
+        fechaInicio,
+        fechaFin,
+        metodoPago: req.body.metodoPago,
+        notas: req.body.notas,
       };
       
       const reserva = await this.createReservaUC.execute(input);
@@ -104,12 +122,17 @@ export class ReservasController {
     try {
       const input = { ...req.body };
       
-      // Convertir fechas si están presentes
+      // Soporte para ambos formatos de fecha
       if (req.body.fechaInicio) {
         input.fechaInicio = new Date(req.body.fechaInicio);
+      } else if (req.body.fecha && req.body.inicio) {
+        input.fechaInicio = new Date(`${req.body.fecha}T${req.body.inicio}:00.000Z`);
       }
+      
       if (req.body.fechaFin) {
         input.fechaFin = new Date(req.body.fechaFin);
+      } else if (req.body.fecha && req.body.fin) {
+        input.fechaFin = new Date(`${req.body.fecha}T${req.body.fin}:00.000Z`);
       }
       
       const reserva = await this.updateReservaUC.execute(Number(req.params.id), input);
@@ -159,15 +182,54 @@ export class ReservasController {
 
   /**
    * Obtiene reservas de un usuario específico.
-   * GET /reservas/usuario/:usuarioId
+   * GET /reservas/usuario/:usuarioId o GET /reservas/mias
    */
   getByUsuario = async (req: Request, res: Response) => {
     try {
-      const usuarioId = Number(req.params.usuarioId);
+      // Para el endpoint /mias, usar el ID del usuario autenticado
+      const usuarioId = req.params.usuarioId ? 
+        Number(req.params.usuarioId) : 
+        (req as any).user?.id_usuario;
+      
+      if (!usuarioId) {
+        return res.status(400).json(fail(400, "Usuario no identificado"));
+      }
+      
       const incluirPasadas = req.query.incluirPasadas === 'true';
       
       const reservas = await this.getReservasByUsuarioUC.execute(usuarioId, incluirPasadas);
       res.json(ok(reservas));
+    } catch (e: any) {
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details));
+    }
+  };
+
+  /**
+   * Cotiza el precio de una reserva.
+   * POST /reservas/cotizar
+   */
+  cotizar = async (req: Request, res: Response) => {
+    try {
+      const { id_cancha, fecha, inicio, fin, cupon } = req.body;
+      
+      if (!id_cancha || !fecha || !inicio || !fin) {
+        return res.status(400).json(fail(400, "id_cancha, fecha, inicio y fin son requeridos"));
+      }
+      
+      // Construir fechas ISO string para la cotización
+      const fechaInicio = `${fecha}T${inicio}:00`;
+      const fechaFin = `${fecha}T${fin}:00`;
+      
+      // Simular respuesta de cotización hasta que se implemente el caso de uso
+      const cotizacion = {
+        moneda: "CLP",
+        subtotal: 12000.0,
+        descuento: cupon ? 2000.0 : 0.0,
+        total: cupon ? 10000.0 : 12000.0,
+        detalle: cupon ? `Descuento aplicado con cupón: ${cupon}` : "Precio base por hora"
+      };
+      
+      res.json(ok(cotizacion));
     } catch (e: any) {
       res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details));
     }
