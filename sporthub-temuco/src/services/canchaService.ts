@@ -73,11 +73,11 @@ const adaptCanchaFromBackend = (backendCancha: any) => {
  * 
  * SCHEMA EXACTO según API de FastAPI para CREATE:
  * {
- *   "id_complejo": number (required),
  *   "nombre": string (required),
- *   "id_deporte": number (optional),
- *   "deporte": string (optional),
- *   "cubierta": boolean (optional, default: false)
+ *   "id_complejo": number (required),
+ *   "deporte": string (required),
+ *   "cubierta": boolean (required),
+ *   "id_deporte": number (optional)
  * }
  * 
  * UPDATE (CanchaUpdateIn):
@@ -91,31 +91,22 @@ const adaptCanchaToBackend = (frontendCancha: CreateCanchaInput | UpdateCanchaIn
 
   // === CAMPOS PARA CREATE ===
   if (!isUpdate) {
-    // id_complejo - REQUERIDO para CREATE
-    if ((frontendCancha as any).establecimientoId !== undefined) {
-      payload.id_complejo = (frontendCancha as any).establecimientoId;
-    }
+    payload.nombre = frontendCancha.nombre;
 
-    // nombre - REQUERIDO para CREATE
-    if (frontendCancha.nombre !== undefined) {
-      payload.nombre = frontendCancha.nombre;
-    }
-
-    // id_deporte - OPCIONAL
-    if ((frontendCancha as any).id_deporte !== undefined) {
-      payload.id_deporte = (frontendCancha as any).id_deporte;
-    }
-
-    // deporte - OPCIONAL (nombre del deporte)
     if ((frontendCancha as any).tipo !== undefined) {
       payload.deporte = (frontendCancha as any).tipo;
     }
 
-    // cubierta - OPCIONAL (default: false)
-    if ((frontendCancha as any).techada !== undefined) {
-      payload.cubierta = (frontendCancha as any).techada;
-    } else {
-      payload.cubierta = false; // Default explícito
+    if ((frontendCancha as any).establecimientoId !== undefined) {
+      payload.id_complejo = Number((frontendCancha as any).establecimientoId);
+    }
+
+    payload.cubierta = (frontendCancha as any).techada !== undefined 
+      ? (frontendCancha as any).techada 
+      : false;
+
+    if ((frontendCancha as any).id_deporte !== undefined && (frontendCancha as any).id_deporte !== 0) {
+      payload.id_deporte = (frontendCancha as any).id_deporte;
     }
   }
 
@@ -144,6 +135,26 @@ const adaptCanchaToBackend = (frontendCancha: CreateCanchaInput | UpdateCanchaIn
     // activo - OPCIONAL
     if ((frontendCancha as any).activa !== undefined) {
       payload.activo = (frontendCancha as any).activa;
+    }
+
+    // precioPorHora - OPCIONAL
+    if ((frontendCancha as any).precioPorHora !== undefined) {
+      payload.precioPorHora = (frontendCancha as any).precioPorHora;
+    }
+
+    // capacidad - OPCIONAL
+    if ((frontendCancha as any).capacidad !== undefined) {
+      payload.capacidad = (frontendCancha as any).capacidad;
+    }
+
+    // descripcion - OPCIONAL
+    if ((frontendCancha as any).descripcion !== undefined) {
+      payload.descripcion = (frontendCancha as any).descripcion;
+    }
+
+    // imagenUrl - OPCIONAL
+    if ((frontendCancha as any).imagenUrl !== undefined) {
+      payload.imagenUrl = (frontendCancha as any).imagenUrl;
     }
   }
 
@@ -214,53 +225,34 @@ export const canchaService = {
    */
   async createCancha(input: CreateCanchaInput) {
     try {
-      // Verificar estado de autenticación antes de enviar
-      const token = typeof window !== 'undefined' ? (localStorage.getItem('access_token') || localStorage.getItem('token')) : null;
-      console.log('🔐 [canchaService] Estado de autenticación:', {
-        hasToken: !!token,
-        tokenLength: token?.length,
-        tokenPreview: token ? `${token.substring(0, 30)}...` : 'No token'
-      });
+      const backendData = adaptCanchaToBackend(input, false);
+      console.log('📤 [canchaService] Creando cancha:', { nombre: input.nombre, tipo: input.tipo, payload: backendData });
       
-      const backendData = adaptCanchaToBackend(input, false); // false = CREATE
-      console.log('📤 [canchaService] Enviando datos para crear cancha:', backendData);
-      console.log('📤 [canchaService] Input original:', input);
-      
-      // 🔥 CORREGIDO: Endpoint es /canchas (no /admin/canchas)
-      // El control de permisos lo hace el middleware authMiddleware + requireRole
       const response = await apiBackend.post('/canchas', backendData);
       
-      console.log('📥 [canchaService] Respuesta completa del backend:', {
-        status: response.status,
-        statusText: response.statusText,
-        data: response.data,
-        headers: response.headers
-      });
-      
-      // Adaptar la respuesta
       let canchaData = response.data;
       if (response.data?.data) {
         canchaData = response.data.data;
       }
       
-      console.log('✅ [canchaService] Cancha creada exitosamente:', canchaData);
+      console.log('✅ [canchaService] Cancha creada:', canchaData.nombre);
       return adaptCanchaFromBackend(canchaData);
     } catch (error: any) {
-      console.error('❌ [canchaService] Error al crear cancha:', {
-        message: error.message,
-        response: error.response,
-        responseData: error.response?.data,
-        responseDataType: typeof error.response?.data,
-        responseDataKeys: error.response?.data ? Object.keys(error.response.data) : [],
-        responseDataFull: JSON.stringify(error.response?.data, null, 2),
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        config: error.config
-      });
+      console.error('❌ [canchaService] Error:', error.message);
       
-      // Extraer el mensaje de error más específico
-      const errorDetail = error.response?.data?.error || error.response?.data;
-      const errorMsg = errorDetail?.message || errorDetail?.detail || error.message || 'Error desconocido al crear la cancha';
+      // Si el error ya tiene un mensaje válido del interceptor, usarlo directamente
+      if (error.message && error.message !== '[object Object]') {
+        throw error;
+      }
+      
+      // Si no, intentar extraer del response
+      let errorMsg = 'Error desconocido al crear la cancha';
+      
+      if (error.response?.data) {
+        const data = error.response.data;
+        errorMsg = typeof data === 'string' ? data : (data.detail || data.error || data.message || data.msg || JSON.stringify(data));
+      }
+      
       throw new Error(errorMsg);
     }
   },

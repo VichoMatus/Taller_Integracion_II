@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { superAdminService } from '@/services/superAdminService';
 import { Usuario, UserDisplay } from '@/types/usuarios';
 import { useSuperAdminProtection } from '@/hooks/useSuperAdminProtection';
-import '@/app/admin/dashboard.css';
 
 const ITEMS_PER_PAGE = 10;
 

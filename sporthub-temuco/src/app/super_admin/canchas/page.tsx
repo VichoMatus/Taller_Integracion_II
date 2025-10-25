@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { canchaService } from '@/services/canchaService';
-import '@/app/admin/dashboard.css';
+import { complejosService } from '@/services/complejosService';
 
 interface Court {
   id: string;
@@ -19,59 +19,92 @@ export default function CanchasPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [courts, setCourts] = useState<Court[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const itemsPerPage = 4;
+  const itemsPerPage = 10;
 
-  // 🔥 NUEVO: Cargar canchas reales de la API
-  useEffect(() => {
-    const loadCourts = async () => {
-      try {
-        setIsLoading(true);
-        console.log('🔍 Cargando canchas desde la API...');
+  // Función de carga separada para poder reutilizarla
+  const loadCourts = async () => {
+    try {
+      setIsLoading(true);
+      
+      const canchasFromApi = await canchaService.getCanchas();
+      const complejosResponse = await complejosService.getComplejos();
+      
+      // La respuesta puede ser un array directamente o un objeto con data/items
+      let complejosFromApi: any[] = [];
+      if (Array.isArray(complejosResponse)) {
+        complejosFromApi = complejosResponse;
+      } else if (complejosResponse?.data && Array.isArray(complejosResponse.data)) {
+        complejosFromApi = complejosResponse.data;
+      } else if (complejosResponse?.items && Array.isArray(complejosResponse.items)) {
+        complejosFromApi = complejosResponse.items;
+      } else if (complejosResponse && typeof complejosResponse === 'object') {
+        // Si es un objeto, intentar obtener el primer array que encontremos
+        const values = Object.values(complejosResponse);
+        const arrayValue = values.find(v => Array.isArray(v));
+        if (arrayValue) {
+          complejosFromApi = arrayValue as any[];
+        }
+      }
+      
+      // Crear un mapa de complejos por ID para acceso rápido
+      const complejosMap = new Map<number, { nombre: string; direccion: string }>(
+        complejosFromApi.map((complejo: any) => {
+          const complejoId = complejo.id || complejo.id_complejo || complejo.idComplejo;
+          const direccion = complejo.direccion || complejo.address || 'Sin dirección';
+          return [
+            complejoId,
+            { nombre: complejo.nombre, direccion: direccion }
+          ];
+        })
+      );
+      
+      // Adaptar datos de la API al formato del frontend
+      const adaptedCourts: Court[] = canchasFromApi.map((cancha: any) => {
+        const complejo = complejosMap.get(cancha.establecimientoId);
+        const location = complejo 
+          ? `${complejo.nombre} - ${complejo.direccion}`
+          : `Establecimiento ${cancha.establecimientoId}`;
         
-        const canchasFromApi = await canchaService.getCanchas();
-        console.log('✅ Canchas cargadas:', canchasFromApi);
-        
-        // Adaptar datos de la API al formato del frontend
-        const adaptedCourts: Court[] = canchasFromApi.map((cancha: any) => ({
+        return {
           id: cancha.id.toString(),
           name: cancha.nombre,
-          location: `Establecimiento ${cancha.establecimientoId}`,
+          location: location,
           status: cancha.activa ? 'Activo' : 'Inactivo',
           type: cancha.tipo
-        }));
-        
-        setCourts(adaptedCourts);
-      } catch (error: any) {
-        console.error('❌ Error cargando canchas:', error);
-        // Mantener datos de ejemplo como fallback
-        setCourts([
-          { id: '1', name: 'Cancha Central', location: 'Av. Principal 123', status: 'Activo', type: 'Futbol' },
-          { id: '2', name: 'Cancha Sur', location: 'Av. Sur 456', status: 'Inactivo', type: 'Futbol' },
-          { id: '3', name: 'Cancha Norte', location: 'Av. Norte 789', status: 'Por revisar', type: 'Tenis' },
-          { id: '4', name: 'Cancha Este', location: 'Av. Este 321', status: 'Activo', type: 'Voleibol' },
-        ]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+        };
+      });
+      
+      setCourts(adaptedCourts);
+    } catch (error: any) {
+      console.error('❌ Error cargando canchas:', error);
+      alert('Error al cargar las canchas: ' + error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  // Cargar canchas al montar el componente
+  useEffect(() => {
     loadCourts();
   }, []);
 
   const editCourt = (courtId: string) => {
-    router.push(`/super_admin/canchas/${courtId}`);
+    router.push(`/super_admin/canchas/editar/${courtId}`);
   };
 
-  // Filtrar canchas basado en búsqueda
+  // Filtrar canchas basado en búsqueda (nombre Y ubicación)
   const filteredCourts = courts.filter(court => {
-    const matchesSearch = court.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         court.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = court.name.toLowerCase().includes(searchLower) ||
+                         court.location.toLowerCase().includes(searchLower) ||
+                         court.type.toLowerCase().includes(searchLower);
     return matchesSearch;
   });
 
   // Paginación
   const totalPages = Math.ceil(filteredCourts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
   const paginatedCourts = filteredCourts.slice(startIndex, startIndex + itemsPerPage);
 
   if (isLoading) {
@@ -104,7 +137,7 @@ export default function CanchasPage() {
             Exportar informe
           </button>
           
-          <button className="export-button" onClick={() => router.push('/super_admin/canchas/nueva')}>
+          <button className="export-button" onClick={() => router.push('/super_admin/canchas/crear')}>
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
@@ -133,6 +166,16 @@ export default function CanchasPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
+            
+            {/* Botón Refrescar */}
+            <button 
+              className="btn-filtrar"
+              onClick={loadCourts}
+              disabled={isLoading}
+              style={{ marginRight: '10px' }}
+            >
+              {isLoading ? 'Cargando...' : '🔄 Refrescar'}
+            </button>
             
             {/* Filtro */}
             <button className="btn-filtrar">
@@ -210,12 +253,12 @@ export default function CanchasPage() {
         {/* Paginación */}
         <div className="admin-pagination-container">
           <div className="admin-pagination-info">
-            mostrando {startIndex + 1} de {Math.min(startIndex + itemsPerPage, filteredCourts.length)} canchas
+            mostrando {startIndex + 1} - {Math.min(endIndex, filteredCourts.length)} de {filteredCourts.length} canchas
           </div>
           
           <div className="admin-pagination-controls">
             <button
-              onClick={() => setCurrentPage((prev: number) => Math.max(prev - 1, 1))}
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
               className="btn-pagination"
             >
@@ -235,7 +278,7 @@ export default function CanchasPage() {
             </div>
             
             <button
-              onClick={() => setCurrentPage((prev: number) => Math.min(prev + 1, totalPages))}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
               className="btn-pagination"
             >
