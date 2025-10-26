@@ -19,7 +19,13 @@ const getBackendUrl = () => {
     return process.env.NEXT_PUBLIC_BACKEND_URL;
   }
   
-  // 🚨 HARDCODE TEMPORAL: Para resolver problemas de caché en producción
+  // � DESARROLLO LOCAL: Si NODE_ENV es development, siempre usar localhost
+  if (process.env.NODE_ENV === 'development') {
+    console.log('💻 [getBackendUrl] DESARROLLO LOCAL → localhost:4000');
+    return 'http://localhost:4000';
+  }
+  
+  // �🚨 HARDCODE TEMPORAL: Para resolver problemas de caché en producción
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
     console.log('🌐 Cliente hostname:', hostname);
@@ -122,13 +128,6 @@ apiBackend.interceptors.response.use(
       hasOkProperty: response.data && typeof response.data === 'object' && 'ok' in response.data
     });
 
-    // Para el endpoint de reservas, dejar pasar la respuesta sin procesar
-    // La API devuelve directamente un array, no un objeto con { ok, data }
-    if (response.config.url?.includes('/reservas')) {
-      console.log('[apiBackend] Respuesta de reservas (sin procesar):', response.data);
-      return response;
-    }
-
     // Para contraseñas, SIEMPRE devolver la respuesta tal cual
     if (response.config.url?.includes('/password')) {
       return response;
@@ -136,6 +135,14 @@ apiBackend.interceptors.response.use(
     
     // Si el BFF retorna { ok: true, data: ... }, extraer los datos
     if (response.data && typeof response.data === 'object' && 'ok' in response.data) {
+      console.log('🔍 [apiBackend] Respuesta con estructura {ok, data}:', {
+        ok: response.data.ok,
+        hasData: 'data' in response.data,
+        dataType: typeof response.data.data,
+        dataKeys: response.data.data ? Object.keys(response.data.data) : [],
+        fullResponse: response.data
+      });
+      
       if (response.data.ok === false) {
         // Extraer mensaje de error del objeto
         let errorMessage = 'Error del servidor';
@@ -150,12 +157,19 @@ apiBackend.interceptors.response.use(
         }
         
         console.error('❌ [apiBackend] Error del BFF:', errorMessage, response.data);
-        throw new Error(errorMessage);
+        
+        // 🔥 IMPORTANTE: Preservar el objeto response para que el código pueda detectar el status
+        const error = new Error(errorMessage) as any;
+        error.response = response;
+        error.status = response.status;
+        throw error;
       }
       // Retornar los datos útiles
+      const extractedData = response.data.data || response.data;
+      console.log('✅ [apiBackend] Datos extraídos:', extractedData);
       return {
         ...response,
-        data: response.data.data || response.data
+        data: extractedData
       };
     }
     

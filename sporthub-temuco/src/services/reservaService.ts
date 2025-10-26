@@ -24,7 +24,7 @@ export const reservaService = {
    */
   async getReservas(filters?: ReservaFilters): Promise<Reserva[]> {
     try {
-      const { data } = await apiBackend.get('/api/reservas', { params: filters });
+      const { data } = await apiBackend.get('/reservas', { params: filters });
       return data;
     } catch (err) {
       handleApiError(err);
@@ -37,7 +37,7 @@ export const reservaService = {
    */
   async getReservaById(id: number): Promise<Reserva> {
     try {
-      const { data } = await apiBackend.get(`/api/reservas/${id}`);
+      const { data } = await apiBackend.get(`/reservas/${id}`);
       return data;
     } catch (err) {
       handleApiError(err);
@@ -50,7 +50,7 @@ export const reservaService = {
    */
   async createReserva(input: CreateReservaInput | CreateReservaInputNew): Promise<Reserva> {
     try {
-      const { data } = await apiBackend.post('/api/reservas', input);
+      const { data } = await apiBackend.post('/reservas', input);
       return data;
     } catch (err) {
       handleApiError(err);
@@ -62,7 +62,7 @@ export const reservaService = {
    */
   async cotizarReserva(input: CotizacionInputNew): Promise<CotizacionResponseNew> {
     try {
-      const { data } = await apiBackend.post('/api/reservas/cotizar', input);
+      const { data } = await apiBackend.post('/reservas/cotizar', input);
       return data;
     } catch (err) {
       handleApiError(err);
@@ -75,7 +75,7 @@ export const reservaService = {
    */
   async updateReserva(id: number, input: UpdateReservaInput | UpdateReservaInputNew): Promise<Reserva> {
     try {
-      const { data } = await apiBackend.patch(`/api/reservas/${id}`, input);
+      const { data } = await apiBackend.patch(`/reservas/${id}`, input);
       return data;
     } catch (err) {
       handleApiError(err);
@@ -84,7 +84,7 @@ export const reservaService = {
 
   async deleteReserva(id: number): Promise<void> {
     try {
-      await apiBackend.delete(`/api/v1/reservas/${id}`);
+      await apiBackend.delete(`/reservas/${id}`);
     } catch (err) {
       handleApiError(err);
     }
@@ -94,13 +94,13 @@ export const reservaService = {
 
   /**
    * Obtener mis reservas (usuario autenticado)
-   * Actualizado para usar el nuevo endpoint /api/reservas/mias
+   * Actualizado para usar el nuevo endpoint /reservas/mias
    */
   async getMisReservas(): Promise<Reserva[]> {
     try {
-      console.log("Intentando acceder a endpoint actualizado:", '/api/reservas/mias');
+      console.log("Intentando acceder a endpoint actualizado:", '/reservas/mias');
       
-      const { data } = await apiBackend.get('/api/reservas/mias');
+      const { data } = await apiBackend.get('/reservas/mias');
       
       console.log("Respuesta mis reservas (endpoint actualizado):", data);
       return Array.isArray(data) ? data : (data.items || data.data || []);
@@ -124,7 +124,7 @@ export const reservaService = {
    */
   async confirmarReserva(id: number): Promise<ConfirmarReservaResponse> {
     try {
-      const { data } = await apiBackend.post(`/api/reservas/${id}/confirmar`);
+      const { data } = await apiBackend.post(`/reservas/${id}/confirmar`);
       return data;
     } catch (err) {
       handleApiError(err);
@@ -133,7 +133,7 @@ export const reservaService = {
 
   async checkInReserva(id: number): Promise<CheckInResponse> {
     try {
-      const { data } = await apiBackend.post(`/api/reservas/${id}/check-in`);
+      const { data } = await apiBackend.post(`/reservas/${id}/check-in`);
       return data;
     } catch (err) {
       handleApiError(err);
@@ -142,7 +142,7 @@ export const reservaService = {
 
   async noShowReserva(id: number): Promise<NoShowResponse> {
     try {
-      const { data } = await apiBackend.post(`/api/reservas/${id}/no-show`);
+      const { data } = await apiBackend.post(`/reservas/${id}/no-show`);
       return data;
     } catch (err) {
       handleApiError(err);
@@ -151,7 +151,7 @@ export const reservaService = {
 
   async cancelarReserva(id: number): Promise<Reserva> {
     try {
-      const { data } = await apiBackend.post(`/api/reservas/${id}/cancelar`);
+      const { data } = await apiBackend.post(`/reservas/${id}/cancelar`);
       return data;
     } catch (err) {
       handleApiError(err);
@@ -168,11 +168,17 @@ export const reservaService = {
    */
   async getAdminReservas(filters?: ReservaFilters): Promise<Reserva[]> {
     try {
-      // TODO: Cambiar a /admin/reservas cuando el backend corrija el bug de req.user.sub
-      // Temporalmente usando /reservas (muestra todas las reservas)
+      console.log('🔍 [getAdminReservas] Iniciando petición con filtros:', filters);
+      console.log('🔍 [getAdminReservas] URL base:', apiBackend.defaults.baseURL);
+      console.log('🔍 [getAdminReservas] Ruta:', '/reservas');
+      console.log('🔍 [getAdminReservas] URL completa esperada:', `${apiBackend.defaults.baseURL}/reservas`);
+      
       const { data } = await apiBackend.get('/reservas', { params: filters });
+      
+      console.log('✅ [getAdminReservas] Respuesta recibida:', data);
       return data;
     } catch (err) {
+      console.error('❌ [getAdminReservas] Error capturado:', err);
       handleApiError(err);
     }
   },
@@ -222,7 +228,7 @@ export const reservaService = {
    */
   async createReservaAdmin(input: CreateReservaInput): Promise<Reserva> {
     try {
-      const { data } = await apiBackend.post('/api/reservas/admin/crear', input);
+      const { data } = await apiBackend.post('/reservas/admin/crear', input);
       return data;
     } catch (err) {
       handleApiError(err);
@@ -235,7 +241,7 @@ export const reservaService = {
    */
   async cancelarReservaAdmin(id: number): Promise<Reserva> {
     try {
-      const { data } = await apiBackend.post(`/api/reservas/admin/${id}/cancelar`);
+      const { data } = await apiBackend.post(`/reservas/admin/${id}/cancelar`);
       return data;
     } catch (err) {
       handleApiError(err);
@@ -248,7 +254,7 @@ export const reservaService = {
    */
   async deleteReservaAdmin(id: number): Promise<void> {
     try {
-      await apiBackend.delete(`/api/reservas/${id}`);
+      await apiBackend.delete(`/reservas/${id}`);
     } catch (err) {
       handleApiError(err);
     }
@@ -264,7 +270,7 @@ export const reservaService = {
    */
   async getReservasStatus(): Promise<any> {
     try {
-      const { data } = await apiBackend.get('/api/reservas/status');
+      const { data } = await apiBackend.get('/reservas/status');
       return data;
     } catch (err) {
       console.warn('No se pudo obtener el estado del módulo reservas:', err);

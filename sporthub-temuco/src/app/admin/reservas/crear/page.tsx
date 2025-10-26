@@ -52,9 +52,14 @@ export default function CreateReservaPage() {
       setLoading(true);
       setError(null);
       
-      // TEMPORAL: Cargar todas las canchas
-      // TODO: Cuando FastAPI tenga GET /admin/canchas, filtrar solo las del admin
-      const canchasData = await canchaService.getCanchas();
+      // ✅ ACTUALIZADO: Usar endpoint de admin que filtra automáticamente por complejo del admin
+      const result = await canchaService.getCanchasAdmin({
+        incluir_inactivas: false, // Solo canchas activas para crear reservas
+        sort_by: 'nombre',
+        order: 'asc'
+      });
+      
+      const canchasData = result.items || [];
       
       if (canchasData && canchasData.length > 0) {
         setCanchas(canchasData);

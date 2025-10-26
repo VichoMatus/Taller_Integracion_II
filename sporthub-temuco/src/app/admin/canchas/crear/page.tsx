@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { canchaService } from '@/services/canchaService';
 import { complejosService } from '@/services/complejosService';
-import { apiBackend } from '@/config/backend';
 import '@/app/admin/dashboard.css';
 
 // Tipos de cancha disponibles (mantenemos en minúscula como el backend)
@@ -71,7 +70,7 @@ export default function NuevaCanchaPage() {
       setUserId(adminId);
       console.log('👤 [CrearCancha] Cargando complejos del admin ID:', adminId);
 
-      // Cargar complejos del administrador
+      // 🔥 CORREGIDO: El servicio ahora usa /complejos/duenio/:id y requiere el adminId
       const complejosData = await complejosService.getComplejosByAdmin(adminId);
       
       console.log('📋 [CrearCancha] Complejos cargados:', complejosData);
@@ -154,29 +153,21 @@ export default function NuevaCanchaPage() {
         throw new Error('La capacidad debe ser al menos 1');
       }
 
-      // TODO: Volver a usar /admin/canchas cuando backend corrija req.user.sub
-      // Temporalmente usando /canchas (no valida permisos de dueño)
-      console.log('📤 Enviando datos al endpoint temporal:', {
+      // ✅ ACTUALIZADO: Usar método del servicio que usa el endpoint correcto POST /api/canchas
+      console.log('📤 Creando cancha con datos:', formData);
+
+      const nuevaCancha = await canchaService.createCancha({
         nombre: formData.nombre.trim(),
         tipo: formData.tipo,
         techada: formData.techada,
-        id_complejo: formData.establecimientoId,
-        precio_hora: formData.precioPorHora,
+        establecimientoId: formData.establecimientoId,
+        precioPorHora: formData.precioPorHora,
         capacidad: formData.capacidad,
-        descripcion: formData.descripcion.trim() || undefined
+        descripcion: formData.descripcion.trim() || undefined,
+        activa: true
       });
 
-      const response = await apiBackend.post('/canchas', {
-        nombre: formData.nombre.trim(),
-        tipo: formData.tipo,
-        techada: formData.techada,
-        id_complejo: formData.establecimientoId,
-        precio_hora: formData.precioPorHora,
-        capacidad: formData.capacidad,
-        descripcion: formData.descripcion.trim() || undefined
-      });
-
-      console.log('✅ Cancha creada exitosamente:', response.data);
+      console.log('✅ Cancha creada exitosamente:', nuevaCancha);
       
       setSuccess('Cancha creada exitosamente');
       
@@ -187,7 +178,13 @@ export default function NuevaCanchaPage() {
 
     } catch (err: any) {
       console.error('❌ Error al crear cancha:', err);
-      setError(err.message || 'Error al crear la cancha. Por favor, intenta nuevamente.');
+      
+      // 🔥 Validación específica para error 403 (complejo no pertenece al admin)
+      if (err.response?.status === 403) {
+        setError('❌ Este complejo no te pertenece. Solo puedes crear canchas en tus propios complejos deportivos.');
+      } else {
+        setError(err.message || 'Error al crear la cancha. Por favor, intenta nuevamente.');
+      }
     } finally {
       setIsLoading(false);
     }

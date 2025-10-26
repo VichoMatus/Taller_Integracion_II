@@ -22,15 +22,29 @@ export default function ReservasPage() {
       setLoading(true);
       setError(null);
       
+      console.log('🔍 [loadReservas] Llamando a getAdminReservas()...');
       const response: any = await reservaService.getAdminReservas();
       
-      console.log("📥 Respuesta completa del servidor:", response);
+      console.log("📥 [loadReservas] Respuesta completa del servidor:", response);
+      console.log("📥 [loadReservas] Tipo de response:", typeof response);
+      console.log("📥 [loadReservas] Es array?:", Array.isArray(response));
+      console.log("📥 [loadReservas] Keys:", response ? Object.keys(response) : 'null/undefined');
       
       // Manejar diferentes formatos de respuesta
       let reservasArray = [];
       
+      // Array directo (lo más probable después del interceptor)
+      if (Array.isArray(response)) {
+        reservasArray = response;
+        console.log("✅ Formato detectado: Array directo");
+      }
+      // Formato con items: { items: [...], total, page, pageSize }
+      else if (response?.items && Array.isArray(response.items)) {
+        reservasArray = response.items;
+        console.log("✅ Formato detectado: Paginación con items");
+      } 
       // Formato envelope del BFF con paginación: { ok: true, data: { items: [...], page, pageSize, total } }
-      if (response?.ok && response?.data?.items && Array.isArray(response.data.items)) {
+      else if (response?.ok && response?.data?.items && Array.isArray(response.data.items)) {
         reservasArray = response.data.items;
         console.log("✅ Formato detectado: Envelope BFF con paginación");
       }
@@ -39,16 +53,6 @@ export default function ReservasPage() {
         reservasArray = response.data;
         console.log("✅ Formato detectado: Envelope BFF con array directo");
       }
-      // Formato directo con items: { items: [...] }
-      else if (response?.items && Array.isArray(response.items)) {
-        reservasArray = response.items;
-        console.log("✅ Formato detectado: Paginación directa");
-      } 
-      // Array directo de FastAPI
-      else if (Array.isArray(response)) {
-        reservasArray = response;
-        console.log("✅ Formato detectado: Array directo");
-      } 
       // Formato con data: { data: [...] }
       else if (response?.data && Array.isArray(response.data)) {
         reservasArray = response.data;
@@ -56,7 +60,8 @@ export default function ReservasPage() {
       }
       else {
         console.warn('⚠️ Formato inesperado de respuesta:', response);
-        console.warn('Estructura:', Object.keys(response || {}));
+        console.warn('⚠️ Estructura:', Object.keys(response || {}));
+        console.warn('⚠️ Contenido completo:', JSON.stringify(response, null, 2));
         reservasArray = [];
       }
       
@@ -68,7 +73,9 @@ export default function ReservasPage() {
         setError('No hay reservas para mostrar. Las reservas aparecerán aquí.');
       }
     } catch (err: any) {
-      console.error('Error al cargar reservas:', err);
+      console.error('❌ Error al cargar reservas:', err);
+      console.error('❌ Error response:', err?.response);
+      console.error('❌ Error data:', err?.response?.data);
       
       // Extraer mensaje del error
       let errorMessage = 'Error al cargar reservas del servidor. Verifique su conexión.';

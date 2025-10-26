@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { canchaService } from '@/services/canchaService';
-import { apiBackend } from '@/config/backend';
 import { Cancha, UpdateCanchaInput, TipoCancha, EstadoCancha } from '@/types/cancha';
 import '../../dashboard.css';
 
@@ -73,11 +72,10 @@ export default function EditCourtPage() {
       
       console.log('💾 Guardando cambios de cancha:', formData);
       
-      // TODO: Volver a usar /admin/canchas/:id cuando backend corrija req.user.sub
-      // Temporalmente usando /canchas/:id (no valida permisos)
-      const response = await apiBackend.put(`/canchas/${courtId}`, formData);
+      // ✅ ACTUALIZADO: Usar método del servicio que usa el endpoint correcto PATCH /api/canchas/:id
+      const updatedCancha = await canchaService.updateCancha(parseInt(courtId), formData);
       
-      console.log('✅ Cancha actualizada exitosamente:', response.data);
+      console.log('✅ Cancha actualizada exitosamente:', updatedCancha);
       
       // Mostrar mensaje de éxito y redirigir
       alert('Cancha actualizada exitosamente. La lista se recargará.');
@@ -87,7 +85,7 @@ export default function EditCourtPage() {
       router.refresh(); // Forzar recarga de la página
     } catch (err: any) {
       console.error('❌ Error guardando cancha:', err);
-      const errorMessage = err.response?.data?.message || err.message || 'Error al guardar los cambios';
+      const errorMessage = err.message || 'Error al guardar los cambios';
       setError(errorMessage);
       alert(`Error: ${errorMessage}`);
     } finally {
