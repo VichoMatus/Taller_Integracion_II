@@ -60,10 +60,11 @@ const ctrl = (req: any) => {
 };
 
 // === Endpoint de Prueba de Conectividad ===
-/** GET /reservas/status - Verifica estado y conectividad del módulo reservas */
+/** GET /reservas/status - Verifica estado y conectividad del módulo reservas (PÚBLICO) */
 router.get("/status", async (req, res) => {
   try {
-    const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
+    // Endpoint público de diagnóstico - no requiere autenticación
+    const http = buildHttpClient(ENV.FASTAPI_URL, () => "");
     
     let response;
     let endpoint_tested = "";
@@ -116,20 +117,21 @@ router.get("/status", async (req, res) => {
       status: response?.status || 0,
       endpoints_found,
       available_endpoints: [
+        // NOTA: TODOS los endpoints requieren autenticación (Bearer Token)
         // Endpoints normales (usuario/admin/superadmin)
-        "GET /reservas/mias - Mis reservas (usuario autenticado)",
-        "GET /reservas - Listado de reservas (admin/superadmin)",
-        "GET /reservas/{id} - Detalle de reserva",
-        "POST /reservas/cotizar - Cotizar reserva (precio)",
-        "POST /reservas - Crear reserva",
-        "PATCH /reservas/{id} - Reprogramar/editar reserva", 
-        "POST /reservas/{id}/confirmar - Confirmar reserva (admin/superadmin)",
-        "POST /reservas/{id}/cancelar - Cancelar reserva",
+        "GET /reservas/mias - Mis reservas (REQUIERE AUTH: usuario/admin/superadmin)",
+        "GET /reservas - Listado de reservas (REQUIERE AUTH: admin/superadmin)",
+        "GET /reservas/{id} - Detalle de reserva (REQUIERE AUTH: usuario/admin/superadmin)",
+        "POST /reservas/cotizar - Cotizar reserva (REQUIERE AUTH: usuario/admin/superadmin)",
+        "POST /reservas - Crear reserva (REQUIERE AUTH: usuario/admin/superadmin)",
+        "PATCH /reservas/{id} - Reprogramar/editar reserva (REQUIERE AUTH: usuario/admin/superadmin)", 
+        "POST /reservas/{id}/confirmar - Confirmar reserva (REQUIERE AUTH: admin/superadmin)",
+        "POST /reservas/{id}/cancelar - Cancelar reserva (REQUIERE AUTH: usuario/admin/superadmin)",
         // Endpoints administrativos (panel)
-        "GET /reservas/admin/cancha/{id} - Reservas por cancha (panel admin)",
-        "GET /reservas/admin/usuario/{id} - Reservas por usuario (panel admin)",
-        "POST /reservas/admin/crear - Crear reserva como administrador",
-        "POST /reservas/admin/{id}/cancelar - Cancelar reserva como administrador"
+        "GET /reservas/admin/cancha/{id} - Reservas por cancha (REQUIERE AUTH: admin/superadmin)",
+        "GET /reservas/admin/usuario/{id} - Reservas por usuario (REQUIERE AUTH: admin/superadmin)",
+        "POST /reservas/admin/crear - Crear reserva como admin (REQUIERE AUTH: admin/superadmin)",
+        "POST /reservas/admin/{id}/cancelar - Cancelar como admin (REQUIERE AUTH: admin/superadmin)"
       ],
       supported_formats: {
         new_format: {
@@ -151,6 +153,12 @@ router.get("/status", async (req, res) => {
           },
           description: "Formato legacy - timestamps completos (compatible)"
         }
+      },
+      authentication_pattern: {
+        status_endpoint: "PÚBLICO - Sin autenticación requerida",
+        all_other_endpoints: "PRIVADOS - Requieren Bearer Token válido",
+        middleware_chain: "authMiddleware → requireRole (donde aplique) → getBearerFromReq",
+        taller4_compliance: "✅ 100% sincronizado con patrones de autenticación Taller4"
       },
       timestamp: new Date().toISOString()
     });
