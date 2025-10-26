@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import '@/app/admin/dashboard.css';
 import { superAdminService } from '@/services/superAdminService';
 import { Usuario } from '@/types/usuarios';
 

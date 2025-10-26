@@ -92,23 +92,9 @@ apiBackend.interceptors.request.use(
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('access_token') || localStorage.getItem('token');
       
-      // Log para debugging
-        console.log('🔐 [apiBackend] Interceptor request:', {
-        url: config.url,
-        method: config.method,
-        hasToken: !!token,
-        tokenPreview: token ? `${token.substring(0, 20)}...` : 'No token',
-        baseURL: config.baseURL
-      });      if (token) {
+      if (token) {
         config.headers.Authorization = `Bearer ${token}`;
-      } else {
-        console.warn('⚠️ [apiBackend] No se encontró token en localStorage para:', config.url);
       }
-    } else {
-      console.log('🖥️ [apiBackend] Request desde servidor SSR:', {
-        url: config.url,
-        baseURL: config.baseURL
-      });
     }
     
     return config;
@@ -119,17 +105,8 @@ apiBackend.interceptors.request.use(
 // Interceptor para manejar respuestas del BFF
 apiBackend.interceptors.response.use(
   (response) => {
-    // Log para debugging de respuestas
-    console.log('📥 [apiBackend] Response:', {
-      url: response.config.url,
-      status: response.status,
-      dataType: typeof response.data,
-      isArray: Array.isArray(response.data),
-      hasOkProperty: response.data && typeof response.data === 'object' && 'ok' in response.data
-    });
-
-    // Para contraseñas, SIEMPRE devolver la respuesta tal cual
-    if (response.config.url?.includes('/password')) {
+    // Para el endpoint de reservas, dejar pasar la respuesta sin procesar
+    if (response.config.url?.includes('/reservas') || response.config.url?.includes('/password')) {
       return response;
     }
     
@@ -177,12 +154,14 @@ apiBackend.interceptors.response.use(
   },
   (error) => {
     // Logging detallado del error
-    console.error('❌ [apiBackend] Error:', {
+    console.error('❌ [apiBackend] Error interceptor:', {
       url: error.config?.url,
       method: error.config?.method,
       status: error.response?.status,
       statusText: error.response?.statusText,
-      data: error.response?.data
+      responseData: error.response?.data,
+      responseDataType: typeof error.response?.data,
+      fullError: error
     });
 
     // NO limpiar localStorage aquí - eso lo maneja useAdminProtection
@@ -192,22 +171,37 @@ apiBackend.interceptors.response.use(
     }
     
     // Extraer mensaje de error del BFF
-    if (error.response?.data && typeof error.response.data === 'object') {
+    if (error.response?.data) {
       const errorData = error.response.data;
       
       // Intentar obtener el mensaje de error de varias formas
       let errorMessage = 'Error del servidor';
       
-      if (typeof errorData.error === 'string') {
-        errorMessage = errorData.error;
-      } else if (typeof errorData.message === 'string') {
-        errorMessage = errorData.message;
-      } else if (typeof errorData.detail === 'string') {
-        errorMessage = errorData.detail;
-      } else if (errorData.error && typeof errorData.error === 'object') {
-        // Si error es un objeto, intentar extraer el mensaje
-        errorMessage = JSON.stringify(errorData.error);
+      if (typeof errorData === 'string') {
+        errorMessage = errorData;
+      } else if (typeof errorData === 'object') {
+        if (typeof errorData.error === 'string') {
+          errorMessage = errorData.error;
+        } else if (typeof errorData.message === 'string') {
+          errorMessage = errorData.message;
+        } else if (typeof errorData.detail === 'string') {
+          errorMessage = errorData.detail;
+        } else if (typeof errorData.msg === 'string') {
+          errorMessage = errorData.msg;
+        } else if (errorData.error && typeof errorData.error === 'object') {
+          // Si error es un objeto, intentar extraer el mensaje
+          if (errorData.error.message) {
+            errorMessage = errorData.error.message;
+          } else {
+            errorMessage = JSON.stringify(errorData.error);
+          }
+        } else {
+          // Si no encontramos un mensaje específico, mostrar el objeto completo
+          errorMessage = JSON.stringify(errorData);
+        }
       }
+      
+      console.error('❌ [apiBackend] Mensaje de error extraído:', errorMessage);
       
       // Para errores 401, no lanzar error visible al usuario
       if (error.response?.status === 401) {
@@ -220,9 +214,13 @@ apiBackend.interceptors.response.use(
       const customError = new Error(errorMessage);
       (customError as any).response = error.response;
       (customError as any).statusCode = error.response?.status;
+      (customError as any).originalError = error;
+      
+      console.error('❌ [apiBackend] Custom error creado:', customError.message);
       return Promise.reject(customError);
     }
     
+    console.error('❌ [apiBackend] Error sin response.data, rechazando error original');
     return Promise.reject(error);
   }
 );

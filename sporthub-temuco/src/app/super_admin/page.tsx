@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import StatsCard from '@/components/charts/StatsCard';
-import "./dashboard.css";
 
 export default function SuperAdminDashboard() {
   // 🔥 AGREGAR VERIFICACIÓN DE CLIENTE
@@ -64,11 +63,8 @@ export default function SuperAdminDashboard() {
           <div className="section-header">
             <h2 className="section-title">Gestionar Administradores</h2>
             <div className="section-header-buttons">
-              <button className="section-button add-button">
-                <span className="button-icon">+</span>
-                Agregar
-              </button>
-              <button className="section-button view-button">Ver todo</button>
+              <button className="section-view-all">Agregar</button>
+              <button className="section-view-all">Ver todo</button>
             </div>
           </div>
           
@@ -120,11 +116,8 @@ export default function SuperAdminDashboard() {
           <div className="section-header">
             <h2 className="section-title">Gestionar Usuarios</h2>
             <div className="section-header-buttons">
-              <button className="section-button add-button">
-                <span className="button-icon">+</span>
-                Agregar
-              </button>
-              <button className="section-button view-button">Ver todo</button>
+              <button className="section-view-all">Agregar</button>
+              <button className="section-view-all">Ver todo</button>
             </div>
           </div>
           
@@ -177,11 +170,8 @@ export default function SuperAdminDashboard() {
         <div className="section-header">
           <h2 className="section-title">Gestion de canchas</h2>
           <div className="section-header-buttons">
-            <button className="section-button add-button">
-              <span className="button-icon">+</span>
-              Agregar
-            </button>
-            <button className="section-button view-button">Ver todo</button>
+            <button className="section-view-all">Agregar</button>
+            <button className="section-view-all">Ver todo</button>
           </div>
         </div>
         
