@@ -163,31 +163,88 @@ const adaptCanchaToBackend = (frontendCancha: CreateCanchaInput | UpdateCanchaIn
 
 export const canchaService = {
   /**
-   * Obtener todas las canchas disponibles
+   * Verificar estado del módulo de canchas (NUEVO)
+   * Endpoint público para diagnóstico
    */
-  async getCanchas() {
+  async getCanchasStatus(): Promise<any> {
     try {
-      const response = await apiBackend.get('/canchas');
+      const { data } = await apiBackend.get('/api/canchas/status');
+      return data;
+    } catch (err) {
+      console.warn('No se pudo obtener el estado del módulo canchas:', err);
+      return { ok: false, error: 'Módulo no disponible' };
+    }
+  },
+
+  /**
+   * Obtener todas las canchas disponibles (ACTUALIZADO con filtros avanzados)
+   * Soporte para nuevos filtros de Taller4: geolocalización, deporte, cubierta, etc.
+   */
+  async getCanchas(filters?: {
+    // Filtros básicos
+    q?: string;
+    page?: number;
+    page_size?: number;
+    id_complejo?: number;
+    
+    // Filtros deportivos
+    deporte?: string;
+    cubierta?: boolean;
+    techada?: boolean; // Alias para cubierta (retrocompatibilidad)
+    iluminacion?: boolean;
+    
+    // Filtros económicos
+    max_precio?: number;
+    
+    // Filtros geográficos (NUEVO)
+    lat?: number;
+    lon?: number;
+    max_km?: number;
+    
+    // Ordenamiento (NUEVO)
+    sort_by?: 'distancia' | 'precio' | 'rating' | 'nombre' | 'recientes';
+    order?: 'asc' | 'desc';
+  }) {
+    try {
+      // Preparar parámetros con soporte para ambos formatos (cubierta/techada)
+      const params = { ...filters };
+      if (filters?.techada !== undefined && filters?.cubierta === undefined) {
+        params.cubierta = filters.techada;
+      }
+      
+      const response = await apiBackend.get('/api/canchas', { params });
       
       // Manejar diferentes estructuras de respuesta del backend
       let canchas = [];
+      let pagination = {};
       
-      if (response.data?.items) {
+      if (response.data?.ok && response.data?.data) {
+        // Formato: { ok: true, data: { items: [...], total: X, page: Y } }
+        const data = response.data.data;
+        canchas = data.items || data;
+        pagination = {
+          total: data.total,
+          page: data.page,
+          page_size: data.page_size
+        };
+      } else if (response.data?.items) {
         // Formato: { items: [...] }
         canchas = response.data.items;
       } else if (Array.isArray(response.data)) {
         // Formato: [...]
         canchas = response.data;
-      } else if (response.data?.data?.items) {
-        // Formato: { data: { items: [...] } }
-        canchas = response.data.data.items;
       } else {
         console.warn('Formato de respuesta inesperado:', response.data);
-        return [];
+        return { items: [], ...pagination };
       }
 
       // Adaptar cada cancha al formato esperado por el frontend
-      return canchas.map(adaptCanchaFromBackend);
+      const adaptedCanchas = canchas.map(adaptCanchaFromBackend);
+      
+      return {
+        items: adaptedCanchas,
+        ...pagination
+      };
     } catch (error: any) {
       console.error('Error al obtener canchas:', error);
       // Manejo de error si la URL no responde o hay error de red
@@ -202,21 +259,62 @@ export const canchaService = {
   },
 
   /**
-   * Obtener una cancha por ID
+   * Obtener una cancha por ID (ACTUALIZADO con distancia opcional)
+   * Soporte para cálculo de distancia con coordenadas del usuario
    */
-  async getCanchaById(id: number) {
+  async getCanchaById(id: number, coords?: { lat: number; lon: number }) {
     try {
-      const response = await apiBackend.get(`/canchas/${id}`);
+      const params = coords ? { lat: coords.lat, lon: coords.lon } : {};
+      const response = await apiBackend.get(`/api/canchas/${id}`, { params });
       
       // Adaptar la respuesta del backend
       let canchaData = response.data;
-      if (response.data?.data) {
+      if (response.data?.ok && response.data?.data) {
         canchaData = response.data.data;
       }
       
       return adaptCanchaFromBackend(canchaData);
     } catch (error: any) {
       throw new Error('Error al obtener la cancha: ' + (error.response?.data?.message || error.message));
+    }
+  },
+
+  /**
+   * Obtener canchas para panel administrativo (NUEVO)
+   * Requiere autenticación admin/super_admin
+   */
+  async getCanchasAdmin(filters?: {
+    id_complejo?: number;
+    q?: string;
+    incluir_inactivas?: boolean;
+    sort_by?: 'nombre' | 'precio' | 'rating' | 'recientes';
+    order?: 'asc' | 'desc';
+    page?: number;
+    page_size?: number;
+  }) {
+    try {
+      const params = { ...filters };
+      const response = await apiBackend.get('/api/canchas/admin', { params });
+      
+      let canchas = [];
+      let pagination = {};
+      
+      if (response.data?.ok && response.data?.data) {
+        const data = response.data.data;
+        canchas = data.items || data;
+        pagination = {
+          total: data.total,
+          page: data.page,
+          page_size: data.page_size
+        };
+      }
+      
+      return {
+        items: canchas.map(adaptCanchaFromBackend),
+        ...pagination
+      };
+    } catch (error: any) {
+      throw new Error('Error al obtener canchas admin: ' + (error.response?.data?.message || error.message));
     }
   },
 
@@ -264,9 +362,9 @@ export const canchaService = {
     try {
       const backendData = adaptCanchaToBackend(input, true); // true = UPDATE
       console.log(`📤 [canchaService] Enviando datos para actualizar cancha ${id}:`, backendData);
-      // 🔥 CORREGIDO: Endpoint es /canchas (no /admin/canchas)
+      // 🔥 ACTUALIZADO: Endpoint correcto con autenticación
       // El backend usa PATCH, no PUT
-      const response = await apiBackend.patch(`/canchas/${id}`, backendData);
+      const response = await apiBackend.patch(`/api/canchas/${id}`, backendData);
       
       // Adaptar la respuesta
       let canchaData = response.data;
@@ -294,8 +392,8 @@ export const canchaService = {
   async deleteCancha(id: number) {
     try {
       console.log(`🗑️ [canchaService] Eliminando cancha ${id}`);
-      // 🔥 CORREGIDO: Endpoint es /canchas (no /admin/canchas)
-      const response = await apiBackend.delete(`/canchas/${id}`);
+      // 🔥 ACTUALIZADO: Endpoint correcto con autenticación
+      const response = await apiBackend.delete(`/api/canchas/${id}`);
       console.log('✅ [canchaService] Cancha eliminada exitosamente');
       return response.data;
     } catch (error: any) {
@@ -311,38 +409,113 @@ export const canchaService = {
   },
 
   /**
-   * Obtener fotos de una cancha
+   * Obtener fotos de una cancha (ACTUALIZADO)
+   * Endpoint público - no requiere autenticación
    */
   async getFotosCancha(id: number): Promise<FotoCancha[]> {
     try {
       const response = await apiBackend.get(`/api/canchas/${id}/fotos`);
-      return response.data;
+      
+      // Adaptar respuesta del backend
+      let fotos = response.data;
+      if (response.data?.ok && response.data?.data) {
+        fotos = response.data.data;
+      }
+      
+      return Array.isArray(fotos) ? fotos : [];
     } catch (error: any) {
       throw new Error('Error al obtener las fotos: ' + (error.response?.data?.message || error.message));
     }
   },
 
   /**
-   * Agregar foto a una cancha
+   * Agregar foto a una cancha (ACTUALIZADO)
+   * Requiere autenticación admin/super_admin
    */
   async addFotoCancha(id: number, fotoData: AddFotoInput): Promise<FotoCancha> {
     try {
       const response = await apiBackend.post(`/api/canchas/${id}/fotos`, fotoData);
-      return response.data;
+      
+      // Adaptar respuesta del backend
+      let foto = response.data;
+      if (response.data?.ok && response.data?.data) {
+        foto = response.data.data;
+      }
+      
+      return foto;
     } catch (error: any) {
       throw new Error('Error al agregar la foto: ' + (error.response?.data?.message || error.message));
     }
   },
 
   /**
-   * Eliminar foto de una cancha
+   * Eliminar foto de una cancha (ACTUALIZADO)
+   * Requiere autenticación admin/super_admin
    */
-  async deleteFotoCancha(canchaId: number, mediaId: number): Promise<void> {
+  async deleteFotoCancha(canchaId: number, fotoId: number): Promise<void> {
     try {
-      const response = await apiBackend.delete(`/api/canchas/${canchaId}/fotos/${mediaId}`);
-      return response.data;
+      await apiBackend.delete(`/api/canchas/${canchaId}/fotos/${fotoId}`);
+      // No retorna data para DELETE 204
     } catch (error: any) {
       throw new Error('Error al eliminar la foto: ' + (error.response?.data?.message || error.message));
+    }
+  },
+
+  /**
+   * Buscar canchas cercanas (NUEVA FUNCIONALIDAD)
+   * Utiliza geolocalización para encontrar canchas por proximidad
+   */
+  async getCanchasCercanas(
+    lat: number, 
+    lon: number, 
+    maxKm: number = 10,
+    filters?: {
+      deporte?: string;
+      cubierta?: boolean;
+      max_precio?: number;
+    }
+  ) {
+    try {
+      const params = {
+        lat,
+        lon,
+        max_km: maxKm,
+        sort_by: 'distancia' as const,
+        order: 'asc' as const,
+        ...filters
+      };
+      
+      return await this.getCanchas(params);
+    } catch (error: any) {
+      throw new Error('Error al buscar canchas cercanas: ' + (error.response?.data?.message || error.message));
+    }
+  },
+
+  /**
+   * Buscar canchas por deporte (NUEVA FUNCIONALIDAD)
+   */
+  async getCanchasByDeporte(deporte: string, filters?: any) {
+    try {
+      return await this.getCanchas({ 
+        deporte, 
+        ...filters 
+      });
+    } catch (error: any) {
+      throw new Error('Error al buscar canchas por deporte: ' + (error.response?.data?.message || error.message));
+    }
+  },
+
+  /**
+   * Buscar canchas techadas/cubiertas (NUEVA FUNCIONALIDAD)
+   */
+  async getCanchasTechadas(filters?: any) {
+    try {
+      return await this.getCanchas({ 
+        cubierta: true, 
+        ...filters 
+      });
+    } catch (error: any) {
+      throw new Error('Error al buscar canchas techadas: ' + (error.response?.data?.message || error.message));
     }
   }
 };
