@@ -354,29 +354,14 @@ export const canchaService = {
     } catch (error: any) {
       console.error('❌ [canchaService] Error:', error.message);
       
-      // 🔥 IMPORTANTE: Propagar el objeto error completo con el status para que el componente pueda detectar 403
       // Extraer el mensaje de error más específico
       const errorDetail = error.response?.data?.error || error.response?.data;
       const errorMsg = errorDetail?.message || errorDetail?.detail || error.message || 'Error desconocido al crear la cancha';
       
-      // Crear error personalizado que incluya el response
+      // Crear error personalizado que incluya el response para que el componente pueda detectar el status code
       const customError = new Error(errorMsg) as any;
       customError.response = error.response;
       throw customError;
-      // Si el error ya tiene un mensaje válido del interceptor, usarlo directamente
-      if (error.message && error.message !== '[object Object]') {
-        throw error;
-      }
-      
-      // Si no, intentar extraer del response
-      let errorMsg = 'Error desconocido al crear la cancha';
-      
-      if (error.response?.data) {
-        const data = error.response.data;
-        errorMsg = typeof data === 'string' ? data : (data.detail || data.error || data.message || data.msg || JSON.stringify(data));
-      }
-      
-      throw new Error(errorMsg);
     }
   },
 
