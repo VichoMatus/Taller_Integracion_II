@@ -26,8 +26,18 @@ export default function CanchasPage() {
     try {
       setIsLoading(true);
       
-      const canchasFromApi = await canchaService.getCanchas();
+      const canchasResponse = await canchaService.getCanchas();
       const complejosResponse = await complejosService.getComplejos();
+      
+      // Extraer array de canchas (puede venir como { items: [] } o array directo)
+      let canchasFromApi: any[] = [];
+      if (Array.isArray(canchasResponse)) {
+        canchasFromApi = canchasResponse;
+      } else if (canchasResponse?.items && Array.isArray(canchasResponse.items)) {
+        canchasFromApi = canchasResponse.items;
+      } else if ((canchasResponse as any)?.data && Array.isArray((canchasResponse as any).data)) {
+        canchasFromApi = (canchasResponse as any).data;
+      }
       
       // La respuesta puede ser un array directamente o un objeto con data/items
       let complejosFromApi: any[] = [];
@@ -90,6 +100,27 @@ export default function CanchasPage() {
 
   const editCourt = (courtId: string) => {
     router.push(`/super_admin/canchas/editar/${courtId}`);
+  };
+
+  const deleteCourt = async (courtId: string, courtName: string) => {
+    // Confirmación antes de eliminar
+    const confirmDelete = window.confirm(
+      `¿Estás seguro de que deseas eliminar la cancha "${courtName}"?\n\nEsta acción no se puede deshacer.`
+    );
+    
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      await canchaService.deleteCancha(Number(courtId));
+      alert('✅ Cancha eliminada exitosamente');
+      // Recargar la lista de canchas
+      await loadCourts();
+    } catch (error: any) {
+      console.error('❌ Error eliminando cancha:', error);
+      alert('Error al eliminar la cancha: ' + error.message);
+    }
   };
 
   // Filtrar canchas basado en búsqueda (nombre Y ubicación)
@@ -231,13 +262,11 @@ export default function CanchasPage() {
                         </svg>
                       </button>
                       
-                      <button className="btn-action btn-aprobar" title="Aprobar">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </button>
-                      
-                      <button className="btn-action btn-eliminar" title="Eliminar">
+                      <button 
+                        className="btn-action btn-eliminar" 
+                        title="Eliminar"
+                        onClick={() => deleteCourt(court.id, court.name)}
+                      >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>

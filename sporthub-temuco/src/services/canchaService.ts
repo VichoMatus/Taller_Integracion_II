@@ -168,7 +168,7 @@ export const canchaService = {
    */
   async getCanchasStatus(): Promise<any> {
     try {
-      const { data } = await apiBackend.get('/api/canchas/status');
+      const { data } = await apiBackend.get('/canchas/status');
       return data;
     } catch (err) {
       console.warn('No se pudo obtener el estado del módulo canchas:', err);
@@ -212,7 +212,7 @@ export const canchaService = {
         params.cubierta = filters.techada;
       }
       
-      const response = await apiBackend.get('/api/canchas', { params });
+      const response = await apiBackend.get('/canchas', { params });
       
       // Manejar diferentes estructuras de respuesta del backend
       let canchas = [];
@@ -265,7 +265,7 @@ export const canchaService = {
   async getCanchaById(id: number, coords?: { lat: number; lon: number }) {
     try {
       const params = coords ? { lat: coords.lat, lon: coords.lon } : {};
-      const response = await apiBackend.get(`/api/canchas/${id}`, { params });
+      const response = await apiBackend.get(`/canchas/${id}`, { params });
       
       // Adaptar la respuesta del backend
       let canchaData = response.data;
@@ -294,7 +294,7 @@ export const canchaService = {
   }) {
     try {
       const params = { ...filters };
-      const response = await apiBackend.get('/api/canchas/admin', { params });
+      const response = await apiBackend.get('/canchas/admin', { params });
       
       let canchas = [];
       let pagination = {};
@@ -364,7 +364,7 @@ export const canchaService = {
       console.log(`📤 [canchaService] Enviando datos para actualizar cancha ${id}:`, backendData);
       // 🔥 ACTUALIZADO: Endpoint correcto con autenticación
       // El backend usa PATCH, no PUT
-      const response = await apiBackend.patch(`/api/canchas/${id}`, backendData);
+      const response = await apiBackend.patch(`/canchas/${id}`, backendData);
       
       // Adaptar la respuesta
       let canchaData = response.data;
@@ -393,7 +393,7 @@ export const canchaService = {
     try {
       console.log(`🗑️ [canchaService] Eliminando cancha ${id}`);
       // 🔥 ACTUALIZADO: Endpoint correcto con autenticación
-      const response = await apiBackend.delete(`/api/canchas/${id}`);
+      const response = await apiBackend.delete(`/canchas/${id}`);
       console.log('✅ [canchaService] Cancha eliminada exitosamente');
       return response.data;
     } catch (error: any) {
@@ -414,7 +414,7 @@ export const canchaService = {
    */
   async getFotosCancha(id: number): Promise<FotoCancha[]> {
     try {
-      const response = await apiBackend.get(`/api/canchas/${id}/fotos`);
+      const response = await apiBackend.get(`/canchas/${id}/fotos`);
       
       // Adaptar respuesta del backend
       let fotos = response.data;
@@ -434,7 +434,7 @@ export const canchaService = {
    */
   async addFotoCancha(id: number, fotoData: AddFotoInput): Promise<FotoCancha> {
     try {
-      const response = await apiBackend.post(`/api/canchas/${id}/fotos`, fotoData);
+      const response = await apiBackend.post(`/canchas/${id}/fotos`, fotoData);
       
       // Adaptar respuesta del backend
       let foto = response.data;
@@ -454,7 +454,7 @@ export const canchaService = {
    */
   async deleteFotoCancha(canchaId: number, fotoId: number): Promise<void> {
     try {
-      await apiBackend.delete(`/api/canchas/${canchaId}/fotos/${fotoId}`);
+      await apiBackend.delete(`/canchas/${canchaId}/fotos/${fotoId}`);
       // No retorna data para DELETE 204
     } catch (error: any) {
       throw new Error('Error al eliminar la foto: ' + (error.response?.data?.message || error.message));
