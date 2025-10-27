@@ -107,17 +107,32 @@ export default function CreateReservaPage() {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
     
+    // Convertir valores según el campo
+    let processedValue: any = value;
+    if (name === 'usuarioId' || name === 'canchaId') {
+      processedValue = parseInt(value) || 0;
+      console.log(`🔄 [handleInputChange] ${name}:`, { raw: value, processed: processedValue });
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : 
-               name === 'usuarioId' || name === 'canchaId' ? parseInt(value) || 0 : 
-               value
+      [name]: type === 'checkbox' ? checked : processedValue
     }));
   };
 
   // Validar formulario
   const validateForm = (): string | null => {
-    if (!formData.canchaId) return 'Debe seleccionar una cancha';
+    console.log('🔍 [validateForm] Validando datos:', {
+      canchaId: formData.canchaId,
+      usuarioId: formData.usuarioId,
+      fechaInicio: formData.fechaInicio,
+      fechaFin: formData.fechaFin
+    });
+    
+    if (!formData.canchaId || formData.canchaId === 0) {
+      console.error('❌ [validateForm] canchaId inválido:', formData.canchaId);
+      return 'Debe seleccionar una cancha';
+    }
     if (!formData.fechaInicio) return 'Debe especificar la fecha y hora de inicio';
     if (!formData.fechaFin) return 'Debe especificar la fecha y hora de fin';
     
@@ -131,6 +146,7 @@ export default function CreateReservaPage() {
     if (horas > 12) return 'La reserva no puede ser mayor a 12 horas';
     if (horas < 0.5) return 'La reserva debe ser de al menos 30 minutos';
     
+    console.log('✅ [validateForm] Validación exitosa');
     return null;
   };
 
@@ -148,12 +164,26 @@ export default function CreateReservaPage() {
       setSaving(true);
       setError(null);
       
-      // Convertir fechas a ISO
+      // Convertir fechas a formato requerido por backend
+      const fechaInicioDate = new Date(formData.fechaInicio);
+      const fechaFinDate = new Date(formData.fechaFin);
+      
+      // Extraer fecha y horas en formato que espera el backend
+      const fecha_reserva = fechaInicioDate.toISOString().split('T')[0]; // YYYY-MM-DD
+      const hora_inicio = fechaInicioDate.toTimeString().slice(0, 5); // HH:MM
+      const hora_fin = fechaFinDate.toTimeString().slice(0, 5); // HH:MM
+      
+      // Formato que espera el backend: { id_cancha, fecha_reserva, hora_inicio, hora_fin, id_usuario }
       const createData = {
-        ...formData,
-        fechaInicio: new Date(formData.fechaInicio).toISOString(),
-        fechaFin: new Date(formData.fechaFin).toISOString()
+        id_cancha: Number(formData.canchaId),
+        fecha_reserva,
+        hora_inicio,
+        hora_fin,
+        id_usuario: Number(formData.usuarioId),
+        notas: formData.notas || ''
       };
+      
+      console.log('📤 [handleSubmit] Datos a enviar (formato backend):', createData);
       
       // CORREGIDO: Usar createReservaAdmin en lugar de createReserva
       // Esto llama al endpoint POST /api/reservas/admin/crear
@@ -164,7 +194,12 @@ export default function CreateReservaPage() {
       router.push('/admin/reservas');
     } catch (err: any) {
       console.error('Error al crear la reserva:', err);
-      setError(err?.message || 'No se pudo crear la reserva. Verifique los datos e intente nuevamente.');
+      const errorMessage = typeof err?.message === 'string' 
+        ? err.message 
+        : err?.response?.data?.message 
+        || JSON.stringify(err?.message || err) 
+        || 'No se pudo crear la reserva. Verifique los datos e intente nuevamente.';
+      setError(errorMessage);
     } finally {
       setSaving(false);
     }

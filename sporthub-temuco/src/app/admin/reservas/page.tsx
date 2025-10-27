@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { reservaService } from '@/services/reservaService';
+import { apiBackend } from '@/config/backend';
 import { Reserva, EstadoReserva } from '@/types/reserva';
 import '../dashboard.css';
 
@@ -22,8 +23,56 @@ export default function ReservasPage() {
       setLoading(true);
       setError(null);
       
-      console.log('🔍 [loadReservas] Llamando a getAdminReservas()...');
-      const response: any = await reservaService.getAdminReservas();
+      // 1. Obtener ID del usuario actual
+      const userData = localStorage.getItem('userData');
+      let adminId: number | undefined;
+      let complejoId: number | undefined;
+      
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          adminId = user?.id_usuario || user?.id;
+          console.log('🔍 [loadReservas] Admin ID:', adminId);
+          
+          // 2. ⚠️ WORKAROUND: Obtener complejo del admin consultando /complejos/admin/:adminId
+          // Esto es temporal hasta que el backend agregue complejoId a /auth/me
+          if (adminId) {
+            try {
+              console.log('🔍 [loadReservas] Obteniendo complejo del admin...');
+              const complejosResponse = await apiBackend.get(`/complejos/admin/${adminId}`);
+              console.log('� [loadReservas] Respuesta de complejos:', complejosResponse.data);
+              
+              // Manejar diferentes formatos de respuesta
+              let complejos = [];
+              if (Array.isArray(complejosResponse.data)) {
+                complejos = complejosResponse.data;
+              } else if (complejosResponse.data?.items && Array.isArray(complejosResponse.data.items)) {
+                complejos = complejosResponse.data.items;
+              } else if (complejosResponse.data?.data && Array.isArray(complejosResponse.data.data)) {
+                complejos = complejosResponse.data.data;
+              }
+              
+              if (complejos.length > 0) {
+                // Usar el primer complejo (un admin generalmente tiene un solo complejo)
+                complejoId = complejos[0]?.id_complejo || complejos[0]?.id || complejos[0]?.complejoId;
+                console.log('✅ [loadReservas] Complejo encontrado:', complejoId);
+              } else {
+                console.warn('⚠️ [loadReservas] El admin no tiene complejos asociados');
+              }
+            } catch (err) {
+              console.error('❌ [loadReservas] Error al obtener complejo del admin:', err);
+            }
+          }
+        } catch (err) {
+          console.warn('⚠️ [loadReservas] No se pudo parsear userData');
+        }
+      } else {
+        console.warn('⚠️ [loadReservas] No hay userData en localStorage');
+      }
+      
+      // 3. Llamar al servicio de reservas con el filtro de complejo
+      console.log('🔍 [loadReservas] Llamando a getAdminReservas() con filtros:', { complejoId });
+      const response: any = await reservaService.getAdminReservas(complejoId ? { complejoId } : undefined);
       
       console.log("📥 [loadReservas] Respuesta completa del servidor:", response);
       console.log("📥 [loadReservas] Tipo de response:", typeof response);
@@ -261,8 +310,8 @@ export default function ReservasPage() {
               </tr>
             </thead>
             <tbody>
-              {reservas.map((reserva) => (
-                <tr key={reserva.id}>
+              {reservas.map((reserva, index) => (
+                <tr key={reserva.id || `reserva-${index}`}>
                   <td>
                     <div className="admin-cell-title">
                       {reserva.usuario ? 

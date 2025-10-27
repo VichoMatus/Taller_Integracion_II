@@ -144,12 +144,78 @@ apiBackend.interceptors.response.use(
       });
       
       if (response.data.ok === false) {
+        // Log completo para debugging
+        console.log('🔍 [apiBackend] Error response.data:', response.data);
+        console.log('🔍 [apiBackend] Error tipo:', typeof response.data.error);
+        console.log('🔍 [apiBackend] Error isArray:', Array.isArray(response.data.error));
+        console.log('🔍 [apiBackend] Error contenido:', response.data.error);
+        console.log('🔍 [apiBackend] Error details:', response.data.error?.details);
+        
         // Extraer mensaje de error del objeto
         let errorMessage = 'Error del servidor';
         if (response.data.error) {
-          if (typeof response.data.error === 'object') {
-            errorMessage = response.data.error.message || JSON.stringify(response.data.error);
-          } else {
+          // 1. Si hay details.detail (formato Pydantic de FastAPI)
+          if (response.data.error.details?.detail) {
+            const detail = response.data.error.details.detail;
+            console.log('🔍 [apiBackend] Pydantic detail tipo:', typeof detail);
+            console.log('🔍 [apiBackend] Pydantic detail isArray:', Array.isArray(detail));
+            console.log('🔍 [apiBackend] Pydantic detail contenido:', detail);
+            
+            if (Array.isArray(detail)) {
+              // Formato Pydantic: [{ type, loc, msg, input }, ...]
+              errorMessage = detail.map((e: any) => {
+                if (e.msg) {
+                  const field = Array.isArray(e.loc) ? e.loc.filter((l: any) => l !== 'body').join('.') : '';
+                  return field ? `${field}: ${e.msg}` : e.msg;
+                }
+                return e.message || JSON.stringify(e);
+              }).join(' | ');
+            } else if (typeof detail === 'string') {
+              errorMessage = detail;
+            } else if (typeof detail === 'object') {
+              errorMessage = JSON.stringify(detail);
+            }
+          }
+          // 2. Si hay details (pero no detail)
+          else if (response.data.error.details) {
+            const details = response.data.error.details;
+            console.log('🔍 [apiBackend] Details tipo:', typeof details);
+            console.log('🔍 [apiBackend] Details isArray:', Array.isArray(details));
+            console.log('🔍 [apiBackend] Details contenido completo:', details);
+            
+            if (Array.isArray(details)) {
+              errorMessage = details.map((e: any) => {
+                if (typeof e === 'object') {
+                  return e.message || e.msg || e.error || JSON.stringify(e);
+                }
+                return String(e);
+              }).join(', ');
+            } else if (typeof details === 'object') {
+              errorMessage = JSON.stringify(details);
+            } else {
+              errorMessage = String(details);
+            }
+          }
+          // 3. Si error es un array directamente
+          else if (Array.isArray(response.data.error)) {
+            errorMessage = response.data.error.map((e: any) => {
+              if (typeof e === 'object') {
+                return e.message || e.msg || e.error || JSON.stringify(e);
+              }
+              return String(e);
+            }).join(', ');
+          }
+          // 4. Si error.message existe y NO es "[object Object]"
+          else if (typeof response.data.error === 'object') {
+            const msg = response.data.error.message || response.data.error.msg;
+            if (msg && !msg.includes('[object Object]')) {
+              errorMessage = msg;
+            } else {
+              errorMessage = JSON.stringify(response.data.error);
+            }
+          }
+          // 5. Fallback
+          else {
             errorMessage = String(response.data.error);
           }
         } else if (response.data.message) {

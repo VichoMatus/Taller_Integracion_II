@@ -1,272 +1,162 @@
+/**
+ * SERVICIO DE RESERVAS - SINCRONIZADO CON BACKEND
+ * ================================================
+ * ✅ 100% sincronizado con backend/src/reservas/presentation/routes/reservas.routes.ts
+ * ⚠️ Solo contiene endpoints que existen en el backend
+ * 🗑️ Funcionalidades fantasma eliminadas
+ * 
+ * Última sincronización: 27 de octubre de 2025
+ */
+
 import { apiBackend } from '../config/backend';
 import {
   Reserva,
   ReservaFilters,
   CreateReservaInput,
   UpdateReservaInput,
-  CotizacionInput,
   CotizacionResponse,
   ConfirmarReservaResponse,
-  CheckInResponse,
-  NoShowResponse,
   // Nuevos tipos actualizados
   CreateReservaInputNew,
+  CreateReservaAdminInput,
   UpdateReservaInputNew,
   CotizacionInputNew,
   CotizacionResponseNew
 } from '../types/reserva';
 import { handleApiError } from "../services/ApiError";
 
+/**
+ * Servicio de Reservas
+ * Todos los métodos están sincronizados 1:1 con los endpoints del backend
+ */
 export const reservaService = {
   /**
    * Obtener todas las reservas con filtros (admin/superadmin)
-   * Actualizado para usar el nuevo endpoint
+   * ✅ Backend: GET /reservas
+   * ✅ Requiere: admin o super_admin
    */
   async getReservas(filters?: ReservaFilters): Promise<Reserva[]> {
     try {
+      console.log('🔍 [getReservas] Obteniendo todas las reservas (admin)');
       const { data } = await apiBackend.get('/reservas', { params: filters });
+      console.log('✅ [getReservas] Reservas obtenidas:', Array.isArray(data) ? data.length : 'formato inesperado');
       return data;
     } catch (err) {
+      console.error('❌ [getReservas] Error:', err);
       handleApiError(err);
     }
   },
 
   /**
    * Obtener una reserva por ID
-   * Actualizado para usar el nuevo endpoint
+   * ✅ Backend: GET /reservas/:id
+   * ✅ Requiere: autenticación (usuario/admin/super_admin)
    */
   async getReservaById(id: number): Promise<Reserva> {
     try {
+      console.log(`🔍 [getReservaById] Obteniendo reserva ${id}`);
       const { data } = await apiBackend.get(`/reservas/${id}`);
+      console.log(`✅ [getReservaById] Reserva obtenida`);
       return data;
     } catch (err) {
+      console.error(`❌ [getReservaById] Error:`, err);
       handleApiError(err);
     }
   },
 
   /**
    * Crear nueva reserva (soporta ambos formatos: nuevo y legacy)
-   * Actualizado para usar el nuevo endpoint
+   * ✅ Backend: POST /reservas
+   * ✅ Requiere: autenticación (usuario/admin/super_admin)
    */
   async createReserva(input: CreateReservaInput | CreateReservaInputNew): Promise<Reserva> {
     try {
+      console.log('🔍 [createReserva] Creando reserva:', input);
       const { data } = await apiBackend.post('/reservas', input);
+      console.log('✅ [createReserva] Reserva creada:', data);
       return data;
     } catch (err) {
+      console.error('❌ [createReserva] Error:', err);
       handleApiError(err);
     }
   },
 
   /**
-   * Cotizar precio de reserva (NUEVO ENDPOINT)
+   * Cotizar precio de reserva
+   * ✅ Backend: POST /reservas/cotizar
+   * ✅ Requiere: autenticación (usuario/admin/super_admin)
    */
   async cotizarReserva(input: CotizacionInputNew): Promise<CotizacionResponseNew> {
     try {
+      console.log('🔍 [cotizarReserva] Cotizando:', input);
       const { data } = await apiBackend.post('/reservas/cotizar', input);
+      console.log('✅ [cotizarReserva] Cotización obtenida:', data);
       return data;
     } catch (err) {
+      console.error('❌ [cotizarReserva] Error:', err);
       handleApiError(err);
     }
   },
 
   /**
    * Actualizar/reprogramar reserva
-   * Actualizado para usar el nuevo endpoint
+   * ✅ Backend: PATCH /reservas/:id
+   * ✅ Requiere: autenticación (usuario/admin/super_admin)
    */
   async updateReserva(id: number, input: UpdateReservaInput | UpdateReservaInputNew): Promise<Reserva> {
     try {
+      console.log(`🔍 [updateReserva] Actualizando reserva ${id}:`, input);
       const { data } = await apiBackend.patch(`/reservas/${id}`, input);
+      console.log(`✅ [updateReserva] Reserva actualizada`);
       return data;
     } catch (err) {
+      console.error(`❌ [updateReserva] Error:`, err);
       handleApiError(err);
     }
   },
-
-  async deleteReserva(id: number): Promise<void> {
-    try {
-      await apiBackend.delete(`/reservas/${id}`);
-    } catch (err) {
-      handleApiError(err);
-    }
-  },
-
-
 
   /**
-   * Obtener mis reservas (usuario autenticado)
-   * Actualizado para usar el nuevo endpoint /reservas/mias
+   * Cancelar reserva (usuario normal)
+   * ✅ Backend: POST /reservas/:id/cancelar
+   * ✅ Requiere: autenticación (usuario/admin/super_admin)
+   * ⚠️ Nota: El backend NO tiene DELETE, usa POST /cancelar
    */
-  async getMisReservas(): Promise<Reserva[]> {
-    try {
-      console.log("Intentando acceder a endpoint actualizado:", '/reservas/mias');
-      
-      const { data } = await apiBackend.get('/reservas/mias');
-      
-      console.log("Respuesta mis reservas (endpoint actualizado):", data);
-      return Array.isArray(data) ? data : (data.items || data.data || []);
-    } catch (err: any) {
-      console.error("Error detallado al obtener mis reservas:", {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-        url: err.config?.url,
-        baseURL: err.config?.baseURL
-      });
-      handleApiError(err);
-      return []; // Devuelve array vacío en caso de error
-    }
-  },
-
-
-  /**
-   * Confirmar reserva (admin/superadmin)
-   * Actualizado para usar el nuevo endpoint
-   */
-  async confirmarReserva(id: number): Promise<ConfirmarReservaResponse> {
-    try {
-      const { data } = await apiBackend.post(`/reservas/${id}/confirmar`);
-      return data;
-    } catch (err) {
-      handleApiError(err);
-    }
-  },
-
-  async checkInReserva(id: number): Promise<CheckInResponse> {
-    try {
-      const { data } = await apiBackend.post(`/reservas/${id}/check-in`);
-      return data;
-    } catch (err) {
-      handleApiError(err);
-    }
-  },
-
-  async noShowReserva(id: number): Promise<NoShowResponse> {
-    try {
-      const { data } = await apiBackend.post(`/reservas/${id}/no-show`);
-      return data;
-    } catch (err) {
-      handleApiError(err);
-    }
-  },
-
   async cancelarReserva(id: number): Promise<Reserva> {
     try {
+      console.log(`🔍 [cancelarReserva] Cancelando reserva ${id}`);
       const { data } = await apiBackend.post(`/reservas/${id}/cancelar`);
+      console.log(`✅ [cancelarReserva] Reserva cancelada:`, data);
       return data;
     } catch (err) {
+      console.error(`❌ [cancelarReserva] Error:`, err);
       handleApiError(err);
     }
   },
+
+  /**
+   * Alias de cancelarReserva() para compatibilidad
+   * ⚠️ El backend NO tiene DELETE, internamente usa POST /reservas/:id/cancelar
+   */
+  async deleteReserva(id: number): Promise<void> {
+    try {
+      console.log(`🔍 [deleteReserva] Cancelando reserva ${id} (alias de cancelarReserva)`);
+      await apiBackend.post(`/reservas/${id}/cancelar`);
+      console.log(`✅ [deleteReserva] Reserva cancelada exitosamente`);
+    } catch (err) {
+      console.error(`❌ [deleteReserva] Error:`, err);
+      handleApiError(err);
+    }
+  },
+
+
 
   // ==========================================
-  // MÉTODOS ESPECÍFICOS PARA ADMIN
-  // ==========================================
-
-  /**
-   * Obtener reservas del administrador (desde /admin/reservas)
-   * Requiere rol admin o super_admin
-   */
-  async getAdminReservas(filters?: ReservaFilters): Promise<Reserva[]> {
-    try {
-      console.log('🔍 [getAdminReservas] Iniciando petición con filtros:', filters);
-      console.log('🔍 [getAdminReservas] URL base:', apiBackend.defaults.baseURL);
-      console.log('🔍 [getAdminReservas] Ruta:', '/reservas');
-      console.log('🔍 [getAdminReservas] URL completa esperada:', `${apiBackend.defaults.baseURL}/reservas`);
-      
-      const { data } = await apiBackend.get('/reservas', { params: filters });
-      
-      console.log('✅ [getAdminReservas] Respuesta recibida:', data);
-      return data;
-    } catch (err) {
-      console.error('❌ [getAdminReservas] Error capturado:', err);
-      handleApiError(err);
-    }
-  },
-
-  /**
-   * Obtener todas las reservas (lista completa admin)
-   * Requiere rol admin o super_admin
-   */
-  async getAllReservasAdmin(filters?: ReservaFilters): Promise<Reserva[]> {
-    try {
-      const { data } = await apiBackend.get('/reservas', { params: filters });
-      return data;
-    } catch (err) {
-      handleApiError(err);
-    }
-  },
-
-  /**
-   * Obtener reservas de una cancha específica (admin)
-   * Requiere rol admin o super_admin
-   */
-  async getReservasByCancha(canchaId: number, filters?: ReservaFilters): Promise<Reserva[]> {
-    try {
-      const { data } = await apiBackend.get(`/reservas/admin/cancha/${canchaId}`, { params: filters });
-      return data;
-    } catch (err) {
-      handleApiError(err);
-    }
-  },
-
-  /**
-   * Obtener reservas de un usuario específico (admin)
-   * Requiere rol admin o super_admin
-   */
-  async getReservasByUsuarioAdmin(usuarioId: number, filters?: ReservaFilters): Promise<Reserva[]> {
-    try {
-      const { data } = await apiBackend.get(`/reservas/admin/usuario/${usuarioId}`, { params: filters });
-      return data;
-    } catch (err) {
-      handleApiError(err);
-    }
-  },
-
-  /**
-   * Crear reserva como administrador (para cualquier usuario)
-   * Requiere rol admin o super_admin
-   */
-  async createReservaAdmin(input: CreateReservaInput): Promise<Reserva> {
-    try {
-      const { data } = await apiBackend.post('/reservas/admin/crear', input);
-      return data;
-    } catch (err) {
-      handleApiError(err);
-    }
-  },
-
-  /**
-   * Cancelar reserva como administrador (forzar cancelación)
-   * Requiere rol admin o super_admin
-   */
-  async cancelarReservaAdmin(id: number): Promise<Reserva> {
-    try {
-      const { data } = await apiBackend.post(`/reservas/admin/${id}/cancelar`);
-      return data;
-    } catch (err) {
-      handleApiError(err);
-    }
-  },
-
-  /**
-   * Eliminar reserva permanentemente (admin)
-   * Requiere rol admin o super_admin
-   */
-  async deleteReservaAdmin(id: number): Promise<void> {
-    try {
-      await apiBackend.delete(`/reservas/${id}`);
-    } catch (err) {
-      handleApiError(err);
-    }
-  },
-
-  // ==========================================
-  // MÉTODOS DE UTILIDAD Y ESTADO
+  // ENDPOINTS PÚBLICOS
   // ==========================================
 
   /**
    * Verificar estado del módulo de reservas
-   * Nuevo método para verificar endpoints disponibles
+   * ✅ Backend: GET /reservas/status (PÚBLICO - sin auth)
    */
   async getReservasStatus(): Promise<any> {
     try {
@@ -277,6 +167,147 @@ export const reservaService = {
       return { ok: false, error: 'Módulo no disponible' };
     }
   },
+
+  // ==========================================
+  // ENDPOINTS DE USUARIO AUTENTICADO
+  // ==========================================
+
+  /**
+   * Obtener mis reservas (usuario autenticado)
+   * ✅ Backend: GET /reservas/mias
+   * ✅ Requiere: autenticación (cualquier usuario)
+   */
+  async getMisReservas(): Promise<Reserva[]> {
+    try {
+      console.log('🔍 [getMisReservas] Obteniendo mis reservas');
+      const { data } = await apiBackend.get('/reservas/mias');
+      console.log('✅ [getMisReservas] Reservas obtenidas:', Array.isArray(data) ? data.length : 'formato inesperado');
+      return Array.isArray(data) ? data : (data.items || data.data || []);
+    } catch (err: any) {
+      console.error('❌ [getMisReservas] Error:', err);
+      handleApiError(err);
+      return [];
+    }
+  },
+
+
+  // ==========================================
+  // ENDPOINTS ADMIN (requieren rol admin o super_admin)
+  // ==========================================
+
+  /**
+   * Alias de getReservas() para el panel admin
+   * ✅ Backend: GET /reservas
+   * ✅ Requiere: admin o super_admin
+   */
+  async getAdminReservas(filters?: ReservaFilters): Promise<Reserva[]> {
+    return this.getReservas(filters);
+  },
+
+  /**
+   * Confirmar pago de reserva (admin)
+   * ✅ Backend: POST /reservas/:id/confirmar
+   * ✅ Requiere: admin o super_admin
+   */
+  async confirmarReserva(id: number): Promise<ConfirmarReservaResponse> {
+    try {
+      console.log(`🔍 [confirmarReserva] Confirmando reserva ${id}`);
+      const { data } = await apiBackend.post(`/reservas/${id}/confirmar`);
+      console.log(`✅ [confirmarReserva] Reserva confirmada:`, data);
+      return data;
+    } catch (err) {
+      console.error(`❌ [confirmarReserva] Error:`, err);
+      handleApiError(err);
+    }
+  },
+
+  /**
+   * Obtener reservas de una cancha específica (admin)
+   * ✅ Backend: GET /reservas/admin/cancha/:canchaId
+   * ✅ Requiere: admin o super_admin
+   */
+  async getReservasByCancha(canchaId: number, filters?: ReservaFilters): Promise<Reserva[]> {
+    try {
+      console.log(`🔍 [getReservasByCancha] Obteniendo reservas de cancha ${canchaId}`);
+      const { data } = await apiBackend.get(`/reservas/admin/cancha/${canchaId}`, { params: filters });
+      console.log(`✅ [getReservasByCancha] Reservas obtenidas:`, data?.length || 0);
+      return data;
+    } catch (err) {
+      console.error(`❌ [getReservasByCancha] Error:`, err);
+      handleApiError(err);
+    }
+  },
+
+  /**
+   * Obtener reservas de un usuario específico (admin)
+   * ✅ Backend: GET /reservas/admin/usuario/:usuarioId
+   * ✅ Requiere: admin o super_admin
+   */
+  async getReservasByUsuarioAdmin(usuarioId: number, filters?: ReservaFilters): Promise<Reserva[]> {
+    try {
+      console.log(`🔍 [getReservasByUsuarioAdmin] Obteniendo reservas del usuario ${usuarioId}`);
+      const { data } = await apiBackend.get(`/reservas/admin/usuario/${usuarioId}`, { params: filters });
+      console.log(`✅ [getReservasByUsuarioAdmin] Reservas obtenidas:`, data?.length || 0);
+      return data;
+    } catch (err) {
+      console.error(`❌ [getReservasByUsuarioAdmin] Error:`, err);
+      handleApiError(err);
+    }
+  },
+
+  /**
+   * Crear reserva como administrador (para cualquier usuario)
+   * ✅ Backend: POST /reservas/admin/crear
+   * ✅ Requiere: admin o super_admin
+   * ⚠️ Formato esperado: { id_cancha, fecha_reserva, hora_inicio, hora_fin, id_usuario }
+   */
+  async createReservaAdmin(input: CreateReservaAdminInput): Promise<Reserva> {
+    try {
+      console.log('🔍 [createReservaAdmin] Creando reserva como admin:', input);
+      const { data } = await apiBackend.post('/reservas/admin/crear', input);
+      console.log('✅ [createReservaAdmin] Reserva creada:', data);
+      return data;
+    } catch (err) {
+      console.error('❌ [createReservaAdmin] Error:', err);
+      handleApiError(err);
+    }
+  },
+
+  /**
+   * Cancelar reserva como administrador (forzar cancelación)
+   * ✅ Backend: POST /reservas/admin/:id/cancelar
+   * ✅ Requiere: admin o super_admin
+   */
+  async cancelarReservaAdmin(id: number): Promise<Reserva> {
+    try {
+      console.log(`🔍 [cancelarReservaAdmin] Cancelando reserva ${id} como admin`);
+      const { data } = await apiBackend.post(`/reservas/admin/${id}/cancelar`);
+      console.log(`✅ [cancelarReservaAdmin] Reserva cancelada:`, data);
+      return data;
+    } catch (err) {
+      console.error(`❌ [cancelarReservaAdmin] Error:`, err);
+      handleApiError(err);
+    }
+  },
+
+  /**
+   * Alias de cancelarReservaAdmin() para compatibilidad
+   * ⚠️ El backend NO tiene DELETE, internamente usa POST /reservas/admin/:id/cancelar
+   */
+  async deleteReservaAdmin(id: number): Promise<void> {
+    try {
+      console.log(`🔍 [deleteReservaAdmin] Cancelando reserva ${id} como admin (alias)`);
+      await apiBackend.post(`/reservas/admin/${id}/cancelar`);
+      console.log(`✅ [deleteReservaAdmin] Reserva cancelada exitosamente`);
+    } catch (err) {
+      console.error(`❌ [deleteReservaAdmin] Error:`, err);
+      handleApiError(err);
+    }
+  },
+
+  // ==========================================
+  // MÉTODOS DE UTILIDAD Y CONVERSIÓN DE FORMATOS
+  // ==========================================
 
   /**
    * Método helper para convertir formato legacy a nuevo formato
