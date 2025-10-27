@@ -106,7 +106,7 @@ router.get("/", async (req, res) => {
       cubierta: req.query.cubierta || req.query.techada,
     };
     
-    const { data } = await http.get('/api/v1/canchas', { params });
+    const { data } = await http.get('/canchas', { params });
     res.json({ ok: true, data });
   } catch (error: any) {
     res.status(error.response?.status || 500).json({ 
@@ -133,7 +133,7 @@ router.get("/admin", authMiddleware, requireRole("admin", "super_admin"), async 
       page_size: req.query.page_size || 20,
     };
     
-    const { data } = await http.get('/api/v1/canchas/admin', { params });
+    const { data } = await http.get('/canchas/admin', { params });
     res.json({ ok: true, data });
   } catch (error: any) {
     res.status(error.response?.status || 500).json({ 
@@ -155,7 +155,7 @@ router.get("/:id", async (req, res) => {
       lon: req.query.lon,
     };
     
-    const { data } = await http.get(`/api/v1/canchas/${req.params.id}`, { params });
+    const { data } = await http.get(`/canchas/${req.params.id}`, { params });
     res.json({ ok: true, data });
   } catch (error: any) {
     res.status(error.response?.status || 500).json({ 
@@ -172,7 +172,7 @@ router.get("/:id/fotos", async (req, res) => {
   try {
     // Endpoint público - no requiere autenticación
     const http = buildHttpClient(ENV.FASTAPI_URL, () => "");
-    const { data } = await http.get(`/api/v1/canchas/${req.params.id}/fotos`);
+    const { data } = await http.get(`/canchas/${req.params.id}/fotos`);
     res.json({ ok: true, data });
   } catch (error: any) {
     res.status(error.response?.status || 500).json({ 
@@ -187,7 +187,7 @@ router.post("/", authMiddleware, requireRole("admin", "super_admin"), async (req
   try {
     // Requiere autenticación - dueño/admin/super_admin
     const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
-    const { data } = await http.post('/api/v1/canchas', req.body);
+    const { data } = await http.post('/canchas', req.body);
     res.status(201).json({ ok: true, data });
   } catch (error: any) {
     res.status(error.response?.status || 500).json({ 
@@ -202,7 +202,7 @@ router.patch("/:id", authMiddleware, requireRole("admin", "super_admin"), async 
   try {
     // Requiere autenticación - dueño/admin/super_admin
     const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
-    const { data } = await http.patch(`/api/v1/canchas/${req.params.id}`, req.body);
+    const { data } = await http.patch(`/canchas/${req.params.id}`, req.body);
     res.json({ ok: true, data });
   } catch (error: any) {
     res.status(error.response?.status || 500).json({ 
@@ -217,7 +217,7 @@ router.delete("/:id", authMiddleware, requireRole("admin", "super_admin"), async
   try {
     // Requiere autenticación - dueño/admin/super_admin
     const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
-    await http.delete(`/api/v1/canchas/${req.params.id}`);
+    await http.delete(`/canchas/${req.params.id}`);
     res.status(204).json({ ok: true });
   } catch (error: any) {
     res.status(error.response?.status || 500).json({ 
@@ -232,7 +232,7 @@ router.post("/:id/fotos", authMiddleware, requireRole("admin", "super_admin"), a
   try {
     // Requiere autenticación - dueño/admin/super_admin
     const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
-    const { data } = await http.post(`/api/v1/canchas/${req.params.id}/fotos`, req.body);
+    const { data } = await http.post(`/canchas/${req.params.id}/fotos`, req.body);
     res.status(201).json({ ok: true, data });
   } catch (error: any) {
     res.status(error.response?.status || 500).json({ 
@@ -247,7 +247,7 @@ router.delete("/:id/fotos/:fotoId", authMiddleware, requireRole("admin", "super_
   try {
     // Requiere autenticación - dueño/admin/super_admin
     const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
-    await http.delete(`/api/v1/canchas/${req.params.id}/fotos/${req.params.fotoId}`);
+    await http.delete(`/canchas/${req.params.id}/fotos/${req.params.fotoId}`);
     res.status(204).json({ ok: true });
   } catch (error: any) {
     res.status(error.response?.status || 500).json({ 
