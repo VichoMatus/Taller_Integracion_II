@@ -154,7 +154,7 @@ export default function MapaPage() {
               onChange={handleSearchChange}
               onSearch={handleSearch}
               placeholder="Buscar complejos, direcciones..."
-              sport="basquetbol"
+              sport="index"
             />
             <button 
               className={styles.userButton}
