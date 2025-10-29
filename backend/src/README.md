@@ -45,7 +45,7 @@ POST   /admin/users/:id/role # Asignar rol
 Entidades principales y lógica de negocio.
 
 - **User**: Entidad principal del usuario con roles y datos personales
-- **Roles**: Sistema de permisos (usuario, dueno, admin, superadmin)
+- **Roles**: Sistema de permisos (usuario, admin, superadmin)
 
 ### 📁 `/app/common` - Utilidades Comunes
 Funciones auxiliares reutilizables en toda la aplicación.
@@ -170,19 +170,18 @@ POST   /uploads/cleanup               # Limpiar archivos expirados
 
 ### Jerarquía de Permisos
 ```
-superadmin > admin > dueno > usuario
+superadmin > admin > usuario
 ```
 
 ### Roles Disponibles
 - **usuario**: Usuario básico del sistema
-- **dueno**: Propietario de establecimiento
-- **admin**: Administrador con permisos de gestión
+- **admin**: Administrador con permisos de gestión (incluye propietarios de establecimientos)
 - **superadmin**: Administrador con permisos completos
 
 ### Políticas de Seguridad
 - Solo `admin` y `superadmin` pueden acceder a endpoints administrativos
 - Solo `superadmin` puede asignar roles `admin` o `superadmin`
-- Los `admin` pueden gestionar usuarios regulares y `dueno`
+- Los `admin` pueden gestionar usuarios regulares
 
 ## Integración con FastAPI
 

@@ -1,85 +1,178 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStatus } from '../../../../hooks/useAuthStatus';
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
+import LocationMap from '../../../../components/LocationMap';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
+import { complejosService } from '../../../../services/complejosService';
 
-const centros = [
-  {
-    imageUrl: "/sports/escalada/centros/Centro1.png",
-    name: "Escalada Vertical - Centro",
-    address: "Centro, Temuco",
-    rating: 4.7,
-    reviews: "89 reseñas",
-    tags: ["Escalada Indoor", "Boulder", "Equipos Incluidos", "Instructores"],
-    description: "Centro de escalada indoor con rutas de diferentes niveles, boulder y alquiler de equipos completo",
-    price: "18",
-    nextAvailable: "14:00-15:00", 
-  },
-  {
-    imageUrl: "/sports/escalada/centros/Centro2.png",
-    name: "Boulder & Climb Norte",
-    address: "Sector Norte",
-    rating: 4.5,
-    reviews: "67 reseñas",
-    tags: ["Boulder", "Escalada Deportiva", "Cafetería", "Estacionamiento"],
-    description: "Centro especializado en boulder y escalada deportiva con muro de 15 metros y zona de entrenamiento",
-    price: "15",
-    nextAvailable: "16:30-17:30", 
-  },
-  {
-    imageUrl: "/sports/escalada/centros/Centro3.png",
-    name: "Escalada Outdoor Sur",
-    address: "Sector Sur",
-    rating: 4.8,
-    reviews: "124 reseñas",
-    tags: ["Escalada Outdoor", "Guías", "Transporte", "Equipos"],
-    description: "Centro de escalada en roca natural con guías certificados y tours a sectores cercanos a Temuco",
-    price: "35",
-    nextAvailable: "Mañana 08:00-09:00",
-  },
-  {
-    imageUrl: "/sports/escalada/centros/Centro4.png",
-    name: "Climb Gym Premium",
-    address: "Centro Premium", 
-    rating: 4.9,
-    reviews: "156 reseñas",
-    tags: ["Escalada Indoor", "Boulder", "Entrenamiento", "Sauna"],
-    description: "Gimnasio de escalada premium con muros de 18 metros, boulder avanzado y área de recuperación",
-    price: "25",
-    nextAvailable: "No disponible hoy",
-  },
-  {
-    imageUrl: "/sports/escalada/centros/Centro5.png",
-    name: "Escalada Volcán",
-    address: "Zona Volcánica", 
-    rating: 4.6,
-    reviews: "203 reseñas",
-    tags: ["Escalada Outdoor", "Volcanes", "Expediciones", "Camping"],
-    description: "Centro especializado en escalada en volcanes con expediciones guiadas y camping base",
-    price: "45",
-    nextAvailable: "18:00-19:00",
-  },
-  {
-    imageUrl: "/sports/escalada/centros/Centro6.png",
-    name: "Rock Climbing Temuco",
-    address: "Centro Deportivo",
-    rating: 4.4,
-    reviews: "78 reseñas",
-    tags: ["Escalada Indoor", "Cursos", "Certificación", "Competencias"],
-    description: "Centro de escalada con cursos de certificación, competencias regulares y entrenamiento técnico",
-    price: "20",
-    nextAvailable: "19:00-20:00",
-  }
-];
+// 🧗‍♂️ IMPORTAR SERVICIO
+import { canchaService } from '../../../../services/canchaService';
 
 export default function Page() {
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredCentros, setFilteredCentros] = useState(centros);
+  
+  // 🧗‍♂️ ESTADOS PARA LA API
+  const [centros, setCentros] = useState<any[]>([]);
+  const [filteredCentros, setFilteredCentros] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
+  const [isLoadingCentros, setIsLoadingCentros] = useState(true);
+  const [error, setError] = useState<string>('');
+
+  // 🧗‍♂️ FUNCIÓN PARA CARGAR CENTROS MODIFICADA PARA ESCALADA
+  const cargarCentros = async () => {
+    try {
+      setIsLoadingCentros(true);
+      setError('');
+      
+      console.log('🔄 [CentrosEscalada] Cargando TODAS las instalaciones del backend...');
+      
+      const todasLasInstalaciones = await canchaService.getCanchas();
+      console.log('✅ [CentrosEscalada] Todas las instalaciones obtenidas:', todasLasInstalaciones);
+      
+      // 🧗‍♂️ FILTRAR INSTALACIONES DE ESCALADA
+      const centrosDeEscalada = todasLasInstalaciones.filter((instalacion: any) => {
+        return ['escalada', 'climbing', 'rocodromo', 'boulder'].includes(instalacion.tipo.toLowerCase());
+      });
+      
+      console.log('🧗‍♂️ [CentrosEscalada] Centros de escalada encontrados:', centrosDeEscalada.length);
+      
+      // 🧗‍♂️ OBTENER DATOS DE COMPLEJOS PARA CADA CENTRO
+      const centrosMapeados = await Promise.all(
+        centrosDeEscalada.map(async (centro: any) => {
+          let complejoData = null;
+          let addressInfo = `Complejo ${centro.establecimientoId}`;
+          
+          // 🧗‍♂️ INTENTAR OBTENER DATOS DEL COMPLEJO
+          if (centro.establecimientoId) {
+            try {
+              console.log(`🔍 [CentrosEscalada] Cargando complejo ID ${centro.establecimientoId} para centro ${centro.id}`);
+              complejoData = await complejosService.getComplejoById(centro.establecimientoId);
+              
+              if (complejoData) {
+                addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                console.log(`✅ [CentrosEscalada] Complejo cargado: ${addressInfo}`);
+              }
+              
+            } catch (complejoError: any) {
+              console.warn(`⚠️ [CentrosEscalada] Error cargando complejo ${centro.establecimientoId}:`, complejoError.message);
+              // Usar datos de fallback
+              const staticComplejo = getStaticComplejoData(centro.establecimientoId);
+              addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+            }
+          }
+          
+          // 🧗‍♂️ MAPEAR CENTRO CON DATOS DEL COMPLEJO
+          const mappedCentro = {
+            id: centro.id,
+            imageUrl: `/sports/escalada/centros/Centro${centro.id}.png`,
+            name: centro.nombre,
+            address: addressInfo,
+            rating: centro.rating || 4.7,
+            tags: [
+              centro.techada ? "Techado" : "Al aire libre",
+              centro.activa ? "Disponible" : "No disponible",
+              "Muros de Escalada"
+            ],
+            description: `Centro de ${centro.tipo} ${centro.nombre} - ID: ${centro.id}`,
+            price: centro.precioPorHora?.toString() || "18",
+            nextAvailable: centro.activa ? "Disponible ahora" : "No disponible",
+            sport: centro.tipo
+          };
+          
+          console.log('🗺️ [CentrosEscalada] Centro mapeado:', mappedCentro);
+          return mappedCentro;
+        })
+      );
+      
+      console.log('🎉 [CentrosEscalada] Centros con datos de complejo cargados:', centrosMapeados.length);
+      setCentros(centrosMapeados);
+      setFilteredCentros(centrosMapeados);
+      
+    } catch (error: any) {
+      console.error('❌ [CentrosEscalada] ERROR cargando centros:', error);
+      setError(`Error: ${error.message}`);
+      
+      // 🧗‍♂️ Fallback con datos estáticos de escalada
+      const fallbackCentros = [
+        {
+          id: 1,
+          imageUrl: "/sports/escalada/escalada.png",
+          name: "Centro de Escalada Norte",
+          address: "Centro de Escalada Norte - Av. Alemania 1234, Temuco, Chile",
+          rating: 4.8,
+          tags: ["Techado", "Disponible", "Muros de Escalada"],
+          description: "Centro de escalada con múltiples rutas",
+          price: "18",
+          nextAvailable: "Disponible ahora",
+          sport: "escalada"
+        },
+        {
+          id: 2,
+          imageUrl: "/sports/escalada/escalada.png",
+          name: "Rocódromo Centro",
+          address: "Rocódromo Centro - Av. Pedro de Valdivia 567, Temuco, Chile",
+          rating: 4.6,
+          tags: ["Techado", "Disponible", "Boulder"],
+          description: "Rocódromo especializado en boulder",
+          price: "15",
+          nextAvailable: "Disponible ahora",
+          sport: "escalada"
+        },
+        {
+          id: 3,
+          imageUrl: "/sports/escalada/escalada.png",
+          name: "Climbing Wall Sur",
+          address: "Climbing Wall Sur - Calle Montt 890, Temuco, Chile",
+          rating: 4.9,
+          tags: ["Al aire libre", "Disponible", "Escalada Natural"],
+          description: "Muro de escalada al aire libre",
+          price: "22",
+          nextAvailable: "Disponible ahora",
+          sport: "escalada"
+        }
+      ];
+      
+      setCentros(fallbackCentros);
+      setFilteredCentros(fallbackCentros);
+    } finally {
+      setIsLoadingCentros(false);
+    }
+  };
+
+  // 🧗‍♂️ FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO
+  const getStaticComplejoData = (establecimientoId: number) => {
+    const staticComplejos = {
+      1: {
+        nombre: "Centro de Escalada Norte",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      },
+      2: {
+        nombre: "Rocódromo Centro", 
+        direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+      },
+      3: {
+        nombre: "Climbing Wall Sur",
+        direccion: "Calle Montt 890, Temuco, Chile"
+      },
+      default: {
+        nombre: "Centro de Escalada",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      }
+    };
+    
+    return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+  };
+
+  // 🧗‍♂️ CARGAR CENTROS AL MONTAR EL COMPONENTE
+  useEffect(() => {
+    cargarCentros();
+  }, []);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -106,6 +199,25 @@ export default function Page() {
     !centro.nextAvailable.includes("Mañana")
   ).length;
 
+  const handleUserButtonClick = () => {
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
+  };
+
+  // 🧗‍♂️ FUNCIÓN PARA REFRESCAR DATOS
+  const handleRefresh = () => {
+    cargarCentros();
+  };
+
+  // 🧗‍♂️ MANEJADOR DE CLICK EN CENTRO
+  const handleCentroClick = (center: any) => {
+    console.log('Navegando a centro:', center);
+    router.push(`/sports/escalada/centros/centroseleccionado?id=${center.id}`);
+  };
+
   return (
     <div className={styles.pageContainer}>
       <Sidebar userRole="usuario" sport="escalada" />
@@ -122,12 +234,16 @@ export default function Page() {
               value={searchTerm}
               onChange={handleSearchChange}
               onSearch={handleSearch}
-              placeholder="Nombre del centro o ruta"
+              placeholder="Nombre del centro"
               sport="escalada" 
             />
-            <button className={styles.userButton}>
+            <button 
+              {...buttonProps}
+              onClick={handleUserButtonClick}
+              className={styles.userButton}
+            >
               <span>👤</span>
-              <span>Usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>
@@ -143,24 +259,41 @@ export default function Page() {
           </button>
         </div>
 
+        {/* 🧗‍♂️ MENSAJE DE ERROR CON INDICADOR DE FALLBACK */}
+        {error && (
+          <div className={styles.errorMessage}>
+            <span>⚠️</span>
+            <span>Error: {error} - Mostrando datos offline</span>
+            <button onClick={handleRefresh}>Reintentar</button>
+          </div>
+        )}
+
+        {/* 🧗‍♂️ MENSAJE DE CARGA */}
+        {isLoadingCentros && (
+          <div className={styles.loadingMessage}>
+            <span>🧗‍♂️</span>
+            <span>Cargando centros de escalada...</span>
+          </div>
+        )}
+
         {/* Filtros */}
         <div className={styles.filtersContainer}>
           <h3 className={styles.filtersTitle}>Filtrar centros de escalada</h3>
           <div className={styles.filtersGrid}>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#A67B5B'}}>📍</span>
-                <span>Ubicación o zona</span>
+                <span style={{color: '#7c3aed'}}>📍</span>
+                <span>Ubicación o barrio</span>
               </label>
               <input
                 type="text"
-                placeholder="Norte, Centro, Sur, Volcánica..."
+                placeholder="Norte, Centro, Sur, Oeste..."
                 className={styles.filterInput}
               />
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#A67B5B'}}>📅</span>
+                <span style={{color: '#7c3aed'}}>📅</span>
                 <span>Fecha</span>
               </label>
               <input
@@ -171,29 +304,26 @@ export default function Page() {
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#6F4E37'}}>💰</span>
-                <span>Precio (max $sesión)</span>
+                <span style={{color: '#6d28d9'}}>💰</span>
+                <span>Precio (max $hr)</span>
               </label>
               <input
                 type="range"
                 min="0"
-                max="50"
+                max="30"
                 className={styles.priceSlider}
               />
             </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
-                <span style={{color: '#ECB176'}}>🧗‍♀️</span>
+                <span style={{color: '#5b21b6'}}>🧗‍♂️</span>
                 <span>Tipo de escalada</span>
               </label>
               <select className={styles.filterSelect}>
                 <option>Tipo de escalada</option>
-                <option>Escalada Indoor</option>
-                <option>Escalada Outdoor</option>
                 <option>Boulder</option>
-                <option>Escalada Deportiva</option>
-                <option>Escalada Tradicional</option>
-                <option>Escalada en Volcanes</option>
+                <option>Escalada deportiva</option>
+                <option>Escalada tradicional</option>
               </select>
             </div>
           </div>
@@ -205,9 +335,8 @@ export default function Page() {
           </div>
         </div>
 
-
         {/* Mensaje de no resultados */}
-        {filteredCentros.length === 0 && searchTerm && (
+        {filteredCentros.length === 0 && searchTerm && !isLoadingCentros && (
           <div className={styles.noResults}>
             <h3>No se encontraron centros de escalada para &quot;{searchTerm}&quot;</h3>
             <p>Intenta con otros términos de búsqueda o ubicaciones</p>
@@ -217,19 +346,33 @@ export default function Page() {
           </div>
         )}
 
-        {/* Contenedor de tarjetas */}
-        <div className={styles.cardsContainer}>
-          <div className={styles.cardsGrid}>
-            {filteredCentros.map((centro, idx) => (
-              <CourtCard 
-                key={idx} 
-                {...centro} 
-                sport="escalada"
-                
-              />
-            ))}
+        {/* 🧗‍♂️ MENSAJE CUANDO NO HAY CENTROS EN LA BD */}
+        {filteredCentros.length === 0 && !searchTerm && !isLoadingCentros && !error && (
+          <div className={styles.noData}>
+            <div className={styles.noDataContainer}>
+              <div className={styles.noDataIcon}>🧗‍♂️</div>
+              <h3 className={styles.noDataTitle}>No hay centros de escalada registrados</h3>
+              <p className={styles.noDataText}>Aún no se han registrado centros de escalada en el sistema</p>
+              <button className={styles.refreshButton} onClick={handleRefresh}>Actualizar</button>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Contenedor de tarjetas */}
+        {!isLoadingCentros && filteredCentros.length > 0 && (
+          <div className={styles.cardsContainer}>
+            <div className={styles.cardsGrid}>
+              {filteredCentros.map((centro, idx) => (
+                <CourtCard 
+                  key={centro.id || idx} 
+                  {...centro} 
+                  sport="escalada"
+                  onClick={() => handleCentroClick(centro)}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

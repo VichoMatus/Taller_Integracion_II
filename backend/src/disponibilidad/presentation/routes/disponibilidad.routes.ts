@@ -142,7 +142,7 @@ router.post("/horarios", authMiddleware, (req, res) => ctrl(req).createHorario(r
 router.patch("/horarios/:id", authMiddleware, (req, res) => ctrl(req).updateHorario(req, res));
 
 /** DELETE /horarios/:id - Eliminar horario (requiere rol admin) */
-router.delete("/horarios/:id", requireRole("admin", "superadmin"), (req, res) => ctrl(req).deleteHorario(req, res));
+router.delete("/horarios/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).deleteHorario(req, res));
 
 // === Endpoints de Bloqueos ===
 // Requieren autenticación para todas las operaciones

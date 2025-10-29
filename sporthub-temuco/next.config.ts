@@ -7,11 +7,34 @@ const nextConfig: NextConfig = {
     "http://localhost:8081",
     "http://localhost:3000"
   ],
+  
+  // Optimizaciones de build
+  swcMinify: true,
+  experimental: {
+    turbo: {
+      loaders: {
+        '.svg': ['@svgr/webpack'],
+      },
+    },
+  },
+  
+  // Webpack optimizations
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+      };
+    }
+    return config;
+  },
+  
   // ESLint y TypeScript habilitados para verificar errores
   
   // Asegurar que las variables de entorno se expongan correctamente
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL,
   },
   
   // Para depuración: mostrar las variables de entorno en build time

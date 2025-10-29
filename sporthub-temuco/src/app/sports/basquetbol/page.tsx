@@ -6,103 +6,66 @@ import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import StatsCard from '../../../components/charts/StatsCard';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
+import { canchaService } from '@/services/canchaService';
+import { complejosService } from '@/services/complejosService';
 import styles from './page.module.css';
 
-// Datos de ejemplo para las canchas mejor calificadas (6 tarjetas)
-const topRatedCourts = [
-  {
-    imageUrl: "/sports/basquetbol/canchas/Cancha1.png",
-    name: "Basquetbol - Centro",
-    address: "Norte, Centro, Sur",
-    rating: 4.3,
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Cancha para basquetbol ubicada en el centro y con implementos deportivos (Balones y petos)",
-    price: "21",
-    nextAvailable: "20:00-21:00", 
-  },
-  {
-    imageUrl: "/sports/basquetbol/canchas/Cancha2.png",
-    name: "Basquetbol - Norte",
-    address: "Sector Norte",
-    rating: 4.5,
-    tags: ["Cancha Cerrada", "Estacionamiento"],
-    description: "Cancha para basquetbol ubicada en el centro y con implementos deportivos (Balones y petos)",
-    price: "19",
-    nextAvailable: "14:30-15:30", 
-  },
-  {
-    imageUrl: "/sports/basquetbol/canchas/Cancha3.png",
-    name: "Basquetbol - Sur",
-    address: "Sector Sur",
-    rating: 4.1,
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación"],
-    description: "Cancha para basquetbol ubicada en el centro y con implementos deportivos (Balones y petos)",
-    price: "23",
-    nextAvailable: "Mañana 09:00-10:00",
-  },
-  {
-    imageUrl: "/sports/basquetbol/canchas/Cancha4.png",
-    name: "Basquetbol Premium",
-    address: "Centro Premium", 
-    rating: 4.7,
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Cancha para basquetbol ubicada en el centro y con implementos deportivos (Balones y petos)",
-    price: "26",
-    nextAvailable: "Disponible ahora",
-  },
-  {
-    imageUrl: "/sports/basquetbol/canchas/Cancha5.png",
-    name: "Basquetbol - Elite",
-    address: "Zona Elite", 
-    rating: 4.8,
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Cancha premium para basquetbol con todas las comodidades y equipamiento profesional",
-    price: "28",
-    nextAvailable: "18:00-19:00",
-  },
-  {
-    imageUrl: "/sports/basquetbol/canchas/Cancha6.png",
-    name: "Basquetbol - Deportivo",
-    address: "Centro Deportivo", 
-    rating: 4.4,
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación"],
-    description: "Cancha de basquetbol en complejo deportivo con múltiples servicios disponibles",
-    price: "22",
-    nextAvailable: "16:30-17:30",
-  }
-];
-
-// 🔥 DATOS PARA LAS ESTADÍSTICAS DE BASQUETBOL
+// 🏀 DATOS PARA LAS ESTADÍSTICAS DE BÁSQUETBOL
 const basketballStats = [
   {
     title: "Canchas Disponibles Hoy",
-    value: "12",
+    value: "8",
     icon: "🏀",
-    subtitle: "Listas para jugar",
+    subtitle: "Listas para reservar",
     trend: { value: 2, isPositive: true }
   },
   {
     title: "Rango de Precios",
-    value: "$19-28",
+    value: "$18-35",
     icon: "💰",
     subtitle: "Por hora",
-    trend: { value: 6, isPositive: true }
+    trend: { value: 5, isPositive: true }
   },
   {
     title: "Calificación Promedio",
-    value: "4.5⭐",
+    value: "4.6⭐",
     icon: "🏆",
     subtitle: "De nuestras canchas",
-    trend: { value: 0.1, isPositive: true }
+    trend: { value: 0.3, isPositive: true }
   },
   {
     title: "Jugadores en Cancha",
-    value: "18",
+    value: "10",
     icon: "👥",
     subtitle: "Ahora mismo",
     trend: { value: 6, isPositive: true }
   }
 ];
+
+// 🏀 FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO
+const getStaticComplejoData = (establecimientoId: number) => {
+  const staticComplejos = {
+    1: {
+      nombre: "Gimnasio Municipal Norte",
+      direccion: "Av. Alemania 1234, Temuco, Chile"
+    },
+    2: {
+      nombre: "Centro Deportivo Los Andes", 
+      direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+    },
+    3: {
+      nombre: "Polideportivo Universidad",
+      direccion: "Calle Montt 890, Temuco, Chile"
+    },
+    default: {
+      nombre: "Gimnasio de Básquetbol",
+      direccion: "Av. Alemania 1234, Temuco, Chile"
+    }
+  };
+
+  return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+};
 
 export default function BasquetbolPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -112,6 +75,139 @@ export default function BasquetbolPage() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
+
+  // 🏀 ESTADOS PARA CANCHAS DEL BACKEND
+  const [canchas, setCanchas] = useState<any[]>([]);
+  const [loadingCanchas, setLoadingCanchas] = useState(true);
+  const [errorCanchas, setErrorCanchas] = useState<string | null>(null);
+
+  // 🏀 Hook de autenticación
+  const { buttonProps } = useAuthStatus();
+
+  // 🏀 CARGAR CANCHAS DEL BACKEND CON DATOS DE COMPLEJO
+  useEffect(() => {
+    const loadCanchas = async () => {
+      try {
+        setLoadingCanchas(true);
+        setErrorCanchas(null);
+        
+        console.log('🔄 [BasquetbolPage] Cargando TODAS las canchas del backend...');
+        
+        // 🏀 OBTENER TODAS LAS CANCHAS
+        const todasLasCanchas = await canchaService.getCanchas();
+        console.log('✅ [BasquetbolPage] Todas las canchas obtenidas:', todasLasCanchas);
+        
+        // 🏀 FILTRAR CANCHAS DE BÁSQUETBOL Y BASKETBALL
+        const canchasDeBasquetbol = todasLasCanchas.filter((cancha: any) => {
+          console.log(`🔍 [BasquetbolPage] Evaluando cancha ID ${cancha.id}: tipo="${cancha.tipo}"`);
+          return ['basquetbol', 'basketball', 'basquet'].includes(cancha.tipo.toLowerCase());
+        });
+        
+        console.log('🏀 [BasquetbolPage] Canchas de básquetbol encontradas:', canchasDeBasquetbol.length);
+        
+        // 🏀 OBTENER DATOS DE COMPLEJOS PARA CADA CANCHA
+        const canchasMapeadas = await Promise.all(
+          canchasDeBasquetbol.map(async (cancha: any) => {
+            let complejoData = null;
+            let addressInfo = `Gimnasio ${cancha.establecimientoId}`;
+            
+            // 🏀 INTENTAR OBTENER DATOS DEL COMPLEJO
+            if (cancha.establecimientoId) {
+              try {
+                console.log(`🔍 [BasquetbolPage] Cargando complejo ID ${cancha.establecimientoId} para cancha ${cancha.id}`);
+                complejoData = await complejosService.getComplejoById(cancha.establecimientoId);
+                
+                if (complejoData) {
+                  addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                  console.log(`✅ [BasquetbolPage] Complejo cargado: ${addressInfo}`);
+                }
+                
+              } catch (complejoError: any) {
+                console.warn(`⚠️ [BasquetbolPage] Error cargando complejo ${cancha.establecimientoId}:`, complejoError.message);
+                // Usar datos de fallback
+                const staticComplejo = getStaticComplejoData(cancha.establecimientoId);
+                addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+              }
+            }
+            
+            // 🏀 MAPEAR CANCHA CON DATOS DEL COMPLEJO
+            const mappedCancha = {
+              id: cancha.id,
+              imageUrl: `/sports/basquetbol/canchas/Cancha${cancha.id}.png`,
+              name: cancha.nombre,
+              address: addressInfo, // 🏀 USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
+              rating: cancha.rating || 4.6,
+              tags: [
+                cancha.techada ? "Cancha Techada" : "Cancha Exterior",
+                cancha.activa ? "Disponible" : "No disponible",
+                cancha.tipo.charAt(0).toUpperCase() + cancha.tipo.slice(1) // Capitalizar tipo
+              ],
+              description: `Cancha de ${cancha.tipo} ${cancha.nombre} - ID: ${cancha.id}`,
+              price: cancha.precioPorHora?.toString() || "22",
+              nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
+              sport: "basquetbol"
+            };
+            
+            console.log('🗺️ [BasquetbolPage] Cancha mapeada:', mappedCancha);
+            return mappedCancha;
+          })
+        );
+        
+        console.log('🎉 [BasquetbolPage] Canchas con datos de complejo cargadas:', canchasMapeadas.length);
+        setCanchas(canchasMapeadas);
+        
+      } catch (error: any) {
+        console.error('❌ [BasquetbolPage] ERROR cargando canchas:', error);
+        setErrorCanchas(`Error: ${error.message}`);
+        
+        // 🏀 FALLBACK CON DATOS ESTÁTICOS MEJORADOS
+        const canchasEstaticas = [
+          {
+            id: 1,
+            imageUrl: "/sports/basquetbol/basquetbol.png",
+            name: "🚨 FALLBACK - Basquetbol Centro",
+            address: "Gimnasio Municipal Norte - Av. Alemania 1234, Temuco", // 🏀 FORMATO MEJORADO
+            rating: 4.5,
+            tags: ["DATOS OFFLINE", "Cancha Techada", "Piso Sintético"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "22",
+            nextAvailable: "18:00-19:00",
+            sport: "basquetbol"
+          },
+          {
+            id: 2,
+            imageUrl: "/sports/basquetbol/basquetbol.png",
+            name: "🚨 FALLBACK - Basketball Norte",
+            address: "Centro Deportivo Los Andes - Av. Pedro de Valdivia 567, Temuco",
+            rating: 4.7,
+            tags: ["DATOS OFFLINE", "Cancha Techada", "Tableros Profesionales"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "25",
+            nextAvailable: "15:30-16:30",
+            sport: "basquetbol"
+          },
+          {
+            id: 3,
+            imageUrl: "/sports/basquetbol/basquetbol.png",
+            name: "🚨 FALLBACK - Basquet Sur",
+            address: "Polideportivo Universidad - Calle Montt 890, Temuco",
+            rating: 4.4,
+            tags: ["DATOS OFFLINE", "Cancha Exterior", "Concreto"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "18",
+            nextAvailable: "Mañana 10:00-11:00",
+            sport: "basquetbol"
+          }
+        ];
+        
+        setCanchas(canchasEstaticas);
+      } finally {
+        setLoadingCanchas(false);
+      }
+    };
+
+    loadCanchas();
+  }, []);
 
   useEffect(() => {
     setIsClient(true);
@@ -140,6 +236,8 @@ export default function BasquetbolPage() {
     };
   }, []);
 
+  // 🏀 USAR CANCHAS REALES PARA EL CARRUSEL
+  const topRatedCourts = canchas.slice(0, 6); // Máximo 6 canchas para el carrusel
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -155,21 +253,45 @@ export default function BasquetbolPage() {
   };
 
   const handleSearch = () => {
-    console.log('Buscando cancha de basquetbol:', searchTerm);
+    console.log('Buscando:', searchTerm);
   };
 
   const handleLocationSearch = () => {
-    console.log('Buscando ubicación de canchas:', locationSearch, 'Radio:', radiusKm);
+    console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
   };
 
   const handleCanchaClick = (court: any) => {
-    console.log('Navegando a cancha de basquetbol...');
-    router.push('/sports/basquetbol/canchas/canchaseleccionada');
+    console.log('Navegando a cancha:', court);
+    router.push(`/sports/basquetbol/canchas/canchaseleccionada?id=${court.id}`);
   };
 
-  const handleHelp = () => {
-    alert('¿Necesitas ayuda con reservas de basquetbol? Contáctanos al (45) 555-0000 o envía un email a basquet@sporthub.cl');
+  // 🏀 Manejador del botón de usuario
+  const handleUserButtonClick = () => {
+    if (!buttonProps.disabled) {
+      router.push(buttonProps.href);
+    }
   };
+
+  // 🏀 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
+  const updatedStats = [
+    {
+      ...basketballStats[0],
+      value: canchas.filter(c => c.nextAvailable !== "No disponible").length.toString()
+    },
+    {
+      ...basketballStats[1],
+      value: canchas.length > 0 ? 
+        `$${Math.min(...canchas.map(c => parseInt(c.price || '0')))}-${Math.max(...canchas.map(c => parseInt(c.price || '0')))}` : 
+        "$18-35"
+    },
+    {
+      ...basketballStats[2],
+      value: canchas.length > 0 ? 
+        `${(canchas.reduce((acc, c) => acc + c.rating, 0) / canchas.length).toFixed(1)}⭐` : 
+        "4.6⭐"
+    },
+    basketballStats[3] // Mantener jugadores por defecto
+  ];
 
   if (!isClient) {
     return (
@@ -177,7 +299,7 @@ export default function BasquetbolPage() {
         <Sidebar userRole="usuario" sport="basquetbol" />
         <div className={styles.mainContent}>
           <div style={{ height: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <p>Cargando canchas de basquetbol...</p>
+            <p>Cargando...</p>
           </div>
         </div>
       </div>
@@ -192,7 +314,7 @@ export default function BasquetbolPage() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>🏀</div>
-            <h1 className={styles.headerTitle}>Basquetbol</h1>
+            <h1 className={styles.headerTitle}>Básquetbol</h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar
@@ -202,21 +324,25 @@ export default function BasquetbolPage() {
               placeholder="Nombre de la cancha..."
               sport="basquetbol" 
             />
-            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
+            <button 
+              className={styles.userButton}
+              onClick={handleUserButtonClick}
+              disabled={buttonProps.disabled}
+            >
               <span>👤</span>
-              <span>usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>
 
-        {/* 🔥 STATS CARDS MEJORADAS CON STATSCARD */}
+        {/* 🏀 STATS CARDS CON DATOS ACTUALIZADOS */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
             <span className={styles.statsTitleIcon}>📊</span>
-            Estadísticas del Basquetbol en Temuco
+            Estadísticas del Básquetbol en Temuco
           </h2>
           <div className={styles.statsContainer}>
-            {basketballStats.map((stat, index) => (
+            {updatedStats.map((stat, index) => (
               <StatsCard
                 key={index}
                 title={stat.title}
@@ -224,9 +350,9 @@ export default function BasquetbolPage() {
                 icon={stat.icon}
                 subtitle={stat.subtitle}
                 trend={stat.trend}
+                sport="basquetbol"
                 onClick={() => {
                   console.log(`Clicked on ${stat.title} stat`);
-                  // Navegación específica para basquetbol
                   if (stat.title.includes("Canchas")) {
                     router.push('/sports/basquetbol/canchas');
                   }
@@ -239,7 +365,7 @@ export default function BasquetbolPage() {
         <div className={styles.quickAccessSection}>
           <button 
             className={styles.mainCourtButton}
-            onClick={() => window.location.href = '/sports/basquetbol/canchas'}
+            onClick={() => window.location.href = '/sports/basquetbol/canchas/'}
           >
             <div className={styles.courtButtonIcon}>🏀</div>
             <div className={styles.courtButtonText}>
@@ -250,19 +376,21 @@ export default function BasquetbolPage() {
           </button>
         </div>
 
-        {/* Canchas mejor calificadas con carrusel */}
+        {/* 🏀 CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>⭐</span>
               Canchas mejor calificadas
+              {loadingCanchas && <span style={{ fontSize: '14px', marginLeft: '10px' }}>Cargando...</span>}
+              {errorCanchas && <span style={{ fontSize: '14px', marginLeft: '10px', color: 'red' }}>⚠️ Usando datos offline</span>}
             </h2>
             <div className={styles.carouselControls}>
               <button 
                 onClick={prevSlide} 
                 className={styles.carouselButton}
-                disabled={currentSlide === 0}
-                style={{ opacity: currentSlide === 0 ? 0.5 : 1 }}
+                disabled={currentSlide === 0 || loadingCanchas}
+                style={{ opacity: currentSlide === 0 || loadingCanchas ? 0.5 : 1 }}
               >
                 ←
               </button>
@@ -272,8 +400,8 @@ export default function BasquetbolPage() {
               <button 
                 onClick={nextSlide} 
                 className={styles.carouselButton}
-                disabled={currentSlide === totalSlides - 1}
-                style={{ opacity: currentSlide === totalSlides - 1 ? 0.5 : 1 }}
+                disabled={currentSlide === totalSlides - 1 || loadingCanchas}
+                style={{ opacity: currentSlide === totalSlides - 1 || loadingCanchas ? 0.5 : 1 }}
               >
                 →
               </button>
@@ -281,21 +409,27 @@ export default function BasquetbolPage() {
           </div>
           
           <div className={styles.carouselContainer}>
-            <div 
-              className={styles.courtsGrid}
-              style={{
-                transform: `translateX(-${currentSlide * (320 + 20)}px)`,
-              }}
-            >
-              {topRatedCourts.map((court, index) => (
-                <CourtCard 
-                  key={index} 
-                  {...court} 
-                  sport="basquetbol"
-                  onClick={() => router.push('/sports/basquetbol/canchas/canchaseleccionada')}
-                />
-              ))}
-            </div>
+            {loadingCanchas ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                <p>Cargando canchas...</p>
+              </div>
+            ) : (
+              <div 
+                className={styles.courtsGrid}
+                style={{
+                  transform: `translateX(-${currentSlide * (320 + 20)}px)`,
+                }}
+              >
+                {topRatedCourts.map((court, index) => (
+                  <CourtCard 
+                    key={court.id || index} 
+                    {...court} 
+                    sport="basquetbol"
+                    onClick={() => handleCanchaClick(court)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -342,7 +476,7 @@ export default function BasquetbolPage() {
           />
 
           <div className={styles.mapActions}>
-            <button className={styles.helpButton} onClick={handleHelp}>
+            <button className={styles.helpButton}>
               ❓ Ayuda
             </button>
           </div>

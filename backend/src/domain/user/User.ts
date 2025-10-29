@@ -2,11 +2,10 @@
  * Roles disponibles en el sistema con jerarquía de permisos.
  * 
  * - usuario: Usuario básico del sistema
- * - dueno: Propietario de establecimiento
- * - admin: Administrador con permisos de gestión
- * - superadmin: Administrador con permisos completos
+ * - admin: Administrador/Propietario con permisos de gestión de complejos
+ * - super_admin: Administrador con permisos completos del sistema
  */
-export type Rol = "usuario" | "dueno" | "admin" | "superadmin";
+export type Rol = "usuario" | "admin" | "super_admin";
 
 /**
  * Entidad principal de usuario del sistema.

@@ -30,12 +30,11 @@ interface CourtCardProps {
   name: string;
   address: string;
   rating: number;
-  // 🔥 REMOVIDO: reviews prop ya no existe
   tags: string[];
   description: string;
   price: string;
   nextAvailable: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje' | 'escalada' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
+  sport?: 'basquetbol' | 'futbol' | 'futsal' | 'futbolito' | 'tenis' | 'voleibol' | 'padel' | 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje' | 'escalada' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
   onClick?: () => void;
 }
 
@@ -44,7 +43,6 @@ const CourtCard: React.FC<CourtCardProps> = ({
   name,
   address,
   rating,
-  // 🔥 REMOVIDO: reviews de los params
   tags,
   description,
   price,
@@ -54,12 +52,85 @@ const CourtCard: React.FC<CourtCardProps> = ({
 }) => {
   const router = useRouter();
   
+  // 🔥 ESTADOS PARA MANEJO DE IMÁGENES
+  const [imageError, setImageError] = React.useState(false);
+  const [currentImageUrl, setCurrentImageUrl] = React.useState(imageUrl);
+  
+  // 🔥 FUNCIÓN PARA OBTENER IMAGEN POR DEFECTO DEL DEPORTE
+  const getDefaultSportImage = () => {
+    switch (sport) {
+      case 'basquetbol':
+        return '/sports/basquetbol/Basquet.png';
+      case 'futbol':
+      case 'futsal':
+      case 'futbolito':
+        return '/sports/futbol/futbol.png';
+      case 'tenis':
+        return '/sports/tenis/tenis.png';
+      case 'voleibol':
+        return '/sports/voleibol/voleibol.png';
+      case 'padel':
+        return '/sports/padel/padel.png';
+      case 'natacion':
+        return '/sports/natacion/natacion.png';
+      case 'patinaje':
+        return '/sports/patinaje/patinaje.png';
+      case 'atletismo':
+        return '/sports/atletismo/atletismo.png';
+      case 'escalada':
+        return '/sports/escalada/escalada.png';
+      case 'crossfitentrenamientofuncional':
+        return '/sports/crossfitentrenamientofuncional/crossfitentrenamientofuncional.png';
+      case 'enduro':
+        return '/sports/enduro/enduro.png';
+      case 'rugby':
+        return '/sports/rugby/rugby.png';
+      case 'futbol-americano':
+        return '/sports/futbol-americano/futbol-americano.png';
+      case 'mountain-bike':
+        return '/sports/mountain-bike/mountain-bike.png';
+      case 'skate':
+        return '/sports/skate/skate.png';
+      case 'ciclismo':
+        return '/sports/ciclismo/ciclismo.png';
+      case 'karting':
+        return '/sports/karting/karting.png';
+      default:
+        return '/sports/basquetbol/Basquet.png';
+    }
+  };
+
+  // 🔥 FUNCIÓN PARA MANEJAR ERRORES DE IMAGEN
+  const handleImageError = () => {
+    console.log(`⚠️ Error cargando imagen: ${currentImageUrl}`);
+    
+    // Si la imagen actual no es la por defecto, cambiar a la por defecto
+    const defaultImage = getDefaultSportImage();
+    if (currentImageUrl !== defaultImage) {
+      console.log(`🔄 Cambiando a imagen por defecto: ${defaultImage}`);
+      setCurrentImageUrl(defaultImage);
+      setImageError(false); // Resetear el error para intentar con la nueva imagen
+    } else {
+      // Si ya estamos usando la imagen por defecto y falló, mostrar emoji
+      console.log(`❌ Imagen por defecto también falló, mostrando emoji`);
+      setImageError(true);
+    }
+  };
+
+  // 🔥 RESETEAR ESTADO CUANDO CAMBIA EL imageUrl PROP
+  React.useEffect(() => {
+    setCurrentImageUrl(imageUrl);
+    setImageError(false);
+  }, [imageUrl]);
+  
   // 🔥 FUNCIÓN PARA SELECCIONAR ESTILOS SEGÚN EL DEPORTE
   const getSportStyles = () => {
     switch (sport) {
       case 'basquetbol':
         return basquetbolStyles;
       case 'futbol':
+      case 'futsal':
+      case 'futbolito':
         return futbolStyles;
       case 'tenis':
         return tenisStyles;
@@ -98,7 +169,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
   };
 
   // 🔥 OBTENER LOS ESTILOS APROPIADOS
-  const currentStyles = getSportStyles(); // 🔥 CAMBIADO A currentStyles
+  const currentStyles = getSportStyles();
   
   // 🔥 Limitar a máximo 4 tags
   const displayTags = tags.slice(0, 4);
@@ -147,8 +218,10 @@ const CourtCard: React.FC<CourtCardProps> = ({
         case 'karting':
           router.push('/sports/karting/canchas/canchaseleccionada');
           break;
-          
+
         case 'futbol':
+        case 'futsal':
+        case 'futbolito':
           router.push('/sports/futbol/canchas/canchaseleccionada');
           break;
           
@@ -159,7 +232,6 @@ const CourtCard: React.FC<CourtCardProps> = ({
             location: address,
             description: description,
             rating: rating.toString(),
-            // 🔥 REMOVIDO: reviews ya no existe
             priceFrom: (parseInt(price) * 1000).toString(),
           });
           router.push(`/sports/tenis/canchas/canchaseleccionada?${tenisParams.toString()}`);
@@ -172,7 +244,6 @@ const CourtCard: React.FC<CourtCardProps> = ({
             location: address,
             description: description,
             rating: rating.toString(),
-            // 🔥 REMOVIDO: reviews ya no existe
             priceFrom: (parseInt(price) * 1000).toString(),
           });
           router.push(`/sports/voleibol/canchas/canchaseleccionada?${voleibolParams.toString()}`);
@@ -193,7 +264,6 @@ const CourtCard: React.FC<CourtCardProps> = ({
             location: address,
             description: description,
             rating: rating.toString(),
-            // 🔥 REMOVIDO: reviews ya no existe
             priceFrom: (parseInt(price) * 1000).toString(),
           });
           router.push(`/sports/futbol-americano/estadios/estadioseleccionado?${futbolAmericanoParams.toString()}`);
@@ -206,20 +276,18 @@ const CourtCard: React.FC<CourtCardProps> = ({
             location: address,
             description: description,
             rating: rating.toString(),
-            // 🔥 REMOVIDO: reviews ya no existe
             priceFrom: (parseInt(price) * 1000).toString(),
           });
           router.push(`/sports/rugby/canchas/canchaseleccionada?${rugbyParams.toString()}`);
           break;
 
-        case 'mountain-bike': // 🔥 NUEVO CASO PARA MOUNTAIN BIKE
+        case 'mountain-bike':
           const mountainBikeParams = new URLSearchParams({
             id: Date.now().toString(),
             name: name,
             location: address,
             description: description,
             rating: rating.toString(),
-            // 🔥 REMOVIDO: reviews ya no existe
             priceFrom: (parseInt(price) * 1000).toString(),
           });
           router.push(`/sports/mountain-bike/rutas/rutaseleccionada?${mountainBikeParams.toString()}`);
@@ -250,7 +318,11 @@ const CourtCard: React.FC<CourtCardProps> = ({
     switch (sport) {
       case 'basquetbol':
         return '🏀';
-      case 'futbol':
+      case 'futbol' :
+        return '⚽';
+      case 'futsal':
+        return '⚽';
+      case 'futbolito':
         return '⚽';
       case 'tenis':
         return '🎾';
@@ -284,21 +356,14 @@ const CourtCard: React.FC<CourtCardProps> = ({
         return '🏀';
     }
   };
-
-  // 🔥 FUNCIÓN PARA MANEJAR ERRORES DE IMAGEN
-  const [imageError, setImageError] = React.useState(false);
-
-  const handleImageError = () => {
-    setImageError(true);
-  };
   
   return (
     <div className={currentStyles.courtCard} data-sport={sport}>
-      {/* 🔥 CONTENEDOR DE IMAGEN CON FALLBACK */}
+      {/* 🔥 CONTENEDOR DE IMAGEN CON FALLBACK INTELIGENTE */}
       <div className={`${currentStyles.imageContainer} ${imageError ? currentStyles.fallback : ''}`}>
         {!imageError ? (
           <Image
-            src={imageUrl}
+            src={currentImageUrl}
             alt={name}
             className={currentStyles.cardImage}
             width={300}
@@ -311,7 +376,8 @@ const CourtCard: React.FC<CourtCardProps> = ({
             alignItems: 'center', 
             justifyContent: 'center',
             fontSize: '48px',
-            height: '100%'
+            height: '100%',
+            backgroundColor: '#f0f0f0'
           }}>
             {getSportEmoji()}
           </div>

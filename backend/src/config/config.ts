@@ -43,7 +43,8 @@ export const API_CONFIG = {
 export const API_ENDPOINTS = {
   // Endpoints de autenticación
   auth: {
-    register: '/api/v1/auth/register',
+    registerInit: '/api/v1/auth/register/init',
+    registerVerify: '/api/v1/auth/register/verify',
     login: '/api/v1/auth/login',
     logout: '/api/v1/auth/logout',
     refresh: '/api/v1/auth/refresh',
@@ -72,9 +73,9 @@ export const API_ENDPOINTS = {
   },
   
   // Endpoints específicos de SuperAdmin
-  superadmin: {
-    parametros: '/api/v1/superadmin/parametros',
-    estadisticas: '/api/v1/superadmin/estadisticas',
-    logs: '/api/v1/superadmin/logs'
+  super_admin: {
+    parametros: '/api/v1/super_admin/parametros',
+    estadisticas: '/api/v1/super_admin/estadisticas',
+    logs: '/api/v1/super_admin/logs'
   }
 };

@@ -32,16 +32,21 @@ export default function LoginPage() {
             });
 
             console.log('Login exitoso:', response);
+            console.log('Rol del usuario:', response.usuario?.rol);
             
             if (response.usuario && response.usuario.rol) {
+                console.log('Switch con rol:', response.usuario.rol);
                 switch (response.usuario.rol) {
                     case 'admin':
+                        console.log('Redirigiendo a /admin');
                         router.push('/admin');
                         break;
                     case 'super_admin':
-                        router.push('/superadmin');
+                        console.log('Redirigiendo a /super_admin');
+                        router.push('/super_admin');
                         break;
                     default:
+                        console.log('Redirigiendo a /sports por default');
                         router.push('/sports');
                         break;
                 }

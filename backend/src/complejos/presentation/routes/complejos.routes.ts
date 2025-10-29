@@ -14,6 +14,7 @@ import {
 } from "../../application/ComplejosUseCases";
 import { ComplejosController } from "../controllers/complejos.controller";
 import { requireRole } from "../../../admin/presentation/guards/guards";
+import { authMiddleware } from "../../../auth/middlewares/authMiddleware";
 
 /**
  * Router para endpoints de complejos deportivos.
@@ -47,25 +48,25 @@ router.get("/", (req, res) => ctrl(req).list(req, res));
 /** GET /complejos/:id - Obtiene complejo específico (público) */
 router.get("/:id", (req, res) => ctrl(req).get(req, res));
 
-// === Endpoints para Dueños ===
-// Requieren autenticación pero permiten a dueños gestionar sus propios complejos
+// === Endpoints para Administradores ===
+// Requieren rol admin o super_admin
 
-/** GET /complejos/duenio/:duenioId - Obtiene complejos de un dueño */
-router.get("/duenio/:duenioId", requireRole("admin", "superadmin"), (req, res) => ctrl(req).getByDuenio(req, res));
+/** GET /complejos/admin/:adminId - Obtiene complejos de un administrador */
+router.get("/admin/:adminId", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getByDuenio(req, res));
 
 // === Endpoints Administrativos ===
-// Requieren rol admin o superadmin
+// Requieren rol admin o super_admin
 
 /** POST /complejos - Crea nuevo complejo */
-router.post("/", requireRole("admin", "superadmin"), (req, res) => ctrl(req).create(req, res));
+router.post("/", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).create(req, res));
 
 /** PATCH /complejos/:id - Actualiza complejo */
-router.patch("/:id", requireRole("admin", "superadmin"), (req, res) => ctrl(req).update(req, res));
+router.patch("/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).update(req, res));
 
 /** DELETE /complejos/:id - Elimina complejo */
-router.delete("/:id", requireRole("admin", "superadmin"), (req, res) => ctrl(req).delete(req, res));
+router.delete("/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).delete(req, res));
 
 /** PATCH /complejos/:id/estado - Cambia estado de complejo */
-router.patch("/:id/estado", requireRole("admin", "superadmin"), (req, res) => ctrl(req).cambiarEstado(req, res));
+router.patch("/:id/estado", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).cambiarEstado(req, res));
 
 export default router;

@@ -1,9 +1,10 @@
 'use client';
 
 import './seguridad.css';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Input, Button } from '../componentes/compUser';
 import UserLayout from '../UsuarioLayout';
+import authService from '@/services/authService';
 
 export default function SeguridadPage() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -11,27 +12,17 @@ export default function SeguridadPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [allowEmails, setAllowEmails] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleChangePassword = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newPassword !== confirmPassword) {
-      alert("Las contraseñas no coinciden.");
-      return;
-    }
-    if (newPassword.length < 8) {
-      alert("La contraseña debe tener al menos 8 caracteres.");
-      return;
-    }
-    console.log("Nueva contraseña guardada:", newPassword);
-    alert("Contraseña cambiada exitosamente");
-  };
-
+  // Calcular fuerza de contraseña (solo mínimo 8 caracteres es obligatorio)
   const checkPasswordStrength = (password: string) => {
     let strength = 0;
-    if (password.length >= 8) strength += 25;
-    if (/[A-Z]/.test(password) && /[a-z]/.test(password)) strength += 25;
-    if (/[0-9]/.test(password)) strength += 25;
-    if (/[!@#$%^&*]/.test(password)) strength += 25;
+    if (password.length >= 8) strength += 40;
+    if (/[A-Z]/.test(password) && /[a-z]/.test(password)) strength += 20;
+    if (/[0-9]/.test(password)) strength += 20;
+    if (/[!@#$%^&*]/.test(password)) strength += 20;
     setPasswordStrength(strength);
   };
 
@@ -39,6 +30,88 @@ export default function SeguridadPage() {
     const password = e.target.value;
     setNewPassword(password);
     checkPasswordStrength(password);
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSuccess(null);
+    setError(null);
+    setIsLoading(true);
+
+    // Validaciones básicas
+    if (!currentPassword.trim()) {
+      setError("Por favor ingresa tu contraseña actual.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setError("Las contraseñas no coinciden.");
+      setIsLoading(false);
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres.");
+      setIsLoading(false);
+      return;
+    }
+
+    
+    // ...existing code...
+    try {
+      const response = await authService.changePassword({
+        current_password: currentPassword,
+        new_password: newPassword,
+      });
+      
+      console.log("Respuesta cambio contraseña:", response);
+      
+      // Verificar si la respuesta es un objeto y contiene mensaje de éxito
+      // Acceder directamente a response ya que puede no tener .data
+      const responseMessage = ((response as any).message || 
+                              (response as any).error || 
+                              '').toLowerCase();
+      
+      if (responseMessage.includes('contraseña actualizada correctamente') || 
+          responseMessage.includes('password updated successfully')) {
+        setSuccess("Contraseña cambiada exitosamente");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setPasswordStrength(0);
+      } else if ((response as any).ok === false) {
+        setError((response as any).error || (response as any).message || "Error desconocido");
+      } else {
+        setSuccess("Contraseña cambiada exitosamente");
+      }
+    } catch (err: any) {
+      console.error("Error completo:", err);
+      
+      // Verificar si hay un mensaje específico sobre contraseña incorrecta
+      if (err?.response?.data?.detail?.includes("contraseña actual") || 
+          err?.response?.data?.error?.includes("contraseña actual") || 
+          err?.response?.data?.message?.includes("contraseña actual")) {
+        setError("La contraseña actual es incorrecta");
+      } 
+      else if (err?.response?.status === 401) {
+        setError("Tu sesión ha expirado. Por favor inicia sesión nuevamente.");
+      }
+      else if (err?.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } 
+      else if (err?.message) {
+        setError(err.message);
+      } 
+      else {
+        setError("No se pudo cambiar la contraseña. Intente nuevamente.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
+    // ...existing code...
+
+
   };
 
   const seguridadLogs = [
@@ -56,7 +129,6 @@ export default function SeguridadPage() {
       notificationCount={2}
     >
       <div className="seguridad-wrapper">
-        {/* Header de seguridad simplificado */}
         <div className="seguridad-header">
           <h1 className="seguridad-titulo">Seguridad de la Cuenta</h1>
           <p className="seguridad-subtitulo">Gestiona la seguridad de tu cuenta</p>
@@ -65,9 +137,7 @@ export default function SeguridadPage() {
         <div className="bloque-principal">
           <div className="contenedor-flex">
 
-            {/* Sección izquierda - Formulario y contacto */}
             <div className="seccion-izquierda">
-              {/* Tarjeta de cambio de contraseña */}
               <div className="security-card">
                 <h2 className="titulo-seccion">Cambiar Contraseña</h2>
                 
@@ -76,70 +146,117 @@ export default function SeguridadPage() {
                     Protege tu cuenta con una contraseña segura y única.
                   </p>
 
+                  {error && <div className="error-message" style={{ 
+                    background: '#fee2e2', 
+                    color: '#dc2626', 
+                    padding: '12px', 
+                    borderRadius: '8px',
+                    border: '1px solid #fecaca',
+                    marginBottom: '16px'
+                  }}>
+                    {error}
+                  </div>}
+                  
+                  {success && <div className="success-message" style={{ 
+                    background: '#d1fae5', 
+                    color: '#065f46', 
+                    padding: '12px', 
+                    borderRadius: '8px',
+                    border: '1px solid #a7f3d0',
+                    marginBottom: '16px'
+                  }}>
+                    {success}
+                  </div>}
+
                   <div className="input-group">
-                    <label>Contraseña Actual</label>
+                    <label>Contraseña Actual *</label>
                     <Input
                       type="password"
                       placeholder="Ingresa tu contraseña actual"
                       value={currentPassword}
                       onChange={(e) => setCurrentPassword(e.target.value)}
                       className="security-input"
+                      required
+                      disabled={isLoading}
                     />
                   </div>
 
                   <div className="input-group">
-                    <label>Nueva Contraseña</label>
+                    <label>Nueva Contraseña *</label>
                     <Input
                       type="password"
-                      placeholder="Crea una nueva contraseña"
+                      placeholder="Crea una nueva contraseña (mínimo 8 caracteres)"
                       value={newPassword}
                       onChange={handleNewPasswordChange}
                       className="security-input"
+                      required
+                      disabled={isLoading}
                     />
                     
                     {newPassword && (
                       <div className="password-strength">
                         <div className="strength-bar">
                           <div 
-                            className={`strength-fill ${passwordStrength >= 75 ? 'strong' : passwordStrength >= 50 ? 'medium' : 'weak'}`}
+                            className={`strength-fill ${
+                              passwordStrength >= 60 ? 'strong' : 
+                              passwordStrength >= 40 ? 'medium' : 'weak'
+                            }`}
                             style={{ width: `${passwordStrength}%` }}
                           ></div>
                         </div>
                         <span className="strength-text">
-                          {passwordStrength >= 75 ? 'Fuerte' : passwordStrength >= 50 ? 'Media' : 'Débil'}
+                          {passwordStrength >= 60 ? 'Fuerte' : 
+                           passwordStrength >= 40 ? 'Media' : 'Débil'}
                         </span>
                       </div>
                     )}
                   </div>
 
                   <div className="input-group">
-                    <label>Confirmar Nueva Contraseña</label>
+                    <label>Confirmar Nueva Contraseña *</label>
                     <Input
                       type="password"
                       placeholder="Repite tu nueva contraseña"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       className="security-input"
+                      required
+                      disabled={isLoading}
                     />
                   </div>
 
                   <div className="requisitos-container">
                     <h4>Requisitos de seguridad:</h4>
                     <ul className="requisitos-list">
-                      <li className={newPassword.length >= 8 ? 'valid' : ''}>Mínimo 8 caracteres</li>
-                      <li className={/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword) ? 'valid' : ''}>Mayúsculas y minúsculas</li>
-                      <li className={/[0-9]/.test(newPassword) ? 'valid' : ''}>Al menos un número</li>
-                      <li className={/[!@#$%^&*]/.test(newPassword) ? 'valid' : ''}>Al menos un símbolo</li>
+                      <li className={newPassword.length >= 8 ? 'valid' : ''}>
+                        Mínimo 8 caracteres *
+                      </li>
+                      <li className={/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword) ? 'valid' : ''}>
+                        Mayúsculas y minúsculas (recomendado)
+                      </li>
+                      <li className={/[0-9]/.test(newPassword) ? 'valid' : ''}>
+                        Al menos un número (recomendado)
+                      </li>
+                      <li className={/[!@#$%^&*]/.test(newPassword) ? 'valid' : ''}>
+                        Al menos un símbolo (!@#$%^&*) (recomendado)
+                      </li>
                     </ul>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--security-text-light)', marginTop: '8px', fontStyle: 'italic' }}>
+                      * Campo obligatorio
+                    </p>
                   </div>
 
-                  <Button type="submit" variant="primary" className="btn-security">
-                    Actualizar Contraseña
+                  <Button 
+                    type="submit" 
+                    variant="primary" 
+                    className="btn-security"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Actualizando...' : 'Actualizar Contraseña'}
                   </Button>
                 </form>
               </div>
 
-              {/* Contactar administrador debajo del formulario */}
               <div className="security-card contact-admin">
                 <h2 className="titulo-seccion">¿Necesitas Ayuda?</h2>
                 <div className="contact-content">
@@ -153,16 +270,12 @@ export default function SeguridadPage() {
               </div>
             </div>
 
-            {/* Sección derecha - Actividad y notificaciones */}
             <div className="seccion-derecha">
-              {/* Actividad de seguridad */}
               <div className="security-card">
                 <h2 className="titulo-seccion">Actividad Reciente</h2>
-                
                 <p className="texto-secundario">
                   Registro de inicios de sesión en tu cuenta.
                 </p>
-
                 <div className="activity-log">
                   {seguridadLogs.map((log) => (
                     <div key={log.id} className="log-entry">
@@ -176,10 +289,8 @@ export default function SeguridadPage() {
                 </div>
               </div>
 
-              {/* Notificaciones por correo debajo de la actividad */}
               <div className="security-card">
                 <h2 className="titulo-seccion">Notificaciones por Correo</h2>
-                
                 <div className="email-preferences">
                   <div className="preference-item">
                     <div className="preference-info">
@@ -195,11 +306,9 @@ export default function SeguridadPage() {
                       <span className="toggle-slider"></span>
                     </label>
                   </div>
-                  
                   <p className="preference-note">
                     Recibirás correos importantes sobre la seguridad de tu cuenta.
                   </p>
-                  
                   <Button variant="secondary" className="btn-security-outline">
                     Guardar Preferencias
                   </Button>

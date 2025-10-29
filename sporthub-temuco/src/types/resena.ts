@@ -37,3 +37,58 @@ export interface ResumenCalificacion {
   total_resenas: number;  // e.g. 127
   breakdown?: Record<string, number>; // { "1": 3, "2": 5, "3": 20, "4": 40, "5": 59 }
 }
+
+// Tipos para estadísticas de complejo
+export interface EstadisticasComplejo {
+  complejo_id: number;
+  promedio_general: number;
+  total_resenas: number;
+  resenas_por_mes: Record<string, number>;
+  calificaciones_por_estrella: Record<string, number>;
+  resenas_recientes: Resena[];
+}
+
+// Tipos para likes en reseñas
+export interface LikeResponse {
+  resena_id: number;
+  usuario_id: number;
+  liked: boolean;
+  total_likes: number;
+}
+
+// Tipos para reportes
+export interface ReportarResenaInput {
+  motivo: string;
+  descripcion?: string;
+}
+
+export interface ReporteResponse {
+  resena_id: number;
+  usuario_id: number;
+  motivo: string;
+  estado: "pendiente" | "revisado" | "resuelto";
+  fecha_reporte: string;
+}
+
+// Tipos para respuestas de dueño
+export interface ResponderResenaInput {
+  respuesta: string;
+}
+
+export interface RespuestaResena {
+  id: number;
+  resena_id: number;
+  usuario_id: number; // ID del dueño que responde
+  respuesta: string;
+  fecha_respuesta: string;
+}
+
+// Reseña extendida con todas las funcionalidades
+export interface ResenaExtendida extends Resena {
+  likes_count?: number;
+  user_liked?: boolean;
+  respuesta?: RespuestaResena;
+  reportada?: boolean;
+  usuario_nombre?: string;
+  cancha_nombre?: string;
+}

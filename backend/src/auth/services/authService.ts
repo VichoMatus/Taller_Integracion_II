@@ -29,10 +29,11 @@
 import axios, { AxiosInstance } from 'axios';
 import { API_CONFIG, API_ENDPOINTS } from '../../config/config';
 import {
-  UserRegister, UserRegisterAPI, UserLogin, TokenResponse, ApiResponse, UserPublic,
+  UserLogin, TokenResponse, ApiResponse, UserPublic,
   UserUpdate, ChangePasswordRequest, ForgotPasswordRequest, ResetPasswordRequest,
   VerifyEmailRequest, ResendVerificationRequest, SendVerificationRequest, RefreshTokenRequest,
-  LogoutRequest, PushTokenRequest, SimpleMessage, AccessTokenOnly, EndpointStatus, EndpointType
+  LogoutRequest, PushTokenRequest, SimpleMessage, AccessTokenOnly, EndpointStatus, EndpointType,
+  RegisterInitRequest, RegisterInitResponse, RegisterVerifyRequest
 } from '../types/authTypes';
 
 /**
@@ -42,6 +43,74 @@ import {
 export class AuthService {
   private apiClient: AxiosInstance; // Cliente HTTP configurado para la API FastAPI
   private authToken: string | null = null; // Token JWT almacenado en memoria
+
+  /**
+   * Normaliza el rol del usuario a minúsculas y convierte variantes
+   * @param rol - Rol del usuario (puede venir en mayúsculas, minúsculas o mixto)
+   * @returns string - Rol normalizado en minúsculas
+   */
+  private normalizeRole(rol: string): string {
+    const normalized = rol.toLowerCase().trim();
+    
+    // Mapear roles específicos para mantener consistencia
+    switch (normalized) {
+      case 'admin':
+        return 'admin';
+      case 'super_admin':
+      case 'superadmin':
+        return 'super_admin';
+      case 'usuario':
+      case 'user':
+        return 'usuario';
+      default:
+        return normalized;
+    }
+  }
+
+
+
+  /**
+   * Normaliza los datos del usuario, especialmente el rol
+   * @param userData - Datos del usuario que pueden venir con rol en cualquier formato
+   * @returns UserPublic - Datos del usuario con rol normalizado
+   */
+  private async normalizeUserDataAsync(userData: any): Promise<any> {
+    if (!userData) return userData;
+    
+    console.log('🔍 [AuthService.normalizeUserDataAsync] Datos recibidos completos:', {
+      id_usuario: userData.id_usuario,
+      id: userData.id,
+      nombre: userData.nombre,
+      email: userData.email,
+      rol: userData.rol,
+      rolTipo: typeof userData.rol,
+      todosLosCampos: Object.keys(userData)
+    });
+    
+    const normalizedRole = userData.rol ? this.normalizeRole(userData.rol) : userData.rol;
+    
+    console.log('🔄 [AuthService.normalizeUserDataAsync] Normalización de rol:', {
+      original: userData.rol,
+      normalizado: normalizedRole
+    });
+    
+    return {
+      ...userData,
+      rol: normalizedRole
+    };
+  }
+
+  /**
+   * Versión síncrona para compatibilidad
+   */
+  private normalizeUserData(userData: any): any {
+    if (!userData) return userData;
+    
+    return {
+      ...userData,
+      rol: userData.rol ? this.normalizeRole(userData.rol) : userData.rol
+    };
+  }
 
   /**
    * CONSTRUCTOR - Configuración inicial
@@ -76,31 +145,21 @@ export class AuthService {
    */
 
   /**
-   * Registrar nuevo usuario en el sistema
-   * @param userData - Datos del usuario a registrar
-   * @returns Promise<ApiResponse<TokenResponse>> - Tokens y datos del usuario registrado
+   * Iniciar proceso de registro (envía OTP, no crea usuario aún)
+   * @param userData - Datos completos del usuario para pre-registro
+   * @returns Promise<ApiResponse<RegisterInitResponse>> - Action token para completar el proceso
    */
-  async register(userData: UserRegister): Promise<ApiResponse<TokenResponse>> {
+  async registerInit(userData: RegisterInitRequest): Promise<ApiResponse<RegisterInitResponse>> {
     try {
-      console.log('🔄 AuthService: Iniciando registro con datos:', JSON.stringify(userData, null, 2));
-      console.log('🔄 AuthService: URL de API:', API_CONFIG.baseURL + API_ENDPOINTS.auth.register);
+      console.log('🔄 AuthService: Iniciando registro por pasos con datos:', JSON.stringify(userData, null, 2));
+      console.log('🔄 AuthService: URL de API:', API_CONFIG.baseURL + API_ENDPOINTS.auth.registerInit);
       
-      // Crear objeto sin confirmPassword para enviar a la API
-      const { confirmPassword, ...apiData } = userData;
-      console.log('🔄 AuthService: Datos para API (sin confirmPassword):', JSON.stringify(apiData, null, 2));
+      const response = await this.apiClient.post(API_ENDPOINTS.auth.registerInit, userData);
       
-      const response = await this.apiClient.post(API_ENDPOINTS.auth.register, apiData);
-      
-      console.log('✅ AuthService: Registro exitoso', response.data);
-      
-      // Almacenar token para futuras peticiones
-      if (response.data.access_token) {
-        this.authToken = response.data.access_token;
-      }
-      
+      console.log('✅ AuthService: Init registro exitoso, OTP enviado', response.data);
       return { ok: true, data: response.data };
     } catch (error: any) {
-      console.error('❌ AuthService: Error en registro:', {
+      console.error('❌ AuthService: Error en init registro:', {
         message: error.message,
         status: error.response?.status,
         statusText: error.response?.statusText,
@@ -114,11 +173,64 @@ export class AuthService {
       
       return { 
         ok: false, 
-        error: error.response?.data?.detail || error.message || 'Error en el registro de usuario' 
+        error: error.response?.data?.detail || error.message || 'Error al iniciar proceso de registro' 
       };
     }
   }
 
+  /**
+   * Verificar OTP y completar el registro (crea el usuario verificado)
+   * @param verifyData - Email, código OTP y action token
+   * @returns Promise<ApiResponse<TokenResponse>> - Tokens y datos del usuario creado
+   */
+  async registerVerify(verifyData: RegisterVerifyRequest): Promise<ApiResponse<TokenResponse>> {
+    try {
+      console.log('🔄 AuthService: Verificando OTP y completando registro:', JSON.stringify(verifyData, null, 2));
+      console.log('🔄 AuthService: URL de API:', API_CONFIG.baseURL + API_ENDPOINTS.auth.registerVerify);
+      
+      const response = await this.apiClient.post(API_ENDPOINTS.auth.registerVerify, verifyData);
+      
+      console.log('✅ AuthService: Registro completo exitoso', response.data);
+      
+      // Almacenar token para futuras peticiones
+      if (response.data.access_token) {
+        this.authToken = response.data.access_token;
+      }
+      
+      // 🔥 NORMALIZAR ROL: Convertir a minúsculas y super_admin → super_admin
+      const normalizedData = {
+        ...response.data,
+        user: response.data.user ? this.normalizeUserData(response.data.user) : response.data.user
+      };
+      
+      return { ok: true, data: normalizedData };
+    } catch (error: any) {
+      console.error('❌ AuthService: Error en verificación de registro:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        config: {
+          url: error.config?.url,
+          method: error.config?.method,
+          data: error.config?.data
+        }
+      });
+      
+      return { 
+        ok: false, 
+        error: error.response?.data?.detail || error.message || 'Error al verificar código de registro' 
+      };
+    }
+  }
+
+  /**
+   * MÉTODOS DE PRE-REGISTRO CON VERIFICACIÓN DE EMAIL
+   * =================================================
+   */
+
+  /**
+   * Pre-registrar usuario y enviar correo de verificación
   /**
    * Autenticar usuario en el sistema
    * @param credentials - Email y contraseña del usuario
@@ -126,15 +238,54 @@ export class AuthService {
    */
   async login(credentials: UserLogin): Promise<ApiResponse<TokenResponse>> {
     try {
+      console.log('🔄 [AuthService.login] Iniciando login con credenciales:', {
+        email: credentials.email,
+        url: `${API_CONFIG.baseURL}${API_ENDPOINTS.auth.login}`
+      });
+      
       const response = await this.apiClient.post(API_ENDPOINTS.auth.login, credentials);
+      
+      console.log('🔍 [AuthService.login] Respuesta COMPLETA de FastAPI:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: response.headers,
+        dataCompleta: response.data
+      });
+      
+      console.log('🔍 [AuthService.login] Usuario específico de la respuesta:', {
+        user: response.data.user,
+        rolRecibido: response.data.user?.rol,
+        rolTipo: typeof response.data.user?.rol,
+        idUsuario: response.data.user?.id_usuario || response.data.user?.id,
+        email: response.data.user?.email
+      });
       
       // Almacenar token para futuras peticiones
       if (response.data.access_token) {
         this.authToken = response.data.access_token;
       }
       
-      return { ok: true, data: response.data };
+      // 🔥 NORMALIZAR ROL: Aplicar correcciones y normalización
+      const normalizedData = {
+        ...response.data,
+        user: response.data.user ? await this.normalizeUserDataAsync(response.data.user) : response.data.user
+      };
+      
+      console.log('✅ [AuthService.login] Resultado final después de normalización:', {
+        originalRol: response.data.user?.rol,
+        normalizedRol: normalizedData.user?.rol,
+        userId: normalizedData.user?.id_usuario || normalizedData.user?.id
+      });
+      
+      return { ok: true, data: normalizedData };
     } catch (error: any) {
+      console.error('❌ [AuthService.login] Error en login:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        message: error.message
+      });
+      
       return { 
         ok: false, 
         error: error.response?.data?.detail || 'Error de autenticación' 
@@ -200,7 +351,16 @@ export class AuthService {
   async getMe(): Promise<ApiResponse<UserPublic>> {
     try {
       const response = await this.apiClient.get(API_ENDPOINTS.auth.me);
-      return { ok: true, data: response.data };
+      
+      // 🔥 NORMALIZAR ROL: Convertir a minúsculas y super_admin → super_admin
+      const normalizedData = this.normalizeUserData(response.data);
+      
+      console.log('🔄 [AuthService.getMe] Rol normalizado:', {
+        original: response.data?.rol,
+        normalizado: normalizedData?.rol
+      });
+      
+      return { ok: true, data: normalizedData };
     } catch (error: any) {
       return { 
         ok: false, 
@@ -217,7 +377,11 @@ export class AuthService {
   async updateMe(updateData: UserUpdate): Promise<ApiResponse<UserPublic>> {
     try {
       const response = await this.apiClient.patch(API_ENDPOINTS.auth.updateMe, updateData);
-      return { ok: true, data: response.data };
+      
+      // 🔥 NORMALIZAR ROL: Convertir a minúsculas y super_admin → super_admin
+      const normalizedData = this.normalizeUserData(response.data);
+      
+      return { ok: true, data: normalizedData };
     } catch (error: any) {
       return { 
         ok: false, 
@@ -404,7 +568,8 @@ export class AuthService {
     
     // Mapear tipos de endpoint a URLs
     const endpointMap: Record<EndpointType, string> = {
-      register: API_ENDPOINTS.auth.register,
+      registerInit: API_ENDPOINTS.auth.registerInit,
+      registerVerify: API_ENDPOINTS.auth.registerVerify,
       login: API_ENDPOINTS.auth.login,
       logout: API_ENDPOINTS.auth.logout,
       refresh: API_ENDPOINTS.auth.refresh,
@@ -488,7 +653,7 @@ export class AuthService {
    * @returns Promise<Record<EndpointType, EndpointStatus>> - Status de todos los endpoints
    */
   async checkAllEndpointsStatus(): Promise<Record<EndpointType, EndpointStatus>> {
-    const endpoints: EndpointType[] = ['register', 'login', 'logout', 'refresh', 'me', 'verifyEmail', 'resendVerification', 'sendVerification', 'forgotPassword', 'resetPassword', 'pushToken'];
+    const endpoints: EndpointType[] = ['registerInit', 'registerVerify', 'login', 'logout', 'refresh', 'me', 'verifyEmail', 'resendVerification', 'sendVerification', 'forgotPassword', 'resetPassword', 'pushToken'];
     
     const statusChecks = endpoints.map(async (endpoint) => {
       const status = await this.checkEndpointStatus(endpoint);

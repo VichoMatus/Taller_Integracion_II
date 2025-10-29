@@ -1,87 +1,216 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import Sidebar from '../../../../../components/layout/Sidebar'; 
-import SearchBar from '../../../../../components/SearchBar'; 
-import LocationMap from '../../../../../components/LocationMap'; 
+import { useRouter, useSearchParams } from 'next/navigation';
+import Sidebar from '@/components/layout/Sidebar'; 
+import SearchBar from '@/components/SearchBar'; 
+import LocationMap from '@/components/LocationMap'; 
 import styles from './page.module.css';
 
-export default function RutaSeleccionadaPage() {
+import { useAuthStatus } from '@/hooks/useAuthStatus';
+import { canchaService } from '../../../../../services/canchaService';
+import { complejosService } from '../../../../../services/complejosService';
+
+// 🏍️ DATOS ESTÁTICOS PARA CAMPOS NO DISPONIBLES EN LA API
+const staticContactData = {
+  phone: "(45) 555-1234",
+  instagram: "@endurotemuco",
+  reviewsList: [
+    {
+      name: "Carlos M.",
+      rating: 5,
+      date: "hace 3 días",
+      comment: "Increíble ruta de enduro! Terreno desafiante y paisajes espectaculares. Perfecto para riders experimentados."
+    },
+    {
+      name: "Ana G.",
+      rating: 4,
+      date: "hace 1 semana", 
+      comment: "Excelente ruta, bien marcada y con niveles de dificultad variados. Personal muy profesional y equipamiento de primera."
+    },
+    {
+      name: "Roberto L.",
+      rating: 5,
+      date: "hace 2 semanas",
+      comment: "La mejor experiencia de enduro en la región. Terreno técnico y vistas increíbles de la cordillera."
+    }
+  ]
+};
+
+// 🏍️ COMPONENTE PRINCIPAL CON SUSPENSE
+function EnduroRutaSeleccionadaContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
+  
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
-  
-  // 🔥 DATOS ESTÁTICOS PARA ENDURO
-  const ruta = {
-    id: 1,
-    name: "Ruta Montaña Extremo",
-    location: "Cordillera Central, Temuco, Chile",
-    coordinates: { lat: -38.7359, lng: -72.5904 },
-    phone: "(45) 555-1234",
-    instagram: "@enduroextrem",
-    description: "Ruta desafiante para expertos con terrenos rocosos, descensos técnicos y vistas panorámicas espectaculares. Incluye guía certificado y equipo de seguridad.",
-    schedule: "Lunes a Domingo • 06:00 a 20:00",
-    capacity: "Grupos de 5-8 riders",
-    rating: 4.8,
-    reviews: 95,
-    priceFrom: 35000,
-    images: [
-      "/sports/enduro/rutas/rutaseleccionada/rutaSelec1.png",
-      "/sports/enduro/rutas/rutaseleccionada/rutaSelec2.png",
-      "/sports/enduro/rutas/rutaseleccionada/rutaSelec3.png"
-    ],
-    amenities: ["Guía Certificado", "Equipo Seguridad", "Terreno Rocoso", "Vistas Panorámicas"],
-    difficulty: "Alta",
-    distance: "15km",
-    elevation: "800m",
-    duration: "3-4 horas",
-    reviewsList: [
-      {
-        name: "Carlos M.",
-        rating: 5,
-        date: "hace 2 días",
-        comment: "Increíble experiencia! Los guías son profesionales y el terreno es desafiante pero seguro."
-      },
-      {
-        name: "Ana T.",
-        rating: 4,
-        date: "hace 1 semana", 
-        comment: "Vistas espectaculares y rutas bien marcadas. Perfecto para riders con experiencia."
-      },
-      {
-        name: "Diego R.",
-        rating: 5,
-        date: "hace 2 semanas",
-        comment: "El equipo de seguridad es de primera calidad. Volveré sin duda!"
-      }
-    ]
-  };
-  
+  const [ruta, setRuta] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // 🏍️ OBTENER ID DE LA RUTA DESDE URL
+  const rutaId = searchParams?.get('id') || searchParams?.get('ruta');
+
   useEffect(() => {
-    // Simular carga
-    const timer = setTimeout(() => setIsLoading(false), 1200);
-    return () => clearTimeout(timer);
-  }, []);
+    const loadRutaData = async () => {
+      if (!rutaId) {
+        setError('No se especificó ID de ruta');
+        setDataLoading(false);
+        return;
+      }
+
+      try {
+        setDataLoading(true);
+        setError(null);
+        
+        console.log('🔍 Cargando ruta ID:', rutaId);
+        
+        // 🏍️ LLAMADA A LA API PARA OBTENER LA RUTA (SIN FILTRO ESTRICTO)
+        const rutaData = await canchaService.getCanchaById(parseInt(rutaId));
+        console.log('✅ Ruta cargada:', rutaData);
+
+        // 🏍️ OBTENER DATOS DEL COMPLEJO
+        let complejoData = null;
+        let locationInfo = "Cordillera de Nahuelbuta, Temuco, Chile"; // Fallback estático
+        let coordinates = { lat: -38.7359, lng: -72.5904 }; // Fallback estático
+
+        if (rutaData.establecimientoId) {
+          try {
+            console.log('🔍 Cargando complejo ID:', rutaData.establecimientoId);
+            complejoData = await complejosService.getComplejoById(rutaData.establecimientoId);
+            console.log('✅ Complejo cargado:', complejoData);
+            
+            // 🏍️ USAR DIRECCIÓN REAL DEL COMPLEJO
+            if (complejoData.direccion) {
+              locationInfo = complejoData.direccion;
+              console.log('📍 Dirección obtenida del complejo:', locationInfo);
+            }
+            
+            // 🏍️ USAR COORDENADAS DEL COMPLEJO SI ESTÁN DISPONIBLES
+            if (complejoData.latitud && complejoData.longitud) {
+              coordinates = {
+                lat: parseFloat(complejoData.latitud),
+                lng: parseFloat(complejoData.longitud)
+              };
+              console.log('🗺️ Coordenadas obtenidas del complejo:', coordinates);
+            }
+            
+          } catch (complejoError: any) {
+            console.error('⚠️ Error cargando complejo, usando datos estáticos:', complejoError.message);
+            // Mantener valores de fallback
+          }
+        }
+
+        // 🏍️ MAPEAR DATOS DE LA API CON INFORMACIÓN DEL COMPLEJO
+        const mappedRuta = {
+          id: rutaData.id,
+          name: `${rutaData.nombre} (Adaptado para Enduro)`,
+          
+          // 🏍️ USAR UBICACIÓN REAL DEL COMPLEJO
+          location: locationInfo,
+          coordinates: coordinates,
+          
+          // 🏍️ DESCRIPCIÓN ADAPTADA
+          description: `${rutaData.nombre} - Ruta de enduro ${complejoData ? `en ${complejoData.nombre}` : ''} adaptada para motociclismo extremo. Perfecta para riders experimentados y aventuras off-road.`,
+          
+          // 🏍️ HORARIOS - USAR DEL COMPLEJO SI ESTÁ DISPONIBLE
+          schedule: complejoData?.horarioAtencion || "Lunes a Domingo • 08:00 a 18:00",
+          
+          // 🏍️ CAPACIDAD ESPECÍFICA PARA ENDURO
+          capacity: "10 riders máximo por grupo",
+          
+          // 🏍️ DATOS REALES DE LA API
+          rating: rutaData.rating || 4.8,
+          reviews: 67, // Estático por ahora
+          priceFrom: rutaData.precioPorHora || 45000,
+          
+          // 🏍️ IMÁGENES ESPECÍFICAS DE ENDURO
+          images: [
+            `/sports/enduro/enduro.png` // Solo una imagen por defecto
+          ],
+          
+          // 🏍️ AMENIDADES BÁSICAS CON DATOS REALES
+          amenities: [
+            rutaData.activa ? "Disponible" : "No disponible",
+            rutaData.techada ? "Ruta Cubierta" : "Ruta Exterior",
+            "Adaptado para Enduro",
+            "Terreno Extremo",
+            "Equipo de Seguridad",
+            "Guías Especializados"
+          ],
+          
+          // 🏍️ CONTACTO ESTÁTICO (hasta implementar en complejo)
+          phone: staticContactData.phone,
+          instagram: staticContactData.instagram,
+          reviewsList: staticContactData.reviewsList,
+
+          // 🏍️ INFORMACIÓN ADICIONAL REAL
+          establecimientoId: rutaData.establecimientoId,
+          tipo: rutaData.tipo,
+          techada: rutaData.techada,
+          activa: rutaData.activa,
+          
+          // 🏍️ INFORMACIÓN DEL COMPLEJO
+          complejoNombre: complejoData?.nombre || `Base ${rutaData.establecimientoId}`
+        };
+
+        setRuta(mappedRuta);
+        
+      } catch (error: any) {
+        console.error('❌ Error cargando ruta:', error);
+        setError(`Error cargando ruta: ${error.message}`);
+        
+        // 🏍️ FALLBACK SIMPLE
+        setRuta({
+          id: rutaId,
+          name: `Ruta de Enduro #${rutaId}`,
+          location: "Cordillera de Nahuelbuta, Temuco, Chile",
+          coordinates: { lat: -38.7359, lng: -72.5904 },
+          phone: staticContactData.phone,
+          instagram: staticContactData.instagram,
+          description: `Ruta de enduro adaptada para motociclismo extremo - ID: ${rutaId}`,
+          schedule: "Lunes a Domingo • 08:00 a 18:00",
+          capacity: "10 riders máximo por grupo",
+          rating: 4.8,
+          reviews: 67,
+          priceFrom: 45000,
+          images: ["/sports/enduro/enduro.png"],
+          amenities: ["Datos offline", "Adaptado para Enduro", "Terreno Extremo", "Equipo de Seguridad"],
+          reviewsList: staticContactData.reviewsList,
+          activa: true,
+          complejoNombre: "Base de Enduro"
+        });
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    loadRutaData();
+  }, [rutaId]);
+
+  // 🏍️ RESTO DE FUNCIONES SIN CAMBIOS
+  const handleUserButtonClick = () => {
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
+  };
 
   const handleBackToRutas = () => {
     router.push('/sports/enduro/rutas');
   };
 
   const nextImage = () => {
-    if (ruta && ruta.images.length > 0) {
-      setCurrentImageIndex((prev) => 
-        prev === ruta.images.length - 1 ? 0 : prev + 1
-      );
+    if (ruta && ruta.images.length > 1) {
+      setCurrentImageIndex((prev) => (prev + 1) % ruta.images.length);
     }
   };
 
   const prevImage = () => {
-    if (ruta && ruta.images.length > 0) {
-      setCurrentImageIndex((prev) => 
-        prev === 0 ? ruta.images.length - 1 : prev - 1
-      );
+    if (ruta && ruta.images.length > 1) {
+      setCurrentImageIndex((prev) => (prev - 1 + ruta.images.length) % ruta.images.length);
     }
   };
 
@@ -105,37 +234,54 @@ export default function RutaSeleccionadaPage() {
   };
 
   const handleReserve = () => {
-    router.push('/sports/enduro/rutas/reservar');
+    router.push(`/sports/reservacancha?canchaId=${ruta.id}`);
   };
 
   const handleCall = () => {
-    window.open(`tel:${ruta.phone}`, '_self');
+    window.open(`tel:${ruta?.phone}`, '_self');
   };
 
   const handleInstagram = () => {
-    window.open(`https://instagram.com/${ruta.instagram.replace('@', '')}`, '_blank');
+    window.open(`https://instagram.com/${ruta?.instagram.replace('@', '')}`, '_blank');
   };
 
   const handleDirections = () => {
-    const query = encodeURIComponent(ruta.location);
+    const query = encodeURIComponent(ruta?.location || '');
     window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
   };
 
   const handleHelp = () => {
-    alert('¿Necesitas ayuda? Contáctanos al (45) 555-0000 o envía un email a ayuda@sporthub.cl');
+    alert(`¿Necesitas ayuda con enduro? Contáctanos al ${ruta?.phone} o envía un email a enduro@sporthub.cl`);
   };
 
   const handleWriteReview = () => {
-    alert('Función de escribir reseña próximamente...');
+    alert(`Función de escribir reseña de enduro próximamente...`);
   };
 
-  if (isLoading) {
+  // 🏍️ LOADING Y ERROR
+  if (dataLoading) {
     return (
       <div className={styles.pageContainer}>
         <Sidebar userRole="usuario" sport="enduro" />
         <div className={styles.loading}>
           <div className={styles.loadingSpinner}>🏍️</div>
-          <p>Cargando información de la ruta...</p>
+          <p>Cargando información de la ruta de enduro...</p>
+          {error && <p style={{color: 'red', marginTop: '10px'}}>⚠️ {error}</p>}
+        </div>
+      </div>
+    );
+  }
+
+  if (!ruta) {
+    return (
+      <div className={styles.pageContainer}>
+        <Sidebar userRole="usuario" sport="enduro" />
+        <div className={styles.loading}>
+          <div className={styles.loadingSpinner}>❌</div>
+          <p>No se pudo cargar la información de la ruta de enduro</p>
+          <button onClick={() => router.push('/sports/enduro/rutas')}>
+            Volver a rutas
+          </button>
         </div>
       </div>
     );
@@ -154,13 +300,17 @@ export default function RutaSeleccionadaPage() {
           </div>
           <div className={styles.headerRight}>
            <SearchBar
-            placeholder="Buscar canchas de enduro..."
+            placeholder="Buscar rutas de enduro..."
             sport="enduro"
             onSearch={(term) => router.push(`/sports/enduro/rutas?search=${encodeURIComponent(term)}`)}
             />
-            <button className={styles.userButton}>
+            <button 
+              {...buttonProps}
+              onClick={handleUserButtonClick}
+              className={styles.userButton}
+            >
               <span>👤</span>
-              <span>Usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>
@@ -176,12 +326,22 @@ export default function RutaSeleccionadaPage() {
           </button>
         </div>
 
-        {/* Ruta Info Card */}
+        {/* Court Info Card */}
         <div className={styles.courtInfoCard}>
           <div className={styles.courtHeader}>
-            <h2 className={styles.courtTitle}>{ruta.name}</h2>
-            <button className={styles.reserveButton} onClick={handleReserve}>
-              📅 Reservar
+            <h2 className={styles.courtTitle}>
+              {ruta.name}
+            </h2>
+            <button 
+              className={styles.reserveButton} 
+              onClick={handleReserve}
+              disabled={!ruta.activa}
+              style={{ 
+                opacity: ruta.activa ? 1 : 0.6,
+                cursor: ruta.activa ? 'pointer' : 'not-allowed'
+              }}
+            >
+              🏍️ {ruta.activa ? 'Reservar' : 'No disponible'}
             </button>
           </div>
           
@@ -192,38 +352,38 @@ export default function RutaSeleccionadaPage() {
             </div>
             <div className={styles.detailItem}>
               <span className={styles.detailIcon}>💰</span>
-              <span>Desde {formatPrice(ruta.priceFrom)}/persona</span>
+              <span>Desde {formatPrice(ruta.priceFrom)}/día</span>
             </div>
             <div className={styles.detailItem}>
-              <span className={styles.detailIcon}>📏</span>
-              <span>Dificultad: {ruta.difficulty}</span>
+              <span className={styles.detailIcon}>🏢</span>
+              <span>{ruta.complejoNombre}</span>
             </div>
           </div>
 
           <div className={styles.courtTabs}>
-            {ruta.amenities.map((amenity, index) => (
-              <button 
-                key={index}
-                className={`${styles.tab} ${activeTab === index ? styles.tabActive : ''}`}
-                onClick={() => setActiveTab(index)}
-              >
-                {amenity}
-              </button>
-            ))}
+            {ruta.amenities.map((amenity: string, index: number) => (
+                <button 
+                  key={index}
+                  className={`${styles.tab} ${activeTab === index ? styles.tabActive : ''}`}
+                  onClick={() => setActiveTab(index)}
+                >
+                  {amenity}
+                </button>
+              ))}
           </div>
 
           {/* Description Section */}
           <div className={styles.descriptionSection}>
-            <h3 className={styles.sectionTitle}>Descripción</h3>
+            <h3 className={styles.sectionTitle}>Descripción de la Ruta de Enduro</h3>
             <div className={styles.descriptionCard}>
-              <span className={styles.descriptionIcon}>✅</span>
+              <span className={styles.descriptionIcon}>🏍️</span>
               <p className={styles.descriptionText}>{ruta.description}</p>
             </div>
           </div>
 
-          {/* Route Details Section */}
+          {/* Availability Section */}
           <div className={styles.availabilitySection}>
-            <h3 className={styles.sectionTitle}>Detalles de la Ruta</h3>
+            <h3 className={styles.sectionTitle}>Disponibilidad</h3>
             <div className={styles.availabilityCard}>
               <div className={styles.availabilityItem}>
                 <span className={styles.availabilityIcon}>🕒</span>
@@ -233,18 +393,6 @@ export default function RutaSeleccionadaPage() {
                 <span className={styles.availabilityIcon}>👥</span>
                 <span className={styles.availabilityText}>{ruta.capacity}</span>
               </div>
-              <div className={styles.availabilityItem}>
-                <span className={styles.availabilityIcon}>📏</span>
-                <span className={styles.availabilityText}>Distancia: {ruta.distance}</span>
-              </div>
-              <div className={styles.availabilityItem}>
-                <span className={styles.availabilityIcon}>⛰️</span>
-                <span className={styles.availabilityText}>Desnivel: {ruta.elevation}</span>
-              </div>
-              <div className={styles.availabilityItem}>
-                <span className={styles.availabilityIcon}>⏱️</span>
-                <span className={styles.availabilityText}>Duración: {ruta.duration}</span>
-              </div>
             </div>
           </div>
         </div>
@@ -253,14 +401,15 @@ export default function RutaSeleccionadaPage() {
         <div className={styles.locationImagesContainer}>
           {/* Location Section */}
           <div className={styles.locationSection}>
-            <h3 className={styles.sectionTitle}>Ubicación</h3>
+            <h3 className={styles.sectionTitle}>Ubicación de la Ruta</h3>
             <div className={styles.mapContainer}>
               <LocationMap 
                 latitude={ruta.coordinates.lat} 
                 longitude={ruta.coordinates.lng}
                 address={ruta.location}
-                zoom={12}
+                zoom={15}
                 height="250px"
+                sport="enduro"
               />
               <div className={styles.locationInfo}>
                 <p className={styles.locationAddress}>{ruta.location}</p>
@@ -271,13 +420,15 @@ export default function RutaSeleccionadaPage() {
             </div>
           </div>
 
-          {/* Images Section */}
+          {/* Images Section - SIMPLIFICADA */}
           <div className={styles.imagesSection}>
-            <h3 className={styles.sectionTitle}>Imágenes de la ruta</h3>
+            <h3 className={styles.sectionTitle}>Fotos de la Ruta</h3>
             <div className={styles.imageCarousel}>
-              <button className={styles.carouselButton} onClick={prevImage}>
-                ←
-              </button>
+              {ruta.images.length > 1 && (
+                <button className={styles.carouselButton} onClick={prevImage}>
+                  ←
+                </button>
+              )}
               <div className={styles.imageContainer}>
                 <Image 
                   src={ruta.images[currentImageIndex] || "/sports/enduro/enduro.png"} 
@@ -289,31 +440,37 @@ export default function RutaSeleccionadaPage() {
                     e.target.src = "/sports/enduro/enduro.png";
                   }}
                 />
-                <div className={styles.imageOverlay}>
-                  <span className={styles.imageCounter}>
-                    {currentImageIndex + 1} / {ruta.images.length}
-                  </span>
-                </div>
+                {ruta.images.length > 1 && (
+                  <div className={styles.imageOverlay}>
+                    <span className={styles.imageCounter}>
+                      {currentImageIndex + 1} / {ruta.images.length}
+                    </span>
+                  </div>
+                )}
               </div>
-              <button className={styles.carouselButton} onClick={nextImage}>
-                →
-              </button>
+              {ruta.images.length > 1 && (
+                <button className={styles.carouselButton} onClick={nextImage}>
+                  →
+                </button>
+              )}
             </div>
-            <div className={styles.imageIndicators}>
-              {ruta.images.map((_, index) => (
-                <button
-                  key={index}
-                  className={`${styles.imageIndicator} ${index === currentImageIndex ? styles.imageIndicatorActive : ''}`}
-                  onClick={() => setCurrentImageIndex(index)}
-                />
-              ))}
-            </div>
+            {ruta.images.length > 1 && (
+              <div className={styles.imageIndicators}>
+                {ruta.images.map((_: string, index: number) => (
+                  <button
+                    key={index}
+                    className={`${styles.imageIndicator} ${index === currentImageIndex ? styles.imageIndicatorActive : ''}`}
+                    onClick={() => setCurrentImageIndex(index)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Contact Section */}
         <div className={styles.contactSection}>
-          <h3 className={styles.sectionTitle}>Contacto</h3>
+          <h3 className={styles.sectionTitle}>Contacto Base de Enduro</h3>
           <div className={styles.contactCard}>
             <div className={styles.contactInfo}>
               <div className={styles.contactItem}>
@@ -330,7 +487,7 @@ export default function RutaSeleccionadaPage() {
                 📞 Llamar
               </button>
               <button className={styles.contactButton} onClick={handleInstagram}>
-                💬 Abrir
+                📱 Seguir
               </button>
             </div>
           </div>
@@ -341,7 +498,7 @@ export default function RutaSeleccionadaPage() {
           <div className={styles.reviewsHeader}>
             <div className={styles.reviewsTitle}>
               <span className={styles.reviewsIcon}>⭐</span>
-              <span>{ruta.rating} • {ruta.reviews} reseñas</span>
+              <span>{ruta.rating.toFixed(1)} • {ruta.reviews} reseñas de enduro</span>
             </div>
             <button className={styles.writeReviewButton} onClick={handleWriteReview}>
               ✏️ Escribir reseña
@@ -349,25 +506,25 @@ export default function RutaSeleccionadaPage() {
           </div>
 
           <div className={styles.reviewsList}>
-            {ruta.reviewsList.map((review, index) => (
-              <div key={index} className={styles.reviewCard}>
-                <div className={styles.reviewHeader}>
-                  <div className={styles.reviewUser}>
-                    <div className={styles.userAvatar}>
-                      {review.name.charAt(0)}
-                    </div>
-                    <div className={styles.userInfo}>
-                      <span className={styles.userName}>{review.name}</span>
-                      <div className={styles.reviewStars}>
-                        {renderStars(review.rating)}
+            {ruta.reviewsList.map((review: any, index: number) => (
+                <div key={index} className={styles.reviewCard}>
+                  <div className={styles.reviewHeader}>
+                    <div className={styles.reviewUser}>
+                      <div className={styles.userAvatar}>
+                        {review.name.charAt(0)}
+                      </div>
+                      <div className={styles.userInfo}>
+                        <span className={styles.userName}>{review.name}</span>
+                        <div className={styles.reviewStars}>
+                          {renderStars(review.rating)}
+                        </div>
                       </div>
                     </div>
+                    <span className={styles.reviewDate}>{review.date}</span>
                   </div>
-                  <span className={styles.reviewDate}>{review.date}</span>
+                  <p className={styles.reviewComment}>{review.comment}</p>
                 </div>
-                <p className={styles.reviewComment}>{review.comment}</p>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
 
@@ -379,5 +536,14 @@ export default function RutaSeleccionadaPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// 🔥 COMPONENTE PRINCIPAL CON SUSPENSE (RESUELVE EL ERROR DEL BUILD)
+export default function EnduroRutaSeleccionada() {
+  return (
+    <Suspense fallback={<div>Cargando ruta de enduro...</div>}>
+      <EnduroRutaSeleccionadaContent />
+    </Suspense>
   );
 }

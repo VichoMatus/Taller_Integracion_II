@@ -6,103 +6,66 @@ import SearchBar from '../../../components/SearchBar';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import StatsCard from '../../../components/charts/StatsCard';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
+import { canchaService } from '@/services/canchaService';
+import { complejosService } from '@/services/complejosService'; 
 import styles from './page.module.css';
 
-// Datos de ejemplo para las pistas mejor calificadas (6 tarjetas)
-const topRatedCourts = [
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha1.png",
-    name: "Atletismo - Centro",
-    address: "Norte, Centro, Sur",
-    rating: 4.3,
-    tags: ["Pista al aire libre", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Pista de atletismo ubicada en el centro con áreas para salto y lanzamiento",
-    price: "21",
-    nextAvailable: "20:00-21:00",
-  },
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha2.png",
-    name: "Atletismo - Norte",
-    address: "Sector Norte",
-    rating: 4.5,
-    tags: ["Pista al aire libre", "Estacionamiento"],
-    description: "Pista de atletismo con cronometraje y carriles reglamentarios",
-    price: "19",
-    nextAvailable: "14:30-15:30",
-  },
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha1.png",
-    name: "Atletismo - Sur",
-    address: "Sector Sur",
-    rating: 4.8,
-    tags: ["Pista techada", "Vestuarios", "Entrenadores", "Áreas de salto"],
-    description: "Pista de atletismo con instalaciones completas y zona de entrenamiento",
-    price: "23",
-    nextAvailable: "10:30-11:30",
-  },
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha2.png",
-    name: "Atletismo - Premium",
-    address: "Centro Premium",
-    rating: 4.7,
-    tags: ["Pista Profesional", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Pista de atletismo profesional con césped híbrido y todas las comodidades",
-    price: "28",
-    nextAvailable: "Disponible ahora",
-  },
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha1.png",
-    name: "Atletismo - Elite",
-    address: "Zona Elite",
-    rating: 4.8,
-    tags: ["Pista Profesional", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Pista premium de atletismo con estándar internacional y equipamiento completo",
-    price: "32",
-    nextAvailable: "18:00-19:00",
-  },
-  {
-    imageUrl: "/sports/atletismo/canchas/Cancha2.png",
-    name: "Atletismo - Deportivo",
-    address: "Centro Deportivo",
-    rating: 4.4,
-    tags: ["Pista Sintética", "Estacionamiento", "Iluminación"],
-    description: "Pista de atletismo en complejo deportivo con múltiples servicios y torneos",
-    price: "25",
-    nextAvailable: "16:30-17:30",
-  }
-];
-
-// 🏃 DATOS PARA LAS ESTADÍSTICAS DE ATLETISMO
+// 🏃‍♂️ DATOS PARA LAS ESTADÍSTICAS DE ATLETISMO
 const atletismoStats = [
   {
     title: "Pistas Disponibles Hoy",
-    value: "8",
-    icon: "🏃",
+    value: "6",
+    icon: "🏃‍♂️",
     subtitle: "Listas para entrenar",
-    trend: { value: 2, isPositive: true }
+    trend: { value: 1, isPositive: true }
   },
   {
     title: "Rango de Precios",
-    value: "$19-32",
+    value: "$15-35",
     icon: "💰",
     subtitle: "Por hora",
     trend: { value: 5, isPositive: true }
   },
   {
     title: "Calificación Promedio",
-    value: "4.5⭐",
+    value: "4.6⭐",
     icon: "🏆",
     subtitle: "De nuestras pistas",
-    trend: { value: 0.2, isPositive: true }
+    trend: { value: 0.3, isPositive: true }
   },
   {
-    title: "Atletas Activos",
-    value: "45",
+    title: "Atletas en Pista",
+    value: "18",
     icon: "👥",
     subtitle: "Ahora mismo",
-    trend: { value: 12, isPositive: true }
+    trend: { value: 5, isPositive: true }
   }
 ];
+
+// 🏃‍♂️ FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO DE ATLETISMO
+const getStaticComplejoData = (establecimientoId: number) => {
+  const staticComplejos = {
+    1: {
+      nombre: "Centro de Atletismo Norte",
+      direccion: "Estadio Municipal, Av. Alemania 1234, Temuco, Chile"
+    },
+    2: {
+      nombre: "Pista Atlética Centro", 
+      direccion: "Centro Deportivo, Av. Pedro de Valdivia 567, Temuco, Chile"
+    },
+    3: {
+      nombre: "Complejo Atlético Sur",
+      direccion: "Polideportivo Municipal, Calle Montt 890, Temuco, Chile"
+    },
+    default: {
+      nombre: "Centro de Atletismo",
+      direccion: "Estadio Municipal, Av. Alemania 1234, Temuco, Chile"
+    }
+  };
+
+  return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+};
 
 export default function AtletismoPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -113,16 +76,147 @@ export default function AtletismoPage() {
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
+  // 🏃‍♂️ ESTADOS PARA PISTAS DEL BACKEND
+  const [pistas, setPistas] = useState<any[]>([]);
+  const [loadingPistas, setLoadingPistas] = useState(true);
+  const [errorPistas, setErrorPistas] = useState<string | null>(null);
+
+  // 🏃‍♂️ Hook de autenticación
+  const { buttonProps } = useAuthStatus();
+
+  // 🏃‍♂️ CARGAR PISTAS DEL BACKEND CON DATOS DE COMPLEJO
+  useEffect(() => {
+    const loadPistas = async () => {
+      try {
+        setLoadingPistas(true);
+        setErrorPistas(null);
+        
+        console.log('🔄 [AtletismoPage] Cargando TODAS las pistas del backend...');
+        
+        // 🏃‍♂️ OBTENER TODAS LAS CANCHAS/PISTAS
+        const todasLasPistas = await canchaService.getCanchas();
+        console.log('✅ [AtletismoPage] Todas las pistas obtenidas:', todasLasPistas);
+        
+        // 🏃‍♂️ FILTRAR PISTAS DE ATLETISMO
+        const pistasDeAtletismo = todasLasPistas.filter((pista: any) => {
+          console.log(`🔍 [AtletismoPage] Evaluando pista ID ${pista.id}: tipo="${pista.tipo}"`);
+          return ['atletismo', 'pista_atletica', 'track', 'running'].includes(pista.tipo);
+        });
+        
+        console.log('🏃‍♂️ [AtletismoPage] Pistas de atletismo encontradas:', pistasDeAtletismo.length);
+        
+        // 🏃‍♂️ OBTENER DATOS DE COMPLEJOS PARA CADA PISTA
+        const pistasMapeadas = await Promise.all(
+          pistasDeAtletismo.map(async (pista: any) => {
+            let complejoData = null;
+            let addressInfo = `Complejo ${pista.establecimientoId}`;
+            
+            // 🏃‍♂️ INTENTAR OBTENER DATOS DEL COMPLEJO
+            if (pista.establecimientoId) {
+              try {
+                console.log(`🔍 [AtletismoPage] Cargando complejo ID ${pista.establecimientoId} para pista ${pista.id}`);
+                complejoData = await complejosService.getComplejoById(pista.establecimientoId);
+                
+                if (complejoData) {
+                  addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                  console.log(`✅ [AtletismoPage] Complejo cargado: ${addressInfo}`);
+                }
+                
+              } catch (complejoError: any) {
+                console.warn(`⚠️ [AtletismoPage] Error cargando complejo ${pista.establecimientoId}:`, complejoError.message);
+                // Usar datos de fallback
+                const staticComplejo = getStaticComplejoData(pista.establecimientoId);
+                addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+              }
+            }
+            
+            // 🏃‍♂️ MAPEAR PISTA CON DATOS DEL COMPLEJO
+            const mappedPista = {
+              id: pista.id,
+              imageUrl: `/sports/atletismo/pistas/Pista${pista.id}.png`,
+              name: pista.nombre,
+              address: addressInfo, // 🏃‍♂️ USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
+              rating: pista.rating || 4.6,
+              tags: [
+                pista.techada ? "Pista cubierta" : "Pista exterior",
+                pista.activa ? "Disponible" : "No disponible",
+                "Pista oficial", // Específico para atletismo
+                "400m estándar"
+              ],
+              description: `Pista de atletismo ${pista.nombre} - ID: ${pista.id}`,
+              price: pista.precioPorHora?.toString() || "20",
+              nextAvailable: pista.activa ? "Disponible ahora" : "No disponible",
+              sport: "atletismo"
+            };
+            
+            console.log('🗺️ [AtletismoPage] Pista mapeada:', mappedPista);
+            return mappedPista;
+          })
+        );
+        
+        console.log('🎉 [AtletismoPage] Pistas con datos de complejo cargadas:', pistasMapeadas.length);
+        setPistas(pistasMapeadas);
+        
+      } catch (error: any) {
+        console.error('❌ [AtletismoPage] ERROR cargando pistas:', error);
+        setErrorPistas(`Error: ${error.message}`);
+        
+        // 🏃‍♂️ FALLBACK CON DATOS ESTÁTICOS DE ATLETISMO
+        const pistasEstaticas = [
+          {
+            id: 1,
+            imageUrl: "/sports/atletismo/pistas/Pista1.png",
+            name: "🚨 FALLBACK - Pista Principal",
+            address: "Centro de Atletismo Norte - Estadio Municipal, Av. Alemania 1234, Temuco",
+            rating: 4.7,
+            tags: ["DATOS OFFLINE", "400m oficial", "8 carriles", "Pista exterior"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "20",
+            nextAvailable: "06:00-07:00",
+          },
+          {
+            id: 2,
+            imageUrl: "/sports/atletismo/pistas/Pista2.png",
+            name: "🚨 FALLBACK - Pista de Entrenamiento",
+            address: "Pista Atlética Centro - Centro Deportivo, Av. Pedro de Valdivia 567, Temuco",
+            rating: 4.4,
+            tags: ["DATOS OFFLINE", "200m entrenamiento", "6 carriles", "Pista cubierta"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "15",
+            nextAvailable: "16:00-17:00", 
+          },
+          {
+            id: 3,
+            imageUrl: "/sports/atletismo/pistas/Pista3.png",
+            name: "🚨 FALLBACK - Pista Polideportivo",
+            address: "Complejo Atlético Sur - Polideportivo Municipal, Calle Montt 890, Temuco",
+            rating: 4.5,
+            tags: ["DATOS OFFLINE", "400m sintética", "Salto largo", "Lanzamientos"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "25",
+            nextAvailable: "Mañana 08:00-09:00",
+          }
+        ];
+        
+        setPistas(pistasEstaticas);
+      } finally {
+        setLoadingPistas(false);
+      }
+    };
+
+    loadPistas();
+  }, []);
+
   useEffect(() => {
     setIsClient(true);
-
+    
     const calculateCardsToShow = () => {
       const screenWidth = window.innerWidth;
       const cardWidth = 320;
       const gap = 20;
       const sidebarWidth = 240;
       const padding = 40;
-
+      
       const availableWidth = screenWidth - sidebarWidth - padding;
       return Math.max(1, Math.min(4, Math.floor(availableWidth / (cardWidth + gap))));
     };
@@ -140,7 +234,9 @@ export default function AtletismoPage() {
     };
   }, []);
 
-  const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
+  // 🏃‍♂️ USAR PISTAS REALES PARA EL CARRUSEL
+  const topRatedTracks = pistas.slice(0, 6); // Máximo 6 pistas para el carrusel
+  const totalSlides = Math.max(1, topRatedTracks.length - cardsToShow + 1);
 
   const nextSlide = () => {
     setCurrentSlide((prev) => Math.min(prev + 1, totalSlides - 1));
@@ -162,10 +258,38 @@ export default function AtletismoPage() {
     console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
   };
 
-  const handleCanchaClick = (court: any) => {
-    console.log('Test navigation...');
-    router.push('/sports/atletismo/canchas/canchaseleccionada');
+  const handlePistaClick = (track: any) => {
+    console.log('Navegando a pista:', track);
+    router.push(`/sports/atletismo/canchas/canchaseleccionada?id=${track.id}`);
   };
+
+  // 🏃‍♂️ Manejador del botón de usuario
+  const handleUserButtonClick = () => {
+    if (!buttonProps.disabled) {
+      router.push(buttonProps.href);
+    }
+  };
+
+  // 🏃‍♂️ ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
+  const updatedStats = [
+    {
+      ...atletismoStats[0],
+      value: pistas.filter(p => p.nextAvailable !== "No disponible").length.toString()
+    },
+    {
+      ...atletismoStats[1],
+      value: pistas.length > 0 ? 
+        `$${Math.min(...pistas.map(p => parseInt(p.price || '0')))}-${Math.max(...pistas.map(p => parseInt(p.price || '0')))}` : 
+        "$15-35"
+    },
+    {
+      ...atletismoStats[2],
+      value: pistas.length > 0 ? 
+        `${(pistas.reduce((acc, p) => acc + p.rating, 0) / pistas.length).toFixed(1)}⭐` : 
+        "4.6⭐"
+    },
+    atletismoStats[3] // Mantener atletas por defecto
+  ];
 
   if (!isClient) {
     return (
@@ -187,7 +311,7 @@ export default function AtletismoPage() {
       <div className={styles.mainContent}>
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerIcon}>🏃</div>
+            <div className={styles.headerIcon}>🏃‍♂️</div>
             <h1 className={styles.headerTitle}>Atletismo</h1>
           </div>
           <div className={styles.headerRight}>
@@ -196,23 +320,27 @@ export default function AtletismoPage() {
               onChange={handleSearchChange}
               onSearch={handleSearch}
               placeholder="Nombre de la pista..."
-              sport="atletismo"
+              sport="atletismo" 
             />
-            <button className={styles.userButton}>
+            <button 
+              className={styles.userButton}
+              onClick={handleUserButtonClick}
+              disabled={buttonProps.disabled}
+            >
               <span>👤</span>
-              <span>usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>
 
-        {/* 🏃 STATS CARDS MEJORADAS CON STATSCARD */}
+        {/* 🏃‍♂️ STATS CARDS CON DATOS ACTUALIZADOS */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
             <span className={styles.statsTitleIcon}>📊</span>
             Estadísticas del Atletismo en Temuco
           </h2>
           <div className={styles.statsContainer}>
-            {atletismoStats.map((stat, index) => (
+            {updatedStats.map((stat, index) => (
               <StatsCard
                 key={index}
                 title={stat.title}
@@ -223,7 +351,6 @@ export default function AtletismoPage() {
                 sport="atletismo"
                 onClick={() => {
                   console.log(`Clicked on ${stat.title} stat`);
-                  // Agregar navegación específica si es necesario
                   if (stat.title.includes("Pistas")) {
                     router.push('/sports/atletismo/canchas');
                   }
@@ -234,11 +361,11 @@ export default function AtletismoPage() {
         </div>
 
         <div className={styles.quickAccessSection}>
-          <button
+          <button 
             className={styles.mainCourtButton}
             onClick={() => window.location.href = '/sports/atletismo/canchas/'}
           >
-            <div className={styles.courtButtonIcon}>🏃</div>
+            <div className={styles.courtButtonIcon}>🏃‍♂️</div>
             <div className={styles.courtButtonText}>
               <span className={styles.courtButtonTitle}>Explorar Pistas</span>
               <span className={styles.courtButtonSubtitle}>Ver todas las pistas disponibles</span>
@@ -247,59 +374,67 @@ export default function AtletismoPage() {
           </button>
         </div>
 
-        {/* Pistas mejor calificadas con carrusel */}
+        {/* 🏃‍♂️ CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>⭐</span>
               Pistas mejor calificadas
+              {loadingPistas && <span style={{ fontSize: '14px', marginLeft: '10px' }}>Cargando...</span>}
+              {errorPistas && <span style={{ fontSize: '14px', marginLeft: '10px', color: 'red' }}>⚠️ Usando datos offline</span>}
             </h2>
             <div className={styles.carouselControls}>
-              <button
-                onClick={prevSlide}
+              <button 
+                onClick={prevSlide} 
                 className={styles.carouselButton}
-                disabled={currentSlide === 0}
-                style={{ opacity: currentSlide === 0 ? 0.5 : 1 }}
+                disabled={currentSlide === 0 || loadingPistas}
+                style={{ opacity: currentSlide === 0 || loadingPistas ? 0.5 : 1 }}
               >
                 ←
               </button>
               <span className={styles.slideIndicator}>
                 {currentSlide + 1} / {totalSlides}
               </span>
-              <button
-                onClick={nextSlide}
+              <button 
+                onClick={nextSlide} 
                 className={styles.carouselButton}
-                disabled={currentSlide === totalSlides - 1}
-                style={{ opacity: currentSlide === totalSlides - 1 ? 0.5 : 1 }}
+                disabled={currentSlide === totalSlides - 1 || loadingPistas}
+                style={{ opacity: currentSlide === totalSlides - 1 || loadingPistas ? 0.5 : 1 }}
               >
                 →
               </button>
             </div>
           </div>
-
+          
           <div className={styles.carouselContainer}>
-            <div
-              className={styles.courtsGrid}
-              style={{
-                transform: `translateX(-${currentSlide * (320 + 20)}px)`,
-              }}
-            >
-              {topRatedCourts.map((court, index) => (
-                <CourtCard
-                  key={index}
-                  {...court}
-                  sport="atletismo"
-                  onClick={() => router.push('/sports/atletismo/canchas/canchaseleccionada')}
-                />
-              ))}
-            </div>
+            {loadingPistas ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                <p>Cargando pistas...</p>
+              </div>
+            ) : (
+              <div 
+                className={styles.courtsGrid}
+                style={{
+                  transform: `translateX(-${currentSlide * (320 + 20)}px)`,
+                }}
+              >
+                {topRatedTracks.map((track, index) => (
+                  <CourtCard 
+                    key={track.id || index} 
+                    {...track} 
+                    sport="atletismo"
+                    onClick={() => handlePistaClick(track)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Ubicación en el mapa */}
         <div className={styles.mapSection}>
           <h2 className={styles.sectionTitle}>Ubicación en el mapa de las pistas</h2>
-
+          
           <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>
               <span className={styles.locationIcon}>📍</span>
@@ -313,8 +448,8 @@ export default function AtletismoPage() {
             </div>
             <div className={styles.radiusContainer}>
               <span className={styles.radiusIcon}>📏</span>
-              <select
-                value={radiusKm}
+              <select 
+                value={radiusKm} 
                 onChange={(e) => setRadiusKm(e.target.value)}
                 className={styles.radiusSelect}
               >
@@ -329,7 +464,7 @@ export default function AtletismoPage() {
             </button>
           </div>
 
-          <LocationMap
+          <LocationMap 
             latitude={-38.7359}
             longitude={-72.5904}
             address="Temuco, Chile"
@@ -348,4 +483,3 @@ export default function AtletismoPage() {
     </div>
   );
 }
-

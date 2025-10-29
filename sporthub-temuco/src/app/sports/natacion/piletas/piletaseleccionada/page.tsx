@@ -1,83 +1,244 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import Sidebar from '../../../../../components/layout/Sidebar'; 
-import SearchBar from '../../../../../components/SearchBar'; 
-import LocationMap from '../../../../../components/LocationMap'; 
+import { useRouter, useSearchParams } from 'next/navigation';
+import Sidebar from '@/components/layout/Sidebar'; 
+import SearchBar from '@/components/SearchBar'; 
+import LocationMap from '@/components/LocationMap'; 
 import styles from './page.module.css';
 
-export default function PiscinaSeleccionadaPage() {
-  const router = useRouter();
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState(0);
-  
-  // 🔥 DATOS ESTÁTICOS DE NATACIÓN - Adaptado completamente
-  const piscina = {
-    id: 1,
-    name: "Natación Elite Center",
-    location: "Av. Alemania 1234, Temuco, Chile",
-    coordinates: { lat: -38.7359, lng: -72.5904 },
-    phone: "(45) 555-1234",
-    instagram: "@natacionelitecenter",
-    description: "Piscina olímpica profesional con sistema de filtración de última generación y tratamiento de agua con ozono. Incluye carriles demarcados y equipos de natación profesionales.",
-    schedule: "Lunes a Domingo • 06:00 a 22:00",
-    capacity: "8 carriles simultáneos",
-    rating: 4.9,
-    reviews: 187,
-    priceFrom: 35000,
-    images: [
-      "/sports/natacion/piscinas/Piscina1.png",
-      "/sports/natacion/piscinas/Piscina2.png",
-      "/sports/natacion/piscinas/Piscina3.png",
-      "/sports/natacion/natacion.png"
-    ],
-    amenities: ["Piscina Olímpica", "Sistema Ozono", "Vestuarios Premium", "Zona Calentamiento", "Instructor Profesional"],
-    reviewsList: [
-      {
-        name: "Laura M.",
-        rating: 5,
-        date: "hace 2 días",
-        comment: "Excelente piscina de natación! El agua está perfectamente tratada y los carriles están bien demarcados. Ideal para entrenamiento profesional."
-      },
-      {
-        name: "Diego R.",
-        rating: 5,
-        date: "hace 5 días", 
-        comment: "La mejor piscina de natación de Temuco. Sistema de filtración de primera y vestuarios impecables. Totalmente recomendada."
-      },
-      {
-        name: "Carolina L.",
-        rating: 4,
-        date: "hace 1 semana",
-        comment: "Muy buena experiencia nadando. La piscina está en perfectas condiciones y la temperatura del agua es ideal. Volveremos pronto."
-      }
-    ]
-  };
-  
-  useEffect(() => {
-    // Simular carga
-    const timer = setTimeout(() => setIsLoading(false), 1200);
-    return () => clearTimeout(timer);
-  }, []);
+import { useAuthStatus } from '@/hooks/useAuthStatus';
+import { canchaService } from '../../../../../services/canchaService';
+import { complejosService } from '../../../../../services/complejosService';
 
-  const handleBackToPiscinas = () => {
+// 🏊‍♂️ DATOS ESTÁTICOS PARA CAMPOS NO DISPONIBLES EN LA API
+const staticContactData = {
+  phone: "(45) 555-1234",
+  instagram: "@clubnataciontemuco",
+  reviewsList: [
+    {
+      name: "Carlos M.",
+      rating: 5,
+      date: "hace 3 días",
+      comment: "Excelente pileta olímpica! El agua está perfectamente climatizada y muy limpia. Las instalaciones son de primera calidad."
+    },
+    {
+      name: "Ana G.",
+      rating: 4,
+      date: "hace 1 semana", 
+      comment: "Muy buena pileta, vestuarios limpios y personal amable. El sistema de filtrado mantiene el agua cristalina."
+    },
+    {
+      name: "Roberto L.",
+      rating: 5,
+      date: "hace 2 semanas",
+      comment: "La iluminación subacuática es perfecta para natación nocturna. Carriles bien marcados y profundidad ideal."
+    }
+  ]
+};
+
+// 🏊‍♂️ COMPONENTE PRINCIPAL CON SUSPENSE
+function NatacionPiletaSeleccionadaContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
+  
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState(0);
+  const [pileta, setPileta] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // 🏊‍♂️ OBTENER ID DE LA PILETA DESDE URL
+  const piletaId = searchParams?.get('id') || searchParams?.get('pileta');
+
+  useEffect(() => {
+    const loadPiletaData = async () => {
+      if (!piletaId) {
+        setError('No se especificó ID de pileta');
+        setDataLoading(false);
+        return;
+      }
+
+      try {
+        setDataLoading(true);
+        setError(null);
+        
+        console.log('🔍 Cargando pileta ID:', piletaId);
+        
+        // 🏊‍♂️ LLAMADA A LA API PARA OBTENER LA PILETA
+        const piletaData = await canchaService.getCanchaById(parseInt(piletaId));
+        console.log('✅ Pileta cargada:', piletaData);
+
+        // 🏊‍♂️ VERIFICAR QUE SEA UNA PILETA DE NATACIÓN
+        if (!['natacion', 'swimming', 'pileta', 'piscina'].includes(piletaData.tipo.toLowerCase())) {
+          throw new Error(`Esta instalación es de ${piletaData.tipo}, no de natación`);
+        }
+
+        // 🏊‍♂️ OBTENER DATOS DEL COMPLEJO
+        let complejoData = null;
+        let locationInfo = "Av. Alemania 1234, Temuco, Chile"; // Fallback estático
+        let coordinates = { lat: -38.7359, lng: -72.5904 }; // Fallback estático
+
+        if (piletaData.establecimientoId) {
+          try {
+            console.log('🔍 Cargando complejo ID:', piletaData.establecimientoId);
+            complejoData = await complejosService.getComplejoById(piletaData.establecimientoId);
+            console.log('✅ Complejo cargado:', complejoData);
+            
+            // 🏊‍♂️ USAR DIRECCIÓN REAL DEL COMPLEJO
+            if (complejoData.direccion) {
+              locationInfo = complejoData.direccion;
+              console.log('📍 Dirección obtenida del complejo:', locationInfo);
+            }
+            
+            // 🏊‍♂️ USAR COORDENADAS DEL COMPLEJO SI ESTÁN DISPONIBLES
+            if (complejoData.latitud && complejoData.longitud) {
+              coordinates = {
+                lat: parseFloat(complejoData.latitud),
+                lng: parseFloat(complejoData.longitud)
+              };
+              console.log('🗺️ Coordenadas obtenidas del complejo:', coordinates);
+            }
+            
+          } catch (complejoError: any) {
+            console.error('⚠️ Error cargando complejo, usando datos estáticos:', complejoError.message);
+            // Mantener valores de fallback
+          }
+        }
+
+        // 🏊‍♂️ MAPEAR DATOS DE LA API CON INFORMACIÓN DEL COMPLEJO
+        const mappedPileta = {
+          id: piletaData.id,
+          name: piletaData.nombre,
+          
+          // 🏊‍♂️ USAR UBICACIÓN REAL DEL COMPLEJO
+          location: locationInfo,
+          coordinates: coordinates,
+          
+          // 🏊‍♂️ DESCRIPCIÓN SIMPLE CON DATOS REALES
+          description: `${piletaData.nombre} - Pileta de ${piletaData.tipo}${complejoData ? ` en ${complejoData.nombre}` : ''} con agua climatizada y sistema de filtrado profesional. Ideal para natación recreativa, entrenamiento y competencias.`,
+          
+          // 🏊‍♂️ HORARIOS - USAR DEL COMPLEJO SI ESTÁ DISPONIBLE
+          schedule: complejoData?.horarioAtencion || "Lunes a Domingo • 06:00 a 22:00",
+          
+          // 🏊‍♂️ CAPACIDAD ESPECÍFICA PARA NATACIÓN
+          capacity: (() => {
+            switch (piletaData.tipo?.toLowerCase()) {
+              case 'natacion':
+              case 'swimming': 
+                return "50 nadadores (8 carriles)";
+              case 'pileta olimpica': 
+                return "80 nadadores (10 carriles)";
+              case 'pileta recreativa': 
+                return "30 nadadores (6 carriles)";
+              default: 
+                return "Consultar capacidad";
+            }
+          })(),
+          
+          // 🏊‍♂️ DATOS REALES DE LA API
+          rating: piletaData.rating || 4.6,
+          reviews: 84, // Estático por ahora
+          priceFrom: piletaData.precioPorHora || 15000,
+          
+          // 🏊‍♂️ IMÁGENES ESPECÍFICAS DE NATACIÓN
+          images: [
+            `/sports/natacion/piletas/Pileta1.png`,
+            `/sports/natacion/piletas/Pileta2.png`,
+            `/sports/natacion/piletas/Pileta3.png`,
+            `/sports/natacion/natacion.png`
+          ],
+          
+          // 🏊‍♂️ AMENIDADES BÁSICAS CON DATOS REALES
+          amenities: [
+            piletaData.activa ? "Disponible" : "No disponible",
+            piletaData.techada ? "Pileta Techada" : "Pileta Exterior",
+            "Agua Climatizada",
+            "Carriles Profesionales",
+            "Sistema de Filtrado",
+            "Iluminación LED",
+            "Vestuarios VIP"
+          ],
+          
+          // 🏊‍♂️ CONTACTO ESTÁTICO (hasta implementar en complejo)
+          phone: staticContactData.phone,
+          instagram: staticContactData.instagram,
+          reviewsList: staticContactData.reviewsList,
+
+          // 🏊‍♂️ INFORMACIÓN ADICIONAL REAL
+          establecimientoId: piletaData.establecimientoId,
+          tipo: piletaData.tipo,
+          techada: piletaData.techada,
+          activa: piletaData.activa,
+          
+          // 🏊‍♂️ INFORMACIÓN DEL COMPLEJO
+          complejoNombre: complejoData?.nombre || `Complejo ${piletaData.establecimientoId}`
+        };
+
+        setPileta(mappedPileta);
+        
+      } catch (error: any) {
+        console.error('❌ Error cargando pileta:', error);
+        setError(`Error cargando pileta: ${error.message}`);
+        
+        // 🏊‍♂️ FALLBACK SIMPLE
+        setPileta({
+          id: piletaId,
+          name: `Club Natación Temuco #${piletaId}`,
+          location: "Av. Alemania 1234, Temuco, Chile", // Fallback estático
+          coordinates: { lat: -38.7359, lng: -72.5904 },
+          phone: staticContactData.phone,
+          instagram: staticContactData.instagram,
+          description: `Pileta de Natación #${piletaId} con agua climatizada - Datos no disponibles`,
+          schedule: "Lunes a Domingo • 06:00 a 22:00",
+          capacity: "50 nadadores (8 carriles)",
+          rating: 4.6,
+          reviews: 84,
+          priceFrom: 15000,
+          images: [
+            "/sports/natacion/natacion.png",
+            "/sports/natacion/natacion.png",
+            "/sports/natacion/natacion.png"
+          ],
+          amenities: ["Datos offline", "Agua Climatizada", "Carriles Profesionales", "Iluminación LED"],
+          reviewsList: staticContactData.reviewsList,
+          activa: true,
+          complejoNombre: "Club de Natación"
+        });
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    loadPiletaData();
+  }, [piletaId]);
+
+  // 🏊‍♂️ RESTO DE FUNCIONES SIN CAMBIOS
+  const handleUserButtonClick = () => {
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil');
+    } else {
+      router.push('/login');
+    }
+  };
+
+  const handleBackToPiletas = () => {
     router.push('/sports/natacion/piletas');
   };
 
   const nextImage = () => {
-    if (piscina && piscina.images.length > 0) {
+    if (pileta && pileta.images.length > 0) {
       setCurrentImageIndex((prev) => 
-        prev === piscina.images.length - 1 ? 0 : prev + 1
+        prev === pileta.images.length - 1 ? 0 : prev + 1
       );
     }
   };
 
   const prevImage = () => {
-    if (piscina && piscina.images.length > 0) {
+    if (pileta && pileta.images.length > 0) {
       setCurrentImageIndex((prev) => 
-        prev === 0 ? piscina.images.length - 1 : prev - 1
+        prev === 0 ? pileta.images.length - 1 : prev - 1
       );
     }
   };
@@ -90,7 +251,7 @@ export default function PiscinaSeleccionadaPage() {
       >
         ⭐
       </span>
-    ));  
+    ));
   };
 
   const formatPrice = (price: number) => {
@@ -102,37 +263,54 @@ export default function PiscinaSeleccionadaPage() {
   };
 
   const handleReserve = () => {
-    router.push('/sports/reservacancha');
+    router.push(`/sports/reservacancha?canchaId=${pileta.id}`);
   };
 
   const handleCall = () => {
-    window.open(`tel:${piscina.phone}`, '_self');
+    window.open(`tel:${pileta?.phone}`, '_self');
   };
 
   const handleInstagram = () => {
-    window.open(`https://instagram.com/${piscina.instagram.replace('@', '')}`, '_blank');
+    window.open(`https://instagram.com/${pileta?.instagram.replace('@', '')}`, '_blank');
   };
 
   const handleDirections = () => {
-    const query = encodeURIComponent(piscina.location);
+    const query = encodeURIComponent(pileta?.location || '');
     window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank');
   };
 
   const handleHelp = () => {
-    alert('¿Necesitas ayuda con natación? Contáctanos al (45) 555-0000 o envía un email a natacion@sporthub.cl');
+    alert(`¿Necesitas ayuda con natación? Contáctanos al ${pileta?.phone} o envía un email a natacion@sporthub.cl`);
   };
 
   const handleWriteReview = () => {
-    alert('Función de escribir reseña de natación próximamente...');
+    alert(`Función de escribir reseña de natación próximamente...`);
   };
 
-  if (isLoading) {
+  // 🏊‍♂️ LOADING Y ERROR - SIN CAMBIOS
+  if (dataLoading) {
     return (
       <div className={styles.pageContainer}>
         <Sidebar userRole="usuario" sport="natacion" />
         <div className={styles.loading}>
           <div className={styles.loadingSpinner}>🏊‍♂️</div>
-          <p>Cargando información de la piscina de natación...</p>
+          <p>Cargando información de la pileta de natación...</p>
+          {error && <p style={{color: 'red', marginTop: '10px'}}>⚠️ {error}</p>}
+        </div>
+      </div>
+    );
+  }
+
+  if (!pileta) {
+    return (
+      <div className={styles.pageContainer}>
+        <Sidebar userRole="usuario" sport="natacion" />
+        <div className={styles.loading}>
+          <div className={styles.loadingSpinner}>❌</div>
+          <p>No se pudo cargar la información de la pileta de natación</p>
+          <button onClick={() => router.push('/sports/natacion/piletas')}>
+            Volver a piletas
+          </button>
         </div>
       </div>
     );
@@ -151,13 +329,17 @@ export default function PiscinaSeleccionadaPage() {
           </div>
           <div className={styles.headerRight}>
            <SearchBar
-            placeholder="Buscar piscinas de natación..."
+            placeholder="Buscar piletas de natación..."
             sport="natacion"
             onSearch={(term) => router.push(`/sports/natacion/piletas?search=${encodeURIComponent(term)}`)}
             />
-            <button className={styles.userButton}>
+            <button 
+              {...buttonProps}
+              onClick={handleUserButtonClick}
+              className={styles.userButton}
+            >
               <span>👤</span>
-              <span>Usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>
@@ -166,83 +348,79 @@ export default function PiscinaSeleccionadaPage() {
         <div className={styles.breadcrumb}>
           <button 
             className={styles.breadcrumbButton}
-            onClick={handleBackToPiscinas}
+            onClick={handleBackToPiletas}
           >
             <span>←</span>
-            <span>Volver a piscinas</span>
+            <span>Volver a piletas</span>
           </button>
         </div>
 
         {/* Court Info Card */}
         <div className={styles.courtInfoCard}>
           <div className={styles.courtHeader}>
-            <h2 className={styles.courtTitle}>{piscina.name} - Piscina Natación</h2>
-            <button className={styles.reserveButton} onClick={handleReserve}>
-              🏊‍♂️ Reservar
+            <h2 className={styles.courtTitle}>
+              {pileta.name} - {pileta.tipo?.charAt(0).toUpperCase() + pileta.tipo?.slice(1) || 'Natación'}
+            </h2>
+            <button 
+              className={styles.reserveButton} 
+              onClick={handleReserve}
+              disabled={!pileta.activa}
+              style={{ 
+                opacity: pileta.activa ? 1 : 0.6,
+                cursor: pileta.activa ? 'pointer' : 'not-allowed'
+              }}
+            >
+              🏊‍♂️ {pileta.activa ? 'Reservar' : 'No disponible'}
             </button>
           </div>
           
           <div className={styles.courtDetails}>
             <div className={styles.detailItem}>
               <span className={styles.detailIcon}>📍</span>
-              <span>{piscina.location}</span>
+              <span>{pileta.location}</span>
             </div>
             <div className={styles.detailItem}>
               <span className={styles.detailIcon}>💰</span>
-              <span>Desde {formatPrice(piscina.priceFrom)}/h</span>
+              <span>Desde {formatPrice(pileta.priceFrom)}/h</span>
             </div>
             <div className={styles.detailItem}>
-              <span className={styles.detailIcon}>⭐</span>
-              <span>{piscina.rating} • {piscina.reviews} reseñas</span>
+              <span className={styles.detailIcon}>🏢</span>
+              <span>{pileta.complejoNombre}</span>
             </div>
           </div>
 
           <div className={styles.courtTabs}>
-            {piscina.amenities.map((amenity, index) => (
-              <button 
-                key={index}
-                className={`${styles.tab} ${activeTab === index ? styles.tabActive : ''}`}
-                onClick={() => setActiveTab(index)}
-              >
-                {amenity}
-              </button>
-            ))}
+            {pileta.amenities.map((amenity: string, index: number) => (
+                <button 
+                  key={index}
+                  className={`${styles.tab} ${activeTab === index ? styles.tabActive : ''}`}
+                  onClick={() => setActiveTab(index)}
+                >
+                  {amenity}
+                </button>
+              ))}
           </div>
 
           {/* Description Section */}
           <div className={styles.descriptionSection}>
-            <h3 className={styles.sectionTitle}>
-              <span>🏊‍♂️</span>
-              Descripción de la Piscina de Natación
-            </h3>
+            <h3 className={styles.sectionTitle}>Descripción de la Pileta</h3>
             <div className={styles.descriptionCard}>
               <span className={styles.descriptionIcon}>🏊‍♂️</span>
-              <p className={styles.descriptionText}>{piscina.description}</p>
+              <p className={styles.descriptionText}>{pileta.description}</p>
             </div>
           </div>
 
           {/* Availability Section */}
           <div className={styles.availabilitySection}>
-            <h3 className={styles.sectionTitle}>
-              <span>📅</span>
-              Disponibilidad 
-            </h3>
+            <h3 className={styles.sectionTitle}>Disponibilidad</h3>
             <div className={styles.availabilityCard}>
               <div className={styles.availabilityItem}>
                 <span className={styles.availabilityIcon}>🕒</span>
-                <span className={styles.availabilityText}>{piscina.schedule}</span>
+                <span className={styles.availabilityText}>{pileta.schedule}</span>
               </div>
               <div className={styles.availabilityItem}>
                 <span className={styles.availabilityIcon}>👥</span>
-                <span className={styles.availabilityText}>{piscina.capacity}</span>
-              </div>
-              <div className={styles.availabilityItem}>
-                <span className={styles.availabilityIcon}>🏊‍♂️</span>
-                <span className={styles.availabilityText}>Equipos de natación incluidos</span>
-              </div>
-              <div className={styles.availabilityItem}>
-                <span className={styles.availabilityIcon}>💧</span>
-                <span className={styles.availabilityText}>Tratamiento con ozono</span>
+                <span className={styles.availabilityText}>{pileta.capacity}</span>
               </div>
             </div>
           </div>
@@ -252,23 +430,20 @@ export default function PiscinaSeleccionadaPage() {
         <div className={styles.locationImagesContainer}>
           {/* Location Section */}
           <div className={styles.locationSection}>
-            <h3 className={styles.sectionTitle}>
-              <span>📍</span>
-              Ubicación de la Piscina
-            </h3>
+            <h3 className={styles.sectionTitle}>Ubicación de la Pileta</h3>
             <div className={styles.mapContainer}>
               <LocationMap 
-                latitude={piscina.coordinates.lat} 
-                longitude={piscina.coordinates.lng}
-                address={piscina.location}
+                latitude={pileta.coordinates.lat} 
+                longitude={pileta.coordinates.lng}
+                address={pileta.location}
                 zoom={15}
                 height="250px"
                 sport="natacion"
               />
               <div className={styles.locationInfo}>
-                <p className={styles.locationAddress}>{piscina.location}</p>
+                <p className={styles.locationAddress}>{pileta.location}</p>
                 <button className={styles.directionsButton} onClick={handleDirections}>
-                  🧭 Cómo llegar 
+                  🧭 Cómo llegar
                 </button>
               </div>
             </div>
@@ -276,18 +451,15 @@ export default function PiscinaSeleccionadaPage() {
 
           {/* Images Section */}
           <div className={styles.imagesSection}>
-            <h3 className={styles.sectionTitle}>
-              <span>📸</span>
-              Imágenes de la Piscina
-            </h3>
+            <h3 className={styles.sectionTitle}>Fotos de la Pileta</h3>
             <div className={styles.imageCarousel}>
               <button className={styles.carouselButton} onClick={prevImage}>
                 ←
               </button>
               <div className={styles.imageContainer}>
                 <Image 
-                  src={piscina.images[currentImageIndex] || "/sports/natacion/piscinas/Piscina1.png"} 
-                  alt={`${piscina.name} - Piscina de Natación - Imagen ${currentImageIndex + 1}`}
+                  src={pileta.images[currentImageIndex] || "/sports/natacion/natacion.png"} 
+                  alt={`${pileta.name} - Imagen ${currentImageIndex + 1}`}
                   className={styles.courtImage}
                   width={600}
                   height={400}
@@ -297,7 +469,7 @@ export default function PiscinaSeleccionadaPage() {
                 />
                 <div className={styles.imageOverlay}>
                   <span className={styles.imageCounter}>
-                    {currentImageIndex + 1} / {piscina.images.length}
+                    {currentImageIndex + 1} / {pileta.images.length}
                   </span>
                 </div>
               </div>
@@ -306,7 +478,7 @@ export default function PiscinaSeleccionadaPage() {
               </button>
             </div>
             <div className={styles.imageIndicators}>
-              {piscina.images.map((_, index) => (
+              {pileta.images.map((_: string, index: number) => (
                 <button
                   key={index}
                   className={`${styles.imageIndicator} ${index === currentImageIndex ? styles.imageIndicatorActive : ''}`}
@@ -319,23 +491,16 @@ export default function PiscinaSeleccionadaPage() {
 
         {/* Contact Section */}
         <div className={styles.contactSection}>
-          <h3 className={styles.sectionTitle}>
-            <span>📱</span>
-            Contacto Natación Elite Center
-          </h3>
+          <h3 className={styles.sectionTitle}>Contacto Club de Natación</h3>
           <div className={styles.contactCard}>
             <div className={styles.contactInfo}>
               <div className={styles.contactItem}>
                 <span className={styles.contactLabel}>Teléfono:</span>
-                <span className={styles.contactValue}>{piscina.phone}</span>
+                <span className={styles.contactValue}>{pileta.phone}</span>
               </div>
               <div className={styles.contactItem}>
                 <span className={styles.contactLabel}>Instagram:</span>
-                <span className={styles.contactValue}>{piscina.instagram}</span>
-              </div>
-              <div className={styles.contactItem}>
-                <span className={styles.contactLabel}>Especialidad:</span>
-                <span className={styles.contactValue}>Natación Profesional</span>
+                <span className={styles.contactValue}>{pileta.instagram}</span>
               </div>
             </div>
             <div className={styles.contactButtons}>
@@ -343,7 +508,7 @@ export default function PiscinaSeleccionadaPage() {
                 📞 Llamar
               </button>
               <button className={styles.contactButton} onClick={handleInstagram}>
-                💬 Instagram
+                📱 Seguir
               </button>
             </div>
           </div>
@@ -354,7 +519,7 @@ export default function PiscinaSeleccionadaPage() {
           <div className={styles.reviewsHeader}>
             <div className={styles.reviewsTitle}>
               <span className={styles.reviewsIcon}>⭐</span>
-              <span>{piscina.rating} • {piscina.reviews} reseñas </span>
+              <span>{pileta.rating.toFixed(1)} • {pileta.reviews} reseñas de natación</span>
             </div>
             <button className={styles.writeReviewButton} onClick={handleWriteReview}>
               ✏️ Escribir reseña
@@ -362,25 +527,25 @@ export default function PiscinaSeleccionadaPage() {
           </div>
 
           <div className={styles.reviewsList}>
-            {piscina.reviewsList.map((review, index) => (
-              <div key={index} className={styles.reviewCard}>
-                <div className={styles.reviewHeader}>
-                  <div className={styles.reviewUser}>
-                    <div className={styles.userAvatar}>
-                      {review.name.charAt(0)}
-                    </div>
-                    <div className={styles.userInfo}>
-                      <span className={styles.userName}>{review.name}</span>
-                      <div className={styles.reviewStars}>
-                        {renderStars(review.rating)}
+            {pileta.reviewsList.map((review: any, index: number) => (
+                <div key={index} className={styles.reviewCard}>
+                  <div className={styles.reviewHeader}>
+                    <div className={styles.reviewUser}>
+                      <div className={styles.userAvatar}>
+                        {review.name.charAt(0)}
+                      </div>
+                      <div className={styles.userInfo}>
+                        <span className={styles.userName}>{review.name}</span>
+                        <div className={styles.reviewStars}>
+                          {renderStars(review.rating)}
+                        </div>
                       </div>
                     </div>
+                    <span className={styles.reviewDate}>{review.date}</span>
                   </div>
-                  <span className={styles.reviewDate}>{review.date}</span>
+                  <p className={styles.reviewComment}>{review.comment}</p>
                 </div>
-                <p className={styles.reviewComment}>{review.comment}</p>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
 
@@ -392,5 +557,14 @@ export default function PiscinaSeleccionadaPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// 🔥 COMPONENTE PRINCIPAL CON SUSPENSE (RESUELVE EL ERROR DEL BUILD)
+export default function NatacionPiletaSeleccionada() {
+  return (
+    <Suspense fallback={<div>Cargando pileta de natación...</div>}>
+      <NatacionPiletaSeleccionadaContent />
+    </Suspense>
   );
 }

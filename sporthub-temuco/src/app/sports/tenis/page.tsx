@@ -3,93 +3,33 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
-import StatsCard from '../../../components/charts/StatsCard'; // ✅ Importar StatsCard
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
+import StatsCard from '../../../components/charts/StatsCard';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
+import { canchaService } from '@/services/canchaService';
+import { complejosService } from '@/services/complejosService';
 import styles from './page.module.css';
 
-// Datos de ejemplo para las canchas de tenis mejor calificadas
-const topRatedCourts = [
-  {
-    imageUrl: "/sports/tenis/canchas/Cancha1.png",
-    name: "Tenis - Centro",
-    address: "Norte, Centro, Sur",
-    rating: 4.8,
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Cancha para tenis ubicada en el centro y con implementos deportivos (Balones y raquetas)",
-    price: "25",
-    nextAvailable: "20:00-21:00", 
-  },
-  {
-    imageUrl: "/sports/tenis/canchas/Cancha2.png",
-    name: "Tenis - Norte",
-    address: "Sector Norte",
-    rating: 4.6,
-    tags: ["Cancha Cerrada", "Estacionamiento", "Vestuarios"],
-    description: "Cancha para tenis ubicada en el centro y con implementos deportivos (Balones y raquetas)",
-    price: "22",
-    nextAvailable: "14:30-15:30", 
-  },
-  {
-    imageUrl: "/path/to/tennis-court3.jpg",
-    name: "Tenis - Sur",
-    address: "Sector Sur",
-    rating: 4.4,
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación"],
-    description: "Cancha para tenis ubicada en el centro y con implementos deportivos (Balones y raquetas)",
-    price: "28",
-    nextAvailable: "Mañana 09:00-10:00",
-  },
-  {
-    imageUrl: "/path/to/tennis-court4.jpg",
-    name: "Tenis Premium",
-    address: "Centro Premium", 
-    rating: 4.9,
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería", "Vestuarios"],
-    description: "Cancha para tenis ubicada en el centro y con implementos deportivos (Balones y raquetas)",
-    price: "35",
-    nextAvailable: "Disponible ahora",
-  },
-  {
-    imageUrl: "/path/to/tennis-court5.jpg",
-    name: "Tenis - Elite",
-    address: "Zona Elite", 
-    rating: 4.7,
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación", "Cafetería"],
-    description: "Cancha premium para tenis con todas las comodidades y equipamiento profesional",
-    price: "32",
-    nextAvailable: "18:00-19:00",
-  },
-  {
-    imageUrl: "/path/to/tennis-court6.jpg",
-    name: "Tenis - Deportivo",
-    address: "Centro Deportivo", 
-    rating: 4.5,
-    tags: ["Cancha Cerrada", "Estacionamiento", "Iluminación"],
-    description: "Cancha de tenis en complejo deportivo con múltiples servicios disponibles",
-    price: "26",
-    nextAvailable: "16:30-17:30",
-  }
-];
-
-const tennisStats = [
+// 🎾 DATOS PARA LAS ESTADÍSTICAS DE TENIS
+const tenisStats = [
   {
     title: "Canchas Disponibles Hoy",
-    value: "12",
+    value: "8",
     icon: "🎾",
     subtitle: "Listas para reservar",
-    trend: { value: 4, isPositive: true }
+    trend: { value: 2, isPositive: true }
   },
   {
     title: "Rango de Precios",
-    value: "$22-35",
+    value: "$15-35",
     icon: "💰",
     subtitle: "Por hora",
-    trend: { value: 6, isPositive: true }
+    trend: { value: 5, isPositive: true }
   },
   {
     title: "Calificación Promedio",
-    value: "4.7⭐",
+    value: "4.8⭐",
     icon: "🏆",
     subtitle: "De nuestras canchas",
     trend: { value: 0.4, isPositive: true }
@@ -103,9 +43,32 @@ const tennisStats = [
   }
 ];
 
+// 🎾 FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO
+const getStaticComplejoData = (establecimientoId: number) => {
+  const staticComplejos = {
+    1: {
+      nombre: "Club Tenis Elite",
+      direccion: "Av. Alemania 1234, Temuco, Chile"
+    },
+    2: {
+      nombre: "Centro Deportivo Tenis", 
+      direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+    },
+    3: {
+      nombre: "Tenis Club Temuco",
+      direccion: "Calle Montt 890, Temuco, Chile"
+    },
+    default: {
+      nombre: "Club de Tenis",
+      direccion: "Av. Alemania 1234, Temuco, Chile"
+    }
+  };
+
+  return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+};
+
 export default function TenisPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredCourts, setFilteredCourts] = useState(topRatedCourts);
   const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
   const [radiusKm, setRadiusKm] = useState('5');
@@ -113,22 +76,135 @@ export default function TenisPage() {
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
-  const handleSearch = (searchValue: string) => {
-    setSearchTerm(searchValue);
-    const filtered = topRatedCourts.filter(court => 
-      court.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-      court.address.toLowerCase().includes(searchValue.toLowerCase()) ||
-      court.description.toLowerCase().includes(searchValue.toLowerCase()) ||
-      court.tags.some(tag => tag.toLowerCase().includes(searchValue.toLowerCase()))
-    );
-    setFilteredCourts(filtered);
-  };
+  // 🎾 ESTADOS PARA CANCHAS DEL BACKEND
+  const [canchas, setCanchas] = useState<any[]>([]);
+  const [loadingCanchas, setLoadingCanchas] = useState(true);
+  const [errorCanchas, setErrorCanchas] = useState<string | null>(null);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setSearchTerm(newValue);
-    handleSearch(newValue);
-  };
+  // 🎾 Hook de autenticación
+  const { buttonProps } = useAuthStatus();
+
+  // 🎾 CARGAR CANCHAS DEL BACKEND CON DATOS DE COMPLEJO
+  useEffect(() => {
+    const loadCanchas = async () => {
+      try {
+        setLoadingCanchas(true);
+        setErrorCanchas(null);
+        
+        console.log('🔄 [TenisPage] Cargando TODAS las canchas del backend...');
+        
+        // 🎾 OBTENER TODAS LAS CANCHAS
+        const todasLasCanchas = await canchaService.getCanchas();
+        console.log('✅ [TenisPage] Todas las canchas obtenidas:', todasLasCanchas);
+        
+        // 🎾 FILTRAR CANCHAS DE TENIS
+        const canchasDeTenis = todasLasCanchas.filter((cancha: any) => {
+          console.log(`🔍 [TenisPage] Evaluando cancha ID ${cancha.id}: tipo="${cancha.tipo}"`);
+          return ['tenis', 'tennis'].includes(cancha.tipo.toLowerCase());
+        });
+        
+        console.log('🎾 [TenisPage] Canchas de tenis encontradas:', canchasDeTenis.length);
+        
+        // 🎾 OBTENER DATOS DE COMPLEJOS PARA CADA CANCHA
+        const canchasMapeadas = await Promise.all(
+          canchasDeTenis.map(async (cancha: any) => {
+            let complejoData = null;
+            let addressInfo = `Complejo ${cancha.establecimientoId}`;
+            
+            // 🎾 INTENTAR OBTENER DATOS DEL COMPLEJO
+            if (cancha.establecimientoId) {
+              try {
+                console.log(`🔍 [TenisPage] Cargando complejo ID ${cancha.establecimientoId} para cancha ${cancha.id}`);
+                complejoData = await complejosService.getComplejoById(cancha.establecimientoId);
+                
+                if (complejoData) {
+                  addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                  console.log(`✅ [TenisPage] Complejo cargado: ${addressInfo}`);
+                }
+                
+              } catch (complejoError: any) {
+                console.warn(`⚠️ [TenisPage] Error cargando complejo ${cancha.establecimientoId}:`, complejoError.message);
+                // Usar datos de fallback
+                const staticComplejo = getStaticComplejoData(cancha.establecimientoId);
+                addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+              }
+            }
+            
+            // 🎾 MAPEAR CANCHA CON DATOS DEL COMPLEJO
+            const mappedCancha = {
+              id: cancha.id,
+              imageUrl: `/sports/tenis/canchas/Cancha${cancha.id}.png`,
+              name: cancha.nombre,
+              address: addressInfo, // 🎾 USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
+              rating: cancha.rating || 4.8,
+              tags: [
+                cancha.techada ? "Techada" : "Al aire libre",
+                cancha.activa ? "Disponible" : "No disponible",
+                "Superficie Profesional"
+              ],
+              description: `Cancha de ${cancha.tipo} ${cancha.nombre} - ID: ${cancha.id}`,
+              price: cancha.precioPorHora?.toString() || "20",
+              nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
+              sport: cancha.tipo
+            };
+            
+            console.log('🗺️ [TenisPage] Cancha mapeada:', mappedCancha);
+            return mappedCancha;
+          })
+        );
+        
+        console.log('🎉 [TenisPage] Canchas con datos de complejo cargadas:', canchasMapeadas.length);
+        setCanchas(canchasMapeadas);
+        
+      } catch (error: any) {
+        console.error('❌ [TenisPage] ERROR cargando canchas:', error);
+        setErrorCanchas(`Error: ${error.message}`);
+        
+        // 🎾 FALLBACK CON DATOS ESTÁTICOS MEJORADOS
+        const canchasEstaticas = [
+          {
+            id: 1,
+            imageUrl: "/sports/tenis/tenis.png",
+            name: "🚨 FALLBACK - Tenis Centro",
+            address: "Club Tenis Elite - Av. Alemania 1234, Temuco",
+            rating: 4.8,
+            tags: ["DATOS OFFLINE", "Superficie Dura", "Iluminación"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "20",
+            nextAvailable: "18:00-19:00",
+          },
+          {
+            id: 2,
+            imageUrl: "/sports/tenis/tenis.png",
+            name: "🚨 FALLBACK - Tenis Norte",
+            address: "Centro Deportivo Tenis - Av. Pedro de Valdivia 567, Temuco",
+            rating: 4.6,
+            tags: ["DATOS OFFLINE", "Arcilla", "Techada"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "25",
+            nextAvailable: "16:30-17:30", 
+          },
+          {
+            id: 3,
+            imageUrl: "/sports/tenis/tenis.png",
+            name: "🚨 FALLBACK - Tenis Sur",
+            address: "Tenis Club Temuco - Calle Montt 890, Temuco",
+            rating: 4.9,
+            tags: ["DATOS OFFLINE", "Césped", "Premium"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "35",
+            nextAvailable: "Mañana 10:00-11:00",
+          }
+        ];
+        
+        setCanchas(canchasEstaticas);
+      } finally {
+        setLoadingCanchas(false);
+      }
+    };
+
+    loadCanchas();
+  }, []);
 
   useEffect(() => {
     setIsClient(true);
@@ -157,6 +233,8 @@ export default function TenisPage() {
     };
   }, []);
 
+  // 🎾 USAR CANCHAS REALES PARA EL CARRUSEL
+  const topRatedCourts = canchas.slice(0, 6); // Máximo 6 canchas para el carrusel
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -167,14 +245,50 @@ export default function TenisPage() {
     setCurrentSlide((prev) => Math.max(prev - 1, 0));
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSearch = () => {
+    console.log('Buscando:', searchTerm);
+  };
+
   const handleLocationSearch = () => {
     console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
   };
 
   const handleCanchaClick = (court: any) => {
-    console.log('Navegando a cancha de tenis...');
-    router.push('/sports/tenis/canchas/canchaseleccionada');
+    console.log('Navegando a cancha:', court);
+    router.push(`/sports/tenis/canchas/canchaseleccionada?id=${court.id}`);
   };
+
+  // 🎾 Manejador del botón de usuario
+  const handleUserButtonClick = () => {
+    if (!buttonProps.disabled) {
+      router.push(buttonProps.href);
+    }
+  };
+
+  // 🎾 ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
+  const updatedStats = [
+    {
+      ...tenisStats[0],
+      value: canchas.filter(c => c.nextAvailable !== "No disponible").length.toString()
+    },
+    {
+      ...tenisStats[1],
+      value: canchas.length > 0 ? 
+        `$${Math.min(...canchas.map(c => parseInt(c.price || '0')))}-${Math.max(...canchas.map(c => parseInt(c.price || '0')))}` : 
+        "$15-35"
+    },
+    {
+      ...tenisStats[2],
+      value: canchas.length > 0 ? 
+        `${(canchas.reduce((acc, c) => acc + c.rating, 0) / canchas.length).toFixed(1)}⭐` : 
+        "4.8⭐"
+    },
+    tenisStats[3] // Mantener jugadores por defecto
+  ];
 
   if (!isClient) {
     return (
@@ -207,21 +321,25 @@ export default function TenisPage() {
               placeholder="Nombre de la cancha..."
               sport="tenis" 
             />
-            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
+            <button 
+              className={styles.userButton}
+              onClick={handleUserButtonClick}
+              disabled={buttonProps.disabled}
+            >
               <span>👤</span>
-              <span>usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>
 
-        {/* 🔥 STATS CARDS MEJORADAS CON STATSCARD (nueva estructura) */}
+        {/* 🎾 STATS CARDS CON DATOS ACTUALIZADOS */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
             <span className={styles.statsTitleIcon}>📊</span>
             Estadísticas del Tenis en Temuco
           </h2>
           <div className={styles.statsContainer}>
-            {tennisStats.map((stat, index) => (
+            {updatedStats.map((stat, index) => (
               <StatsCard
                 key={index}
                 title={stat.title}
@@ -232,7 +350,6 @@ export default function TenisPage() {
                 sport="tenis"
                 onClick={() => {
                   console.log(`Clicked on ${stat.title} stat`);
-                  // Agregar navegación específica si es necesario
                   if (stat.title.includes("Canchas")) {
                     router.push('/sports/tenis/canchas');
                   }
@@ -245,30 +362,32 @@ export default function TenisPage() {
         <div className={styles.quickAccessSection}>
           <button 
             className={styles.mainCourtButton}
-            onClick={() => window.location.href = '/sports/tenis/canchas'}
+            onClick={() => window.location.href = '/sports/tenis/canchas/'}
           >
             <div className={styles.courtButtonIcon}>🎾</div>
             <div className={styles.courtButtonText}>
               <span className={styles.courtButtonTitle}>Explorar Canchas</span>
-              <span className={styles.courtButtonSubtitle}>Ver todas las canchas disponibles</span>
+              <span className={styles.courtButtonSubtitle}>Ver todas las canchas de tenis disponibles</span>
             </div>
             <div className={styles.courtButtonArrow}>→</div>
           </button>
         </div>
 
-        {/* Canchas mejor calificadas con carrusel */}
+        {/* 🎾 CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>⭐</span>
-              Canchas mejor calificadas
+              Canchas de tenis mejor calificadas
+              {loadingCanchas && <span style={{ fontSize: '14px', marginLeft: '10px' }}>Cargando...</span>}
+              {errorCanchas && <span style={{ fontSize: '14px', marginLeft: '10px', color: 'red' }}>⚠️ Usando datos offline</span>}
             </h2>
             <div className={styles.carouselControls}>
               <button 
                 onClick={prevSlide} 
                 className={styles.carouselButton}
-                disabled={currentSlide === 0}
-                style={{ opacity: currentSlide === 0 ? 0.5 : 1 }}
+                disabled={currentSlide === 0 || loadingCanchas}
+                style={{ opacity: currentSlide === 0 || loadingCanchas ? 0.5 : 1 }}
               >
                 ←
               </button>
@@ -278,8 +397,8 @@ export default function TenisPage() {
               <button 
                 onClick={nextSlide} 
                 className={styles.carouselButton}
-                disabled={currentSlide === totalSlides - 1}
-                style={{ opacity: currentSlide === totalSlides - 1 ? 0.5 : 1 }}
+                disabled={currentSlide === totalSlides - 1 || loadingCanchas}
+                style={{ opacity: currentSlide === totalSlides - 1 || loadingCanchas ? 0.5 : 1 }}
               >
                 →
               </button>
@@ -287,27 +406,33 @@ export default function TenisPage() {
           </div>
           
           <div className={styles.carouselContainer}>
-            <div 
-              className={styles.courtsGrid}
-              style={{
-                transform: `translateX(-${currentSlide * (320 + 20)}px)`,
-              }}
-            >
-              {filteredCourts.map((court, index) => (
-                <CourtCard 
-                  key={index} 
-                  {...court} 
-                  sport="tenis"
-                  onClick={() => router.push('/sports/tenis/canchas/canchaseleccionada')}
-                />
-              ))}
-            </div>
+            {loadingCanchas ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                <p>Cargando canchas de tenis...</p>
+              </div>
+            ) : (
+              <div 
+                className={styles.courtsGrid}
+                style={{
+                  transform: `translateX(-${currentSlide * (320 + 20)}px)`,
+                }}
+              >
+                {topRatedCourts.map((court, index) => (
+                  <CourtCard 
+                    key={court.id || index} 
+                    {...court} 
+                    sport="tenis"
+                    onClick={() => handleCanchaClick(court)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Ubicación en el mapa */}
         <div className={styles.mapSection}>
-          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las canchas</h2>
+          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las canchas de tenis</h2>
           
           <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>

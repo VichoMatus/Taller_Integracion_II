@@ -5,7 +5,7 @@
  * Este archivo define todas las rutas HTTP disponibles para el módulo SuperAdmin.
  * Las rutas se configuran usando Express Router y se conectan con el controlador.
  * 
- * URL base: /api/superadmin
+ * URL base: /api/super_admin
  * 
  * Uso desde el frontend:
  * - Hacer peticiones HTTP a estas rutas desde React/Next.js
@@ -15,7 +15,7 @@
  * Ejemplo de uso:
  * ```typescript
  * // Desde el frontend React/Next.js
- * const response = await fetch('/api/superadmin/users?page=1&page_size=20');
+ * const response = await fetch('/api/super_admin/users?page=1&page_size=20');
  * const data: ApiResponse<User[]> = await response.json();
  * 
  * if (data.ok) {
@@ -28,6 +28,8 @@
 
 import { Router } from 'express';
 import { SuperAdminController } from '../interfaces/controllers/superAdminController';
+import { authMiddleware } from '../../auth/middlewares/authMiddleware';
+import { requireSuperAdmin } from '../guards/superAdminGuards';
 
 // Crear router de Express y instancia del controlador
 const router = Router();
@@ -37,62 +39,62 @@ const controller = new SuperAdminController();
  * RUTAS DE AUTENTICACIÓN
  * ======================
  */
-// POST /api/superadmin/auth/login - Iniciar sesión
+// POST /api/super_admin/auth/login - Iniciar sesión
 router.post('/auth/login', controller.login);
 
-// POST /api/superadmin/auth/logout - Cerrar sesión
+// POST /api/super_admin/auth/logout - Cerrar sesión
 router.post('/auth/logout', controller.logout);
 
 /**
  * RUTAS DE GESTIÓN DE USUARIOS
  * ============================
  */
-// GET /api/superadmin/users - Listar usuarios (con paginación y filtros)
-router.get('/users', controller.getUsers);
+// GET /api/super_admin/users - Listar usuarios (con paginación y filtros)
+router.get('/users', authMiddleware, requireSuperAdmin, controller.getUsers);
 
-// GET /api/superadmin/users/:id - Obtener usuario específico
-router.get('/users/:id', controller.getUserById);
+// GET /api/super_admin/users/:id - Obtener usuario específico
+router.get('/users/:id', authMiddleware, requireSuperAdmin, controller.getUserById);
 
-// PATCH /api/superadmin/users/:id - Actualizar datos de usuario
-router.patch('/users/:id', controller.updateUser);
+// PATCH /api/super_admin/users/:id - Actualizar datos de usuario
+router.patch('/users/:id', authMiddleware, requireSuperAdmin, controller.updateUser);
 
-// DELETE /api/superadmin/users/:id - Desactivar usuario
-router.delete('/users/:id', controller.deleteUser);
+// DELETE /api/super_admin/users/:id - Desactivar usuario
+router.delete('/users/:id', authMiddleware, requireSuperAdmin, controller.deleteUser);
 
 /**
  * RUTAS DE GESTIÓN DE COMPLEJOS DEPORTIVOS
  * ========================================
  */
-// GET /api/superadmin/complejos - Listar complejos deportivos
-router.get('/complejos', controller.getComplejos);
+// GET /api/super_admin/complejos - Listar complejos deportivos
+router.get('/complejos', authMiddleware, requireSuperAdmin, controller.getComplejos);
 
-// GET /api/superadmin/complejos/:id - Obtener complejo específico
-router.get('/complejos/:id', controller.getComplejoById);
+// GET /api/super_admin/complejos/:id - Obtener complejo específico
+router.get('/complejos/:id', authMiddleware, requireSuperAdmin, controller.getComplejoById);
 
-// GET /api/superadmin/complejos/:id/canchas - Obtener canchas de un complejo
-router.get('/complejos/:id/canchas', controller.getComplejoCanchas);
+// GET /api/super_admin/complejos/:id/canchas - Obtener canchas de un complejo
+router.get('/complejos/:id/canchas', authMiddleware, requireSuperAdmin, controller.getComplejoCanchas);
 
 /**
  * RUTAS ESPECÍFICAS DE SUPERADMIN
  * ===============================
  */
-// POST /api/superadmin/system/parameters - Actualizar configuración del sistema
-router.post('/system/parameters', controller.updateSystemParameters);
+// POST /api/super_admin/system/parameters - Actualizar configuración del sistema
+router.post('/system/parameters', authMiddleware, requireSuperAdmin, controller.updateSystemParameters);
 
-// GET /api/superadmin/system/statistics - Obtener estadísticas del sistema
-router.get('/system/statistics', controller.getSystemStatistics);
+// GET /api/super_admin/system/statistics - Obtener estadísticas del sistema
+router.get('/system/statistics', authMiddleware, requireSuperAdmin, controller.getSystemStatistics);
 
-// GET /api/superadmin/system/logs - Obtener logs del sistema
-router.get('/system/logs', controller.getSystemLogs);
+// GET /api/super_admin/system/logs - Obtener logs del sistema
+router.get('/system/logs', authMiddleware, requireSuperAdmin, controller.getSystemLogs);
 
 /**
  * RUTAS DE UTILIDADES Y DASHBOARD
  * ===============================
  */
-// GET /api/superadmin/dashboard - Datos para el dashboard principal
-router.get('/dashboard', controller.getDashboard);
+// GET /api/super_admin/dashboard - Datos para el dashboard principal
+router.get('/dashboard', authMiddleware, requireSuperAdmin, controller.getDashboard);
 
-// GET /api/superadmin/search?q=term - Búsqueda global en el sistema
-router.get('/search', controller.globalSearch);
+// GET /api/super_admin/search?q=term - Búsqueda global en el sistema
+router.get('/search', authMiddleware, requireSuperAdmin, controller.globalSearch);
 
 export default router;

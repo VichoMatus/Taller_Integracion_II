@@ -3,109 +3,72 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import CourtCard from '../../../components/charts/CourtCard';
 import SearchBar from '../../../components/SearchBar';
-import StatsCard from '../../../components/charts/StatsCard';
 import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
+import StatsCard from '../../../components/charts/StatsCard';
+import { useAuthStatus } from '@/hooks/useAuthStatus';
+import { canchaService } from '@/services/canchaService';
+import { complejosService } from '@/services/complejosService';
 import styles from './page.module.css';
 
-// Datos de ejemplo para las pistas de patinaje mejor calificadas
-const topRatedCourts = [
-  {
-    imageUrl: "/sports/patinaje/pistas/Pista1.png",
-    name: "Pista de Patinaje - Centro",
-    address: "Norte, Centro, Sur",
-    rating: 4.8,
-    tags: ["Pista Cubierta", "Estacionamiento", "Iluminación", "Alquiler Patines"],
-    description: "Pista profesional de patinaje ubicada en el centro con alquiler de equipos y clases",
-    price: "25",
-    nextAvailable: "20:00-21:00", 
-  },
-  {
-    imageUrl: "/sports/patinaje/pistas/Pista2.png",
-    name: "Pista - Norte",
-    address: "Sector Norte",
-    rating: 4.6,
-    tags: ["Pista Techada", "Estacionamiento", "Cafetería"],
-    description: "Pista techada ideal para patinaje artístico y recreativo con áreas de descanso",
-    price: "22",
-    nextAvailable: "14:30-15:30", 
-  },
-  {
-    imageUrl: "/path/to/skating-rink3.jpg",
-    name: "Pista - Sur",
-    address: "Sector Sur",
-    rating: 4.4,
-    tags: ["Pista Cubierta", "Estacionamiento", "Clases"],
-    description: "Pista climatizada perfecta para patinaje en todas las estaciones del año",
-    price: "28",
-    nextAvailable: "Mañana 09:00-10:00",
-  },
-  {
-    imageUrl: "/path/to/skating-rink4.jpg",
-    name: "Centro de Patinaje Premium",
-    address: "Centro Premium", 
-    rating: 4.9,
-    tags: ["Pista Olímpica", "Estacionamiento", "Tienda", "Restaurante", "Vestuarios"],
-    description: "Complejo premium de patinaje con pista olímpica y servicios de primera",
-    price: "35",
-    nextAvailable: "Disponible ahora",
-  },
-  {
-    imageUrl: "/path/to/skating-rink5.jpg",
-    name: "Pista - Elite",
-    address: "Zona Elite", 
-    rating: 4.7,
-    tags: ["Pista Techada", "Estacionamiento", "Hockey", "Cafetería"],
-    description: "Pista de alta gama especializada en hockey y patinaje artístico",
-    price: "32",
-    nextAvailable: "18:00-19:00",
-  },
-  {
-    imageUrl: "/path/to/skating-rink6.jpg",
-    name: "Complejo Deportivo de Patinaje",
-    address: "Centro Deportivo", 
-    rating: 4.5,
-    tags: ["Pista Semi-olímpica", "Estacionamiento", "Área infantil"],
-    description: "Complejo deportivo con pistas para diferentes modalidades de patinaje",
-    price: "26",
-    nextAvailable: "16:30-17:30",
-  }
-];
-
-const skatingStats = [
+// ⛸️ DATOS PARA LAS ESTADÍSTICAS DE PATINAJE
+const patinajeStats = [
   {
     title: "Pistas Disponibles Hoy",
-    value: "7",
+    value: "4",
     icon: "⛸️",
     subtitle: "Listas para reservar",
-    trend: { value: 3, isPositive: true }
+    trend: { value: 1, isPositive: true }
   },
   {
     title: "Rango de Precios",
-    value: "$22-35",
+    value: "$18-30",
     icon: "💰",
     subtitle: "Por hora",
-    trend: { value: 5, isPositive: true }
+    trend: { value: 3, isPositive: true }
   },
   {
     title: "Calificación Promedio",
-    value: "4.7⭐",
+    value: "4.8⭐",
     icon: "🏆",
     subtitle: "De nuestras pistas",
     trend: { value: 0.4, isPositive: true }
   },
   {
-    title: "Modalidades Disponibles",
-    value: "4",
-    icon: "🔄",
-    subtitle: "Diferentes estilos",
-    trend: { value: 1, isPositive: true }
+    title: "Patinadores Activos",
+    value: "18",
+    icon: "👥",
+    subtitle: "Ahora mismo",
+    trend: { value: 5, isPositive: true }
   }
 ];
 
+// ⛸️ FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO
+const getStaticComplejoData = (establecimientoId: number) => {
+  const staticComplejos = {
+    1: {
+      nombre: "Pista de Hielo Norte",
+      direccion: "Av. Alemania 1234, Temuco, Chile"
+    },
+    2: {
+      nombre: "Centro de Patinaje Centro", 
+      direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+    },
+    3: {
+      nombre: "Patinodromo Sur",
+      direccion: "Calle Montt 890, Temuco, Chile"
+    },
+    default: {
+      nombre: "Centro de Patinaje",
+      direccion: "Av. Alemania 1234, Temuco, Chile"
+    }
+  };
+
+  return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+};
+
 export default function PatinajePage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredCourts, setFilteredCourts] = useState(topRatedCourts);
   const router = useRouter();
   const [locationSearch, setLocationSearch] = useState('');
   const [radiusKm, setRadiusKm] = useState('5');
@@ -113,22 +76,135 @@ export default function PatinajePage() {
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
-  const handleSearch = (searchValue: string) => {
-    setSearchTerm(searchValue);
-    const filtered = topRatedCourts.filter(court => 
-      court.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-      court.address.toLowerCase().includes(searchValue.toLowerCase()) ||
-      court.description.toLowerCase().includes(searchValue.toLowerCase()) ||
-      court.tags.some(tag => tag.toLowerCase().includes(searchValue.toLowerCase()))
-    );
-    setFilteredCourts(filtered);
-  };
+  // ⛸️ ESTADOS PARA PISTAS DEL BACKEND
+  const [pistas, setPistas] = useState<any[]>([]);
+  const [loadingPistas, setLoadingPistas] = useState(true);
+  const [errorPistas, setErrorPistas] = useState<string | null>(null);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setSearchTerm(newValue);
-    handleSearch(newValue);
-  };
+  // ⛸️ Hook de autenticación
+  const { buttonProps } = useAuthStatus();
+
+  // ⛸️ CARGAR PISTAS DEL BACKEND CON DATOS DE COMPLEJO
+  useEffect(() => {
+    const loadPistas = async () => {
+      try {
+        setLoadingPistas(true);
+        setErrorPistas(null);
+        
+        console.log('🔄 [PatinajePage] Cargando TODAS las canchas del backend...');
+        
+        // ⛸️ OBTENER TODAS LAS CANCHAS
+        const todasLasCanchas = await canchaService.getCanchas();
+        console.log('✅ [PatinajePage] Todas las canchas obtenidas:', todasLasCanchas);
+        
+        // ⛸️ FILTRAR PISTAS DE PATINAJE
+        const pistasDePatinaje = todasLasCanchas.filter((cancha: any) => {
+          console.log(`🔍 [PatinajePage] Evaluando cancha ID ${cancha.id}: tipo="${cancha.tipo}"`);
+          return ['patinaje', 'pista de hielo', 'skating', 'hockey sobre hielo'].includes(cancha.tipo.toLowerCase());
+        });
+        
+        console.log('⛸️ [PatinajePage] Pistas de patinaje encontradas:', pistasDePatinaje.length);
+        
+        // ⛸️ OBTENER DATOS DE COMPLEJOS PARA CADA PISTA
+        const pistasMapeadas = await Promise.all(
+          pistasDePatinaje.map(async (cancha: any) => {
+            let complejoData = null;
+            let addressInfo = `Complejo ${cancha.establecimientoId}`;
+            
+            // ⛸️ INTENTAR OBTENER DATOS DEL COMPLEJO
+            if (cancha.establecimientoId) {
+              try {
+                console.log(`🔍 [PatinajePage] Cargando complejo ID ${cancha.establecimientoId} para pista ${cancha.id}`);
+                complejoData = await complejosService.getComplejoById(cancha.establecimientoId);
+                
+                if (complejoData) {
+                  addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+                  console.log(`✅ [PatinajePage] Complejo cargado: ${addressInfo}`);
+                }
+                
+              } catch (complejoError: any) {
+                console.warn(`⚠️ [PatinajePage] Error cargando complejo ${cancha.establecimientoId}:`, complejoError.message);
+                // Usar datos de fallback
+                const staticComplejo = getStaticComplejoData(cancha.establecimientoId);
+                addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+              }
+            }
+            
+            // ⛸️ MAPEAR PISTA CON DATOS DEL COMPLEJO
+            const mappedPista = {
+              id: cancha.id,
+              imageUrl: `/sports/patinaje/pistas/Pista${cancha.id}.png`,
+              name: cancha.nombre,
+              address: addressInfo, // ⛸️ USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
+              rating: cancha.rating || 4.8,
+              tags: [
+                cancha.techada ? "Techada" : "Al aire libre",
+                cancha.activa ? "Disponible" : "No disponible",
+                "Superficie de Hielo"
+              ],
+              description: `Pista de ${cancha.tipo} ${cancha.nombre} - ID: ${cancha.id}`,
+              price: cancha.precioPorHora?.toString() || "20",
+              nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
+              sport: cancha.tipo
+            };
+            
+            console.log('🗺️ [PatinajePage] Pista mapeada:', mappedPista);
+            return mappedPista;
+          })
+        );
+        
+        console.log('🎉 [PatinajePage] Pistas con datos de complejo cargadas:', pistasMapeadas.length);
+        setPistas(pistasMapeadas);
+        
+      } catch (error: any) {
+        console.error('❌ [PatinajePage] ERROR cargando pistas:', error);
+        setErrorPistas(`Error: ${error.message}`);
+        
+        // ⛸️ FALLBACK CON DATOS ESTÁTICOS MEJORADOS
+        const pistasEstaticas = [
+          {
+            id: 1,
+            imageUrl: "/sports/patinaje/patinaje.png",
+            name: "🚨 FALLBACK - Pista Hielo Norte",
+            address: "Pista de Hielo Norte - Av. Alemania 1234, Temuco",
+            rating: 4.9,
+            tags: ["DATOS OFFLINE", "Techada", "Superficie de Hielo"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "25",
+            nextAvailable: "20:00-21:00",
+          },
+          {
+            id: 2,
+            imageUrl: "/sports/patinaje/patinaje.png",
+            name: "🚨 FALLBACK - Centro Patinaje",
+            address: "Centro de Patinaje Centro - Av. Pedro de Valdivia 567, Temuco",
+            rating: 4.7,
+            tags: ["DATOS OFFLINE", "Techada", "Patinaje Artístico"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "20",
+            nextAvailable: "14:30-15:30", 
+          },
+          {
+            id: 3,
+            imageUrl: "/sports/patinaje/patinaje.png",
+            name: "🚨 FALLBACK - Patinodromo Sur",
+            address: "Patinodromo Sur - Calle Montt 890, Temuco",
+            rating: 4.8,
+            tags: ["DATOS OFFLINE", "Al aire libre", "Hockey sobre Hielo"],
+            description: "🚨 Datos de fallback - API no disponible",
+            price: "22",
+            nextAvailable: "Mañana 09:00-10:00",
+          }
+        ];
+        
+        setPistas(pistasEstaticas);
+      } finally {
+        setLoadingPistas(false);
+      }
+    };
+
+    loadPistas();
+  }, []);
 
   useEffect(() => {
     setIsClient(true);
@@ -157,6 +233,8 @@ export default function PatinajePage() {
     };
   }, []);
 
+  // ⛸️ USAR PISTAS REALES PARA EL CARRUSEL
+  const topRatedCourts = pistas.slice(0, 6); // Máximo 6 pistas para el carrusel
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -167,9 +245,50 @@ export default function PatinajePage() {
     setCurrentSlide((prev) => Math.max(prev - 1, 0));
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleSearch = () => {
+    console.log('Buscando:', searchTerm);
+  };
+
   const handleLocationSearch = () => {
     console.log('Buscando ubicación:', locationSearch, 'Radio:', radiusKm);
   };
+
+  const handlePistaClick = (court: any) => {
+    console.log('Navegando a pista:', court);
+    router.push(`/sports/patinaje/pistas/pistaseleccionada?id=${court.id}`);
+  };
+
+  // ⛸️ Manejador del botón de usuario
+  const handleUserButtonClick = () => {
+    if (!buttonProps.disabled) {
+      router.push(buttonProps.href);
+    }
+  };
+
+  // ⛸️ ACTUALIZAR ESTADÍSTICAS CON DATOS REALES
+  const updatedStats = [
+    {
+      ...patinajeStats[0],
+      value: pistas.filter(p => p.nextAvailable !== "No disponible").length.toString()
+    },
+    {
+      ...patinajeStats[1],
+      value: pistas.length > 0 ? 
+        `$${Math.min(...pistas.map(p => parseInt(p.price || '0')))}-${Math.max(...pistas.map(p => parseInt(p.price || '0')))}` : 
+        "$18-30"
+    },
+    {
+      ...patinajeStats[2],
+      value: pistas.length > 0 ? 
+        `${(pistas.reduce((acc, p) => acc + p.rating, 0) / pistas.length).toFixed(1)}⭐` : 
+        "4.8⭐"
+    },
+    patinajeStats[3] // Mantener patinadores por defecto
+  ];
 
   if (!isClient) {
     return (
@@ -202,21 +321,25 @@ export default function PatinajePage() {
               placeholder="Nombre de la pista..."
               sport="patinaje" 
             />
-            <button className={styles.userButton} onClick={() => router.push('/usuario/perfil')}>
+            <button 
+              className={styles.userButton}
+              onClick={handleUserButtonClick}
+              disabled={buttonProps.disabled}
+            >
               <span>👤</span>
-              <span>usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>
 
-        {/* 🔥 STATS CARDS MEJORADAS CON STATSCARD (nueva estructura) */}
+        {/* ⛸️ STATS CARDS CON DATOS ACTUALIZADOS */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
             <span className={styles.statsTitleIcon}>📊</span>
-            Estadísticas de Patinaje en Temuco
+            Estadísticas del Patinaje en Temuco
           </h2>
           <div className={styles.statsContainer}>
-            {skatingStats.map((stat, index) => (
+            {updatedStats.map((stat, index) => (
               <StatsCard
                 key={index}
                 title={stat.title}
@@ -227,7 +350,6 @@ export default function PatinajePage() {
                 sport="patinaje"
                 onClick={() => {
                   console.log(`Clicked on ${stat.title} stat`);
-                  // Agregar navegación específica si es necesario
                   if (stat.title.includes("Pistas")) {
                     router.push('/sports/patinaje/pistas');
                   }
@@ -240,30 +362,32 @@ export default function PatinajePage() {
         <div className={styles.quickAccessSection}>
           <button 
             className={styles.mainCourtButton}
-            onClick={() => window.location.href = '/sports/patinaje/pistas'}
+            onClick={() => window.location.href = '/sports/patinaje/pistas/'}
           >
             <div className={styles.courtButtonIcon}>⛸️</div>
             <div className={styles.courtButtonText}>
               <span className={styles.courtButtonTitle}>Explorar Pistas</span>
-              <span className={styles.courtButtonSubtitle}>Ver todas las pistas disponibles</span>
+              <span className={styles.courtButtonSubtitle}>Ver todas las pistas de patinaje disponibles</span>
             </div>
             <div className={styles.courtButtonArrow}>→</div>
           </button>
         </div>
 
-        {/* Pistas mejor calificadas con carrusel */}
+        {/* ⛸️ CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>⭐</span>
-              Pistas mejor calificadas
+              Pistas de patinaje mejor calificadas
+              {loadingPistas && <span style={{ fontSize: '14px', marginLeft: '10px' }}>Cargando...</span>}
+              {errorPistas && <span style={{ fontSize: '14px', marginLeft: '10px', color: 'red' }}>⚠️ Usando datos offline</span>}
             </h2>
             <div className={styles.carouselControls}>
               <button 
                 onClick={prevSlide} 
                 className={styles.carouselButton}
-                disabled={currentSlide === 0}
-                style={{ opacity: currentSlide === 0 ? 0.5 : 1 }}
+                disabled={currentSlide === 0 || loadingPistas}
+                style={{ opacity: currentSlide === 0 || loadingPistas ? 0.5 : 1 }}
               >
                 ←
               </button>
@@ -273,8 +397,8 @@ export default function PatinajePage() {
               <button 
                 onClick={nextSlide} 
                 className={styles.carouselButton}
-                disabled={currentSlide === totalSlides - 1}
-                style={{ opacity: currentSlide === totalSlides - 1 ? 0.5 : 1 }}
+                disabled={currentSlide === totalSlides - 1 || loadingPistas}
+                style={{ opacity: currentSlide === totalSlides - 1 || loadingPistas ? 0.5 : 1 }}
               >
                 →
               </button>
@@ -282,27 +406,33 @@ export default function PatinajePage() {
           </div>
           
           <div className={styles.carouselContainer}>
-            <div 
-              className={styles.courtsGrid}
-              style={{
-                transform: `translateX(-${currentSlide * (320 + 20)}px)`,
-              }}
-            >
-              {filteredCourts.map((court, index) => (
-                <CourtCard 
-                  key={index} 
-                  {...court} 
-                  sport="patinaje"
-                  onClick={() => router.push('/sports/patinaje/pistas/pistaseleccionada')}
-                />
-              ))}
-            </div>
+            {loadingPistas ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                <p>Cargando pistas de patinaje...</p>
+              </div>
+            ) : (
+              <div 
+                className={styles.courtsGrid}
+                style={{
+                  transform: `translateX(-${currentSlide * (320 + 20)}px)`,
+                }}
+              >
+                {topRatedCourts.map((court, index) => (
+                  <CourtCard 
+                    key={court.id || index} 
+                    {...court} 
+                    sport="patinaje"
+                    onClick={() => handlePistaClick(court)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Ubicación en el mapa */}
         <div className={styles.mapSection}>
-          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las pistas</h2>
+          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las pistas de patinaje</h2>
           
           <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>
