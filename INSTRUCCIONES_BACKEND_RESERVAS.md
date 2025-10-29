@@ -241,6 +241,72 @@ El endpoint `GET /auth/me` **no devuelve** el campo `complejo_id` para usuarios 
 
 **Resultado actual:** El admin ve **todas las reservas de todos los complejos** en lugar de solo las de su complejo.
 
+---
+
+## 🔧 CAMBIO 3: Incluir Datos Relacionados en GET /reservas (OPCIONAL PERO RECOMENDADO)
+
+### 📍 Problema Adicional
+
+Actualmente, el endpoint `GET /reservas` devuelve las reservas con los IDs de usuario y cancha, pero **NO incluye los datos relacionados** de `usuario` y `cancha`.
+
+**Resultado actual:**
+```json
+{
+  "id_reserva": 123,
+  "usuario_id": 34,
+  "cancha_id": 17,
+  ...
+  // ❌ FALTA: campo "usuario" con {nombre, email}
+  // ❌ FALTA: campo "cancha" con {nombre, tipo}
+}
+```
+
+**Impacto en el frontend:**
+- El frontend muestra "Usuario #34" y "Cancha #17" en lugar de los nombres reales
+- Se requieren consultas adicionales para obtener nombres de usuarios y canchas
+- Experiencia de usuario deficiente
+
+### ✅ Solución Recomendada
+
+Modificar el endpoint para incluir datos relacionados mediante JOINs en la consulta SQL:
+
+```python
+# Ejemplo conceptual (adaptar a su ORM)
+@router.get("/reservas")
+async def list_reservas(...):
+    query = db.query(Reserva).options(
+        joinedload(Reserva.usuario),  # Cargar relación con usuario
+        joinedload(Reserva.cancha)     # Cargar relación con cancha
+    )
+    ...
+```
+
+**Respuesta esperada:**
+```json
+{
+  "id_reserva": 123,
+  "usuario_id": 34,
+  "cancha_id": 17,
+  "usuario": {
+    "id": 34,
+    "email": "usuario@example.com",
+    "nombre": "Juan",
+    "apellido": "Pérez"
+  },
+  "cancha": {
+    "id": 17,
+    "nombre": "Cancha Principal",
+    "tipo": "Fútbol 7"
+  },
+  ...
+}
+```
+
+**Ventajas:**
+- Menos consultas HTTP (mejor performance)
+- Experiencia de usuario mejorada (muestra nombres reales)
+- Código frontend más simple (no necesita consultas adicionales)
+
 ### 🔍 Ejemplo del Problema
 
 **Request:**

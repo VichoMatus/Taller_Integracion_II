@@ -24,6 +24,13 @@ export class ReservaApiRepository implements ReservaRepository {
         fechaHasta: filters.fechaHasta?.toISOString(),
       });
       const { data } = await this.http.get(`/reservas`, { params });
+      
+      // 🔍 DEBUG: Ver qué envía FastAPI
+      console.log('🔍 [ReservaApiRepository] Respuesta de FastAPI:', JSON.stringify(data, null, 2));
+      if (data?.items?.length > 0) {
+        console.log('🔍 [ReservaApiRepository] Primera reserva RAW de FastAPI:', JSON.stringify(data.items[0], null, 2));
+      }
+      
       return normalizePage<Reserva>(data, x => toReserva(x as FastReserva));
     } catch (e) {
       throw httpError(e);

@@ -23,56 +23,10 @@ export default function ReservasPage() {
       setLoading(true);
       setError(null);
       
-      // 1. Obtener ID del usuario actual
-      const userData = localStorage.getItem('userData');
-      let adminId: number | undefined;
-      let complejoId: number | undefined;
-      
-      if (userData) {
-        try {
-          const user = JSON.parse(userData);
-          adminId = user?.id_usuario || user?.id;
-          console.log('🔍 [loadReservas] Admin ID:', adminId);
-          
-          // 2. ⚠️ WORKAROUND: Obtener complejo del admin consultando /complejos/admin/:adminId
-          // Esto es temporal hasta que el backend agregue complejoId a /auth/me
-          if (adminId) {
-            try {
-              console.log('🔍 [loadReservas] Obteniendo complejo del admin...');
-              const complejosResponse = await apiBackend.get(`/complejos/admin/${adminId}`);
-              console.log('� [loadReservas] Respuesta de complejos:', complejosResponse.data);
-              
-              // Manejar diferentes formatos de respuesta
-              let complejos = [];
-              if (Array.isArray(complejosResponse.data)) {
-                complejos = complejosResponse.data;
-              } else if (complejosResponse.data?.items && Array.isArray(complejosResponse.data.items)) {
-                complejos = complejosResponse.data.items;
-              } else if (complejosResponse.data?.data && Array.isArray(complejosResponse.data.data)) {
-                complejos = complejosResponse.data.data;
-              }
-              
-              if (complejos.length > 0) {
-                // Usar el primer complejo (un admin generalmente tiene un solo complejo)
-                complejoId = complejos[0]?.id_complejo || complejos[0]?.id || complejos[0]?.complejoId;
-                console.log('✅ [loadReservas] Complejo encontrado:', complejoId);
-              } else {
-                console.warn('⚠️ [loadReservas] El admin no tiene complejos asociados');
-              }
-            } catch (err) {
-              console.error('❌ [loadReservas] Error al obtener complejo del admin:', err);
-            }
-          }
-        } catch (err) {
-          console.warn('⚠️ [loadReservas] No se pudo parsear userData');
-        }
-      } else {
-        console.warn('⚠️ [loadReservas] No hay userData en localStorage');
-      }
-      
-      // 3. Llamar al servicio de reservas con el filtro de complejo
-      console.log('🔍 [loadReservas] Llamando a getAdminReservas() con filtros:', { complejoId });
-      const response: any = await reservaService.getAdminReservas(complejoId ? { complejoId } : undefined);
+      // La API filtra automáticamente por el token del admin
+      // No necesitamos enviar complejo_id manualmente
+      console.log('🔍 [loadReservas] Llamando a getAdminReservas() (filtrado automático por token)');
+      const response: any = await reservaService.getAdminReservas();
       
       console.log("📥 [loadReservas] Respuesta completa del servidor:", response);
       console.log("📥 [loadReservas] Tipo de response:", typeof response);
@@ -115,6 +69,41 @@ export default function ReservasPage() {
       }
       
       console.log("📊 Total de reservas procesadas:", reservasArray.length);
+      
+      // 🔍 DEBUG: Mostrar estructura de la primera reserva
+      if (reservasArray.length > 0) {
+        console.log("🔍 [loadReservas] Primera reserva (completa):", JSON.stringify(reservasArray[0], null, 2));
+        console.log("🔍 [loadReservas] Campos disponibles:", Object.keys(reservasArray[0]));
+        console.log("🔍 [loadReservas] ¿Tiene usuario?:", !!reservasArray[0].usuario);
+        console.log("🔍 [loadReservas] ¿Tiene cancha?:", !!reservasArray[0].cancha);
+        
+        // Intentar todos los posibles nombres de campos para IDs
+        const possibleUsuarioIds = [
+          reservasArray[0].usuarioId,
+          reservasArray[0].usuario_id,
+          reservasArray[0].id_usuario,
+          reservasArray[0]['usuarioId'],
+          reservasArray[0]['usuario_id'],
+          reservasArray[0]['id_usuario']
+        ];
+        const possibleCanchaIds = [
+          reservasArray[0].canchaId,
+          reservasArray[0].cancha_id,
+          reservasArray[0].id_cancha,
+          reservasArray[0]['canchaId'],
+          reservasArray[0]['cancha_id'],
+          reservasArray[0]['id_cancha']
+        ];
+        
+        console.log("🔍 [loadReservas] Posibles usuarioIds:", possibleUsuarioIds);
+        console.log("🔍 [loadReservas] Posibles canchaIds:", possibleCanchaIds);
+        console.log("🔍 [loadReservas] usuarioId encontrado:", possibleUsuarioIds.find(id => id != null));
+        console.log("🔍 [loadReservas] canchaId encontrado:", possibleCanchaIds.find(id => id != null));
+        
+        // Mostrar todos los campos snake_case
+        const snakeFields = Object.keys(reservasArray[0]).filter(k => k.includes('_'));
+        console.log("🔍 [loadReservas] Campos con snake_case:", snakeFields);
+      }
       
       setReservas(reservasArray);
       
@@ -316,20 +305,30 @@ export default function ReservasPage() {
                     <div className="admin-cell-title">
                       {reserva.usuario ? 
                         `${reserva.usuario.nombre || ''} ${reserva.usuario.apellido || ''}`.trim() || reserva.usuario.email 
-                        : `Usuario ${reserva.usuarioId}`
+                        : `Usuario #${reserva.usuarioId || 'ID desconocido'}`
                       }
                     </div>
                     {reserva.usuario?.email && (
                       <div className="admin-cell-subtitle">{reserva.usuario.email}</div>
                     )}
+                    {!reserva.usuario && reserva.usuarioId && (
+                      <div className="admin-cell-subtitle" style={{ fontSize: '0.75rem', color: 'var(--text-gray)' }}>
+                        ID: {reserva.usuarioId}
+                      </div>
+                    )}
                   </td>
                   <td>
                     <div className="admin-cell-subtitle">
-                      {reserva.cancha?.nombre || `Cancha ${reserva.canchaId}`}
+                      {reserva.cancha?.nombre || `Cancha #${reserva.canchaId || 'ID desconocido'}`}
                     </div>
                     {reserva.cancha?.tipo && (
                       <div className="admin-cell-text" style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>
                         {reserva.cancha.tipo}
+                      </div>
+                    )}
+                    {!reserva.cancha && reserva.canchaId && (
+                      <div className="admin-cell-text" style={{ fontSize: '0.75rem', color: 'var(--text-gray)' }}>
+                        ID: {reserva.canchaId}
                       </div>
                     )}
                   </td>
