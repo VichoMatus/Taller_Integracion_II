@@ -157,7 +157,7 @@ export const canchaService = {
    */
   async getCanchasStatus(): Promise<any> {
     try {
-      const { data } = await apiBackend.get('/api/canchas/status');
+      const { data } = await apiBackend.get('/canchas/status');
       return data;
     } catch (err) {
       console.warn('No se pudo obtener el estado del módulo canchas:', err);
@@ -201,7 +201,7 @@ export const canchaService = {
         params.cubierta = filters.techada;
       }
       
-      const response = await apiBackend.get('/api/canchas', { params });
+      const response = await apiBackend.get('/canchas', { params });
       
       // Manejar diferentes estructuras de respuesta del backend
       let canchas = [];
@@ -254,7 +254,7 @@ export const canchaService = {
   async getCanchaById(id: number, coords?: { lat: number; lon: number }) {
     try {
       const params = coords ? { lat: coords.lat, lon: coords.lon } : {};
-      const response = await apiBackend.get(`/api/canchas/${id}`, { params });
+      const response = await apiBackend.get(`/canchas/${id}`, { params });
       
       // Adaptar la respuesta del backend
       let canchaData = response.data;
@@ -282,21 +282,37 @@ export const canchaService = {
     page_size?: number;
   }) {
     try {
-      const params = { ...filters };
-      const response = await apiBackend.get('/api/canchas/admin', { params });
+      // Convertir tipos correctamente para evitar que query params sean strings
+      const params: any = {
+        sort_by: filters?.sort_by || 'nombre',
+        order: filters?.order || 'asc',
+        page: filters?.page || 1,
+        page_size: filters?.page_size || 20,
+        // ✅ CORRECTO: Incluir inactivas por defecto para panel admin
+        // El admin debe ver TODAS sus canchas (activas e inactivas/archivadas)
+        incluir_inactivas: filters?.incluir_inactivas !== false, // true por defecto
+      };
       
-      let canchas = [];
-      let pagination = {};
+      // Solo agregar parámetros opcionales si existen
+      if (filters?.id_complejo) params.id_complejo = filters.id_complejo;
+      if (filters?.q) params.q = filters.q;
       
-      if (response.data?.ok && response.data?.data) {
-        const data = response.data.data;
-        canchas = data.items || data;
-        pagination = {
-          total: data.total,
-          page: data.page,
-          page_size: data.page_size
-        };
-      }
+      const response = await apiBackend.get('/canchas/admin', { params });
+      
+      console.log('🔍 [getCanchasAdmin] Response completa:', response.data);
+      console.log('🔍 [getCanchasAdmin] Items:', response.data?.items);
+      
+      // El interceptor de apiBackend ya extrajo los datos de { ok, data }
+      // Ahora response.data contiene directamente { items, total, page, page_size }
+      const data = response.data;
+      const canchas = data?.items || [];
+      const pagination = {
+        total: data?.total,
+        page: data?.page,
+        page_size: data?.page_size
+      };
+      
+      console.log('✅ [getCanchasAdmin] Canchas antes de adaptar:', canchas.length);
       
       return {
         items: canchas.map(adaptCanchaFromBackend),
@@ -326,7 +342,7 @@ export const canchaService = {
       
       // 🔥 ACTUALIZADO: Endpoint correcto con autenticación
       // El control de permisos lo hace el middleware authMiddleware + requireRole
-      const response = await apiBackend.post('/api/canchas', backendData);
+      const response = await apiBackend.post('/canchas', backendData);
       
       console.log('📥 [canchaService] Respuesta completa del backend:', {
         status: response.status,
@@ -356,10 +372,15 @@ export const canchaService = {
         config: error.config
       });
       
+      // 🔥 IMPORTANTE: Propagar el objeto error completo con el status para que el componente pueda detectar 403
       // Extraer el mensaje de error más específico
       const errorDetail = error.response?.data?.error || error.response?.data;
       const errorMsg = errorDetail?.message || errorDetail?.detail || error.message || 'Error desconocido al crear la cancha';
-      throw new Error(errorMsg);
+      
+      // Crear error personalizado que incluya el response
+      const customError = new Error(errorMsg) as any;
+      customError.response = error.response;
+      throw customError;
     }
   },
 
@@ -372,7 +393,7 @@ export const canchaService = {
       console.log(`📤 [canchaService] Enviando datos para actualizar cancha ${id}:`, backendData);
       // 🔥 ACTUALIZADO: Endpoint correcto con autenticación
       // El backend usa PATCH, no PUT
-      const response = await apiBackend.patch(`/api/canchas/${id}`, backendData);
+      const response = await apiBackend.patch(`/canchas/${id}`, backendData);
       
       // Adaptar la respuesta
       let canchaData = response.data;
@@ -399,16 +420,29 @@ export const canchaService = {
    */
   async deleteCancha(id: number) {
     try {
-      console.log(`🗑️ [canchaService] Eliminando cancha ${id}`);
+      console.log(`🗑️ [canchaService] Eliminando cancha ID: ${id}`);
+      console.log(`🗑️ [canchaService] Endpoint: DELETE /canchas/${id}`);
+      
       // 🔥 ACTUALIZADO: Endpoint correcto con autenticación
-      const response = await apiBackend.delete(`/api/canchas/${id}`);
-      console.log('✅ [canchaService] Cancha eliminada exitosamente');
-      return response.data;
+      const response = await apiBackend.delete(`/canchas/${id}`);
+      
+      console.log('✅ [canchaService] Respuesta DELETE:', {
+        status: response.status,
+        statusText: response.statusText,
+        data: response.data,
+        headers: response.headers
+      });
+      
+      // DELETE puede devolver 204 No Content (sin body) o 200 con confirmación
+      return response.data || { success: true };
     } catch (error: any) {
       console.error(`❌ [canchaService] Error al eliminar cancha ${id}:`, {
         message: error.message,
         response: error.response?.data,
-        status: error.response?.status
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        url: error.config?.url,
+        method: error.config?.method
       });
       
       const errorMsg = error.message || error.response?.data?.message || error.response?.data?.detail || 'Error desconocido al eliminar la cancha';
@@ -422,7 +456,7 @@ export const canchaService = {
    */
   async getFotosCancha(id: number): Promise<FotoCancha[]> {
     try {
-      const response = await apiBackend.get(`/api/canchas/${id}/fotos`);
+      const response = await apiBackend.get(`/canchas/${id}/fotos`);
       
       // Adaptar respuesta del backend
       let fotos = response.data;
@@ -442,7 +476,7 @@ export const canchaService = {
    */
   async addFotoCancha(id: number, fotoData: AddFotoInput): Promise<FotoCancha> {
     try {
-      const response = await apiBackend.post(`/api/canchas/${id}/fotos`, fotoData);
+      const response = await apiBackend.post(`/canchas/${id}/fotos`, fotoData);
       
       // Adaptar respuesta del backend
       let foto = response.data;
@@ -462,7 +496,7 @@ export const canchaService = {
    */
   async deleteFotoCancha(canchaId: number, fotoId: number): Promise<void> {
     try {
-      await apiBackend.delete(`/api/canchas/${canchaId}/fotos/${fotoId}`);
+      await apiBackend.delete(`/canchas/${canchaId}/fotos/${fotoId}`);
       // No retorna data para DELETE 204
     } catch (error: any) {
       throw new Error('Error al eliminar la foto: ' + (error.response?.data?.message || error.message));

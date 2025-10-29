@@ -70,7 +70,7 @@ export default function NuevaCanchaPage() {
       setUserId(adminId);
       console.log('👤 [CrearCancha] Cargando complejos del admin ID:', adminId);
 
-      // Cargar complejos del administrador
+      // 🔥 CORREGIDO: El servicio ahora usa /complejos/duenio/:id y requiere el adminId
       const complejosData = await complejosService.getComplejosByAdmin(adminId);
       
       console.log('📋 [CrearCancha] Complejos cargados:', complejosData);
@@ -153,15 +153,18 @@ export default function NuevaCanchaPage() {
         throw new Error('La capacidad debe ser al menos 1');
       }
 
-      // Crear la cancha usando el servicio
+      // ✅ ACTUALIZADO: Usar método del servicio que usa el endpoint correcto POST /api/canchas
+      console.log('📤 Creando cancha con datos:', formData);
+
       const nuevaCancha = await canchaService.createCancha({
         nombre: formData.nombre.trim(),
-        tipo: formData.tipo as any,
+        tipo: formData.tipo,
         techada: formData.techada,
         establecimientoId: formData.establecimientoId,
         precioPorHora: formData.precioPorHora,
         capacidad: formData.capacidad,
-        descripcion: formData.descripcion.trim() || undefined
+        descripcion: formData.descripcion.trim() || undefined,
+        activa: true
       });
 
       console.log('✅ Cancha creada exitosamente:', nuevaCancha);
@@ -175,7 +178,13 @@ export default function NuevaCanchaPage() {
 
     } catch (err: any) {
       console.error('❌ Error al crear cancha:', err);
-      setError(err.message || 'Error al crear la cancha. Por favor, intenta nuevamente.');
+      
+      // 🔥 Validación específica para error 403 (complejo no pertenece al admin)
+      if (err.response?.status === 403) {
+        setError('❌ Este complejo no te pertenece. Solo puedes crear canchas en tus propios complejos deportivos.');
+      } else {
+        setError(err.message || 'Error al crear la cancha. Por favor, intenta nuevamente.');
+      }
     } finally {
       setIsLoading(false);
     }

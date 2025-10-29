@@ -20,41 +20,83 @@ export default function CanchasPage() {
   const [courts, setCourts] = useState<Court[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0); // Para forzar recargas
+  const [showInactive, setShowInactive] = useState(true); // 🔥 NUEVO: Toggle para mostrar/ocultar inactivas
   const itemsPerPage = 4;
 
-  // 🔥 Cargar canchas reales de la API
+  // 🔥 Cargar canchas reales de la API usando endpoint de ADMIN
   const loadCourts = async () => {
     try {
       setIsLoading(true);
-      console.log('🔍 Cargando canchas desde la API...');
+      console.log('🔍 [loadCourts] INICIO - Cargando canchas desde getCanchasAdmin()...');
+      console.log('🔍 [loadCourts] Token en localStorage:', localStorage.getItem('access_token')?.substring(0, 30) + '...');
+      console.log('🔍 [loadCourts] Mostrar inactivas:', showInactive);
       
-      const canchasFromApi = await canchaService.getCanchas();
-      console.log('✅ Canchas cargadas:', canchasFromApi);
-      console.log('📊 Total de canchas (incluyendo inactivas):', canchasFromApi.length);
+      // ✅ ACTUALIZADO: Usar endpoint dedicado de admin con filtrado automático por complejo
+      const result = await canchaService.getCanchasAdmin({
+        incluir_inactivas: showInactive, // 🔥 Controlado por el toggle del usuario
+        sort_by: 'nombre',
+        order: 'asc'
+      });
       
-      // Adaptar datos de la API al formato del frontend - MUESTRA TODAS LAS CANCHAS
+      console.log('✅ [loadCourts] Respuesta del servidor:', result);
+      console.log('✅ [loadCourts] Tipo de result:', typeof result);
+      console.log('✅ [loadCourts] Keys de result:', Object.keys(result));
+      
+      // El servicio ya devuelve el formato { items: [...], total, page, page_size }
+      const canchasFromApi = result.items || [];
+      
+      console.log('📊 Total de canchas del admin:', canchasFromApi.length);
+      
+      // Adaptar datos de la API al formato del frontend
       const adaptedCourts: Court[] = canchasFromApi.map((cancha: any) => {
-        console.log(`   - Cancha ${cancha.nombre}: activa=${cancha.activa}`);
+        const id = cancha.id;
+        const nombre = cancha.nombre;
+        const activa = cancha.activa !== undefined ? cancha.activa : true;
+        
+        console.log(`   - Cancha ${nombre} (ID: ${id}): activa=${activa}, tipo=${cancha.tipo}`);
+        
         return {
-          id: cancha.id.toString(),
-          name: cancha.nombre,
-          location: `Establecimiento ${cancha.establecimientoId}`,
-          status: cancha.activa ? 'Activo' : 'Inactivo',
-          type: cancha.tipo
+          id: id.toString(),
+          name: nombre,
+          location: `Complejo ${cancha.establecimientoId || 'N/A'}`,
+          status: activa ? 'Activo' : 'Inactivo',
+          type: cancha.tipo || 'Futbol'
         };
       });
       
       setCourts(adaptedCourts);
-      console.log('✅ Canchas adaptadas al frontend:', adaptedCourts.length);
+      console.log('✅ Canchas del admin cargadas:', adaptedCourts.length);
+      
+      if (adaptedCourts.length === 0) {
+        console.log('ℹ️ No hay canchas para este administrador. Debe crear canchas primero.');
+      }
     } catch (error: any) {
-      console.error('❌ Error cargando canchas:', error);
-      // Mantener datos de ejemplo como fallback
-      setCourts([
-        { id: '1', name: 'Cancha Central', location: 'Av. Principal 123', status: 'Activo', type: 'Futbol' },
-        { id: '2', name: 'Cancha Sur', location: 'Av. Sur 456', status: 'Inactivo', type: 'Futbol' },
-        { id: '3', name: 'Cancha Norte', location: 'Av. Norte 789', status: 'Por revisar', type: 'Tenis' },
-        { id: '4', name: 'Cancha Este', location: 'Av. Este 321', status: 'Activo', type: 'Voleibol' },
-      ]);
+      console.error('❌ Error cargando canchas del admin:', error);
+      
+      // Extraer mensaje de error de múltiples formatos
+      let errorMsg = 'Error desconocido';
+      if (error?.response?.data) {
+        const data = error.response.data;
+        // Si data es un objeto con mensaje
+        if (typeof data === 'object') {
+          errorMsg = data.message || data.error || JSON.stringify(data);
+        } else {
+          errorMsg = String(data);
+        }
+      } else if (error?.message) {
+        errorMsg = error.message;
+      }
+      
+      console.error('   Detalle completo:', {
+        errorMsg,
+        responseData: error?.response?.data,
+        status: error?.response?.status,
+        fullError: error
+      });
+      
+      // NO usar datos mock - mostrar error real
+      setCourts([]);
+      alert(`Error al cargar canchas: ${errorMsg}. Verifique que esté logueado como administrador.`);
     } finally {
       setIsLoading(false);
     }
@@ -62,7 +104,7 @@ export default function CanchasPage() {
 
   useEffect(() => {
     loadCourts();
-  }, [refreshKey]); // Recargar cuando refreshKey cambie
+  }, [refreshKey, showInactive]); // 🔥 Recargar cuando cambie el toggle de inactivas
 
   // Detectar si viene del parámetro refresh en la URL
   useEffect(() => {
@@ -89,12 +131,34 @@ export default function CanchasPage() {
     if (!confirm('¿Estás seguro de que deseas eliminar esta cancha?')) return;
     
     try {
-      await canchaService.deleteCancha(Number(courtId));
-      setCourts(courts.filter(court => court.id !== courtId));
+      console.log('🗑️ [AdminCanchas] Eliminando cancha ID:', courtId);
+      console.log('🗑️ [AdminCanchas] Estado actual de canchas:', courts.length);
+      
+      // ✅ ACTUALIZADO: Usar método del servicio que usa el endpoint correcto
+      const result = await canchaService.deleteCancha(Number(courtId));
+      console.log('✅ [AdminCanchas] Resultado de eliminación:', result);
+      
+      // 🔥 IMPORTANTE: Actualizar estado local Y recargar desde servidor
+      console.log('🔄 [AdminCanchas] Filtrando cancha del estado local...');
+      setCourts(prevCourts => {
+        const filtered = prevCourts.filter(court => court.id !== courtId);
+        console.log(`🔄 [AdminCanchas] Canchas antes: ${prevCourts.length}, después: ${filtered.length}`);
+        return filtered;
+      });
+      
+      // 🔄 Recargar canchas desde el servidor para asegurar sincronización
+      console.log('🔄 [AdminCanchas] Recargando lista completa desde el servidor...');
+      setTimeout(async () => {
+        await loadCourts();
+        console.log('✅ [AdminCanchas] Lista recargada desde servidor');
+      }, 500);
+      
       alert('Cancha eliminada exitosamente');
-    } catch (error) {
-      console.error('Error eliminando cancha:', error);
-      alert('Error al eliminar la cancha');
+      console.log('✅ [AdminCanchas] Proceso de eliminación completado');
+    } catch (error: any) {
+      console.error('❌ [AdminCanchas] Error eliminando cancha:', error);
+      const errorMsg = error?.message || 'Error desconocido';
+      alert(`Error al eliminar la cancha: ${errorMsg}`);
     }
   };
 
@@ -159,6 +223,25 @@ export default function CanchasPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
             Refrescar
+          </button>
+
+          {/* 🔥 NUEVO: Toggle para mostrar/ocultar canchas inactivas */}
+          <button 
+            className={`export-button ${showInactive ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+            onClick={() => {
+              console.log('🔄 Cambiando filtro de inactivas de', showInactive, 'a', !showInactive);
+              setShowInactive(!showInactive);
+            }}
+            title={showInactive ? 'Ocultar canchas eliminadas/inactivas' : 'Mostrar canchas eliminadas/inactivas'}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {showInactive ? (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              ) : (
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+              )}
+            </svg>
+            {showInactive ? 'Mostrar todas' : 'Solo activas'}
           </button>
 
           <button className="export-button">
@@ -244,17 +327,6 @@ export default function CanchasPage() {
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                      </button>
-                      
-                      {/* Botón Refrescar */}
-                      <button 
-                        className="btn-action btn-aprobar" 
-                        title="Refrescar datos"
-                        onClick={() => loadCourts()}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                       </button>
                       
