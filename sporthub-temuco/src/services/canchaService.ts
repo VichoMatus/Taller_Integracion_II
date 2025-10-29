@@ -342,8 +342,6 @@ export const canchaService = {
       const backendData = adaptCanchaToBackend(input, false);
       console.log('📤 [canchaService] Creando cancha:', { nombre: input.nombre, tipo: input.tipo, payload: backendData });
       
-      const response = await apiBackend.post('/canchas', backendData);
-      
       // 🔥 ACTUALIZADO: Endpoint correcto con autenticación
       // El control de permisos lo hace el middleware authMiddleware + requireRole
       const response = await apiBackend.post('/canchas', backendData);

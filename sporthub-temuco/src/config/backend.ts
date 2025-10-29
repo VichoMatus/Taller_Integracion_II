@@ -207,6 +207,9 @@ apiBackend.interceptors.response.use(
         error.status = response.status;
         throw error;
       }
+      
+      // Si ok === true, extraer los datos
+      const extractedData = response.data.data;
       return {
         ...response,
         data: extractedData
