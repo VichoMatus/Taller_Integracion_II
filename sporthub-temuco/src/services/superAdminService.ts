@@ -410,6 +410,38 @@ class SuperAdminService {
       apiBackend.get<any>(`/super_admin/complejos/${id}/canchas`, { headers })
     );
   }
+
+  /**
+   * Promocionar rol de un usuario
+   * Solo super_admin puede promover a 'admin' o 'super_admin'
+   */
+  async cambiarRolUsuario(idUsuario: number, nuevoRol: 'usuario' | 'admin' | 'super_admin'): Promise<Usuario> {
+    const headers = this.getAuthHeaders();
+    const endpoint = `/admin/usuarios/${idUsuario}/rol`;
+    
+    console.log(`🔄 [superAdminService] Cambiando rol de usuario ${idUsuario} a ${nuevoRol}`);
+    console.log(`📍 [superAdminService] Endpoint: ${endpoint}`);
+    console.log(`📍 [superAdminService] BaseURL: ${apiBackend.defaults.baseURL}`);
+    console.log(`📍 [superAdminService] Headers:`, headers);
+    console.log(`📍 [superAdminService] Body:`, { rol: nuevoRol });
+    
+    try {
+      const response = await this.handleRequest(
+        apiBackend.post<Usuario>(
+          endpoint,
+          { rol: nuevoRol },
+          { headers }
+        )
+      );
+      console.log(`✅ [superAdminService] Rol cambiado exitosamente:`, response);
+      return response;
+    } catch (error: any) {
+      console.error(`❌ [superAdminService] Error al cambiar rol:`, error);
+      console.error(`❌ [superAdminService] Error message:`, error.message);
+      console.error(`❌ [superAdminService] Error config:`, error.config);
+      throw error;
+    }
+  }
 }
 
 export const superAdminService = new SuperAdminService();

@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { canchaService } from '@/services/canchaService';
-import { complejosService } from '@/services/complejosService';
 
 // Tipos de cancha disponibles (exactamente como los espera el backend)
 const TIPOS_CANCHA = [
@@ -14,14 +13,6 @@ const TIPOS_CANCHA = [
   { value: 'volley', label: 'Vóleibol' }
 ];
 
-interface Complejo {
-  id_complejo: number;
-  nombre: string;
-  direccion?: string;
-  comuna?: string;
-  activo: boolean;
-}
-
 export default function EditarCanchaPage() {
   const router = useRouter();
   const params = useParams();
@@ -29,10 +20,8 @@ export default function EditarCanchaPage() {
   
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
-  const [isLoadingComplejos, setIsLoadingComplejos] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [complejos, setComplejos] = useState<Complejo[]>([]);
   const [imagenPreview, setImagenPreview] = useState<string>('');
 
   // Estado del formulario
@@ -85,36 +74,7 @@ export default function EditarCanchaPage() {
     }
   }, [canchaId]);
 
-  // Cargar complejos disponibles
-  useEffect(() => {
-    const cargarComplejos = async () => {
-      try {
-        setIsLoadingComplejos(true);
-        console.log('🔍 Cargando complejos disponibles...');
-        const data = await complejosService.getComplejos();
-        console.log('✅ Complejos cargados:', data);
-        
-        // Adaptar estructura según respuesta del backend
-        let complejosArray: Complejo[] = [];
-        if (Array.isArray(data)) {
-          complejosArray = data;
-        } else if (data.data && Array.isArray(data.data)) {
-          complejosArray = data.data;
-        } else if (data.items && Array.isArray(data.items)) {
-          complejosArray = data.items;
-        }
-        
-        setComplejos(complejosArray.filter(c => c.activo));
-      } catch (err: any) {
-        console.error('❌ Error al cargar complejos:', err);
-        setError('Error al cargar los complejos. Recarga la página.');
-      } finally {
-        setIsLoadingComplejos(false);
-      }
-    };
 
-    cargarComplejos();
-  }, []);
 
   // Manejar cambios en el formulario
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -212,7 +172,7 @@ export default function EditarCanchaPage() {
     router.push('/super_admin/canchas');
   };
 
-  if (isLoadingData || isLoadingComplejos) {
+  if (isLoadingData) {
     return (
       <div className="admin-page-layout">
         <div className="flex items-center justify-center h-64">
@@ -316,24 +276,16 @@ export default function EditarCanchaPage() {
               {/* Complejo Deportivo */}
               <div className="edit-form-group">
                 <label htmlFor="id_complejo" className="edit-form-label">
-                  Complejo Deportivo: *
+                  Complejo:
                 </label>
-                <select
+                <input
+                  type="text"
                   id="id_complejo"
-                  name="id_complejo"
-                  value={formData.id_complejo}
-                  onChange={handleChange}
-                  className="edit-form-select"
-                  required
-                  disabled={true} // No permitir cambiar el complejo al editar
-                >
-                  {complejos.map((complejo) => (
-                    <option key={complejo.id_complejo} value={complejo.id_complejo}>
-                      {complejo.nombre}
-                      {complejo.comuna && ` - ${complejo.comuna}`}
-                    </option>
-                  ))}
-                </select>
+                  value={`Complejo ${formData.id_complejo}`}
+                  className="edit-form-input"
+                  disabled={true}
+                  readOnly
+                />
                 <p className="edit-form-hint">
                   El complejo no puede ser modificado después de crear la cancha
                 </p>

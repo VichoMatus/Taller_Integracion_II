@@ -70,6 +70,8 @@ if (typeof window !== 'undefined') {
 }
 
 // Instancia de axios apuntando al Backend for Frontend (BFF)
+console.log('🔧 [apiBackend] Creando instancia de axios con baseURL:', API_BASE_URL);
+
 export const apiBackend = axios.create({
   baseURL: API_BASE_URL, // Usar la URL calculada directamente
   timeout: 15000,
@@ -81,6 +83,8 @@ export const apiBackend = axios.create({
   }
 });
 
+console.log('✅ [apiBackend] Instancia creada, baseURL configurado:', apiBackend.defaults.baseURL);
+
 // Interceptor para agregar token automáticamente
 apiBackend.interceptors.request.use(
   (config) => {
@@ -88,6 +92,13 @@ apiBackend.interceptors.request.use(
     if (!config.baseURL) {
       config.baseURL = API_BASE_URL;
     }
+    
+    console.log('🔍 [apiBackend] Request interceptor:', {
+      url: config.url,
+      baseURL: config.baseURL,
+      fullURL: config.baseURL + config.url,
+      method: config.method
+    });
     
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('access_token') || localStorage.getItem('token');

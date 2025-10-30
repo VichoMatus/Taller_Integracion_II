@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { canchaService } from '@/services/canchaService';
-import { complejosService } from '@/services/complejosService';
 
 interface Court {
   id: string;
@@ -21,15 +20,13 @@ export default function CanchasPage() {
   const [isLoading, setIsLoading] = useState(true);
   const itemsPerPage = 10;
 
-  // Función de carga separada para poder reutilizarla
   const loadCourts = async () => {
     try {
       setIsLoading(true);
       
       const canchasResponse = await canchaService.getCanchas();
-      const complejosResponse = await complejosService.getComplejos();
       
-      // Extraer array de canchas (puede venir como { items: [] } o array directo)
+      // Extraer array de canchas
       let canchasFromApi: any[] = [];
       if (Array.isArray(canchasResponse)) {
         canchasFromApi = canchasResponse;
@@ -39,46 +36,14 @@ export default function CanchasPage() {
         canchasFromApi = (canchasResponse as any).data;
       }
       
-      // La respuesta puede ser un array directamente o un objeto con data/items
-      let complejosFromApi: any[] = [];
-      if (Array.isArray(complejosResponse)) {
-        complejosFromApi = complejosResponse;
-      } else if (complejosResponse?.data && Array.isArray(complejosResponse.data)) {
-        complejosFromApi = complejosResponse.data;
-      } else if (complejosResponse?.items && Array.isArray(complejosResponse.items)) {
-        complejosFromApi = complejosResponse.items;
-      } else if (complejosResponse && typeof complejosResponse === 'object') {
-        // Si es un objeto, intentar obtener el primer array que encontremos
-        const values = Object.values(complejosResponse);
-        const arrayValue = values.find(v => Array.isArray(v));
-        if (arrayValue) {
-          complejosFromApi = arrayValue as any[];
-        }
-      }
-      
-      // Crear un mapa de complejos por ID para acceso rápido
-      const complejosMap = new Map<number, { nombre: string; direccion: string }>(
-        complejosFromApi.map((complejo: any) => {
-          const complejoId = complejo.id || complejo.id_complejo || complejo.idComplejo;
-          const direccion = complejo.direccion || complejo.address || 'Sin dirección';
-          return [
-            complejoId,
-            { nombre: complejo.nombre, direccion: direccion }
-          ];
-        })
-      );
+      console.log('[CanchasPage]', canchasFromApi.length, 'canchas encontradas');
       
       // Adaptar datos de la API al formato del frontend
       const adaptedCourts: Court[] = canchasFromApi.map((cancha: any) => {
-        const complejo = complejosMap.get(cancha.establecimientoId);
-        const location = complejo 
-          ? `${complejo.nombre} - ${complejo.direccion}`
-          : `Establecimiento ${cancha.establecimientoId}`;
-        
         return {
           id: cancha.id.toString(),
           name: cancha.nombre,
-          location: location,
+          location: `Complejo ${cancha.establecimientoId}`,
           status: cancha.activa ? 'Activo' : 'Inactivo',
           type: cancha.tipo
         };
@@ -86,7 +51,7 @@ export default function CanchasPage() {
       
       setCourts(adaptedCourts);
     } catch (error: any) {
-      console.error('❌ Error cargando canchas:', error);
+      console.error('[ERROR] Error cargando canchas:', error);
       alert('Error al cargar las canchas: ' + error.message);
     } finally {
       setIsLoading(false);
@@ -103,7 +68,6 @@ export default function CanchasPage() {
   };
 
   const deleteCourt = async (courtId: string, courtName: string) => {
-    // Confirmación antes de eliminar
     const confirmDelete = window.confirm(
       `¿Estás seguro de que deseas eliminar la cancha "${courtName}"?\n\nEsta acción no se puede deshacer.`
     );
@@ -114,16 +78,15 @@ export default function CanchasPage() {
 
     try {
       await canchaService.deleteCancha(Number(courtId));
-      alert('✅ Cancha eliminada exitosamente');
-      // Recargar la lista de canchas
+      alert('Cancha eliminada exitosamente');
       await loadCourts();
     } catch (error: any) {
-      console.error('❌ Error eliminando cancha:', error);
+      console.error('[ERROR] Error eliminando cancha:', error);
       alert('Error al eliminar la cancha: ' + error.message);
     }
   };
 
-  // Filtrar canchas basado en búsqueda (nombre Y ubicación)
+  // Filtrar canchas basado en búsqueda
   const filteredCourts = courts.filter(court => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = court.name.toLowerCase().includes(searchLower) ||
@@ -205,7 +168,7 @@ export default function CanchasPage() {
               disabled={isLoading}
               style={{ marginRight: '10px' }}
             >
-              {isLoading ? 'Cargando...' : '🔄 Refrescar'}
+              {isLoading ? 'Cargando...' : 'Refrescar'}
             </button>
             
             {/* Filtro */}
