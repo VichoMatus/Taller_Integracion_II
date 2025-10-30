@@ -141,7 +141,7 @@ export default function UsuariosPage() {
   // Funciones de manejo de usuarios
   const handleEditUser = (userId: string) => {
     console.log('Editando usuario:', userId);
-    // router.push(`/super_admin/usuarios/editar/${userId}`);
+      router.push(`/super_admin/usuarios/editar/${userId}`);
   };
 
   const handleDeleteUser = async (userId: string) => {

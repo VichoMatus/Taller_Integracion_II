@@ -14,7 +14,7 @@ export default function AdministradoresPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const itemsPerPage = 4;
+  const itemsPerPage = 10;
   const [isAuthed, setIsAuthed] = useState(false);
   
   // 🔥 AGREGAR VERIFICACIÓN DE CLIENTE

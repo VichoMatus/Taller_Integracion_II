@@ -17,8 +17,9 @@ export default function CambiarRangoAdministradorPage() {
   const [success, setSuccess] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [mostrarResultados, setMostrarResultados] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Cargar administradores cuando el usuario empiece a buscar
+  // Cargar administradores cuando el admin empiece a buscar
   useEffect(() => {
     const cargarAdministradores = async () => {
       if (searchTerm.trim().length === 0) {
@@ -34,7 +35,7 @@ export default function CambiarRangoAdministradorPage() {
         
         console.log('🔍 [CambiarRangoAdmin] Buscando administradores...');
         const data = await superAdminService.listarAdministradores();
-        console.log('✅ [CambiarRangoAdmin] Administradores cargados:', data);
+        console.log('✅ [CambiarRangoAdmin] administradores cargados:', data);
         
         setAdministradores(Array.isArray(data) ? data : []);
       } catch (err: any) {
@@ -45,7 +46,7 @@ export default function CambiarRangoAdministradorPage() {
       }
     };
 
-    // Debounce: esperar 500ms después de que el usuario deje de escribir
+    // Debounce: esperar 500ms después de que el admin deje de escribir
     const timer = setTimeout(() => {
       cargarAdministradores();
     }, 500);
@@ -61,8 +62,8 @@ export default function CambiarRangoAdministradorPage() {
     setSuccess('');
   };
 
-  // Manejar cambio de rol
-  const handleCambiarRol = async () => {
+  // Abrir modal de confirmación
+  const handleAbrirConfirmacion = () => {
     if (!adminSeleccionado) {
       setError('Debes seleccionar un administrador primero');
       return;
@@ -74,12 +75,14 @@ export default function CambiarRangoAdministradorPage() {
       return;
     }
 
-    // Confirmar cambio
-    const confirmacion = window.confirm(
-      `¿Estás seguro de cambiar el rol de "${adminSeleccionado.nombre} ${adminSeleccionado.apellido}" de "${adminSeleccionado.rol}" a "${rolSeleccionado}"?`
-    );
+    setShowConfirmModal(true);
+  };
 
-    if (!confirmacion) return;
+  // Confirmar cambio de rol
+  const handleCambiarRol = async () => {
+    setShowConfirmModal(false);
+
+    if (!adminSeleccionado) return;
 
     try {
       setIsSaving(true);
@@ -97,7 +100,7 @@ export default function CambiarRangoAdministradorPage() {
       
       // Actualizar admin seleccionado
       const adminActualizado = Array.isArray(data) 
-        ? data.find(u => u.id_usuario === adminSeleccionado.id_usuario)
+        ? data.find(u => u.id_usuario === adminSeleccionado?.id_usuario)
         : null;
       if (adminActualizado) {
         setAdminSeleccionado(adminActualizado);
@@ -112,269 +115,391 @@ export default function CambiarRangoAdministradorPage() {
   };
 
   // Filtrar administradores
-  const administradoresFiltrados = administradores.filter(a => {
+  const administradoresFiltrados = administradores.filter(u => {
     const searchLower = searchTerm.toLowerCase();
     return (
-      a.nombre?.toLowerCase().includes(searchLower) ||
-      a.apellido?.toLowerCase().includes(searchLower) ||
-      a.email?.toLowerCase().includes(searchLower)
+      u.nombre?.toLowerCase().includes(searchLower) ||
+      u.apellido?.toLowerCase().includes(searchLower) ||
+      u.email?.toLowerCase().includes(searchLower)
     );
   });
 
   return (
-    <div className="admin-dashboard-container">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => router.back()}
-              className="text-gray-600 hover:text-orange-500 transition-colors p-2 hover:bg-orange-50 rounded-lg"
-              disabled={isSaving}
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-            </button>
-            <div>
-              <h1 className="admin-page-title">Cambiar Rango de Administrador</h1>
-              <p className="admin-cell-subtitle mt-1">Selecciona un administrador y modifica su rol en el sistema</p>
+    <div className="admin-page-layout">
+      {/* Modal de Confirmación */}
+      {showConfirmModal && adminSeleccionado && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                backgroundColor: '#fff7ed',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1rem'
+              }}>
+                <svg style={{ width: '32px', height: '32px', color: '#f97316' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '0.5rem' }}>
+                Confirmar Cambio de Rol
+              </h3>
+              <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                ¿Estás seguro de cambiar el rol de <strong>{adminSeleccionado.nombre} {adminSeleccionado.apellido}</strong> de "<strong>{adminSeleccionado.rol}</strong>" a "<strong>{rolSeleccionado}</strong>"?
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="btn-secondary"
+                style={{ flex: 1 }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleCambiarRol}
+                className="btn-guardar"
+                style={{ flex: 1 }}
+              >
+                Confirmar
+              </button>
             </div>
           </div>
         </div>
+      )}
 
-        {/* Mensajes */}
-        {error && (
-          <div className="error-container">
-            <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+      {/* Modal de Éxito */}
+      {success && (
+        <div style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          backgroundColor: 'white',
+          borderRadius: '12px',
+          padding: '2rem',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          zIndex: 9999,
+          minWidth: '400px',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            backgroundColor: '#dcfce7',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto 1rem'
+          }}>
+            <svg style={{ width: '32px', height: '32px', color: '#16a34a' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            {error}
           </div>
-        )}
-
-        {success && (
-          <div className="success-container">
-            <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '0.5rem' }}>
+            ¡Éxito!
+          </h3>
+          <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1.5rem' }}>
             {success}
-          </div>
-        )}
+          </p>
+          <button
+            onClick={() => setSuccess('')}
+            className="btn-guardar"
+            style={{ width: '100%' }}
+          >
+            Aceptar
+          </button>
+        </div>
+      )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Lista de Administradores */}
-          <div className="admin-table-container">
-            <div className="admin-table-header">
-              <h2 className="admin-table-title">Seleccionar Administrador</h2>
-              <p className="admin-cell-subtitle mt-1">Escribe para buscar administradores por nombre o email</p>
+      {/* Overlay para modales */}
+      {(showConfirmModal || success) && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          zIndex: 9998
+        }} onClick={() => {
+          setShowConfirmModal(false);
+          setSuccess('');
+        }}></div>
+      )}
+
+      {/* Header */}
+      <div className="admin-main-header">
+        <div className="admin-header-nav">
+          <button onClick={() => router.back()} className="btn-volver">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Volver
+          </button>
+          <h1 className="admin-page-title">Cambiar Rango de Administrador</h1>
+        </div>
+      </div>
+
+      {/* Mensajes de Error */}
+      {error && (
+        <div className="error-container">
+          <p><strong>Error:</strong> {error}</p>
+        </div>
+      )}
+
+      {/* Formulario Principal */}
+      <div className="edit-court-container">
+        <div className="edit-court-card">
+          
+          {/* Sección: Buscar Administrador */}
+          <div className="edit-section">
+            <h3 className="edit-section-title">Buscar Administrador</h3>
+            <div className="edit-form-group">
+              <label className="edit-form-label">Buscar por nombre, apellido o email:</label>
+              <input
+                type="text"
+                placeholder="Escribe para buscar..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="edit-form-input"
+                autoFocus
+              />
             </div>
-            
-            {/* Búsqueda */}
-            <div className="p-6">
-              <div className="admin-search-container mb-6">
-                <svg className="admin-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Buscar por nombre, apellido o email..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="admin-search-input"
-                  autoFocus
-                />
+
+            {!mostrarResultados && searchTerm.trim().length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#9ca3af' }}>
+                <p style={{ fontSize: '14px' }}>Escribe en el campo de búsqueda para ver los administradores disponibles</p>
+              </div>
+            ) : isLoading ? (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                <div style={{ 
+                  display: 'inline-block',
+                  width: '40px',
+                  height: '40px',
+                  border: '3px solid #f3f4f6',
+                  borderTop: '3px solid #f97316',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite'
+                }}></div>
+                <p style={{ marginTop: '1rem', color: '#6b7280', fontSize: '14px' }}>Buscando administradores...</p>
+              </div>
+            ) : mostrarResultados && administradoresFiltrados.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#9ca3af' }}>
+                <p style={{ fontSize: '14px' }}>No se encontraron administradores con ese criterio de búsqueda</p>
+              </div>
+            ) : (
+              <div style={{ marginTop: '1rem' }}>
+                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '0.75rem' }}>
+                  {administradoresFiltrados.length} admin{administradoresFiltrados.length !== 1 ? 's' : ''} encontrado{administradoresFiltrados.length !== 1 ? 's' : ''}
+                </p>
+                <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                  {administradoresFiltrados.map((admin) => (
+                    <button
+                      key={admin.id_usuario}
+                      onClick={() => handleSeleccionarAdmin(admin)}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '1rem',
+                        marginBottom: '0.5rem',
+                        border: adminSeleccionado?.id_usuario === admin.id_usuario ? '2px solid #f97316' : '1px solid #e5e7eb',
+                        borderRadius: '8px',
+                        backgroundColor: adminSeleccionado?.id_usuario === admin.id_usuario ? '#fff7ed' : 'white',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (adminSeleccionado?.id_usuario !== admin.id_usuario) {
+                          e.currentTarget.style.borderColor = '#fed7aa';
+                          e.currentTarget.style.backgroundColor = '#fffbf5';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (adminSeleccionado?.id_usuario !== admin.id_usuario) {
+                          e.currentTarget.style.borderColor = '#e5e7eb';
+                          e.currentTarget.style.backgroundColor = 'white';
+                        }
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <div style={{ fontWeight: '600', color: '#111827', marginBottom: '0.25rem' }}>
+                            {admin.nombre} {admin.apellido}
+                          </div>
+                          <div style={{ fontSize: '13px', color: '#6b7280' }}>{admin.email}</div>
+                        </div>
+                        <span className={`status-badge ${
+                          admin.rol === 'super_admin' ? 'bg-purple-100 text-purple-800' :
+                          admin.rol === 'admin' ? 'bg-blue-100 text-blue-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {admin.rol}
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Sección: Cambiar Rol */}
+          {adminSeleccionado && (
+            <div className="edit-section">
+              <h3 className="edit-section-title">Cambiar Rol</h3>
+              
+              {/* Información del admin Seleccionado */}
+              <div style={{ 
+                padding: '1rem', 
+                backgroundColor: '#f9fafb', 
+                borderRadius: '8px', 
+                border: '1px solid #e5e7eb',
+                marginBottom: '1.5rem'
+              }}>
+                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '0.5rem' }}>admin seleccionado:</p>
+                <p style={{ fontWeight: '600', color: '#111827', marginBottom: '0.25rem' }}>
+                  {adminSeleccionado.nombre} {adminSeleccionado.apellido}
+                </p>
+                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '0.5rem' }}>{adminSeleccionado.email}</p>
+                <div>
+                  <span style={{ fontSize: '13px', color: '#6b7280' }}>Rol actual: </span>
+                  <span className={`status-badge ${
+                    adminSeleccionado.rol === 'super_admin' ? 'bg-purple-100 text-purple-800' :
+                    adminSeleccionado.rol === 'admin' ? 'bg-blue-100 text-blue-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {adminSeleccionado.rol}
+                  </span>
+                </div>
               </div>
 
-              {!mostrarResultados && searchTerm.trim().length === 0 ? (
-                <div className="text-center py-16">
-                  <svg className="w-24 h-24 mx-auto text-gray-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  <p className="text-lg font-semibold text-gray-400 mb-2">Busca un administrador</p>
-                  <p className="admin-cell-subtitle">Escribe el nombre, apellido o email del administrador que deseas modificar</p>
-                </div>
-              ) : isLoading ? (
-                <div className="text-center py-16">
-                  <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-                  <p className="admin-cell-subtitle mt-4">Buscando administradores...</p>
-                </div>
-              ) : mostrarResultados && administradoresFiltrados.length === 0 ? (
-                <div className="text-center py-16">
-                  <svg className="w-24 h-24 mx-auto text-gray-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                  <p className="text-lg font-semibold text-gray-400 mb-2">No se encontraron administradores</p>
-                  <p className="admin-cell-subtitle">Intenta con otro término de búsqueda</p>
-                </div>
-              ) : (
-                <>
-                  <p className="admin-cell-subtitle mb-3">{administradoresFiltrados.length} administrador{administradoresFiltrados.length !== 1 ? 'es' : ''} encontrado{administradoresFiltrados.length !== 1 ? 's' : ''}</p>
-                  <div className="space-y-2 max-h-[450px] overflow-y-auto pr-2">
-                    {administradoresFiltrados.map((admin) => (
-                      <button
-                        key={admin.id_usuario}
-                        onClick={() => handleSeleccionarAdmin(admin)}
-                        className={`w-full text-left p-4 border-2 rounded-xl transition-all ${
-                          adminSeleccionado?.id_usuario === admin.id_usuario
-                            ? 'border-orange-500 bg-orange-50 shadow-md transform scale-[1.01]'
-                            : 'border-gray-200 hover:border-orange-300 hover:bg-gray-50 hover:shadow-sm'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="admin-cell-title mb-1">
-                              {admin.nombre} {admin.apellido}
-                            </div>
-                            <div className="admin-cell-subtitle">{admin.email}</div>
-                          </div>
-                          <span className={`status-badge ml-3 ${
-                            admin.rol === 'super_admin' ? 'bg-purple-100 text-purple-800' :
-                            admin.rol === 'admin' ? 'bg-blue-100 text-blue-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {admin.rol}
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Panel de Cambio de Rol */}
-          <div className="admin-table-container">
-            <div className="admin-table-header">
-              <h2 className="admin-table-title">Cambiar Rol</h2>
-            </div>
-            
-            {adminSeleccionado ? (
-              <div className="p-6">
-                {/* Información del Administrador */}
-                <div className="mb-6 p-5" style={{ backgroundColor: '#f9fafb', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-                  <h3 className="admin-cell-title mb-3">Administrador Seleccionado</h3>
-                  <div className="space-y-2">
-                    <div>
-                      <span className="admin-cell-subtitle">Nombre: </span>
-                      <span className="admin-cell-text font-semibold">
-                        {adminSeleccionado.nombre} {adminSeleccionado.apellido}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="admin-cell-subtitle">Email: </span>
-                      <span className="admin-cell-text">{adminSeleccionado.email}</span>
-                    </div>
-                    <div>
-                      <span className="admin-cell-subtitle">Rol actual: </span>
-                      <span className={`status-badge ${
-                        adminSeleccionado.rol === 'super_admin' ? 'bg-purple-100 text-purple-800' :
-                        adminSeleccionado.rol === 'admin' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {adminSeleccionado.rol}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Selector de Rol */}
-                <div className="space-y-3 mb-6">
-                  <label className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    rolSeleccionado === 'usuario' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300'
-                  }`}>
+              {/* Selector de Rol */}
+              <div className="edit-form-grid">
+                <div className="edit-form-group">
+                  <label className="edit-form-label">Seleccionar nuevo rol:</label>
+                  
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    padding: '1rem',
+                    marginBottom: '0.75rem',
+                    border: rolSeleccionado === 'usuario' ? '2px solid #f97316' : '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    backgroundColor: rolSeleccionado === 'usuario' ? '#fff7ed' : 'white',
+                    cursor: 'pointer'
+                  }}>
                     <input
                       type="radio"
                       name="rol"
                       value="usuario"
                       checked={rolSeleccionado === 'usuario'}
                       onChange={(e) => setRolSeleccionado(e.target.value as 'usuario')}
-                      className="mt-1 mr-3 w-4 h-4 text-orange-500"
                       disabled={isSaving}
+                      style={{ marginTop: '0.25rem', marginRight: '0.75rem' }}
                     />
-                    <div className="flex-1">
-                      <div className="admin-cell-title">Usuario</div>
-                      <p className="admin-cell-subtitle mt-1">Permisos básicos: puede realizar reservas y ver complejos</p>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: '600', color: '#111827', marginBottom: '0.25rem' }}>Usuario</div>
+                      <p style={{ fontSize: '13px', color: '#6b7280' }}>Permisos básicos: puede realizar reservas y ver complejos</p>
                     </div>
                   </label>
 
-                  <label className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    rolSeleccionado === 'admin' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300'
-                  }`}>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    padding: '1rem',
+                    marginBottom: '0.75rem',
+                    border: rolSeleccionado === 'admin' ? '2px solid #f97316' : '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    backgroundColor: rolSeleccionado === 'admin' ? '#fff7ed' : 'white',
+                    cursor: 'pointer'
+                  }}>
                     <input
                       type="radio"
                       name="rol"
                       value="admin"
                       checked={rolSeleccionado === 'admin'}
                       onChange={(e) => setRolSeleccionado(e.target.value as 'admin')}
-                      className="mt-1 mr-3 w-4 h-4 text-orange-500"
                       disabled={isSaving}
+                      style={{ marginTop: '0.25rem', marginRight: '0.75rem' }}
                     />
-                    <div className="flex-1">
-                      <div className="admin-cell-title">Administrador</div>
-                      <p className="admin-cell-subtitle mt-1">Gestión de complejos, canchas y horarios</p>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: '600', color: '#111827', marginBottom: '0.25rem' }}>Administrador</div>
+                      <p style={{ fontSize: '13px', color: '#6b7280' }}>Gestión de complejos, canchas y horarios</p>
                     </div>
                   </label>
 
-                  <label className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                    rolSeleccionado === 'super_admin' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300'
-                  }`}>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    padding: '1rem',
+                    marginBottom: '1rem',
+                    border: rolSeleccionado === 'super_admin' ? '2px solid #f97316' : '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    backgroundColor: rolSeleccionado === 'super_admin' ? '#fff7ed' : 'white',
+                    cursor: 'pointer'
+                  }}>
                     <input
                       type="radio"
                       name="rol"
                       value="super_admin"
                       checked={rolSeleccionado === 'super_admin'}
                       onChange={(e) => setRolSeleccionado(e.target.value as 'super_admin')}
-                      className="mt-1 mr-3 w-4 h-4 text-orange-500"
                       disabled={isSaving}
+                      style={{ marginTop: '0.25rem', marginRight: '0.75rem' }}
                     />
-                    <div className="flex-1">
-                      <div className="admin-cell-title">Super Administrador</div>
-                      <p className="admin-cell-subtitle mt-1">Control total del sistema y gestión de usuarios</p>
-                      <p className="text-sm text-red-600 mt-1 font-medium">⚠️ Precaución: Acceso sin restricciones</p>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: '600', color: '#111827', marginBottom: '0.25rem' }}>Super Administrador</div>
+                      <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '0.25rem' }}>Control total del sistema y gestión de administradores</p>
+                      <p style={{ fontSize: '12px', color: '#dc2626', fontWeight: '500' }}>⚠️ Precaución: Acceso sin restricciones</p>
                     </div>
                   </label>
                 </div>
+              </div>
 
+              {/* Botón de Confirmación */}
+              <div className="form-actions">
                 <button
-                  onClick={handleCambiarRol}
+                  type="button"
+                  onClick={handleAbrirConfirmacion}
                   disabled={isSaving || rolSeleccionado === adminSeleccionado.rol}
-                  className="export-button w-full justify-center"
-                  style={{ 
-                    opacity: (isSaving || rolSeleccionado === adminSeleccionado.rol) ? 0.5 : 1,
-                    cursor: (isSaving || rolSeleccionado === adminSeleccionado.rol) ? 'not-allowed' : 'pointer'
-                  }}
+                  className="btn-guardar"
                 >
-                  {isSaving ? (
-                    <>
-                      <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Guardando...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Confirmar Cambio de Rol
-                    </>
-                  )}
+                  {isSaving ? 'Guardando...' : 'Confirmar Cambio de Rol'}
                 </button>
               </div>
-            ) : (
-              <div className="text-center py-12">
-                <svg className="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <p className="admin-cell-subtitle">Selecciona un administrador de la lista para cambiar su rol</p>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
+
         </div>
       </div>
     </div>
   );
 }
+
+
+
+
