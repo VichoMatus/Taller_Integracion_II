@@ -412,34 +412,119 @@ class SuperAdminService {
   }
 
   /**
-   * Promocionar rol de un usuario
-   * Solo super_admin puede promover a 'admin' o 'super_admin'
+   * MÉTODOS DE CAMBIO DE ROL
+   * ========================
    */
-  async cambiarRolUsuario(idUsuario: number, nuevoRol: 'usuario' | 'admin' | 'super_admin'): Promise<Usuario> {
-    const headers = this.getAuthHeaders();
-    const endpoint = `/admin/usuarios/${idUsuario}/rol`;
+
+  /**
+   * Promover usuario a un rol superior (admin o super_admin)
+   * @param id - ID del usuario a promover
+   * @param nuevoRol - Rol al que se desea promover ('admin' o 'super_admin')
+   * @returns Usuario actualizado con el nuevo rol
+   */
+  async promoverUsuario(id: string | number, nuevoRol: 'admin' | 'super_admin'): Promise<Usuario> {
+    console.log(`🔼 [superAdminService] Promoviendo usuario ${id} a rol '${nuevoRol}'`);
     
-    console.log(`🔄 [superAdminService] Cambiando rol de usuario ${idUsuario} a ${nuevoRol}`);
-    console.log(`📍 [superAdminService] Endpoint: ${endpoint}`);
-    console.log(`📍 [superAdminService] BaseURL: ${apiBackend.defaults.baseURL}`);
-    console.log(`📍 [superAdminService] Headers:`, headers);
-    console.log(`📍 [superAdminService] Body:`, { rol: nuevoRol });
+    const headers = this.getAuthHeaders();
     
     try {
-      const response = await this.handleRequest(
-        apiBackend.post<Usuario>(
-          endpoint,
-          { rol: nuevoRol },
-          { headers }
-        )
+      const response = await apiBackend.post<Usuario>(
+        `/super_admin/usuarios/${id}/rol`,
+        { rol: nuevoRol },
+        { headers }
       );
-      console.log(`✅ [superAdminService] Rol cambiado exitosamente:`, response);
-      return response;
+      
+      console.log('✅ Usuario promovido exitosamente:', response.data);
+      return response.data;
     } catch (error: any) {
-      console.error(`❌ [superAdminService] Error al cambiar rol:`, error);
-      console.error(`❌ [superAdminService] Error message:`, error.message);
-      console.error(`❌ [superAdminService] Error config:`, error.config);
-      throw error;
+      console.error('❌ Error al promover usuario:', {
+        userId: id,
+        nuevoRol,
+        error: error.response?.data || error.message
+      });
+      
+      // Manejar errores específicos
+      if (error.response?.status === 401) {
+        throw new Error('No autorizado. Token inválido o expirado.');
+      } else if (error.response?.status === 403) {
+        throw new Error('Permisos insuficientes. Se requiere rol super_admin.');
+      } else if (error.response?.status === 404) {
+        throw new Error('Usuario no encontrado.');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response?.data?.error || 'Datos inválidos para el cambio de rol.');
+      }
+      
+      throw new Error(error.response?.data?.error || 'Error al promover usuario.');
+    }
+  }
+
+  /**
+   * Degradar usuario a un rol inferior (usuario o admin)
+   * @param id - ID del usuario a degradar
+   * @param nuevoRol - Rol al que se desea degradar ('usuario' o 'admin')
+   * @returns Usuario actualizado con el nuevo rol
+   */
+  async degradarUsuario(id: string | number, nuevoRol: 'usuario' | 'admin'): Promise<Usuario> {
+    console.log(`🔽 [superAdminService] Degradando usuario ${id} a rol '${nuevoRol}'`);
+    
+    const headers = this.getAuthHeaders();
+    
+    try {
+      const response = await apiBackend.post<Usuario>(
+        `/super_admin/usuarios/${id}/rol/demote`,
+        { rol: nuevoRol },
+        { headers }
+      );
+      
+      console.log('✅ Usuario degradado exitosamente:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Error al degradar usuario:', {
+        userId: id,
+        nuevoRol,
+        error: error.response?.data || error.message
+      });
+      
+      // Manejar errores específicos
+      if (error.response?.status === 401) {
+        throw new Error('No autorizado. Token inválido o expirado.');
+      } else if (error.response?.status === 403) {
+        throw new Error('Permisos insuficientes. Se requiere rol super_admin.');
+      } else if (error.response?.status === 404) {
+        throw new Error('Usuario no encontrado.');
+      } else if (error.response?.status === 400) {
+        throw new Error(error.response?.data?.error || 'Datos inválidos para el cambio de rol.');
+      }
+      
+      throw new Error(error.response?.data?.error || 'Error al degradar usuario.');
+    }
+  }
+
+  /**
+   * Cambiar rol de usuario (método unificado)
+   * @param id - ID del usuario
+   * @param nuevoRol - Nuevo rol del usuario
+   * @returns Usuario actualizado
+   */
+  async cambiarRolUsuario(id: string | number, nuevoRol: 'usuario' | 'admin' | 'super_admin'): Promise<Usuario> {
+    console.log(`🔄 [superAdminService] Cambiando rol de usuario ${id} a '${nuevoRol}'`);
+    
+    // Determinar si es promoción o degradación basado en el rol
+    const rolActual = await this.obtenerUsuario(id).then(u => u.rol);
+    
+    const jerarquia = { 'usuario': 0, 'admin': 1, 'super_admin': 2 };
+    const nivelActual = jerarquia[rolActual as keyof typeof jerarquia] || 0;
+    const nivelNuevo = jerarquia[nuevoRol as keyof typeof jerarquia] || 0;
+    
+    if (nivelNuevo > nivelActual) {
+      // Es una promoción
+      return this.promoverUsuario(id, nuevoRol as 'admin' | 'super_admin');
+    } else if (nivelNuevo < nivelActual) {
+      // Es una degradación
+      return this.degradarUsuario(id, nuevoRol as 'usuario' | 'admin');
+    } else {
+      // Sin cambios
+      throw new Error('El usuario ya tiene ese rol');
     }
   }
 }
