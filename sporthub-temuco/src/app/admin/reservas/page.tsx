@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { reservaService } from '@/services/reservaService';
+import { apiBackend } from '@/config/backend';
 import { Reserva, EstadoReserva } from '@/types/reserva';
 import '../dashboard.css';
 
@@ -22,88 +23,121 @@ export default function ReservasPage() {
       setLoading(true);
       setError(null);
       
-      const data = await reservaService.getAdminReservas();
+      // 1. Obtener ID del usuario actual
+      const userData = localStorage.getItem('userData');
+      let adminId: number | undefined;
+      let complejoId: number | undefined;
       
-      console.log("Datos recibidos:", data);
-      
-      // Asegurarse de que data sea siempre un array
-      if (Array.isArray(data)) {
-        if (data.length === 0) {
-          // Si no hay datos, usar reservas mock
-          setReservas([
-            {
-              id: 1,
-              usuarioId: 1,
-              canchaId: 1,
-              complejoId: 1,
-              fechaInicio: new Date().toISOString(),
-              fechaFin: new Date(Date.now() + 3600000).toISOString(),
-              estado: 'confirmada' as EstadoReserva,
-              precioTotal: 25000,
-              pagado: true,
-              fechaCreacion: new Date().toISOString(),
-              fechaActualizacion: new Date().toISOString(),
-              usuario: { id: 1, email: 'miguel.chamo@email.com', nombre: 'Miguel', apellido: 'Chamo' },
-              cancha: { id: 1, nombre: 'Cancha Central', tipo: 'futbol', precioPorHora: 25000 }
-            },
-            {
-              id: 2,
-              usuarioId: 2,
-              canchaId: 2,
-              complejoId: 1,
-              fechaInicio: new Date(Date.now() + 86400000).toISOString(),
-              fechaFin: new Date(Date.now() + 86400000 + 3600000).toISOString(),
-              estado: 'pendiente' as EstadoReserva,
-              precioTotal: 20000,
-              pagado: false,
-              fechaCreacion: new Date().toISOString(),
-              fechaActualizacion: new Date().toISOString(),
-              usuario: { id: 2, email: 'ana.garcia@email.com', nombre: 'Ana', apellido: 'García' },
-              cancha: { id: 2, nombre: 'Cancha Norte', tipo: 'basquet', precioPorHora: 20000 }
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          adminId = user?.id_usuario || user?.id;
+          console.log('🔍 [loadReservas] Admin ID:', adminId);
+          
+          // 2. ⚠️ WORKAROUND: Obtener complejo del admin consultando /complejos/admin/:adminId
+          // Esto es temporal hasta que el backend agregue complejoId a /auth/me
+          if (adminId) {
+            try {
+              console.log('🔍 [loadReservas] Obteniendo complejo del admin...');
+              const complejosResponse = await apiBackend.get(`/complejos/admin/${adminId}`);
+              console.log('� [loadReservas] Respuesta de complejos:', complejosResponse.data);
+              
+              // Manejar diferentes formatos de respuesta
+              let complejos = [];
+              if (Array.isArray(complejosResponse.data)) {
+                complejos = complejosResponse.data;
+              } else if (complejosResponse.data?.items && Array.isArray(complejosResponse.data.items)) {
+                complejos = complejosResponse.data.items;
+              } else if (complejosResponse.data?.data && Array.isArray(complejosResponse.data.data)) {
+                complejos = complejosResponse.data.data;
+              }
+              
+              if (complejos.length > 0) {
+                // Usar el primer complejo (un admin generalmente tiene un solo complejo)
+                complejoId = complejos[0]?.id_complejo || complejos[0]?.id || complejos[0]?.complejoId;
+                console.log('✅ [loadReservas] Complejo encontrado:', complejoId);
+              } else {
+                console.warn('⚠️ [loadReservas] El admin no tiene complejos asociados');
+              }
+            } catch (err) {
+              console.error('❌ [loadReservas] Error al obtener complejo del admin:', err);
             }
-          ]);
-        } else {
-          setReservas(data);
+          }
+        } catch (err) {
+          console.warn('⚠️ [loadReservas] No se pudo parsear userData');
         }
       } else {
-        setReservas([]); // Si no es array, establecer array vacío
+        console.warn('⚠️ [loadReservas] No hay userData en localStorage');
+      }
+      
+      // 3. Llamar al servicio de reservas con el filtro de complejo
+      console.log('🔍 [loadReservas] Llamando a getAdminReservas() con filtros:', { complejoId });
+      const response: any = await reservaService.getAdminReservas(complejoId ? { complejoId } : undefined);
+      
+      console.log("📥 [loadReservas] Respuesta completa del servidor:", response);
+      console.log("📥 [loadReservas] Tipo de response:", typeof response);
+      console.log("📥 [loadReservas] Es array?:", Array.isArray(response));
+      console.log("📥 [loadReservas] Keys:", response ? Object.keys(response) : 'null/undefined');
+      
+      // Manejar diferentes formatos de respuesta
+      let reservasArray = [];
+      
+      // Array directo (lo más probable después del interceptor)
+      if (Array.isArray(response)) {
+        reservasArray = response;
+        console.log("✅ Formato detectado: Array directo");
+      }
+      // Formato con items: { items: [...], total, page, pageSize }
+      else if (response?.items && Array.isArray(response.items)) {
+        reservasArray = response.items;
+        console.log("✅ Formato detectado: Paginación con items");
+      } 
+      // Formato envelope del BFF con paginación: { ok: true, data: { items: [...], page, pageSize, total } }
+      else if (response?.ok && response?.data?.items && Array.isArray(response.data.items)) {
+        reservasArray = response.data.items;
+        console.log("✅ Formato detectado: Envelope BFF con paginación");
+      }
+      // Formato envelope del BFF con array directo: { ok: true, data: [...] }
+      else if (response?.ok && Array.isArray(response?.data)) {
+        reservasArray = response.data;
+        console.log("✅ Formato detectado: Envelope BFF con array directo");
+      }
+      // Formato con data: { data: [...] }
+      else if (response?.data && Array.isArray(response.data)) {
+        reservasArray = response.data;
+        console.log("✅ Formato detectado: Data wrapper");
+      }
+      else {
+        console.warn('⚠️ Formato inesperado de respuesta:', response);
+        console.warn('⚠️ Estructura:', Object.keys(response || {}));
+        console.warn('⚠️ Contenido completo:', JSON.stringify(response, null, 2));
+        reservasArray = [];
+      }
+      
+      console.log("📊 Total de reservas procesadas:", reservasArray.length);
+      
+      setReservas(reservasArray);
+      
+      if (reservasArray.length === 0) {
+        setError('No hay reservas para mostrar. Las reservas aparecerán aquí.');
       }
     } catch (err: any) {
-      console.error('Error al cargar reservas:', err);
-      setError('Error al cargar reservas del servidor');
-      // En caso de error, usar reservas mock
-      setReservas([
-        {
-          id: 1,
-          usuarioId: 1,
-          canchaId: 1,
-          complejoId: 1,
-          fechaInicio: new Date().toISOString(),
-          fechaFin: new Date(Date.now() + 3600000).toISOString(),
-          estado: 'confirmada' as EstadoReserva,
-          precioTotal: 25000,
-          pagado: true,
-          fechaCreacion: new Date().toISOString(),
-          fechaActualizacion: new Date().toISOString(),
-          usuario: { id: 1, email: 'miguel.chamo@email.com', nombre: 'Miguel', apellido: 'Chamo' },
-          cancha: { id: 1, nombre: 'Cancha Central', tipo: 'futbol', precioPorHora: 25000 }
-        },
-        {
-          id: 2,
-          usuarioId: 2,
-          canchaId: 2,
-          complejoId: 1,
-          fechaInicio: new Date(Date.now() + 86400000).toISOString(),
-          fechaFin: new Date(Date.now() + 86400000 + 3600000).toISOString(),
-          estado: 'pendiente' as EstadoReserva,
-          precioTotal: 20000,
-          pagado: false,
-          fechaCreacion: new Date().toISOString(),
-          fechaActualizacion: new Date().toISOString(),
-          usuario: { id: 2, email: 'ana.garcia@email.com', nombre: 'Ana', apellido: 'García' },
-          cancha: { id: 2, nombre: 'Cancha Norte', tipo: 'basquet', precioPorHora: 20000 }
-        }
-      ]);
+      console.error('❌ Error al cargar reservas:', err);
+      console.error('❌ Error response:', err?.response);
+      console.error('❌ Error data:', err?.response?.data);
+      
+      // Extraer mensaje del error
+      let errorMessage = 'Error al cargar reservas del servidor. Verifique su conexión.';
+      if (err?.message && typeof err.message === 'string') {
+        errorMessage = err.message;
+      } else if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      
+      setError(errorMessage);
+      setReservas([]);
     } finally {
       setLoading(false);
     }
@@ -276,8 +310,8 @@ export default function ReservasPage() {
               </tr>
             </thead>
             <tbody>
-              {reservas.map((reserva) => (
-                <tr key={reserva.id}>
+              {reservas.map((reserva, index) => (
+                <tr key={reserva.id || `reserva-${index}`}>
                   <td>
                     <div className="admin-cell-title">
                       {reserva.usuario ? 
