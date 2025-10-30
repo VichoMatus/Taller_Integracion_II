@@ -6,54 +6,22 @@ import UserLayout from '../UsuarioLayout';
 import Link from 'next/link';
 import authService from '@/services/authService';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
+import { useRouter } from 'next/navigation';
 
 export default function PerfilUsuario() {
   // Protección de ruta - solo usuarios pueden acceder
   useAuthProtection(['usuario']);
   
-  const [reservasExpandidas, setReservasExpandidas] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState<any>(null);
-
-  const reservas = [
-    {
-      id: 1,
-      cancha: "Fútbol 7 - Club Centro",
-      direccion: "Av. Principal 123",
-      horario: "10:00 - 11:00",
-      fecha: "08 Junio 2025",
-      imagen: "/usuario/cancha.jpg",
-      detalles: {
-        estado: "Confirmada",
-        precio: "$25.000",
-        jugadores: "14/14",
-        duracion: "1 hora",
-        codigo: "RES-2025-001"
-      }
-    },
-    {
-      id: 2,
-      cancha: "Fútbol 5 - Parque Deportivo",
-      direccion: "Calle Secundaria 456",
-      horario: "16:00 - 17:00", 
-      fecha: "10 Junio 2025",
-      imagen: "/usuario/cancha2.jpg",
-      detalles: {
-        estado: "Pendiente de pago",
-        precio: "$18.000",
-        jugadores: "10/10",
-        duracion: "1 hora",
-        codigo: "RES-2025-002"
-      }
-    }
-  ];
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const router = useRouter();
 
   // Función para cargar los datos del usuario
   const loadUserData = async () => {
     setIsLoading(true);
     try {
       const data = await authService.me();
-      // Asegura que todos los datos se actualicen desde la API
       setUserData({
         id_usuario: data.id_usuario,
         name: `${data.nombre} ${data.apellido}`,
@@ -77,10 +45,8 @@ export default function PerfilUsuario() {
   };
 
   useEffect(() => {
-    // Cargar datos cada vez que se monta la página
     loadUserData();
 
-    // Si quisieras recargar datos cuando el usuario vuelve a la pestaña
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         loadUserData();
@@ -89,21 +55,12 @@ export default function PerfilUsuario() {
     
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
-    // Limpiar event listener al desmontar
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, []); // Dependencias vacías para que solo se ejecute al montar
+  }, []);
 
   const userInitial = userData?.name ? userData.name.charAt(0).toUpperCase() : "U";
-
-  const toggleDetalles = (id: number) => {
-    setReservasExpandidas(prev => 
-      prev.includes(id) 
-        ? prev.filter(item => item !== id)
-        : [...prev, id]
-    );
-  };
 
   if (isLoading) {
     return (
@@ -134,13 +91,11 @@ export default function PerfilUsuario() {
     <div id="tailwind-wrapper">
       <UserLayout userName={userData.name} notificationCount={2}>
         <div className="perfil-wrapper">
-          <div className="perfil-header">
-            <h1 className="perfil-titulo">Perfil de Usuario</h1>
-            <p className="perfil-subtitulo">Gestiona tu información y reservas</p>
-          </div>
-
           <div className="profile-card">
+            {/* SIDEBAR IZQUIERDA */}
             <div className="profile-left">
+              <div className="perfil-header-gradient"></div>
+              
               <div className="avatar-iniciales">
                 {userData.avatar ? (
                   <img src={userData.avatar} alt="Avatar" />
@@ -153,78 +108,213 @@ export default function PerfilUsuario() {
               <p>{userData.rol ? userData.rol.charAt(0).toUpperCase() + userData.rol.slice(1) : "Usuario"}</p>
 
               <div className="profile-details">
-                <div><span>ID Usuario</span><span>{userData.id_usuario}</span></div>
-                <div><span>Nombre</span><span>{userData.nombre}</span></div>
-                <div><span>Apellido</span><span>{userData.apellido}</span></div>
-                <div><span>Teléfono</span><span>{userData.phone}</span></div>
-                <div><span>Correo</span><span>{userData.email}</span></div>
-                <div><span>Rol</span><span>{userData.rol}</span></div>
+                <div>
+                  <span>📧 Email</span>
+                  <span>{userData.email}</span>
+                </div>
+                <div>
+                  <span>📱 Teléfono</span>
+                  <span>{userData.phone}</span>
+                </div>
+                <div>
+                  <span>👤 Nombre</span>
+                  <span>{userData.nombre}</span>
+                </div>
+                <div>
+                  <span>👥 Apellido</span>
+                  <span>{userData.apellido}</span>
+                </div>
+                <div>
+                  <span>🎯 Rol</span>
+                  <span>{userData.rol}</span>
+                </div>
+                <div>
+                  <span>🆔 ID</span>
+                  <span>#{userData.id_usuario}</span>
+                </div>
               </div>
 
               <Link href="/usuario/editarperfil">
-                <button className="edit-btn">Editar Perfil</button>
+                <button className="edit-btn">
+                  ✏️ Editar Perfil
+                </button>
               </Link>
             </div>
 
+            {/* CONTENIDO DERECHA */}
             <div className="profile-right">
-              <div className="info-box">
-                <h3>Información del Usuario</h3>
-                {userData.bio ? (
-                  <p>{userData.bio}</p>
-                ) : (
-                  <p className="bio-placeholder">
-                    Hola {userData.nombre}, bienvenido a tu perfil. Aquí podrás ver y gestionar toda tu información personal y tus reservas activas. Te invitamos a completar tu biografía para que otros usuarios puedan conocerte mejor.
-                    <br /><br />
-                  </p>
-                )}
+              <div className="perfil-main-header">
+                <h1 className="perfil-titulo">Mi Perfil</h1>
+                <p className="perfil-subtitulo">Gestiona tu información personal y configuraciones</p>
               </div>
 
-              <div className="reservas-box">
-                <h3>Últimas Reservas Activas</h3>
-                <div className="reservas-grid">
-                  {reservas.map((reserva) => (
-                    <div key={reserva.id} className="reserva-card">
-                      <img src={reserva.imagen} alt={reserva.cancha} />
-                      <p><b>{reserva.cancha}</b></p>
-                      <p>{reserva.direccion}</p>
-                      <p>Horario: {reserva.horario}</p>
-                      <p>Fecha: {reserva.fecha}</p>
-                      
-                      <button className="reserva-btn" onClick={() => toggleDetalles(reserva.id)}>
-                        {reservasExpandidas.includes(reserva.id) ? 'Ocultar' : 'Ver Detalles'}
-                      </button>
+              <div className="perfil-content-scroll">
+                {/* INFORMACIÓN DEL USUARIO */}
+                <div className="info-box">
+                  <h3>💬 Sobre mí</h3>
+                  {userData.bio ? (
+                    <p>{userData.bio}</p>
+                  ) : (
+                    <p className="bio-placeholder">
+                      Hola <strong>{userData.nombre}</strong>, bienvenido a tu perfil. 
+                      <br /><br />
+                      Aquí podrás ver y gestionar toda tu información personal. 
+                      Te invitamos a completar tu biografía para que otros usuarios puedan conocerte mejor.
+                      <br /><br />
+                      Haz clic en <strong>"Editar Perfil"</strong> para agregar más información sobre ti.
+                    </p>
+                  )}
+                </div>
 
-                      {reservasExpandidas.includes(reserva.id) && (
-                        <div className="detalles-reserva">
-                          <div className="detalles-header">
-                            <h4>Detalles de la Reserva</h4>
-                            <span className={`estado ${reserva.detalles.estado.replace(' ', '-').toLowerCase()}`}>
-                              {reserva.detalles.estado}
-                            </span>
-                          </div>
-                          
-                          <div className="detalles-grid">
-                            <div><span>Código:</span><span>{reserva.detalles.codigo}</span></div>
-                            <div><span>Precio:</span><span>{reserva.detalles.precio}</span></div>
-                            <div><span>Jugadores:</span><span>{reserva.detalles.jugadores}</span></div>
-                            <div><span>Duración:</span><span>{reserva.detalles.duracion}</span></div>
-                          </div>
-                          
-                          <div className="detalles-actions">
-                            <Link href="/usuario/reservas">
-                              <button className="btn-ir-reservas">Ir a Mis Reservas</button>
-                            </Link>
-                            <button className="btn-cancelar">Cancelar Reserva</button>
-                          </div>
-                        </div>
+                {/* ESTADÍSTICAS */}
+                <div className="stats-box">
+                  <h3>📊 Estadísticas</h3>
+                  <div className="stats-grid">
+                    <div className="stat-card">
+                      <div className="stat-icon">🏟️</div>
+                      <div className="stat-info">
+                        <div className="stat-value">0</div>
+                        <div className="stat-label">Reservas Totales</div>
+                      </div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-icon">⚽</div>
+                      <div className="stat-info">
+                        <div className="stat-value">0</div>
+                        <div className="stat-label">Canchas Visitadas</div>
+                      </div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-icon">💰</div>
+                      <div className="stat-info">
+                        <div className="stat-value">$0</div>
+                        <div className="stat-label">Total Gastado</div>
+                      </div>
+                    </div>
+                    <div className="stat-card">
+                      <div className="stat-icon">⭐</div>
+                      <div className="stat-info">
+                        <div className="stat-value">0</div>
+                        <div className="stat-label">Favoritos</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* INFORMACIÓN DE SEGURIDAD */}
+                <div className="security-box">
+                  <h3>🔒 Seguridad de la Cuenta</h3>
+                  <div className="security-items">
+                    <div className="security-item">
+                      <div className="security-icon">✅</div>
+                      <div className="security-content">
+                        <h4>Email Verificado</h4>
+                        <p>{userData.verificado ? 'Tu email ha sido verificado correctamente' : 'Verifica tu email para mayor seguridad'}</p>
+                      </div>
+                      {!userData.verificado && (
+                        <button className="security-btn">Verificar</button>
                       )}
                     </div>
-                  ))}
+                    <div className="security-item">
+                      <div className="security-icon">🔑</div>
+                      <div className="security-content">
+                        <h4>Contraseña Segura</h4>
+                        <p>Última actualización: No disponible</p>
+                      </div>
+                      <button 
+                        className="security-btn"
+                        onClick={() => setShowPasswordModal(true)}
+                      >
+                        Cambiar
+                      </button>
+                    </div>
+                    <div className="security-item">
+                      <div className="security-icon">📱</div>
+                      <div className="security-content">
+                        <h4>Teléfono Registrado</h4>
+                        <p>{userData.phone !== 'No registrado' ? 'Teléfono verificado' : 'Agrega tu teléfono para mayor seguridad'}</p>
+                      </div>
+                      {userData.phone === 'No registrado' && (
+                        <Link href="/usuario/editarperfil">
+                          <button className="security-btn">Agregar</button>
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* PREFERENCIAS */}
+                <div className="preferences-box">
+                  <h3>⚙️ Preferencias</h3>
+                  <div className="preference-item">
+                    <div className="preference-info">
+                      <h4>Notificaciones por Email</h4>
+                      <p>Recibe actualizaciones sobre tus reservas</p>
+                    </div>
+                    <label className="switch">
+                      <input type="checkbox" defaultChecked />
+                      <span className="slider"></span>
+                    </label>
+                  </div>
+                  <div className="preference-item">
+                    <div className="preference-info">
+                      <h4>Ofertas y Promociones</h4>
+                      <p>Entérate de descuentos especiales</p>
+                    </div>
+                    <label className="switch">
+                      <input type="checkbox" defaultChecked />
+                      <span className="slider"></span>
+                    </label>
+                  </div>
+                  <div className="preference-item">
+                    <div className="preference-info">
+                      <h4>Recordatorios de Reserva</h4>
+                      <p>Recibe avisos antes de tus reservas</p>
+                    </div>
+                    <label className="switch">
+                      <input type="checkbox" defaultChecked />
+                      <span className="slider"></span>
+                    </label>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* MODAL CAMBIAR CONTRASEÑA */}
+        {showPasswordModal && (
+          <div className="modal-overlay" onClick={() => setShowPasswordModal(false)}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>🔐 Cambiar Contraseña</h2>
+                <button className="modal-close" onClick={() => setShowPasswordModal(false)}>✕</button>
+              </div>
+              <div className="modal-body">
+                <p className="modal-info">
+                  Para cambiar tu contraseña, serás redirigido a la página de configuración.
+                </p>
+                <div className="modal-actions">
+                  <button 
+                    className="btn-primary"
+                    onClick={() => {
+                      setShowPasswordModal(false);
+                      router.push('/usuario/seguridad');
+                    }}
+                  >
+                    Ir a Configuración
+                  </button>
+                  <button 
+                    className="btn-secondary"
+                    onClick={() => setShowPasswordModal(false)}
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </UserLayout>
     </div>
   );
