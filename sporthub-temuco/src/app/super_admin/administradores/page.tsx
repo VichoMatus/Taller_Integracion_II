@@ -59,7 +59,7 @@ export default function AdministradoresPage() {
   // Estado para almacenar todos los usuarios sin filtrar
   const [todosUsuarios, setTodosUsuarios] = useState<Usuario[]>([]);
 
-  // Función para cargar administradores
+  // Función para cargar administradores y complejos
   const cargarUsuarios = async () => {
     if (!mounted) return; // 🔥 No ejecutar si no está montado
     
@@ -191,6 +191,18 @@ export default function AdministradoresPage() {
         <h1 className="text-2xl font-bold text-gray-900">Panel de Gestión de Administradores</h1>
         
         <div className="admin-controls">
+          <button 
+            onClick={cargarUsuarios}
+            className="export-button"
+            disabled={isLoading}
+            title="Refrescar datos"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {isLoading ? 'Refrescando...' : 'Refrescar'}
+          </button>
+
           <button className="export-button">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -277,8 +289,9 @@ export default function AdministradoresPage() {
                 <tr>
                   <th>Nombre</th>
                   <th>Email</th>
+                  <th>Teléfono</th>
+                  <th>Verificación</th>
                   <th>Estado</th>
-                  <th>Fecha de Registro</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -295,14 +308,19 @@ export default function AdministradoresPage() {
                       <div className="admin-cell-subtitle">{usuario.email}</div>
                     </td>
                     <td>
-                      <span className={`status-badge ${usuario.esta_activo ? 'status-activo' : 'status-inactivo'}`}>
-                        {usuario.esta_activo ? 'Activo' : 'Inactivo'}
+                      <div className="admin-cell-text">
+                        {usuario.telefono || 'No registrado'}
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`status-badge ${usuario.verificado ? 'status-activo' : 'status-inactivo'}`}>
+                        {usuario.verificado ? 'Verificado' : 'Sin verificar'}
                       </span>
                     </td>
                     <td>
-                      <div className="admin-cell-text">
-                        {new Date(usuario.fecha_creacion).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                      </div>
+                      <span className={`status-badge ${usuario.esta_activo ? 'status-activo' : 'status-inactivo'}`}>
+                        {usuario.esta_activo ? 'Activo' : 'Inactivo'}
+                      </span>
                     </td>
                     <td>
                       <div className="admin-actions-container">

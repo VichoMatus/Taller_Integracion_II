@@ -145,41 +145,54 @@ export default function CrearAdministradorPage() {
   }
 
   return (
-    <div className="admin-dashboard-container">
+    <div className="admin-page-layout">
       {/* Header */}
-      <div className="estadisticas-header">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Crear Nuevo Administrador
-        </h1>
-        
-        <div className="admin-controls">
+      <div className="admin-main-header">
+        <div className="admin-header-nav">
           <button 
             onClick={() => router.push('/super_admin/administradores')}
-            className="btn-secondary"
+            className="btn-volver"
           >
-            ← Volver
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Volver
+          </button>
+          <h1 className="admin-page-title">Crear Nuevo Administrador</h1>
+        </div>
+        
+        <div className="admin-header-buttons">
+          <button 
+            type="submit" 
+            form="crear-admin-form"
+            className="btn-guardar" 
+            disabled={isSaving}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            {isSaving ? 'Creando...' : 'Crear Administrador'}
           </button>
         </div>
       </div>
 
-      {/* Formulario */}
-      <div className="edit-court-card">
-        <form onSubmit={handleSubmit}>
-          {/* Mensaje de Error */}
-          {error && (
-            <div className="error-message mb-4">
-              {error}
-            </div>
-          )}
+      {/* Mensaje de Error */}
+      {error && (
+        <div className="error-container">
+          <p><strong>Error:</strong> {error}</p>
+        </div>
+      )}
 
+      {/* Formulario Principal */}
+      <div className="edit-court-container">
+        <form id="crear-admin-form" onSubmit={handleSubmit} className="edit-court-card">
           {/* Información Personal */}
           <div className="edit-section">
             <h3 className="edit-section-title">Información Personal</h3>
-            
             <div className="edit-form-grid">
-              <div className="form-group">
-                <label htmlFor="nombre" className="form-label">
-                  Nombre <span className="text-red-500">*</span>
+              <div className="edit-form-group">
+                <label htmlFor="nombre" className="edit-form-label">
+                  Nombre: *
                 </label>
                 <input
                   type="text"
@@ -187,15 +200,16 @@ export default function CrearAdministradorPage() {
                   name="nombre"
                   value={formData.nombre}
                   onChange={handleInputChange}
-                  className="form-input"
-                  placeholder="Juan"
+                  className="edit-form-input"
+                  placeholder="Ej: Juan"
                   required
+                  disabled={isSaving}
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="apellido" className="form-label">
-                  Apellido <span className="text-red-500">*</span>
+              <div className="edit-form-group">
+                <label htmlFor="apellido" className="edit-form-label">
+                  Apellido: *
                 </label>
                 <input
                   type="text"
@@ -203,15 +217,16 @@ export default function CrearAdministradorPage() {
                   name="apellido"
                   value={formData.apellido}
                   onChange={handleInputChange}
-                  className="form-input"
-                  placeholder="Pérez"
+                  className="edit-form-input"
+                  placeholder="Ej: Pérez"
                   required
+                  disabled={isSaving}
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="email" className="form-label">
-                  Email <span className="text-red-500">*</span>
+              <div className="edit-form-group">
+                <label htmlFor="email" className="edit-form-label">
+                  Email: *
                 </label>
                 <input
                   type="email"
@@ -219,15 +234,16 @@ export default function CrearAdministradorPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="form-input"
+                  className="edit-form-input"
                   placeholder="admin@sporthub.cl"
                   required
+                  disabled={isSaving}
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="telefono" className="form-label">
-                  Teléfono
+              <div className="edit-form-group">
+                <label htmlFor="telefono" className="edit-form-label">
+                  Teléfono:
                 </label>
                 <input
                   type="tel"
@@ -235,8 +251,9 @@ export default function CrearAdministradorPage() {
                   name="telefono"
                   value={formData.telefono}
                   onChange={handleInputChange}
-                  className="form-input"
-                  placeholder="+56912345678"
+                  className="edit-form-input"
+                  placeholder="+56 9 1234 5678"
+                  disabled={isSaving}
                 />
               </div>
             </div>
@@ -245,11 +262,10 @@ export default function CrearAdministradorPage() {
           {/* Credenciales de Acceso */}
           <div className="edit-section">
             <h3 className="edit-section-title">Credenciales de Acceso</h3>
-            
             <div className="edit-form-grid">
-              <div className="form-group">
-                <label htmlFor="contrasena" className="form-label">
-                  Contraseña <span className="text-red-500">*</span>
+              <div className="edit-form-group">
+                <label htmlFor="contrasena" className="edit-form-label">
+                  Contraseña: *
                 </label>
                 <div style={{ position: 'relative' }}>
                   <input
@@ -258,10 +274,11 @@ export default function CrearAdministradorPage() {
                     name="contrasena"
                     value={formData.contrasena}
                     onChange={handleInputChange}
-                    className="form-input"
+                    className="edit-form-input"
                     placeholder="Mínimo 8 caracteres"
                     required
                     minLength={8}
+                    disabled={isSaving}
                   />
                   <button
                     type="button"
@@ -280,14 +297,14 @@ export default function CrearAdministradorPage() {
                     {showPassword ? '👁️' : '👁️‍🗨️'}
                   </button>
                 </div>
-                <small style={{ color: '#64748B', fontSize: '0.875rem' }}>
+                <p className="edit-form-hint">
                   Mínimo 8 caracteres
-                </small>
+                </p>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="confirmarContrasena" className="form-label">
-                  Confirmar Contraseña <span className="text-red-500">*</span>
+              <div className="edit-form-group">
+                <label htmlFor="confirmarContrasena" className="edit-form-label">
+                  Confirmar Contraseña: *
                 </label>
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -295,10 +312,11 @@ export default function CrearAdministradorPage() {
                   name="confirmarContrasena"
                   value={formData.confirmarContrasena}
                   onChange={handleInputChange}
-                  className="form-input"
+                  className="edit-form-input"
                   placeholder="Repite la contraseña"
                   required
                   minLength={8}
+                  disabled={isSaving}
                 />
               </div>
             </div>
@@ -307,55 +325,38 @@ export default function CrearAdministradorPage() {
           {/* Configuración de Cuenta */}
           <div className="edit-section">
             <h3 className="edit-section-title">Configuración de Cuenta</h3>
-            
-            <div className="checkbox-group">
-              <label className="checkbox-label">
+            <div className="edit-form-grid">
+              <div className="edit-form-group checkbox-group">
                 <input
                   type="checkbox"
+                  id="verificado"
                   name="verificado"
                   checked={formData.verificado}
                   onChange={handleInputChange}
-                  className="checkbox-input"
+                  className="edit-form-checkbox"
+                  disabled={isSaving}
                 />
-                <span>Marcar cuenta como verificada</span>
-              </label>
-              <small style={{ display: 'block', color: '#64748B', fontSize: '0.875rem', marginTop: '4px', marginLeft: '28px' }}>
-                Si está marcado, el administrador no necesitará verificar su email
-              </small>
+                <label htmlFor="verificado" className="edit-form-label-inline">
+                  Marcar cuenta como verificada
+                </label>
+              </div>
             </div>
+            
+            <p className="edit-form-hint">
+              Si está marcado, el administrador no necesitará verificar su email
+            </p>
 
             <div style={{ 
               marginTop: '1rem', 
               padding: '1rem', 
-              backgroundColor: '#F0F9FF', 
-              borderLeft: '4px solid #0EA5E9',
+              backgroundColor: '#fff7ed', 
+              borderLeft: '4px solid #f97316',
               borderRadius: '4px'
             }}>
-              <p style={{ margin: 0, fontSize: '0.875rem', color: '#0369A1' }}>
+              <p style={{ margin: 0, fontSize: '0.875rem', color: '#9a3412' }}>
                 ℹ️ <strong>Nota:</strong> La cuenta se creará activa por defecto. El administrador podrá acceder inmediatamente después de la creación.
               </p>
             </div>
-          </div>
-
-          {/* Botones de Acción */}
-          <div className="form-actions" style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="btn-primary"
-              style={{ flex: 1 }}
-            >
-              {isSaving ? 'Creando...' : '✅ Crear Administrador'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => router.push('/super_admin/administradores')}
-              className="btn-secondary"
-              disabled={isSaving}
-            >
-              Cancelar
-            </button>
           </div>
         </form>
       </div>
