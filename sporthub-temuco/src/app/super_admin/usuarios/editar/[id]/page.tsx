@@ -34,7 +34,7 @@ export default function EditarUsuarioPage() {
       try {
         setIsLoadingData(true);
         console.log('🔍 Cargando datos del usuario ID:', usuarioId);
-        const usuario = await superAdminService.obtenerUsuarioPorId(usuarioId);
+        const usuario = await superAdminService.obtenerUsuario(usuarioId);
         console.log('✅ Usuario cargado:', usuario);
         
         setFormData({

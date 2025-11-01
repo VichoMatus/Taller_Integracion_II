@@ -122,24 +122,14 @@ export const complejosService = {
    */
   async getComplejosByAdmin(adminId: number) {
     try {
-      console.log(`📍 [complejosService] Obteniendo complejos del admin ID: ${adminId}`);
+      console.log(`📍 [complejosService] Obteniendo complejos del dueño ID: ${adminId}`);
       
-      // 🔥 ENDPOINT CORREGIDO: Usar /complejos con query param duenioId
-      // Este endpoint público está en complejos.routes.ts línea 45
-      // El controller acepta duenioId como query parameter (línea 41)
-      const response = await apiBackend.get(`/complejos`, {
-        params: { duenioId: adminId }
-      });
+      // 🔥 ENDPOINT: /complejos/duenio/{duenio_id}
+      // Devuelve array de complejos del dueño/admin
+      const response = await apiBackend.get(`/complejos/duenio/${adminId}`);
       console.log(`✅ [complejosService] Complejos obtenidos:`, response.data);
       
-      // El interceptor ya extrajo los datos de { ok, data }
-      // El endpoint retorna { items: [...], total: ... }
       const data = response.data;
-      
-      // Si viene como { items: [...] }, extraer el array
-      if (data?.items) {
-        return data.items;
-      }
       
       // Si ya es un array, devolverlo directamente
       if (Array.isArray(data)) {

@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { superAdminService } from '@/services/superAdminService';
 import { Usuario, UsuarioUpdateRequest } from '@/types/usuarios';
-import '@/app/super_admin/dashboard.css';
 
 export default function EditarAdministradorPage() {
   const router = useRouter();
@@ -193,41 +192,55 @@ export default function EditarAdministradorPage() {
   }
 
   return (
-    <div className="admin-dashboard-container">
+    <div className="admin-page-layout">
       {/* Header */}
-      <div className="estadisticas-header">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Editar Administrador
-        </h1>
-        
-        <div className="admin-controls">
+      <div className="admin-main-header">
+        <div className="admin-header-nav">
           <button 
             onClick={() => router.push('/super_admin/administradores')}
-            className="btn-secondary"
+            className="btn-volver"
           >
-            ← Volver
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Volver
+          </button>
+          <h1 className="admin-page-title">Editar Administrador</h1>
+        </div>
+        
+        <div className="admin-header-buttons">
+          <button 
+            type="submit" 
+            form="editar-admin-form"
+            className="btn-guardar" 
+            disabled={isSaving}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            {isSaving ? 'Guardando...' : 'Guardar Cambios'}
           </button>
         </div>
       </div>
 
-      {/* Formulario */}
-      <div className="edit-court-card">
-        <form onSubmit={handleSubmit}>
-          {/* Mensaje de Error */}
-          {error && (
-            <div className="error-message mb-4">
-              {error}
-            </div>
-          )}
+      {/* Mensaje de Error */}
+      {error && (
+        <div className="error-container">
+          <p><strong>Error:</strong> {error}</p>
+        </div>
+      )}
 
-          {/* Información Básica */}
+      {/* Formulario Principal */}
+      <div className="edit-court-container">
+        <form id="editar-admin-form" onSubmit={handleSubmit} className="edit-court-card">
+
+          {/* Información Personal */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Información Básica</h3>
-            
+            <h3 className="edit-section-title">Información Personal</h3>
             <div className="edit-form-grid">
-              <div className="form-group">
-                <label htmlFor="nombre" className="form-label">
-                  Nombre <span className="text-red-500">*</span>
+              <div className="edit-form-group">
+                <label htmlFor="nombre" className="edit-form-label">
+                  Nombre: *
                 </label>
                 <input
                   type="text"
@@ -235,14 +248,15 @@ export default function EditarAdministradorPage() {
                   name="nombre"
                   value={formData.nombre}
                   onChange={handleInputChange}
-                  className="form-input"
+                  className="edit-form-input"
                   required
+                  disabled={isSaving}
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="apellido" className="form-label">
-                  Apellido <span className="text-red-500">*</span>
+              <div className="edit-form-group">
+                <label htmlFor="apellido" className="edit-form-label">
+                  Apellido: *
                 </label>
                 <input
                   type="text"
@@ -250,14 +264,15 @@ export default function EditarAdministradorPage() {
                   name="apellido"
                   value={formData.apellido}
                   onChange={handleInputChange}
-                  className="form-input"
+                  className="edit-form-input"
                   required
+                  disabled={isSaving}
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="email" className="form-label">
-                  Email <span className="text-red-500">*</span>
+              <div className="edit-form-group">
+                <label htmlFor="email" className="edit-form-label">
+                  Email: *
                 </label>
                 <input
                   type="email"
@@ -265,14 +280,15 @@ export default function EditarAdministradorPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="form-input"
+                  className="edit-form-input"
                   required
+                  disabled={isSaving}
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="telefono" className="form-label">
-                  Teléfono
+              <div className="edit-form-group">
+                <label htmlFor="telefono" className="edit-form-label">
+                  Teléfono:
                 </label>
                 <input
                   type="tel"
@@ -280,8 +296,9 @@ export default function EditarAdministradorPage() {
                   name="telefono"
                   value={formData.telefono}
                   onChange={handleInputChange}
-                  className="form-input"
-                  placeholder="+56912345678"
+                  className="edit-form-input"
+                  placeholder="+56 9 1234 5678"
+                  disabled={isSaving}
                 />
               </div>
             </div>
@@ -290,100 +307,120 @@ export default function EditarAdministradorPage() {
           {/* Estado y Verificación */}
           <div className="edit-section">
             <h3 className="edit-section-title">Estado de la Cuenta</h3>
-            
-            <div className="checkbox-group">
-              <label className="checkbox-label">
+            <div className="edit-form-grid">
+              <div className="edit-form-group checkbox-group">
                 <input
                   type="checkbox"
+                  id="esta_activo"
+                  name="esta_activo"
+                  checked={formData.esta_activo}
+                  onChange={handleInputChange}
+                  className="edit-form-checkbox"
+                  disabled={isSaving}
+                />
+                <label htmlFor="esta_activo" className="edit-form-label-inline">
+                  Cuenta Activa
+                </label>
+              </div>
+
+              <div className="edit-form-group checkbox-group">
+                <input
+                  type="checkbox"
+                  id="verificado"
                   name="verificado"
                   checked={formData.verificado}
                   onChange={handleInputChange}
-                  className="checkbox-input"
+                  className="edit-form-checkbox"
+                  disabled={isSaving}
                 />
-                <span>Cuenta verificada</span>
-              </label>
+                <label htmlFor="verificado" className="edit-form-label-inline">
+                  Email Verificado
+                </label>
+              </div>
             </div>
           </div>
 
-          {/* Información Adicional */}
+          {/* Información del Sistema */}
           <div className="edit-section">
             <h3 className="edit-section-title">Información del Sistema</h3>
-            
             <div className="edit-form-grid">
-              <div className="form-group">
-                <label className="form-label">ID de Usuario</label>
+              <div className="edit-form-group">
+                <label className="edit-form-label">ID de Usuario:</label>
                 <input
                   type="text"
                   value={admin.id_usuario}
-                  className="form-input"
+                  className="edit-form-input"
                   disabled
-                  style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
+                  readOnly
                 />
+                <p className="edit-form-hint">
+                  El ID no puede ser modificado
+                </p>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Rol</label>
+              <div className="edit-form-group">
+                <label className="edit-form-label">Rol:</label>
                 <input
                   type="text"
                   value={admin.rol}
-                  className="form-input"
+                  className="edit-form-input"
                   disabled
-                  style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
+                  readOnly
                 />
+                <p className="edit-form-hint">
+                  Para cambiar el rol, usa la opción "Cambiar Rango"
+                </p>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Fecha de Creación</label>
+              <div className="edit-form-group">
+                <label className="edit-form-label">Fecha de Creación:</label>
                 <input
                   type="text"
                   value={new Date(admin.fecha_creacion).toLocaleDateString('es-ES')}
-                  className="form-input"
+                  className="edit-form-input"
                   disabled
-                  style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
+                  readOnly
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Última Actualización</label>
+              <div className="edit-form-group">
+                <label className="edit-form-label">Última Actualización:</label>
                 <input
                   type="text"
                   value={new Date(admin.fecha_actualizacion).toLocaleDateString('es-ES')}
-                  className="form-input"
+                  className="edit-form-input"
                   disabled
-                  style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
+                  readOnly
                 />
               </div>
             </div>
           </div>
 
-          {/* Botones de Acción */}
-          <div className="form-actions" style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-            <button
-              type="submit"
-              disabled={isSaving}
-              className="btn-primary"
-              style={{ flex: 1 }}
-            >
-              {isSaving ? 'Guardando...' : '💾 Guardar Cambios'}
-            </button>
-
-            <button
-              type="button"
-              onClick={toggleActivation}
-              disabled={isSaving}
-              className={admin.esta_activo ? 'btn-danger' : 'btn-success'}
-              style={{ flex: 1 }}
-            >
-              {isSaving ? 'Procesando...' : admin.esta_activo ? '🔴 Desactivar' : '🟢 Activar'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => router.push('/super_admin/administradores')}
-              className="btn-secondary"
-            >
-              Cancelar
-            </button>
+          {/* Acciones Peligrosas */}
+          <div className="edit-section">
+            <h3 className="edit-section-title" style={{ color: '#dc2626' }}>Acciones Peligrosas</h3>
+            <div className="edit-form-grid">
+              <div className="edit-form-group">
+                <button
+                  type="button"
+                  onClick={toggleActivation}
+                  disabled={isSaving}
+                  className="btn-secondary"
+                  style={{ 
+                    backgroundColor: admin.esta_activo ? '#dc2626' : '#16a34a',
+                    color: 'white',
+                    border: 'none'
+                  }}
+                >
+                  {admin.esta_activo ? '🚫 Desactivar Administrador' : '✅ Activar Administrador'}
+                </button>
+                <p className="edit-form-hint">
+                  {admin.esta_activo 
+                    ? 'Desactivar impedirá que el administrador pueda iniciar sesión'
+                    : 'Activar permitirá que el administrador pueda iniciar sesión'}
+                </p>
+              </div>
+            </div>
           </div>
         </form>
       </div>
