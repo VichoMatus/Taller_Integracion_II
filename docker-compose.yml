@@ -36,6 +36,10 @@ services:
       - API_TIMEOUT=${API_TIMEOUT}
       - BFF_PORT=${BFF_PORT}
       - FRONTEND_URL=${FRONTEND_URL}
+      # Google OAuth 
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
       # Variables para Docker Compose (base de datos local)
       - DB_HOST=db
       - DB_USER=${DOCKER_POSTGRES_USER}

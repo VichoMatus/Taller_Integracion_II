@@ -34,6 +34,7 @@
 
 import { Request, Response } from 'express';
 import { AuthService } from '../../services/authService';
+import { GoogleAuthService } from '../../services/googleAuthService';
 import {
   UserLogin, UserUpdate, ChangePasswordRequest,
   VerifyEmailRequest, ResendVerificationRequest, SendVerificationRequest, ForgotPasswordRequest,
@@ -47,9 +48,11 @@ import {
  */
 export class AuthController {
   private service: AuthService;
+  private google: GoogleAuthService;
 
   constructor() {
     this.service = new AuthService();
+    this.google = new GoogleAuthService();
   }
 
   /**
@@ -500,6 +503,48 @@ export class AuthController {
       res.status(status).json(result);
     } catch (error) {
       res.status(500).json({ ok: false, error: 'Error interno del servidor' });
+    }
+  };
+
+  /**
+   * INICIO DE SESIÓN CON GOOGLE (ID TOKEN)
+   * ======================================
+   * POST /google/idtoken
+   * Body: { id_token: string }
+   * Verifica el token de Google y devuelve el perfil. En una segunda etapa,
+   * aquí podemos crear/actualizar el usuario en FastAPI y emitir tokens.
+   */
+  googleWithIdToken = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id_token } = req.body || {};
+      if (!id_token) {
+        res.status(400).json({ ok: false, error: 'id_token es requerido' });
+        return;
+      }
+
+      if (!this.google.isReady()) {
+        res.status(503).json({ ok: false, error: 'Google Auth no está configurado en el servidor' });
+        return;
+      }
+
+      const profile = await this.google.verifyIdToken(id_token);
+
+      // TODO: Integración completa con FastAPI (crear/actualizar usuario y obtener tokens)
+      // Por ahora, retornamos el perfil verificado para que el frontend continúe el flujo.
+      res.status(200).json({ ok: true, data: { provider: 'google', profile } });
+    } catch (error: any) {
+      res.status(401).json({ ok: false, error: error?.message || 'Token de Google inválido' });
+    }
+  };
+
+  /**
+   * GET /google/status - Salud básica de la integración de Google
+   */
+  getGoogleStatus = async (_req: Request, res: Response): Promise<void> => {
+    try {
+      res.status(200).json({ ok: true, provider: 'google', configured: this.google.isReady() });
+    } catch (error) {
+      res.status(500).json({ ok: false, error: 'Error verificando Google Auth' });
     }
   };
 
