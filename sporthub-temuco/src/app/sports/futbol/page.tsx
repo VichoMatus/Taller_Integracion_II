@@ -8,7 +8,7 @@ import Sidebar from '../../../components/layout/Sidebar';
 import StatsCard from '../../../components/charts/StatsCard';
 import { useAuthStatus } from '@/hooks/useAuthStatus';
 import { canchaService } from '@/services/canchaService';
-import { complejosService } from '@/services/complejosService'; // 🔥 NUEVO IMPORT
+import { complejosService } from '@/services/complejosService';
 import styles from './page.module.css';
 
 // 🔥 DATOS PARA LAS ESTADÍSTICAS DE FÚTBOL
@@ -84,7 +84,7 @@ export default function FutbolPage() {
   // 🔥 Hook de autenticación
   const { buttonProps } = useAuthStatus();
 
-  // 🔥 CARGAR CANCHAS DEL BACKEND CON DATOS DE COMPLEJO
+  // 🔥 CARGAR CANCHAS DEL BACKEND CON DATOS DE COMPLEJO - CORREGIDO
   useEffect(() => {
     const loadCanchas = async () => {
       try {
@@ -94,16 +94,37 @@ export default function FutbolPage() {
         console.log('🔄 [FutbolPage] Cargando TODAS las canchas del backend...');
         
         // 🔥 OBTENER TODAS LAS CANCHAS
-        const todasLasCanchas = await canchaService.getCanchas();
-        console.log('✅ [FutbolPage] Todas las canchas obtenidas:', todasLasCanchas);
+        const response = await canchaService.getCanchas();
+        console.log('✅ [FutbolPage] Respuesta completa:', response);
+        
+        // 🔥 VALIDAR QUE LA RESPUESTA SEA UN ARRAY - CORRECCIÓN PRINCIPAL
+        const todasLasCanchas = Array.isArray(response) 
+          ? response 
+          : Array.isArray(response?.data) 
+            ? response.data 
+            : Array.isArray(response?.items) 
+              ? response.items 
+              : [];
+        
+        if (!Array.isArray(todasLasCanchas)) {
+          throw new Error('La respuesta del servidor no contiene un array de canchas válido');
+        }
+        
+        console.log('✅ [FutbolPage] Canchas validadas como array:', todasLasCanchas);
+        console.log('📊 [FutbolPage] Total de canchas recibidas:', todasLasCanchas.length);
         
         // 🔥 FILTRAR CANCHAS DE FÚTBOL, FUTSAL Y FUTBOLITO
         const canchasDeFutbol = todasLasCanchas.filter((cancha: any) => {
           console.log(`🔍 [FutbolPage] Evaluando cancha ID ${cancha.id}: tipo="${cancha.tipo}"`);
           return ['futbol', 'futsal', 'futbolito'].includes(cancha.tipo);
         });
-        
+
         console.log('⚽ [FutbolPage] Canchas de fútbol encontradas:', canchasDeFutbol.length);
+        
+        if (canchasDeFutbol.length === 0) {
+          console.warn('⚠️ [FutbolPage] No se encontraron canchas de fútbol, usando fallback');
+          throw new Error('No se encontraron canchas de fútbol en la respuesta del servidor');
+        }
         
         // 🔥 OBTENER DATOS DE COMPLEJOS PARA CADA CANCHA
         const canchasMapeadas = await Promise.all(
@@ -120,6 +141,10 @@ export default function FutbolPage() {
                 if (complejoData) {
                   addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
                   console.log(`✅ [FutbolPage] Complejo cargado: ${addressInfo}`);
+                } else {
+                  console.warn(`⚠️ [FutbolPage] Complejo ${cancha.establecimientoId} no encontrado, usando fallback`);
+                  const staticComplejo = getStaticComplejoData(cancha.establecimientoId);
+                  addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
                 }
                 
               } catch (complejoError: any) {
@@ -128,21 +153,25 @@ export default function FutbolPage() {
                 const staticComplejo = getStaticComplejoData(cancha.establecimientoId);
                 addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
               }
+            } else {
+              console.warn(`⚠️ [FutbolPage] Cancha ${cancha.id} no tiene establecimientoId`);
+              const staticComplejo = getStaticComplejoData(1); // Usar complejo por defecto
+              addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
             }
             
             // 🔥 MAPEAR CANCHA CON DATOS DEL COMPLEJO
             const mappedCancha = {
               id: cancha.id,
               imageUrl: `/sports/futbol/canchas/Cancha${cancha.id}.png`,
-              name: cancha.nombre,
-              address: addressInfo, // 🔥 USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
-              rating: cancha.rating || 4.5,
+              name: cancha.nombre || `Cancha ${cancha.id}`,
+              address: addressInfo,
+              rating: cancha.rating || 4.9,
               tags: [
                 cancha.techada ? "Techada" : "Al aire libre",
                 cancha.activa ? "Disponible" : "No disponible",
-                cancha.tipo.charAt(0).toUpperCase() + cancha.tipo.slice(1) // Capitalizar tipo
+                cancha.tipo.charAt(0).toUpperCase() + cancha.tipo.slice(1)
               ],
-              description: `Cancha de ${cancha.tipo} ${cancha.nombre} - ID: ${cancha.id}`,
+              description: `Cancha de ${cancha.tipo} ${cancha.nombre || `ID: ${cancha.id}`}`,
               price: cancha.precioPorHora?.toString() || "25",
               nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
               sport: cancha.tipo
@@ -161,43 +190,48 @@ export default function FutbolPage() {
         setErrorCanchas(`Error: ${error.message}`);
         
         // 🔥 FALLBACK CON DATOS ESTÁTICOS MEJORADOS
+        console.log('🔄 [FutbolPage] Aplicando fallback con datos estáticos...');
         const canchasEstaticas = [
           {
             id: 1,
             imageUrl: "/sports/futbol/canchas/Cancha1.png",
             name: "🚨 FALLBACK - Fútbol Centro",
-            address: "Complejo Deportivo Norte - Av. Alemania 1234, Temuco", // 🔥 FORMATO MEJORADO
-            rating: 4.3,
+            address: "Complejo Deportivo Norte - Av. Alemania 1234, Temuco",
+            rating: 4.8,
             tags: ["DATOS OFFLINE", "Estacionamiento", "Iluminación"],
             description: "🚨 Datos de fallback - API no disponible",
-            price: "25",
+            price: "35",
             nextAvailable: "20:00-21:00",
+            sport: "futbol"
           },
           {
             id: 2,
             imageUrl: "/sports/futbol/canchas/Cancha2.png",
             name: "🚨 FALLBACK - Futsal Norte",
             address: "Complejo Deportivo Centro - Av. Pedro de Valdivia 567, Temuco",
-            rating: 4.5,
+            rating: 3.5,
             tags: ["DATOS OFFLINE", "Estacionamiento", "Futsal"],
             description: "🚨 Datos de fallback - API no disponible",
-            price: "22",
-            nextAvailable: "14:30-15:30", 
+            price: "92",
+            nextAvailable: "14:30-15:30",
+            sport: "futsal"
           },
           {
             id: 3,
             imageUrl: "/sports/futbol/canchas/Cancha3.png",
             name: "🚨 FALLBACK - Futbolito Sur",
             address: "Complejo Deportivo Sur - Calle Montt 890, Temuco",
-            rating: 4.1,
+            rating: 2.1,
             tags: ["DATOS OFFLINE", "Estacionamiento", "Futbolito"],
             description: "🚨 Datos de fallback - API no disponible",
-            price: "28",
+            price: "77",
             nextAvailable: "Mañana 09:00-10:00",
+            sport: "futbolito"
           }
         ];
         
         setCanchas(canchasEstaticas);
+        console.log('✅ [FutbolPage] Fallback aplicado correctamente');
       } finally {
         setLoadingCanchas(false);
       }
@@ -234,7 +268,7 @@ export default function FutbolPage() {
   }, []);
 
   // 🔥 USAR CANCHAS REALES PARA EL CARRUSEL
-  const topRatedCourts = canchas.slice(0, 6); // Máximo 6 canchas para el carrusel
+  const topRatedCourts = canchas.slice(0, 6);
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -262,7 +296,6 @@ export default function FutbolPage() {
     router.push(`/sports/futbol/canchas/canchaseleccionada?id=${court.id}`);
   };
 
-  // 🔥 Manejador del botón de usuario
   const handleUserButtonClick = () => {
     if (!buttonProps.disabled) {
       router.push(buttonProps.href);
@@ -287,7 +320,7 @@ export default function FutbolPage() {
         `${(canchas.reduce((acc, c) => acc + c.rating, 0) / canchas.length).toFixed(1)}⭐` : 
         "4.5⭐"
     },
-    footballStats[3] // Mantener jugadores por defecto
+    footballStats[3]
   ];
 
   if (!isClient) {
@@ -332,7 +365,6 @@ export default function FutbolPage() {
           </div>
         </div>
 
-        {/* 🔥 STATS CARDS CON DATOS ACTUALIZADOS */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
             <span className={styles.statsTitleIcon}>📊</span>
@@ -373,7 +405,6 @@ export default function FutbolPage() {
           </button>
         </div>
 
-        {/* 🔥 CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
@@ -430,7 +461,6 @@ export default function FutbolPage() {
           </div>
         </div>
 
-        {/* Ubicación en el mapa */}
         <div className={styles.mapSection}>
           <h2 className={styles.sectionTitle}>Ubicación en el mapa de las canchas</h2>
           
