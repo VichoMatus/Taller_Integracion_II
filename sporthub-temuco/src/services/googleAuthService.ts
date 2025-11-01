@@ -4,6 +4,8 @@
  */
 
 import api from "@/config/backend";
+// Next.js reemplaza process.env.* en build-time; declaramos process para evitar errores de tipos en cliente
+declare const process: any;
 
 interface GoogleCredentialResponse {
   credential: string; // ID Token JWT
@@ -44,7 +46,7 @@ export const googleAuthService = {
     }
 
     // La variable de entorno se inyecta en tiempo de compilación por Next.js
-    const clientId = '648604313333-vhr12pkceshfpi6itu5htq75hsvtrrlf.apps.googleusercontent.com';
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';
     if (!clientId) {
       console.error('GOOGLE_CLIENT_ID no está configurado');
       onError('Configuración de Google Sign-In faltante');
@@ -54,15 +56,9 @@ export const googleAuthService = {
     // Inicializar Google Identity Services
     window.google.accounts.id.initialize({
       client_id: clientId,
-      callback: async (response: GoogleCredentialResponse) => {
-        try {
-          // Enviar el ID token al backend para verificación
-          const result = await this.verifyGoogleToken(response.credential);
-          onSuccess(result);
-        } catch (error: any) {
-          console.error('Error verificando token de Google:', error);
-          onError(error.message || 'Error al verificar con Google');
-        }
+      // Entregar el response crudo (contiene .credential). La verificación la haremos en loginWithGoogle
+      callback: (response: GoogleCredentialResponse) => {
+        onSuccess(response);
       },
       auto_select: false,
       cancel_on_tap_outside: true,
@@ -124,8 +120,7 @@ export const googleAuthService = {
 
   /**
    * Procesa el login con Google (integración completa)
-   * TODO: Conectar con el flujo de login/register de tu backend FastAPI
-   * Por ahora retorna el perfil verificado
+   * Maneja tanto la respuesta completa de FastAPI como el modo fallback
    */
   async loginWithGoogle(idToken: string) {
     const googleResponse = await this.verifyGoogleToken(idToken);
@@ -134,34 +129,60 @@ export const googleAuthService = {
       throw new Error('Error al verificar con Google');
     }
 
-    const { profile } = googleResponse.data;
+    const responseData: any = googleResponse.data;
 
-    // TODO: Aquí debes crear/buscar el usuario en tu backend FastAPI
-    // y obtener un access_token válido para tu sistema
-    // Por ahora, solo retornamos el perfil verificado
-    
-    console.log('✅ Perfil de Google verificado:', profile);
+    // Caso 1: Respuesta completa de FastAPI (access_token + user)
+    if (responseData.access_token && responseData.user) {
+      console.log('✅ Login completo con FastAPI - Token recibido');
+      
+      // Guardar token y datos del usuario
+      localStorage.setItem('auth_token', responseData.access_token);
+      localStorage.setItem('refresh_token', responseData.refresh_token || '');
+      localStorage.setItem('userData', JSON.stringify(responseData.user));
+      localStorage.setItem('user_role', responseData.user.rol || 'usuario');
 
-    // Guardar datos temporalmente (hasta que conectemos con FastAPI)
-    localStorage.setItem('google_profile', JSON.stringify(profile));
-    localStorage.setItem('user_role', 'usuario'); // Rol por defecto
-    localStorage.setItem('userData', JSON.stringify({
-      email: profile.email,
-      nombre: profile.given_name || profile.name?.split(' ')[0] || '',
-      apellido: profile.family_name || profile.name?.split(' ').slice(1).join(' ') || '',
-      rol: 'usuario'
-    }));
+      return {
+        success: true,
+        token: responseData.access_token,
+        user: responseData.user,
+        fallback: false
+      };
+    }
 
-    return {
-      profile,
-      token: null, // TODO: Obtener token real del backend
-      usuario: {
+    // Caso 2: Modo fallback - Solo perfil de Google (FastAPI endpoint no disponible)
+    if (responseData.profile || responseData.fallback) {
+      const profile = responseData.profile;
+      console.warn('⚠️ Modo fallback activo - Endpoint de FastAPI no disponible');
+      console.log('✅ Perfil de Google verificado:', profile?.email);
+
+      // Guardar datos temporalmente (hasta que FastAPI esté disponible)
+      const userData = {
         email: profile.email,
         nombre: profile.given_name || profile.name?.split(' ')[0] || '',
         apellido: profile.family_name || profile.name?.split(' ').slice(1).join(' ') || '',
-        rol: 'usuario' as const
-      }
-    };
+        rol: 'usuario' as const,
+        avatar_url: profile.picture || null,
+        google_id: profile.sub
+      };
+
+      localStorage.setItem('google_profile', JSON.stringify(profile));
+      localStorage.setItem('user_role', 'usuario');
+      localStorage.setItem('userData', JSON.stringify(userData));
+      
+      // Generar token temporal para desarrollo (NO usar en producción)
+      const tempToken = `temp_google_${profile.sub}_${Date.now()}`;
+      localStorage.setItem('auth_token', tempToken);
+
+      return {
+        success: true,
+        token: tempToken,
+        user: userData,
+        fallback: true,
+        message: responseData.message || 'Usando modo de desarrollo - FastAPI endpoint pendiente'
+      };
+    }
+
+    throw new Error('Respuesta inesperada del servidor');
   },
 };
 

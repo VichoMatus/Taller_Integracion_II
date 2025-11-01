@@ -24,15 +24,40 @@ export default function LoginPage() {
                 async (response) => {
                     try {
                         setIsLoading(true);
-                        const result = await googleAuthService.loginWithGoogle(response.data.profile.sub);
+                        setError('');
                         
-                        console.log('Login con Google exitoso:', result);
+                        // response.credential contiene el id_token de Google
+                        const result = await googleAuthService.loginWithGoogle(response.credential);
                         
-                        // TODO: Cuando conectes con FastAPI, aquí recibirás un token real
-                        // Por ahora redirigimos basado en el rol por defecto
-                        router.push('/sports');
+                        console.log('✅ Login con Google exitoso:', result);
+                        
+                        // Verificar si hay usuario y rol
+                        const user = result.user;
+                        const isFallback = result.fallback;
+                        
+                        if (isFallback) {
+                            console.warn('⚠️ Modo fallback - usando token temporal');
+                            setError(result.message || '');
+                        }
+                        
+                        // Redireccionar según rol
+                        if (user && user.rol) {
+                            switch (user.rol) {
+                                case 'admin':
+                                    router.push('/admin');
+                                    break;
+                                case 'super_admin':
+                                    router.push('/super_admin');
+                                    break;
+                                default:
+                                    router.push('/sports');
+                                    break;
+                            }
+                        } else {
+                            router.push('/sports');
+                        }
                     } catch (err: any) {
-                        console.error('Error en login con Google:', err);
+                        console.error('❌ Error en login con Google:', err);
                         setError(err.message || 'Error al iniciar sesión con Google');
                     } finally {
                         setIsLoading(false);
@@ -51,7 +76,7 @@ export default function LoginPage() {
         }
     }, [googleScriptLoaded, router]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: any) => {
         e.preventDefault();
         
         // Validaciones básicas
