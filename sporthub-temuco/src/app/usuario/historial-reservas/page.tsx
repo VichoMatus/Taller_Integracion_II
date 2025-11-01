@@ -312,10 +312,10 @@ export default function ReservaPage() {
               </div>
             </div>
             <div className="stat-card">
-              <div className="stat-icon">💰</div>
+              <div className="stat-icon">❌</div>
               <div className="stat-content">
-                <span className="stat-number">{formatPrice(stats.montoTotal)}</span>
-                <span className="stat-label">Total Invertido</span>
+                <span className="stat-number">{stats.canceladas}</span>
+                <span className="stat-label">Canceladas</span>
               </div>
             </div>
           </div>
