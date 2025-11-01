@@ -93,22 +93,47 @@ export class AuthService {
       original: userData.rol,
       normalizado: normalizedRole
     });
+
+    // ✅ OBTENER complejo_id para usuarios admin
+    let complejo_id = userData.complejo_id;
+    
+    if (normalizedRole === 'admin' && !complejo_id) {
+      try {
+        console.log('🏢 [AuthService.normalizeUserDataAsync] Obteniendo complejo_id para admin:', userData.id_usuario);
+        
+        // Hacer request al endpoint de complejos para obtener el complejo del admin
+        const complejoResponse = await this.apiClient.get(`/api/complejos/admin/${userData.id_usuario}`);
+        
+        if (complejoResponse.data?.ok && complejoResponse.data?.data?.length > 0) {
+          complejo_id = complejoResponse.data.data[0].id_complejo;
+          console.log('✅ [AuthService.normalizeUserDataAsync] complejo_id obtenido:', complejo_id);
+        } else {
+          console.log('⚠️ [AuthService.normalizeUserDataAsync] No se encontró complejo para admin:', userData.id_usuario);
+        }
+      } catch (error) {
+        console.error('❌ [AuthService.normalizeUserDataAsync] Error obteniendo complejo_id:', error);
+        // No lanzar error, continuar sin complejo_id
+      }
+    }
     
     return {
       ...userData,
-      rol: normalizedRole
+      rol: normalizedRole,
+      complejo_id
     };
   }
 
   /**
    * Versión síncrona para compatibilidad
+   * NOTA: No puede obtener complejo_id asincrónicamente, solo preserva si ya existe
    */
   private normalizeUserData(userData: any): any {
     if (!userData) return userData;
     
     return {
       ...userData,
-      rol: userData.rol ? this.normalizeRole(userData.rol) : userData.rol
+      rol: userData.rol ? this.normalizeRole(userData.rol) : userData.rol,
+      complejo_id: userData.complejo_id // Preservar complejo_id si ya existe
     };
   }
 
@@ -346,18 +371,19 @@ export class AuthService {
 
   /**
    * Obtener perfil del usuario actual
-   * @returns Promise<ApiResponse<UserPublic>> - Datos del usuario autenticado
+   * @returns Promise<ApiResponse<UserPublic>> - Perfil del usuario
    */
   async getMe(): Promise<ApiResponse<UserPublic>> {
     try {
       const response = await this.apiClient.get(API_ENDPOINTS.auth.me);
       
-      // 🔥 NORMALIZAR ROL: Convertir a minúsculas y super_admin → super_admin
-      const normalizedData = this.normalizeUserData(response.data);
+      // ✅ USAR VERSION ASINCRONA: Normalizar rol y obtener complejo_id para admins
+      const normalizedData = await this.normalizeUserDataAsync(response.data);
       
-      console.log('🔄 [AuthService.getMe] Rol normalizado:', {
+      console.log('🔄 [AuthService.getMe] Datos normalizados:', {
         original: response.data?.rol,
-        normalizado: normalizedData?.rol
+        normalizado: normalizedData?.rol,
+        complejo_id: normalizedData?.complejo_id
       });
       
       return { ok: true, data: normalizedData };
@@ -367,9 +393,7 @@ export class AuthService {
         error: error.response?.data?.detail || 'Error al obtener perfil' 
       };
     }
-  }
-
-  /**
+  }  /**
    * Actualizar perfil del usuario actual
    * @param updateData - Datos a actualizar del perfil
    * @returns Promise<ApiResponse<UserPublic>> - Perfil actualizado

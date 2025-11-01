@@ -274,6 +274,7 @@ export class ReservasController {
   /**
    * Crea una reserva como administrador.
    * POST /reservas/admin/crear
+   * ✅ ACTUALIZADO: Maneja múltiples formatos de entrada del frontend
    */
   createAdmin = async (req: Request, res: Response) => {
     try {
@@ -281,26 +282,67 @@ export class ReservasController {
         return res.status(501).json(fail(501, "Funcionalidad administrativa no disponible"));
       }
 
-      const { id_cancha, fecha_reserva, hora_inicio, hora_fin, id_usuario } = req.body;
+      console.log('📝 [ReservasController.createAdmin] Request body:', req.body);
+      
+      // Extraer datos con soporte para múltiples formatos
+      const { 
+        id_cancha, cancha_id, canchaId,
+        fecha_reserva, fecha, fecha_inicio, fecha_fin,
+        hora_inicio, hora_fin, inicio, fin,
+        id_usuario, usuario_id, usuarioId,
+        notas
+      } = req.body;
+      
       const adminUserId = (req as any).user?.id_usuario;
-      const targetUserId = id_usuario || adminUserId;
-
-      // Construir fechas completas
-      const fechaInicio = new Date(`${fecha_reserva}T${hora_inicio}:00.000Z`);
-      const fechaFin = new Date(`${fecha_reserva}T${hora_fin}:00.000Z`);
+      
+      // Determinar IDs (prioritario: campos snake_case)
+      const canchaIdFinal = id_cancha || cancha_id || canchaId;
+      const targetUserId = id_usuario || usuario_id || usuarioId || adminUserId;
+      
+      // Construir fechas - soportar diferentes formatos
+      let fechaInicio: Date;
+      let fechaFin: Date;
+      
+      if (fecha_inicio && fecha_fin) {
+        // Formato 1: fechas ISO completas
+        fechaInicio = new Date(fecha_inicio);
+        fechaFin = new Date(fecha_fin);
+      } else if (fecha_reserva && hora_inicio && hora_fin) {
+        // Formato 2: fecha separada + horas
+        fechaInicio = new Date(`${fecha_reserva}T${hora_inicio}:00.000Z`);
+        fechaFin = new Date(`${fecha_reserva}T${hora_fin}:00.000Z`);
+      } else if (fecha && (inicio || hora_inicio) && (fin || hora_fin)) {
+        // Formato 3: fecha + inicio/fin
+        const horaInicio = inicio || hora_inicio;
+        const horaFin = fin || hora_fin;
+        fechaInicio = new Date(`${fecha}T${horaInicio}:00.000Z`);
+        fechaFin = new Date(`${fecha}T${horaFin}:00.000Z`);
+      } else {
+        return res.status(400).json(fail(400, "Formato de fecha/hora inválido", {
+          formatos_soportados: [
+            "{ fecha_inicio: ISO, fecha_fin: ISO }",
+            "{ fecha_reserva: 'YYYY-MM-DD', hora_inicio: 'HH:MM', hora_fin: 'HH:MM' }",
+            "{ fecha: 'YYYY-MM-DD', inicio: 'HH:MM', fin: 'HH:MM' }"
+          ],
+          recibido: req.body
+        }));
+      }
 
       const input = {
         usuarioId: targetUserId,
-        canchaId: id_cancha,
+        canchaId: canchaIdFinal,
         fechaInicio,
         fechaFin,
         metodoPago: undefined,
-        notas: `Creada por administrador ${adminUserId}`
+        notas: notas || `Creada por administrador ${adminUserId}`
       };
+
+      console.log('🚀 [ReservasController.createAdmin] Input procesado:', input);
 
       const reserva = await this.createReservaAdminUC.execute(input, targetUserId, adminUserId);
       res.status(201).json(ok(reserva));
     } catch (e: any) {
+      console.error('❌ [ReservasController.createAdmin] Error:', e);
       res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details));
     }
   };

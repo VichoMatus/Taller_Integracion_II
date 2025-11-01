@@ -46,25 +46,47 @@ export type FastReserva = {
  * @param r - Reserva en formato FastAPI
  * @returns Reserva en formato del dominio
  */
-export const toReserva = (r: FastReserva): Reserva => ({
-  id: r.id,
-  usuarioId: r.usuario_id,
-  canchaId: r.cancha_id,
-  complejoId: r.complejo_id,
-  fechaInicio: new Date(r.fecha_inicio),
-  fechaFin: new Date(r.fecha_fin),
-  estado: r.estado,
-  precioTotal: r.precio_total,
-  metodoPago: r.metodo_pago,
-  pagado: r.pagado,
-  notas: r.notas,
-  fechaCreacion: new Date(r.fecha_creacion),
-  fechaActualizacion: new Date(r.fecha_actualizacion),
-  codigoConfirmacion: r.codigo_confirmacion,
-  usuario: r.usuario,
-  cancha: r.cancha ? {
-    ...r.cancha,
-    precioPorHora: r.cancha.precio_por_hora,
-  } : undefined,
-  complejo: r.complejo,
-});
+export const toReserva = (r: FastReserva): Reserva => {
+  // 🔍 DEBUG: Ver qué recibe el mapper
+  console.log('🔍 [toReserva] Input:', {
+    id: r.id,
+    usuario_id: r.usuario_id,
+    cancha_id: r.cancha_id,
+    hasUsuario: !!r.usuario,
+    hasCancha: !!r.cancha,
+    allKeys: Object.keys(r)
+  });
+  
+  const mapped = {
+    id: r.id,
+    usuarioId: r.usuario_id,
+    canchaId: r.cancha_id,
+    complejoId: r.complejo_id,
+    fechaInicio: new Date(r.fecha_inicio),
+    fechaFin: new Date(r.fecha_fin),
+    estado: r.estado,
+    precioTotal: r.precio_total,
+    metodoPago: r.metodo_pago,
+    pagado: r.pagado,
+    notas: r.notas,
+    fechaCreacion: new Date(r.fecha_creacion),
+    fechaActualizacion: new Date(r.fecha_actualizacion),
+    codigoConfirmacion: r.codigo_confirmacion,
+    usuario: r.usuario,
+    cancha: r.cancha ? {
+      ...r.cancha,
+      precioPorHora: r.cancha.precio_por_hora,
+    } : undefined,
+    complejo: r.complejo,
+  };
+  
+  console.log('🔍 [toReserva] Output:', {
+    id: mapped.id,
+    usuarioId: mapped.usuarioId,
+    canchaId: mapped.canchaId,
+    hasUsuario: !!mapped.usuario,
+    hasCancha: !!mapped.cancha
+  });
+  
+  return mapped;
+};

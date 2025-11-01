@@ -102,6 +102,19 @@ export interface CreateReservaInputNew {
   notas?: string;
 }
 
+/**
+ * Formato para crear reservas como admin
+ * Backend espera: { id_cancha, fecha_reserva, hora_inicio, hora_fin, id_usuario }
+ */
+export interface CreateReservaAdminInput {
+  id_cancha: number;
+  fecha_reserva: string;  // YYYY-MM-DD
+  hora_inicio: string;    // HH:MM
+  hora_fin: string;       // HH:MM
+  id_usuario: number;
+  notas?: string;
+}
+
 export interface UpdateReservaInputNew {
   fecha?: string;     // YYYY-MM-DD
   inicio?: string;    // HH:MM

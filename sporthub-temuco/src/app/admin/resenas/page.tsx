@@ -16,51 +16,57 @@ export default function ResenasPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCalificacion, setSelectedCalificacion] = useState<number | ''>('');
+  const [orderBy, setOrderBy] = useState<"recientes" | "mejor" | "peor">("recientes");
+  const [totalResenas, setTotalResenas] = useState(0);
   const itemsPerPage = 10;
 
-  // Cargar resenas
+  // Cargar reseñas desde el backend
   const loadResenas = async () => {
     try {
       setLoading(true);
       setError(null);
       
+      console.log('🔍 [loadResenas] Cargando reseñas...');
+      
       const filters: ResenaListQuery = {
         page: currentPage,
-        size: itemsPerPage,
-        ...(selectedCalificacion && { 
-          calificacion_min: selectedCalificacion, 
-          calificacion_max: selectedCalificacion 
-        })
+        page_size: itemsPerPage,
+        order: orderBy
       };
       
       const data = await resenaService.listarResenas(filters);
-      setResenas(data);
+      console.log('✅ [loadResenas] Reseñas obtenidas:', data?.length || 0);
+      
+      setResenas(data || []);
+      setTotalResenas(data?.length || 0);
     } catch (err: any) {
-      console.warn('Backend no disponible, usando datos mock:', err);
-      setError('Conectando con datos de desarrollo (backend no disponible)');
-      // Usar datos mock en caso de error para development
-      setResenas([
-        {
-          id_resena: 1,
-          id_usuario: 1,
-          id_cancha: 1,
-          id_reserva: 1,
-          calificacion: 5,
-          comentario: 'Excelente cancha, muy bien mantenida y con buen cesped.',
-          fecha_creacion: new Date().toISOString(),
-          fecha_actualizacion: new Date().toISOString()
-        },
-        {
-          id_resena: 2,
-          id_usuario: 2,
-          id_cancha: 1,
-          id_reserva: 2,
-          calificacion: 4,
-          comentario: 'Muy buena experiencia, solo faltaba un poco mas de iluminacion.',
-          fecha_creacion: new Date(Date.now() - 86400000).toISOString(),
-          fecha_actualizacion: new Date(Date.now() - 86400000).toISOString()
+      console.error('❌ [loadResenas] Error al cargar reseñas:', err);
+      
+      // Extraer mensaje del error de forma segura
+      let errorMsg = 'Error al cargar reseñas';
+      
+      // Intentar diferentes estructuras de error
+      if (typeof err === 'string') {
+        errorMsg = err;
+      } else if (err?.message && typeof err.message === 'string') {
+        errorMsg = err.message;
+      } else if (err?.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      } else if (err?.response?.data?.error) {
+        errorMsg = err.response.data.error;
+      } else if (err?.details) {
+        errorMsg = err.details;
+      } else if (typeof err === 'object') {
+        // Si es un objeto, convertirlo a JSON string como último recurso
+        try {
+          errorMsg = JSON.stringify(err);
+        } catch {
+          errorMsg = 'Error desconocido al cargar reseñas';
         }
-      ]);
+      }
+      
+      setError(errorMsg);
+      setResenas([]);
     } finally {
       setLoading(false);
     }
@@ -68,40 +74,49 @@ export default function ResenasPage() {
 
   useEffect(() => {
     loadResenas();
-  }, [currentPage, selectedCalificacion]);
+  }, [currentPage, orderBy]);
 
-  // Filtrar resenas por termino de busqueda
-  const filteredResenas = resenas.filter(resena =>
-    resena.comentario?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    resena.id_usuario.toString().includes(searchTerm) ||
-    resena.id_cancha.toString().includes(searchTerm)
-  );
+  // Filtrar reseñas por término de búsqueda y calificación
+  const filteredResenas = resenas.filter(resena => {
+    const matchesSearch = !searchTerm || 
+      resena.comentario?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      resena.usuarioId.toString().includes(searchTerm) ||
+      (resena.canchaId && resena.canchaId.toString().includes(searchTerm)) ||
+      (resena.complejoId && resena.complejoId.toString().includes(searchTerm));
+    
+    const matchesCalificacion = !selectedCalificacion || 
+      resena.calificacion === selectedCalificacion;
+    
+    return matchesSearch && matchesCalificacion;
+  });
 
-  // Funcion para navegar a editar resena
-  const editResena = (resenaId: number | string) => {
+  // Función para navegar a editar reseña
+  const editResena = (resenaId: number) => {
     router.push(`/admin/resenas/${resenaId}`);
   };
 
-  // Funcion para navegar a crear resena
+  // Función para navegar a crear reseña
   const createResena = () => {
     router.push('/admin/resenas/crear');
   };
 
-  // Funcion para eliminar resena
-  const deleteResena = async (resenaId: number | string) => {
-    if (window.confirm('¿Estas seguro de que deseas eliminar esta resena?')) {
-      try {
-        await resenaService.eliminarResena(resenaId);
-        alert('Resena eliminada exitosamente');
-        loadResenas(); // Recargar la lista
-      } catch (err: any) {
-        console.warn('No se pudo eliminar (backend no disponible):', err);
-        alert('No se puede eliminar en modo desarrollo (backend no disponible)');
-      }
+  // Función para eliminar reseña
+  const deleteResena = async (resenaId: number) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta reseña?')) {
+      return;
+    }
+    
+    try {
+      await resenaService.eliminarResena(resenaId);
+      alert('Reseña eliminada exitosamente');
+      loadResenas();
+    } catch (err: any) {
+      console.error('❌ Error al eliminar reseña:', err);
+      alert(err.message || 'Error al eliminar la reseña');
     }
   };
 
-  // Funcion para obtener el emoji de calificacion
+  // Función para obtener emoji según calificación
   const getCalificacionEmoji = (calificacion: number) => {
     const emojis = ['😡', '😞', '😐', '😊', '🤩'];
     return emojis[calificacion - 1] || '❓';
@@ -152,11 +167,66 @@ export default function ResenasPage() {
         </div>
       </div>
 
-      {/* Mensaje Informativo */}
+      {/* Mensaje de Advertencia - Backend No Disponible */}
+      {resenas.length === 0 && !loading && (
+        <div style={{
+          backgroundColor: '#fffbeb',
+          border: '1px solid #fcd34d',
+          borderRadius: '8px',
+          padding: '1rem',
+          marginBottom: '1rem'
+        }}>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+            <span style={{ fontSize: '1.5rem' }}>⚠️</span>
+            <div>
+              <h3 style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold', color: '#92400e' }}>
+                Backend de Reseñas No Disponible
+              </h3>
+              <p style={{ margin: '0 0 0.5rem 0', color: '#78350f' }}>
+                El backend de FastAPI tiene un error SQL que impide cargar las reseñas.
+              </p>
+              <details style={{ marginTop: '0.5rem' }}>
+                <summary style={{ cursor: 'pointer', fontWeight: 'bold', color: '#92400e' }}>
+                  Ver detalles técnicos
+                </summary>
+                <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: '#fff', borderRadius: '4px', fontSize: '0.85rem' }}>
+                  <p style={{ margin: '0 0 0.5rem 0' }}>
+                    <strong>Error:</strong> <code>missing FROM-clause entry for table "agg"</code>
+                  </p>
+                  <p style={{ margin: '0 0 0.5rem 0' }}>
+                    <strong>Archivo:</strong> <code>BACKEND_BUG_RESENAS_SQL.md</code>
+                  </p>
+                  <p style={{ margin: 0 }}>
+                    <strong>Workaround:</strong> El BFF devuelve array vacío temporalmente.
+                    Las funcionalidades de crear/editar reseñas funcionan correctamente.
+                  </p>
+                </div>
+              </details>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mensaje de Error Genérico */}
       {error && (
-        <div className="info-container">
-          <div className="info-icon">ℹ️</div>
-          <p>{error}</p>
+        <div className="error-container" style={{
+          backgroundColor: '#fee',
+          border: '1px solid #fcc',
+          borderRadius: '8px',
+          padding: '1rem',
+          marginBottom: '1rem'
+        }}>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+            <span style={{ fontSize: '1.5rem' }}>❌</span>
+            <div>
+              <h3 style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold', color: '#c00' }}>
+                Error al cargar reseñas
+              </h3>
+              <p style={{ margin: 0, color: '#600' }}>
+                {typeof error === 'string' ? error : JSON.stringify(error)}
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -214,58 +284,72 @@ export default function ResenasPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredResenas.map((resena) => (
-                <tr key={resena.id_resena}>
-                  <td>#{resena.id_resena}</td>
-                  <td>Usuario {resena.id_usuario}</td>
-                  <td>Cancha {resena.id_cancha}</td>
-                  <td>
-                    <div className="calificacion-cell">
-                      <span className="calificacion-emoji">
-                        {getCalificacionEmoji(resena.calificacion)}
-                      </span>
-                      <span className="calificacion-numero">
-                        {resena.calificacion}/5
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="comentario-cell">
-                      {resena.comentario ? (
-                        resena.comentario.length > 50 
-                          ? `${resena.comentario.substring(0, 50)}...`
-                          : resena.comentario
-                      ) : 'Sin comentario'}
-                    </div>
-                  </td>
-                  <td>{formatFecha(resena.fecha_creacion)}</td>
-                  <td>
-                    <div className="admin-actions-container">
-                      {/* Boton Editar */}
-                      <button 
-                        className="btn-action btn-editar" 
-                        title="Editar"
-                        onClick={() => editResena(resena.id_resena)}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                      </button>
-                      
-                      {/* Boton Eliminar */}
-                      <button 
-                        className="btn-action btn-eliminar" 
-                        title="Eliminar"
-                        onClick={() => deleteResena(resena.id_resena)}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
+              {filteredResenas.length === 0 ? (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>
+                    {searchTerm || selectedCalificacion 
+                      ? 'No se encontraron reseñas con los filtros aplicados' 
+                      : 'No hay reseñas disponibles'}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredResenas.map((resena) => (
+                  <tr key={resena.id}>
+                    <td>#{resena.id}</td>
+                    <td>Usuario #{resena.usuarioId}</td>
+                    <td>
+                      {resena.canchaId ? `Cancha #${resena.canchaId}` : 
+                       resena.complejoId ? `Complejo #${resena.complejoId}` : 
+                       'N/A'}
+                    </td>
+                    <td>
+                      <div className="calificacion-cell">
+                        <span className="calificacion-emoji">
+                          {getCalificacionEmoji(resena.calificacion)}
+                        </span>
+                        <span className="calificacion-numero">
+                          {resena.calificacion}/5
+                        </span>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="comentario-cell">
+                        {resena.comentario ? (
+                          resena.comentario.length > 50 
+                            ? `${resena.comentario.substring(0, 50)}...`
+                            : resena.comentario
+                        ) : 'Sin comentario'}
+                      </div>
+                    </td>
+                    <td>{formatFecha(resena.fechaCreacion)}</td>
+                    <td>
+                      <div className="admin-actions-container">
+                        {/* Botón Editar */}
+                        <button 
+                          className="btn-action btn-editar" 
+                          title="Editar"
+                          onClick={() => editResena(resena.id)}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                          </svg>
+                        </button>
+                        
+                        {/* Botón Eliminar */}
+                        <button 
+                          className="btn-action btn-eliminar" 
+                          title="Eliminar"
+                          onClick={() => deleteResena(resena.id)}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

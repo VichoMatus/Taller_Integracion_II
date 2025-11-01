@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import AdminLayout from "@/components/layout/AdminsLayout";
 import Input from "@/components/ui/Input";
-import Button from "@/components/ui/Button";
 import { useRouter } from "next/navigation";
 import { authService } from "@/services/authService";
 import "./cambiocontra.css";
@@ -31,7 +30,6 @@ export default function NuevaContrasenaPage() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [success, setSuccess] = useState<string | null>(null);
-  const [currentPasswordValid, setCurrentPasswordValid] = useState(false);
 
   const handleInputChange = (field: keyof ChangePasswordData, value: string) => {
     setFormData(prev => ({
@@ -39,7 +37,6 @@ export default function NuevaContrasenaPage() {
       [field]: value
     }));
     
-    // Limpiar error específico del campo cuando el usuario empiece a escribir
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
@@ -53,42 +50,7 @@ export default function NuevaContrasenaPage() {
       }));
     }
     
-    // Si el usuario modifica la contraseña actual, resetear la validación
-    if (field === 'currentPassword') {
-      setCurrentPasswordValid(false);
-    }
-    
     setSuccess(null);
-  };
-
-  // Validaciones en tiempo real
-  const validateField = (field: keyof ChangePasswordData, value: string): string | undefined => {
-    switch (field) {
-      case 'currentPassword':
-        if (!value.trim()) return "La contraseña actual es requerida";
-        return undefined;
-      
-      case 'newPassword':
-        if (!value.trim()) return "La nueva contraseña es requerida";
-        if (value.length < 8) return "La contraseña debe tener al menos 8 caracteres";
-        return undefined;
-      
-      case 'confirmPassword':
-        if (!value.trim()) return "Confirma tu nueva contraseña";
-        if (value !== formData.newPassword) return "Las contraseñas no coinciden";
-        return undefined;
-      
-      default:
-        return undefined;
-    }
-  };
-
-  const handleBlur = (field: keyof ChangePasswordData) => {
-    const error = validateField(field, formData[field]);
-    setErrors(prev => ({
-      ...prev,
-      [field]: error
-    }));
   };
 
   const handleGuardar = async () => {
@@ -97,7 +59,6 @@ export default function NuevaContrasenaPage() {
       setErrors({});
       setSuccess(null);
 
-      // Validar todos los campos antes de enviar
       const newErrors: FormErrors = {};
       
       if (!formData.currentPassword.trim()) {
@@ -122,25 +83,19 @@ export default function NuevaContrasenaPage() {
         return;
       }
 
-      console.log('Enviando cambio de contraseña...');
-
       await authService.changePassword({
         current_password: formData.currentPassword,
         new_password: formData.newPassword
       });
 
-      // ÉXITO: Contraseña cambiada correctamente
-      setSuccess("✅ Contraseña actualizada correctamente");
-      setCurrentPasswordValid(true);
+      setSuccess("¡Contraseña actualizada correctamente!");
       
-      // Limpiar formulario
       setFormData({
         currentPassword: "",
         newPassword: "",
         confirmPassword: ""
       });
 
-      // Redirigir después de 2 segundos
       setTimeout(() => {
         router.push("/admin/perfil");
       }, 2000);
@@ -149,28 +104,15 @@ export default function NuevaContrasenaPage() {
       console.error('Error cambiando contraseña:', err);
       
       const errorStatus = err?.response?.status;
-      const errorDetail = err?.response?.data?.detail;
       
       if (errorStatus === 400) {
-        // ERROR ESPECÍFICO: Contraseña actual incorrecta
         setErrors({
           currentPassword: "La contraseña actual es incorrecta"
         });
-        setCurrentPasswordValid(false);
       } 
       else if (errorStatus === 401) {
         setErrors({
           general: "Tu sesión ha expirado. Por favor inicia sesión nuevamente."
-        });
-      } 
-      else if (errorDetail) {
-        setErrors({
-          general: errorDetail
-        });
-      } 
-      else if (err?.message) {
-        setErrors({
-          general: err.message
         });
       } 
       else {
@@ -186,108 +128,123 @@ export default function NuevaContrasenaPage() {
   const checkPasswordStrength = (pass: string) => {
     if (pass.length === 0) return 0;
     let strength = 0;
-    if (pass.length >= 8) strength += 40;
+    if (pass.length >= 8) strength += 25;
+    if (pass.length >= 12) strength += 15;
     if (/[A-Z]/.test(pass) && /[a-z]/.test(pass)) strength += 20;
     if (/[0-9]/.test(pass)) strength += 20;
     if (/[^A-Za-z0-9]/.test(pass)) strength += 20;
-    return strength;
+    return Math.min(100, strength);
   };
 
   const passwordStrength = checkPasswordStrength(formData.newPassword);
   
   const getStrengthLabel = (strength: number) => {
+    if (strength >= 80) return "Muy Fuerte";
     if (strength >= 60) return "Fuerte";
     if (strength >= 40) return "Media";
     return "Débil";
   };
 
   const getStrengthColor = (strength: number) => {
-    if (strength >= 60) return "#00C851";
-    if (strength >= 40) return "#ffbb33";
-    return "#ff4444";
+    if (strength >= 80) return "#10b981";
+    if (strength >= 60) return "#3b82f6";
+    if (strength >= 40) return "#f59e0b";
+    return "#ef4444";
   };
 
-  // El botón se habilita solo cuando:
-  // 1. Todos los campos tienen contenido
-  // 2. No hay errores de validación frontend
-  // 3. Las contraseñas coinciden
-  // 4. Tiene al menos 8 caracteres
-  // 5. NO hay error de contraseña actual incorrecta (después de un intento fallido)
   const isFormValid = 
     formData.currentPassword.trim() && 
     formData.newPassword.trim() && 
     formData.confirmPassword.trim() &&
     formData.newPassword === formData.confirmPassword &&
     formData.newPassword.length >= 8 &&
-    !errors.currentPassword && // Esto incluye el error de "contraseña actual incorrecta"
+    !errors.currentPassword &&
     !errors.newPassword &&
     !errors.confirmPassword;
 
   return (
     <AdminLayout userRole="admin" userName="Admin" notificationCount={3}>
-      <div className="change-password-container">
-        <div className="change-password-card">
-          <div className="back-button-container">
-            <button 
-              className="back-button"
-              onClick={() => router.push("/admin/editarperfil")}
-              disabled={loading}
-            >
-              ← Volver al Perfil
-            </button>
-          </div>
-
-          <div className="password-header">
-            <h1 className="title">Cambiar Contraseña</h1>
-            <p className="subtitle">Actualiza tu contraseña de administrador</p>
+      <div className="change-password-page">
+        {/* Panel Izquierdo - Formulario */}
+        <div className="password-left">
+          <div className="page-header">
+            <div className="page-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0110 0v4"/>
+              </svg>
+            </div>
+            <h1 className="page-title">Cambiar Contraseña</h1>
+            <p className="page-subtitle">Actualiza tus credenciales de seguridad</p>
           </div>
 
           {errors.general && (
-            <div className="error-message">
+            <div className="alert alert-error">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
               {errors.general}
             </div>
           )}
           
           {success && (
-            <div className="success-message">
+            <div className="alert alert-success">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
               {success}
             </div>
           )}
 
           <div className="password-form">
-            <div className="input-group">
-              <label className="input-label">Contraseña Actual</label>
+            {/* Contraseña Actual */}
+            <div className="form-group">
+              <label className="form-label">
+                <svg className="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                Contraseña Actual
+              </label>
               <Input
                 type="password"
-                placeholder="Introduce tu contraseña actual"
+                placeholder="Ingresa tu contraseña actual"
                 value={formData.currentPassword}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
                   handleInputChange('currentPassword', e.target.value)
                 }
-                onBlur={() => handleBlur('currentPassword')}
-                className={`password-input ${errors.currentPassword ? 'input-error' : ''}`}
+                className={`form-input ${errors.currentPassword ? 'input-error' : ''}`}
                 disabled={loading}
               />
+              <span className="form-hint">Para verificar tu identidad</span>
               {errors.currentPassword && (
-                <span className="error-text">{errors.currentPassword}</span>
+                <span className="error-message">{errors.currentPassword}</span>
               )}
             </div>
 
-            <div className="input-group">
-              <label className="input-label">Nueva Contraseña</label>
+            {/* Nueva Contraseña */}
+            <div className="form-group">
+              <label className="form-label">
+                <svg className="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0110 0v4"/>
+                </svg>
+                Nueva Contraseña
+              </label>
               <Input
                 type="password"
-                placeholder="Introduce tu nueva contraseña (mínimo 8 caracteres)"
+                placeholder="Ej: MiP@ssw0rd2024!"
                 value={formData.newPassword}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
                   handleInputChange('newPassword', e.target.value)
                 }
-                onBlur={() => handleBlur('newPassword')}
-                className={`password-input ${errors.newPassword ? 'input-error' : ''}`}
+                className={`form-input ${errors.newPassword ? 'input-error' : ''}`}
                 disabled={loading}
               />
+              <span className="form-hint">Mínimo 8 caracteres, incluye mayúsculas, números y símbolos</span>
               {errors.newPassword && (
-                <span className="error-text">{errors.newPassword}</span>
+                <span className="error-message">{errors.newPassword}</span>
               )}
               
               {formData.newPassword && !errors.newPassword && (
@@ -301,95 +258,110 @@ export default function NuevaContrasenaPage() {
                       }}
                     ></div>
                   </div>
-                  <span className="strength-text">
-                    Fortaleza: {getStrengthLabel(passwordStrength)}
+                  <span className="strength-label" style={{ color: getStrengthColor(passwordStrength) }}>
+                    {getStrengthLabel(passwordStrength)}
                   </span>
                 </div>
               )}
             </div>
 
-            <div className="input-group">
-              <label className="input-label">Confirmar Nueva Contraseña</label>
+            {/* Confirmar Contraseña */}
+            <div className="form-group">
+              <label className="form-label">
+                <svg className="label-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Confirmar Nueva Contraseña
+              </label>
               <Input
                 type="password"
-                placeholder="Vuelve a introducir la nueva contraseña"
+                placeholder="Repite la nueva contraseña"
                 value={formData.confirmPassword}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => 
                   handleInputChange('confirmPassword', e.target.value)
                 }
-                onBlur={() => handleBlur('confirmPassword')}
-                className={`password-input ${errors.confirmPassword ? 'input-error' : ''}`}
+                className={`form-input ${errors.confirmPassword ? 'input-error' : formData.confirmPassword && formData.newPassword === formData.confirmPassword ? 'input-success' : ''}`}
                 disabled={loading}
               />
+              <span className="form-hint">Asegúrate de que coincida exactamente</span>
               {errors.confirmPassword ? (
-                <span className="error-text">{errors.confirmPassword}</span>
+                <span className="error-message">{errors.confirmPassword}</span>
               ) : formData.confirmPassword && formData.newPassword === formData.confirmPassword && formData.newPassword.length > 0 && (
-                <span className="success-text">Las contraseñas coinciden ✓</span>
+                <span className="success-message">Las contraseñas coinciden</span>
               )}
             </div>
 
-            <div className="requirements-panel">
-              <div className="requirements-header">
-                <h3>Requisitos de Seguridad para Administradores</h3>
-                <p>Tu contraseña debe cumplir con los siguientes requisitos:</p>
-              </div>
-              
-              <div className="requirements-grid">
-                <div className="requirement-item">
-                  <span className={`requirement-icon ${formData.newPassword.length >= 8 ? 'valid' : ''}`}>
-                    {formData.newPassword.length >= 8 ? '✓' : '•'}
-                  </span>
-                  <span className={`requirement-text ${formData.newPassword.length >= 8 ? 'valid' : ''}`}>
-                    Mínimo 8 caracteres *
-                  </span>
-                </div>
-                
-                <div className="requirement-item">
-                  <span className={`requirement-icon ${/[A-Z]/.test(formData.newPassword) && /[a-z]/.test(formData.newPassword) ? 'valid' : ''}`}>
-                    {/[A-Z]/.test(formData.newPassword) && /[a-z]/.test(formData.newPassword) ? '✓' : '•'}
-                  </span>
-                  <span className={`requirement-text ${/[A-Z]/.test(formData.newPassword) && /[a-z]/.test(formData.newPassword) ? 'valid' : ''}`}>
-                    Mayúsculas y minúsculas (recomendado)
-                  </span>
-                </div>
-                
-                <div className="requirement-item">
-                  <span className={`requirement-icon ${/[0-9]/.test(formData.newPassword) ? 'valid' : ''}`}>
-                    {/[0-9]/.test(formData.newPassword) ? '✓' : '•'}
-                  </span>
-                  <span className={`requirement-text ${/[0-9]/.test(formData.newPassword) ? 'valid' : ''}`}>
-                    Al menos un número (recomendado)
-                  </span>
-                </div>
-                
-                <div className="requirement-item">
-                  <span className={`requirement-icon ${/[^A-Za-z0-9]/.test(formData.newPassword) ? 'valid' : ''}`}>
-                    {/[^A-Za-z0-9]/.test(formData.newPassword) ? '✓' : '•'}
-                  </span>
-                  <span className={`requirement-text ${/[^A-Za-z0-9]/.test(formData.newPassword) ? 'valid' : ''}`}>
-                    Al menos un símbolo especial (recomendado)
-                  </span>
-                </div>
-              </div>
-              
-              <div className="security-notice">
-                <p style={{ fontSize: '0.8rem', color: '#6b7280', marginTop: '8px', fontStyle: 'italic' }}>
-                  * Campo obligatorio
-                </p>
-                <p>
-                  <strong>Importante:</strong> Como administrador, tu contraseña es crítica para la seguridad del sistema. 
-                </p>
-              </div>
-            </div>
-
+            {/* Actions */}
             <div className="form-actions">
-              <Button 
-                onClick={handleGuardar} 
-                className="save-button"
+              <button 
+                className="btn btn-cancel"
+                onClick={() => router.push("/admin/editarperfil")}
+                disabled={loading}
+              >
+                Cancelar
+              </button>
+              <button 
+                className="btn btn-save"
+                onClick={handleGuardar}
                 disabled={!isFormValid || loading}
               >
-                {loading ? 'Cambiando Contraseña...' : 'Guardar Cambios'}
-              </Button>
+                {loading ? (
+                  <>
+                    <div className="spinner"></div>
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Guardar Cambios
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Panel Derecho - Requisitos y Aviso */}
+        <div className="password-right">
+          <div className="requirements-section">
+            {/* Aviso de Seguridad */}
+            <div className="security-notice">
+              <span className="notice-icon">🛡️</span>
+              <h3 className="notice-title">Tu Seguridad es Nuestra Prioridad</h3>
+              <p className="notice-text">
+                Como administrador, tu contraseña protege información sensible del sistema. 
+                Asegúrate de crear una contraseña única y fuerte que no utilices en otros servicios. 
+                Nunca compartas tus credenciales con terceros.
+              </p>
+            </div>
+
+            {/* Requisitos de Seguridad */}
+            <div className="requirements-card">
+              <div className="requirements-header">
+                <span className="req-icon-large">🔒</span>
+                <h3 className="requirements-title">Requisitos de Seguridad</h3>
+                <p className="requirements-subtitle">Tu contraseña debe cumplir con:</p>
+              </div>
+              <div className="requirements-list">
+                <div className={`requirement ${formData.newPassword.length >= 8 ? 'valid' : ''}`}>
+                  <span className="req-check">{formData.newPassword.length >= 8 ? '✓' : '○'}</span>
+                  <span className="req-text">Mínimo 8 caracteres</span>
+                </div>
+                <div className={`requirement ${/[A-Z]/.test(formData.newPassword) && /[a-z]/.test(formData.newPassword) ? 'valid' : ''}`}>
+                  <span className="req-check">{/[A-Z]/.test(formData.newPassword) && /[a-z]/.test(formData.newPassword) ? '✓' : '○'}</span>
+                  <span className="req-text">Mayúsculas y minúsculas</span>
+                </div>
+                <div className={`requirement ${/[0-9]/.test(formData.newPassword) ? 'valid' : ''}`}>
+                  <span className="req-check">{/[0-9]/.test(formData.newPassword) ? '✓' : '○'}</span>
+                  <span className="req-text">Al menos un número</span>
+                </div>
+                <div className={`requirement ${/[^A-Za-z0-9]/.test(formData.newPassword) ? 'valid' : ''}`}>
+                  <span className="req-check">{/[^A-Za-z0-9]/.test(formData.newPassword) ? '✓' : '○'}</span>
+                  <span className="req-text">Carácter especial (!@#$%)</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

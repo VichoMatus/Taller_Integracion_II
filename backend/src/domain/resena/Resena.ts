@@ -4,49 +4,30 @@
 export type EstadoResena = "activa" | "oculta" | "reportada" | "eliminada";
 
 /**
- * Entidad principal de reseña del sistema.
- * Representa una calificación y comentario de un usuario sobre un complejo deportivo.
+ * Entidad principal de reseña del sistema basada en la API de Taller4.
+ * Puede reseñar una cancha O un complejo (o ambos).
  */
 export interface Resena {
   /** Identificador único de la reseña */
   id: number;
   /** ID del usuario que escribió la reseña */
   usuarioId: number;
-  /** ID del complejo reseñado */
-  complejoId: number;
+  /** ID de la cancha reseñada (opcional) */
+  canchaId?: number;
+  /** ID del complejo reseñado (opcional) */
+  complejoId?: number;
   /** Calificación numérica (1-5 estrellas) */
   calificacion: number;
-  /** Comentario de la reseña */
-  comentario: string;
-  /** Estado actual de la reseña */
+  /** Comentario de la reseña (opcional) */
+  comentario?: string;
+  /** Estado actual de la reseña (basado en esta_activa) */
   estado: EstadoResena;
   /** Fecha de creación de la reseña */
   fechaCreacion: Date;
-  /** Fecha de última actualización */
-  fechaActualizacion: Date;
-  /** Respuesta del dueño del complejo (opcional) */
-  respuestaDueno?: string;
-  /** Fecha de respuesta del dueño */
-  fechaRespuesta?: Date;
-  /** Indica si la reseña es verificada (usuario hizo reserva) */
-  verificada: boolean;
-  /** Número de "me gusta" que tiene la reseña */
-  likes: number;
-  /** Número de reportes que tiene la reseña */
-  reportes: number;
-  /** Información del usuario (desnormalizada para consultas) */
-  usuario?: {
-    id: number;
-    email: string;
-    nombre?: string;
-    apellido?: string;
-    avatarUrl?: string;
-  };
-  /** Información del complejo (desnormalizada para consultas) */
-  complejo?: {
-    id: number;
-    nombre: string;
-    direccion: string;
-    calificacionPromedio?: number;
-  };
+  /** Fecha de última actualización (opcional) */
+  fechaActualizacion?: Date;
+  /** Promedio de rating agregado (cuando se filtra por cancha/complejo) */
+  promedioRating?: number;
+  /** Total de reseñas (cuando se filtra por cancha/complejo) */
+  totalResenas?: number;
 }

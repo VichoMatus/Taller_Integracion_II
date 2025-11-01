@@ -15,9 +15,9 @@ export default function CreateResenaPage() {
   
   // Estados del formulario
   const [formData, setFormData] = useState({
-    id_usuario: 1, // En producción se obtendrá del usuario autenticado
-    id_cancha: 1,
-    id_reserva: undefined as number | undefined,
+    usuarioId: 1, // En producción se obtendrá del usuario autenticado
+    canchaId: 1,
+    reservaId: undefined as number | undefined,
     calificacion: 5,
     comentario: ''
   });
@@ -27,7 +27,7 @@ export default function CreateResenaPage() {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'calificacion' || name === 'id_usuario' || name === 'id_cancha' || name === 'id_reserva'
+      [name]: name === 'calificacion' || name === 'usuarioId' || name === 'canchaId' || name === 'reservaId'
         ? value ? parseInt(value) : undefined
         : value
     }));
@@ -41,8 +41,8 @@ export default function CreateResenaPage() {
 
   // Validar formulario
   const isFormValid = () => {
-    return formData.id_usuario > 0 && 
-           formData.id_cancha > 0 && 
+    return formData.usuarioId > 0 && 
+           formData.canchaId > 0 && 
            formData.calificacion >= 1 && 
            formData.calificacion <= 5 && 
            formData.comentario && formData.comentario.trim().length > 0;
@@ -109,12 +109,12 @@ export default function CreateResenaPage() {
             
             <div className="form-grid">
               <div className="form-group">
-                <label htmlFor="id_usuario">ID de Usuario *</label>
+                <label htmlFor="usuarioId">ID de Usuario *</label>
                 <input
                   type="number"
-                  id="id_usuario"
-                  name="id_usuario"
-                  value={formData.id_usuario}
+                  id="usuarioId"
+                  name="usuarioId"
+                  value={formData.usuarioId}
                   onChange={handleInputChange}
                   min={1}
                   required
@@ -124,12 +124,12 @@ export default function CreateResenaPage() {
               </div>
               
               <div className="form-group">
-                <label htmlFor="id_cancha">ID de Cancha *</label>
+                <label htmlFor="canchaId">ID de Cancha *</label>
                 <input
                   type="number"
-                  id="id_cancha"
-                  name="id_cancha"
-                  value={formData.id_cancha}
+                  id="canchaId"
+                  name="canchaId"
+                  value={formData.canchaId}
                   onChange={handleInputChange}
                   min={1}
                   required
@@ -139,12 +139,12 @@ export default function CreateResenaPage() {
               </div>
               
               <div className="form-group">
-                <label htmlFor="id_reserva">ID de Reserva (Opcional)</label>
+                <label htmlFor="reservaId">ID de Reserva (Opcional)</label>
                 <input
                   type="number"
-                  id="id_reserva"
-                  name="id_reserva"
-                  value={formData.id_reserva || ''}
+                  id="reservaId"
+                  name="reservaId"
+                  value={formData.reservaId || ''}
                   onChange={handleInputChange}
                   min={1}
                   className="form-input"

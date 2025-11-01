@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { reservaService } from '@/services/reservaService';
+import { apiBackend } from '@/config/backend';
 import { Reserva, EstadoReserva } from '@/types/reserva';
 import '../dashboard.css';
 
@@ -22,7 +23,9 @@ export default function ReservasPage() {
       setLoading(true);
       setError(null);
       
-      console.log('🔍 [loadReservas] Llamando a getAdminReservas()...');
+      // La API filtra automáticamente por el token del admin
+      // No necesitamos enviar complejo_id manualmente
+      console.log('🔍 [loadReservas] Llamando a getAdminReservas() (filtrado automático por token)');
       const response: any = await reservaService.getAdminReservas();
       
       console.log("📥 [loadReservas] Respuesta completa del servidor:", response);
@@ -66,6 +69,41 @@ export default function ReservasPage() {
       }
       
       console.log("📊 Total de reservas procesadas:", reservasArray.length);
+      
+      // 🔍 DEBUG: Mostrar estructura de la primera reserva
+      if (reservasArray.length > 0) {
+        console.log("🔍 [loadReservas] Primera reserva (completa):", JSON.stringify(reservasArray[0], null, 2));
+        console.log("🔍 [loadReservas] Campos disponibles:", Object.keys(reservasArray[0]));
+        console.log("🔍 [loadReservas] ¿Tiene usuario?:", !!reservasArray[0].usuario);
+        console.log("🔍 [loadReservas] ¿Tiene cancha?:", !!reservasArray[0].cancha);
+        
+        // Intentar todos los posibles nombres de campos para IDs
+        const possibleUsuarioIds = [
+          reservasArray[0].usuarioId,
+          reservasArray[0].usuario_id,
+          reservasArray[0].id_usuario,
+          reservasArray[0]['usuarioId'],
+          reservasArray[0]['usuario_id'],
+          reservasArray[0]['id_usuario']
+        ];
+        const possibleCanchaIds = [
+          reservasArray[0].canchaId,
+          reservasArray[0].cancha_id,
+          reservasArray[0].id_cancha,
+          reservasArray[0]['canchaId'],
+          reservasArray[0]['cancha_id'],
+          reservasArray[0]['id_cancha']
+        ];
+        
+        console.log("🔍 [loadReservas] Posibles usuarioIds:", possibleUsuarioIds);
+        console.log("🔍 [loadReservas] Posibles canchaIds:", possibleCanchaIds);
+        console.log("🔍 [loadReservas] usuarioId encontrado:", possibleUsuarioIds.find(id => id != null));
+        console.log("🔍 [loadReservas] canchaId encontrado:", possibleCanchaIds.find(id => id != null));
+        
+        // Mostrar todos los campos snake_case
+        const snakeFields = Object.keys(reservasArray[0]).filter(k => k.includes('_'));
+        console.log("🔍 [loadReservas] Campos con snake_case:", snakeFields);
+      }
       
       setReservas(reservasArray);
       
@@ -261,26 +299,36 @@ export default function ReservasPage() {
               </tr>
             </thead>
             <tbody>
-              {reservas.map((reserva) => (
-                <tr key={reserva.id}>
+              {reservas.map((reserva, index) => (
+                <tr key={reserva.id || `reserva-${index}`}>
                   <td>
                     <div className="admin-cell-title">
                       {reserva.usuario ? 
                         `${reserva.usuario.nombre || ''} ${reserva.usuario.apellido || ''}`.trim() || reserva.usuario.email 
-                        : `Usuario ${reserva.usuarioId}`
+                        : `Usuario #${reserva.usuarioId || 'ID desconocido'}`
                       }
                     </div>
                     {reserva.usuario?.email && (
                       <div className="admin-cell-subtitle">{reserva.usuario.email}</div>
                     )}
+                    {!reserva.usuario && reserva.usuarioId && (
+                      <div className="admin-cell-subtitle" style={{ fontSize: '0.75rem', color: 'var(--text-gray)' }}>
+                        ID: {reserva.usuarioId}
+                      </div>
+                    )}
                   </td>
                   <td>
                     <div className="admin-cell-subtitle">
-                      {reserva.cancha?.nombre || `Cancha ${reserva.canchaId}`}
+                      {reserva.cancha?.nombre || `Cancha #${reserva.canchaId || 'ID desconocido'}`}
                     </div>
                     {reserva.cancha?.tipo && (
                       <div className="admin-cell-text" style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>
                         {reserva.cancha.tipo}
+                      </div>
+                    )}
+                    {!reserva.cancha && reserva.canchaId && (
+                      <div className="admin-cell-text" style={{ fontSize: '0.75rem', color: 'var(--text-gray)' }}>
+                        ID: {reserva.canchaId}
                       </div>
                     )}
                   </td>
