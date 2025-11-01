@@ -3,9 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { reservaService } from '@/services/reservaService';
-import { canchaService } from '@/services/canchaService';
 import { Reserva, UpdateReservaInput, EstadoReserva, MetodoPago } from '@/types/reserva';
-import { Cancha } from '@/types/cancha';
 import '../../dashboard.css';
 
 export default function EditReservaPage() {
@@ -14,7 +12,6 @@ export default function EditReservaPage() {
   const reservaId = params.id as string;
 
   const [reserva, setReserva] = useState<Reserva | null>(null);
-  const [canchas, setCanchas] = useState<Cancha[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -49,18 +46,9 @@ export default function EditReservaPage() {
         fechaFin: reservaData.fechaFin.slice(0, 16)
       });
       
-      // Cargar lista de canchas para el selector
-      try {
-        const canchasData = await canchaService.getCanchas();
-        setCanchas(canchasData);
-      } catch (err) {
-        console.warn('No se pudieron cargar las canchas:', err);
-        setCanchas([]);
-      }
-      
     } catch (err: any) {
-      console.warn('No se pudo cargar la reserva (backend no disponible):', err);
-      setError('Modo desarrollo: No se puede conectar al backend para cargar los datos de la reserva');
+      console.error('Error al cargar la reserva:', err);
+      setError(err?.message || 'No se pudo cargar la reserva. Verifique que la reserva existe y tiene permisos para acceder.');
     } finally {
       setLoading(false);
     }
@@ -102,8 +90,8 @@ export default function EditReservaPage() {
       alert('Reserva actualizada exitosamente');
       router.push('/admin/reservas');
     } catch (err: any) {
-      console.warn('No se pudo guardar la reserva (backend no disponible):', err);
-      setError('Modo desarrollo: No se puede guardar los cambios sin conexión al backend');
+      console.error('Error al actualizar la reserva:', err);
+      setError(err?.message || 'No se pudo actualizar la reserva. Verifique los datos e intente nuevamente.');
     } finally {
       setSaving(false);
     }

@@ -15,15 +15,7 @@ export default function CreateReservaPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Lista mock de usuarios (en un futuro podría venir del backend)
-  const mockUsuarios = [
-    { id: 1, email: 'usuario1@email.com', nombre: 'Juan', apellido: 'Pérez' },
-    { id: 2, email: 'usuario2@email.com', nombre: 'María', apellido: 'González' },
-    { id: 3, email: 'usuario3@email.com', nombre: 'Carlos', apellido: 'López' },
-    { id: 4, email: 'usuario4@email.com', nombre: 'Ana', apellido: 'Martínez' },
-    { id: 5, email: 'usuario5@email.com', nombre: 'Pedro', apellido: 'Sánchez' }
-  ];
+  const [currentUserId, setCurrentUserId] = useState<number>(0);
 
   // Estado del formulario
   const [formData, setFormData] = useState<CreateReservaInput>({
@@ -38,61 +30,48 @@ export default function CreateReservaPage() {
   // Calcular precio basado en horas y cancha seleccionada
   const [precioCalculado, setPrecioCalculado] = useState<number>(0);
 
+  // Obtener ID del usuario actual del token
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userId = payload.sub ? parseInt(payload.sub) : 0;
+        setCurrentUserId(userId);
+        // Auto-asignar el usuario actual a la reserva
+        setFormData(prev => ({ ...prev, usuarioId: userId }));
+      } catch (err) {
+        console.error('Error al decodificar token:', err);
+      }
+    }
+  }, []);
+
   // Cargar datos iniciales
   const loadInitialData = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Solo cargar canchas
-      const canchasData = await canchaService.getCanchas();
-      setCanchas(canchasData);
+      // ✅ ACTUALIZADO: Usar endpoint de admin que filtra automáticamente por complejo del admin
+      const result = await canchaService.getCanchasAdmin({
+        incluir_inactivas: false, // Solo canchas activas para crear reservas
+        sort_by: 'nombre',
+        order: 'asc'
+      });
+      
+      const canchasData = result.items || [];
+      
+      if (canchasData && canchasData.length > 0) {
+        setCanchas(canchasData);
+      } else {
+        setError('No hay canchas disponibles. Debe crear canchas primero en "Gestión de Canchas".');
+        setCanchas([]);
+      }
       
     } catch (err: any) {
-      console.warn('No se pudieron cargar las canchas (backend no disponible):', err);
-      setError('Modo desarrollo: Usando datos mock (backend no disponible)');
-      // Usar datos mock si falla la carga
-      setCanchas([
-        { 
-          id: 1, 
-          nombre: 'Cancha Central', 
-          precioPorHora: 25000, 
-          tipo: 'futbol',
-          estado: 'disponible',
-          capacidad: 22,
-          techada: false,
-          activa: true,
-          establecimientoId: 1,
-          fechaCreacion: new Date().toISOString(),
-          fechaActualizacion: new Date().toISOString()
-        },
-        { 
-          id: 2, 
-          nombre: 'Cancha Norte', 
-          precioPorHora: 30000, 
-          tipo: 'basquet',
-          estado: 'disponible',
-          capacidad: 10,
-          techada: true,
-          activa: true,
-          establecimientoId: 1,
-          fechaCreacion: new Date().toISOString(),
-          fechaActualizacion: new Date().toISOString()
-        },
-        { 
-          id: 3, 
-          nombre: 'Cancha Sur', 
-          precioPorHora: 20000, 
-          tipo: 'tenis',
-          estado: 'disponible',
-          capacidad: 4,
-          techada: false,
-          activa: true,
-          establecimientoId: 1,
-          fechaCreacion: new Date().toISOString(),
-          fechaActualizacion: new Date().toISOString()
-        }
-      ]);
+      console.error('Error al cargar canchas:', err);
+      setError('No se pudieron cargar las canchas. ' + (err?.message || 'Verifique su conexión.'));
+      setCanchas([]);
     } finally {
       setLoading(false);
     }
@@ -128,18 +107,32 @@ export default function CreateReservaPage() {
     const { name, value, type } = e.target;
     const checked = (e.target as HTMLInputElement).checked;
     
+    // Convertir valores según el campo
+    let processedValue: any = value;
+    if (name === 'usuarioId' || name === 'canchaId') {
+      processedValue = parseInt(value) || 0;
+      console.log(`🔄 [handleInputChange] ${name}:`, { raw: value, processed: processedValue });
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : 
-               name === 'usuarioId' || name === 'canchaId' ? parseInt(value) || 0 : 
-               value
+      [name]: type === 'checkbox' ? checked : processedValue
     }));
   };
 
   // Validar formulario
   const validateForm = (): string | null => {
-    if (!formData.usuarioId) return 'Debe seleccionar un usuario';
-    if (!formData.canchaId) return 'Debe seleccionar una cancha';
+    console.log('🔍 [validateForm] Validando datos:', {
+      canchaId: formData.canchaId,
+      usuarioId: formData.usuarioId,
+      fechaInicio: formData.fechaInicio,
+      fechaFin: formData.fechaFin
+    });
+    
+    if (!formData.canchaId || formData.canchaId === 0) {
+      console.error('❌ [validateForm] canchaId inválido:', formData.canchaId);
+      return 'Debe seleccionar una cancha';
+    }
     if (!formData.fechaInicio) return 'Debe especificar la fecha y hora de inicio';
     if (!formData.fechaFin) return 'Debe especificar la fecha y hora de fin';
     
@@ -153,6 +146,7 @@ export default function CreateReservaPage() {
     if (horas > 12) return 'La reserva no puede ser mayor a 12 horas';
     if (horas < 0.5) return 'La reserva debe ser de al menos 30 minutos';
     
+    console.log('✅ [validateForm] Validación exitosa');
     return null;
   };
 
@@ -170,21 +164,42 @@ export default function CreateReservaPage() {
       setSaving(true);
       setError(null);
       
-      // Convertir fechas a ISO
+      // Convertir fechas a formato requerido por backend
+      const fechaInicioDate = new Date(formData.fechaInicio);
+      const fechaFinDate = new Date(formData.fechaFin);
+      
+      // Extraer fecha y horas en formato que espera el backend
+      const fecha_reserva = fechaInicioDate.toISOString().split('T')[0]; // YYYY-MM-DD
+      const hora_inicio = fechaInicioDate.toTimeString().slice(0, 5); // HH:MM
+      const hora_fin = fechaFinDate.toTimeString().slice(0, 5); // HH:MM
+      
+      // Formato que espera el backend: { id_cancha, fecha_reserva, hora_inicio, hora_fin, id_usuario }
       const createData = {
-        ...formData,
-        fechaInicio: new Date(formData.fechaInicio).toISOString(),
-        fechaFin: new Date(formData.fechaFin).toISOString()
+        id_cancha: Number(formData.canchaId),
+        fecha_reserva,
+        hora_inicio,
+        hora_fin,
+        id_usuario: Number(formData.usuarioId),
+        notas: formData.notas || ''
       };
       
-      await reservaService.createReserva(createData);
+      console.log('📤 [handleSubmit] Datos a enviar (formato backend):', createData);
+      
+      // CORREGIDO: Usar createReservaAdmin en lugar de createReserva
+      // Esto llama al endpoint POST /api/reservas/admin/crear
+      await reservaService.createReservaAdmin(createData);
       
       // Mostrar mensaje de éxito y redirigir
-      alert('Reserva creada exitosamente');
+      alert('Reserva creada exitosamente como administrador');
       router.push('/admin/reservas');
     } catch (err: any) {
-      console.warn('No se pudo crear la reserva (backend no disponible):', err);
-      setError('Modo desarrollo: No se puede crear la reserva sin conexión al backend');
+      console.error('Error al crear la reserva:', err);
+      const errorMessage = typeof err?.message === 'string' 
+        ? err.message 
+        : err?.response?.data?.message 
+        || JSON.stringify(err?.message || err) 
+        || 'No se pudo crear la reserva. Verifique los datos e intente nuevamente.';
+      setError(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -250,24 +265,22 @@ export default function CreateReservaPage() {
             <div className="edit-form-grid">
               <div className="edit-form-group">
                 <label htmlFor="usuarioId" className="edit-form-label">Usuario: *</label>
-                <select
-                  id="usuarioId"
+                <input
+                  type="text"
+                  id="usuarioDisplay"
+                  value={`Usuario actual (ID: ${currentUserId})`}
+                  className="edit-form-input"
+                  disabled
+                  style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
+                />
+                <input
+                  type="hidden"
                   name="usuarioId"
                   value={formData.usuarioId}
-                  onChange={handleInputChange}
-                  className="edit-form-select"
-                  required
-                >
-                  <option value={0}>Seleccionar usuario</option>
-                  {mockUsuarios.map(usuario => (
-                    <option key={usuario.id} value={usuario.id}>
-                      {usuario.nombre && usuario.apellido 
-                        ? `${usuario.nombre} ${usuario.apellido} (${usuario.email})`
-                        : usuario.email
-                      }
-                    </option>
-                  ))}
-                </select>
+                />
+                <p className="text-sm text-gray-600 mt-1">
+                  ℹ️ La reserva se creará a nombre del usuario actual
+                </p>
               </div>
 
               <div className="edit-form-group">
