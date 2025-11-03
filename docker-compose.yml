@@ -4,6 +4,7 @@ services:
       context: ./sporthub-temuco
       args:
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
     ports:
       - "3000:3000"
     volumes:
@@ -12,6 +13,7 @@ services:
     environment:
       - NODE_ENV=development
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
     command: npm run dev
     restart: unless-stopped
 
@@ -36,6 +38,10 @@ services:
       - API_TIMEOUT=${API_TIMEOUT}
       - BFF_PORT=${BFF_PORT}
       - FRONTEND_URL=${FRONTEND_URL}
+      # Google OAuth 
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
       # Variables para Docker Compose (base de datos local)
       - DB_HOST=db
       - DB_USER=${DOCKER_POSTGRES_USER}

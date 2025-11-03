@@ -238,4 +238,10 @@ router.get('/me/push-token/status', controller.getPushTokenStatus);
 // GET /api/auth/status/all - Verificar conectividad de todos los endpoints
 router.get('/status/all', controller.getAllEndpointsStatus);
 
+/**
+ * GOOGLE AUTH
+ */
+router.get('/google/status', controller.getGoogleStatus);
+router.post('/google/idtoken', controller.googleWithIdToken);
+
 export default router;
