@@ -1,7 +1,7 @@
 import { Paginated } from "../../app/common/pagination";
 import { Complejo } from "../../domain/complejo/Complejo";
 import { Cancha } from "../../domain/cancha/Cancha";
-import { EstadisticasOwner, ReservaOwner } from "../../domain/admin/Owner";
+import { EstadisticasOwner, EstadisticasComplejo, ReservaOwner, ReservasPorDiaSemana, ReservasPorCancha } from "../../domain/admin/Owner";
 
 /**
  * Repositorio para operaciones del owner de complejos deportivos.
@@ -38,6 +38,34 @@ export interface AdminRepository {
    * @returns Promise con estadísticas
    */
   getMisEstadisticas(ownerId: number): Promise<EstadisticasOwner>;
+
+  /**
+   * Obtiene estadísticas detalladas de un complejo específico.
+   * @param ownerId - ID del owner
+   * @param complejoId - ID del complejo
+   * @returns Promise con estadísticas del complejo
+   */
+  getEstadisticasComplejo(ownerId: number, complejoId: number): Promise<EstadisticasComplejo>;
+
+  /**
+   * Obtiene estadísticas de reservas agrupadas por día de la semana.
+   * Útil para gráficos de barras mostrando patrones semanales de reservas.
+   * @param ownerId - ID del owner
+   * @param complejoId - ID del complejo
+   * @param diasAtras - Número de días hacia atrás para analizar (por defecto 30)
+   * @returns Promise con datos de reservas por día de la semana
+   */
+  getReservasPorDiaSemana(ownerId: number, complejoId: number, diasAtras?: number): Promise<ReservasPorDiaSemana>;
+
+  /**
+   * Obtiene estadísticas de reservas agrupadas por cancha.
+   * Útil para gráficos de barras comparando el rendimiento de cada cancha del complejo.
+   * @param ownerId - ID del owner
+   * @param complejoId - ID del complejo
+   * @param diasAtras - Número de días hacia atrás para analizar (por defecto 30)
+   * @returns Promise con datos de reservas por cancha
+   */
+  getReservasPorCancha(ownerId: number, complejoId: number, diasAtras?: number): Promise<ReservasPorCancha>;
 
   // === GESTIÓN DE COMPLEJOS ===
   
