@@ -9,6 +9,46 @@
   --color-pending: #D97706;
 }
 
+/* 🔧 Eliminar todos los elementos decorativos extra en los formularios */
+.edit-court-card::before,
+.edit-court-card::after,
+.edit-court-container::before,
+.edit-court-container::after,
+.edit-section::before,
+.edit-section::after,
+.edit-section-title::before,
+.edit-section-title::after {
+  display: none !important;
+  content: none !important;
+  opacity: 0 !important;
+  height: 0 !important;
+  width: 0 !important;
+}
+
+/* Simplificar las tarjetas de formulario - sin efectos complejos */
+.edit-court-card {
+  background: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #e5e7eb !important;
+  backdrop-filter: none !important;
+}
+
+/* Eliminar el contenedor gris innecesario */
+.edit-court-container {
+  background: transparent !important;
+  padding: 0 !important;
+  min-height: auto !important;
+}
+
+/* Simplificar el título de las secciones - sin gradientes ni animaciones */
+.edit-section-title {
+  border-image: none !important;
+  border-bottom: 2px solid #e5e7eb !important;
+  background: none !important;
+  -webkit-text-fill-color: #111827 !important;
+  color: #111827 !important;
+}
+
 /* Solo estilos adicionales que NO interfieran con admin */
 
 /* Barra de búsqueda y filtros */
