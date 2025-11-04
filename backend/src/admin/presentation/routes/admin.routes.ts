@@ -9,6 +9,9 @@ import {
   GetMisCanchas, 
   GetMisReservas, 
   GetMisEstadisticas,
+  GetEstadisticasComplejo,
+  GetReservasPorDiaSemana,
+  GetReservasPorCancha,
   CreateComplejo,
   GetComplejo,
   UpdateComplejo,
@@ -43,6 +46,9 @@ const ctrl = (req: any) => {
     new GetMisCanchas(repo),
     new GetMisReservas(repo),
     new GetMisEstadisticas(repo),
+    new GetEstadisticasComplejo(repo),
+    new GetReservasPorDiaSemana(repo),
+    new GetReservasPorCancha(repo),
     new CreateComplejo(repo),
     new GetComplejo(repo),
     new UpdateComplejo(repo),
@@ -70,6 +76,15 @@ router.post("/complejos", authMiddleware, requireRole("admin", "super_admin"), (
 
 /** GET /admin/complejos/:id - Obtiene complejo específico */
 router.get("/complejos/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getComplejo(req, res));
+
+/** GET /admin/complejos/:id/estadisticas - Obtiene estadísticas detalladas del complejo */
+router.get("/complejos/:id/estadisticas", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getEstadisticasComplejo(req, res));
+
+/** GET /admin/complejos/:id/estadisticas/reservas-semana - Obtiene reservas por día de la semana (para gráfico de barras) */
+router.get("/complejos/:id/estadisticas/reservas-semana", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getReservasPorDiaSemana(req, res));
+
+/** GET /admin/complejos/:id/estadisticas/reservas-cancha - Obtiene reservas por cancha (para gráfico de barras comparativo) */
+router.get("/complejos/:id/estadisticas/reservas-cancha", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getReservasPorCancha(req, res));
 
 /** PUT /admin/complejos/:id - Actualiza complejo */
 router.put("/complejos/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).updateComplejo(req, res));
