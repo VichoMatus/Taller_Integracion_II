@@ -236,4 +236,30 @@ export class SuperAdminController {
       res.status(500).json({ ok: false, error: 'Error interno del servidor' });
     }
   };
+
+  /**
+   * GET /estadisticas/completas
+   * Obtener estadísticas completas del sistema para SuperAdmin
+   * Incluye: métricas generales, mensuales, gráficos y tops
+   */
+  getEstadisticasCompletas = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const token = req.headers.authorization?.split(' ')[1];
+      
+      console.log('📊 [SuperAdminController] Solicitando estadísticas completas...');
+      
+      const result = await this.service.getEstadisticasCompletas(token);
+      
+      if (result.ok) {
+        console.log('✅ [SuperAdminController] Estadísticas obtenidas exitosamente');
+        res.status(200).json(result);
+      } else {
+        console.error('❌ [SuperAdminController] Error al obtener estadísticas:', result.error);
+        res.status(400).json(result);
+      }
+    } catch (error) {
+      console.error('❌ [SuperAdminController] Error interno:', error);
+      res.status(500).json({ ok: false, error: 'Error interno del servidor' });
+    }
+  };
 }

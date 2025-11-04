@@ -89,6 +89,13 @@ router.get('/system/statistics', authMiddleware, requireSuperAdmin, controller.g
 router.get('/system/logs', authMiddleware, requireSuperAdmin, controller.getSystemLogs);
 
 /**
+ * RUTAS DE ESTADÍSTICAS COMPLETAS
+ * ===============================
+ */
+// GET /api/super_admin/estadisticas/completas - Estadísticas completas del sistema
+router.get('/estadisticas/completas', authMiddleware, requireSuperAdmin, controller.getEstadisticasCompletas);
+
+/**
  * RUTAS DE UTILIDADES Y DASHBOARD
  * ===============================
  */
