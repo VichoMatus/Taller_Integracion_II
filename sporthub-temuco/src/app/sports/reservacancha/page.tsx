@@ -1,12 +1,20 @@
 'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import styles from './page.module.css'
 import Sidebar from '../../../components/layout/Sidebar'
 import atletismoCommon from '../atletismo/atletismo.module.css'
+import { deserializeReservationData, type ReservationData } from '@/utils/reservationDataHandler'
+import { useAuthStatus } from '@/hooks/useAuthStatus'
 
-export default function ReservaCancha() {
+function ReservaCanchaContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { user, isAuthenticated, buttonProps } = useAuthStatus()
+  
+  // 🔥 OBTENER DATOS REALES DE LA CANCHA DESDE URL
+  const reservationData: ReservationData | null = deserializeReservationData(searchParams)
+  
   const [selectedDate, setSelectedDate] = useState(8)
   const [selectedTime, setSelectedTime] = useState('10:00')
   const [currentMonth, setCurrentMonth] = useState('Junio 2025')
@@ -19,13 +27,90 @@ export default function ReservaCancha() {
     notas: ''
   })
 
+  // 🔥 CARGAR DATOS DEL USUARIO SI ESTÁ AUTENTICADO
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      setFormData(prev => ({
+        ...prev,
+        nombre: user.nombre || 'Juan Perez',
+        telefono: user.telefono || '+56 9 6969 6969',
+        email: user.email || 'juanperez@gmail.com'
+      }))
+    }
+  }, [isAuthenticated, user])
+
+  // 🔥 SI NO HAY DATOS DE RESERVA, MOSTRAR ERROR
+  if (!reservationData) {
+    return (
+      <div className={styles.container}>
+        <Sidebar userRole="usuario" />
+        <div className={styles.mainContent}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            height: '60vh',
+            flexDirection: 'column',
+            gap: '1rem'
+          }}>
+            <h2>❌ Error: No se encontraron datos de la cancha</h2>
+            <p>Por favor, selecciona una cancha desde la página de deportes.</p>
+            <button 
+              onClick={() => router.push('/sports')}
+              style={{
+                padding: '0.75rem 1.5rem',
+                background: '#3b82f6',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer'
+              }}
+            >
+              🏠 Volver a deportes
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  console.log('🔥 Datos recibidos en reserva:', reservationData)
+
+  // 🔥 FUNCIONES AUXILIARES
+  const getSportIcon = (sport: string) => {
+    switch (sport.toLowerCase()) {
+      case 'futbol': return '⚽'
+      case 'tenis': return '🎾'
+      case 'basquet': return '🏀'
+      case 'voleibol': return '🏐'
+      default: return '📆'
+    }
+  }
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-CL', {
+      style: 'currency',
+      currency: 'CLP',
+      minimumFractionDigits: 0,
+    }).format(price)
+  }
+
+  const calculateTotal = () => {
+    return reservationData.precioPorHora * 1 // Por ahora 1 hora fija
+  }
+
   const handleGoBack = () => {
     router.back()
   }
 
   const handleUserProfile = () => {
-    router.push('/usuario/perfil/')
+    if (isAuthenticated) {
+      router.push('/usuario/EditarPerfil')
+    } else {
+      router.push('/login')
+    }
   }
+
   const timeSlots = [
     { time: '08:00', status: 'Libre' },
     { time: '09:00', status: 'Libre' },
@@ -48,20 +133,25 @@ export default function ReservaCancha() {
   return (
     <div className={styles.container}>
       {/* Sidebar Component */}
-      <Sidebar userRole="usuario" />
+      <Sidebar userRole="usuario" sport={reservationData.sport} />
       {/* Main Content */}
       <div className={styles.mainContent}>
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.headerIcon}>📆</div>
-            <h1 className={styles.headerTitle}>Cancha Basquetbol • Club Centro, Av. Principal 123</h1>
+            <div className={styles.headerIcon}>{getSportIcon(reservationData.sport)}</div>
+            <h1 className={styles.headerTitle}>
+              {reservationData.canchaNombre} • {reservationData.complejoNombre}, {reservationData.direccion}
+            </h1>
           </div>
           <div className={styles.headerRight}>
-            <button className={styles.userButton}
-            onClick={handleUserProfile}>
+            <button 
+              className={styles.userButton}
+              onClick={handleUserProfile}
+              {...buttonProps}
+            >
               <span>👤</span>
-              <span>Usuario</span>
+              <span>{buttonProps.text}</span>
             </button>
           </div>
         </div>
@@ -110,8 +200,6 @@ export default function ReservaCancha() {
                     ))}
                   </div>
                 </div>
-
-                
 
                 {/* Time Slots */}
                 <div className={styles.timeSlots}>
@@ -243,16 +331,20 @@ export default function ReservaCancha() {
             <div className={styles.courtInfo}>
               <div className={styles.courtImage}>
                 <div>
-                  <div className={styles.courtImageContent}>⚽</div>
-                  <div className={styles.courtName}>basquetbol - club centro</div>
-                  <div className={styles.courtAddress}>Av. Principal 123</div>
+                  <div className={styles.courtImageContent}>{getSportIcon(reservationData.sport)}</div>
+                  <div className={styles.courtName}>
+                    {reservationData.sport} - {reservationData.complejoNombre.toLowerCase()}
+                  </div>
+                  <div className={styles.courtAddress}>{reservationData.direccion}</div>
                 </div>
               </div>
               
               <div className={styles.reservationDetails}>
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Cancha</span>
-                  <span className={styles.detailValue}>Basquetbol • Club Centro</span>
+                  <span className={styles.detailValue}>
+                    {reservationData.canchaNombre} • {reservationData.complejoNombre}
+                  </span>
                 </div>
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Fecha:</span>
@@ -260,7 +352,9 @@ export default function ReservaCancha() {
                 </div>
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Horario:</span>
-                  <span className={styles.detailValue}>10:00 - 11:00</span>
+                  <span className={styles.detailValue}>{selectedTime} - {
+                    String(parseInt(selectedTime.split(':')[0]) + 1).padStart(2, '0')
+                  }:00</span>
                 </div>
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Duración:</span>
@@ -268,28 +362,45 @@ export default function ReservaCancha() {
                 </div>
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Jugadores:</span>
-                  <span className={styles.detailValue}>10</span>
+                  <span className={styles.detailValue}>{formData.jugadores}</span>
                 </div>
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Precio | h:</span>
-                  <span className={styles.detailValue}>$30</span>
+                  <span className={styles.detailValue}>{formatPrice(reservationData.precioPorHora)}</span>
                 </div>
                 <hr className={styles.divider} />
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Subtotal:</span>
-                  <span className={styles.detailValue}>$0</span>
+                  <span className={styles.detailValue}>{formatPrice(calculateTotal())}</span>
                 </div>
                 <div className={`${styles.detailRow} ${styles.totalRow}`}>
                   <span className={styles.detailLabel}>Total estimado:</span>
-                  <span className={styles.detailValue}>$0</span>
+                  <span className={styles.detailValue}>{formatPrice(calculateTotal())}</span>
                 </div>
               </div>
 
               <div className={styles.actionButtons}>
-                <button className={styles.cancelButton}>
+                <button 
+                  className={styles.cancelButton}
+                  onClick={handleGoBack}
+                >
                   ✕ Cancelar
                 </button>
-                <button className={styles.confirmButton}>
+                <button 
+                  className={styles.confirmButton}
+                  onClick={() => {
+                    // TODO: Aquí iría la lógica de confirmar reserva
+                    console.log('🔥 Confirmando reserva:', {
+                      cancha: reservationData,
+                      formulario: formData,
+                      fecha: selectedDate,
+                      hora: selectedTime,
+                      pago: selectedPayment,
+                      total: calculateTotal()
+                    })
+                    alert('¡Reserva confirmada! (Función en desarrollo)')
+                  }}
+                >
                   ✓ Confirmar reserva
                 </button>
               </div>
@@ -298,5 +409,24 @@ export default function ReservaCancha() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ReservaCancha() {
+  return (
+    <Suspense fallback={
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        height: '100vh',
+        flexDirection: 'column',
+        gap: '1rem'
+      }}>
+        <div>Cargando datos de reserva...</div>
+      </div>
+    }>
+      <ReservaCanchaContent />
+    </Suspense>
   )
 }
