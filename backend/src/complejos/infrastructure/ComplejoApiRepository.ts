@@ -108,9 +108,23 @@ export class ComplejoApiRepository implements ComplejoRepository {
    */
   async getComplejosByDuenio(duenioId: number): Promise<Complejo[]> {
     try {
+      console.log(`[ComplejoApiRepository] 🔍 Obteniendo complejos del dueño ID: ${duenioId}`);
+      console.log(`[ComplejoApiRepository] 📡 Llamando a: GET /complejos/duenio/${duenioId}`);
+      console.log(`[ComplejoApiRepository] 🌐 Base URL del cliente:`, this.http.defaults.baseURL);
+      
       const { data } = await this.http.get<FastComplejo[]>(`/complejos/duenio/${duenioId}`);
-      return data.map(toComplejo);
-    } catch (e) {
+      
+      console.log(`[ComplejoApiRepository] ✅ Respuesta recibida:`, data);
+      console.log(`[ComplejoApiRepository] 📊 Cantidad de complejos: ${data.length}`);
+      
+      const mapped = data.map(toComplejo);
+      console.log(`[ComplejoApiRepository] 🗺️ Complejos mapeados:`, mapped);
+      
+      return mapped;
+    } catch (e: any) {
+      console.error(`[ComplejoApiRepository] ❌ Error obteniendo complejos del dueño ${duenioId}:`, e.message);
+      console.error(`[ComplejoApiRepository] 📊 Status:`, e.response?.status);
+      console.error(`[ComplejoApiRepository] 📊 Data:`, e.response?.data);
       throw httpError(e);
     }
   }

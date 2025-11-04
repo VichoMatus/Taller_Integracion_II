@@ -45,14 +45,18 @@ const ctrl = (req: any) => {
 /** GET /complejos - Lista complejos con filtros (público) */
 router.get("/", (req, res) => ctrl(req).list(req, res));
 
-/** GET /complejos/:id - Obtiene complejo específico (público) */
-router.get("/:id", (req, res) => ctrl(req).get(req, res));
-
 // === Endpoints para Administradores ===
 // Requieren rol admin o super_admin
+// 🔥 IMPORTANTE: Estas rutas específicas DEBEN ir ANTES de las rutas dinámicas /:id
 
-/** GET /complejos/admin/:adminId - Obtiene complejos de un administrador */
-router.get("/admin/:adminId", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getByDuenio(req, res));
+/** GET /complejos/admin/:duenioId - Obtiene complejos de un administrador */
+router.get("/admin/:duenioId", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getByDuenio(req, res));
+
+// === Rutas dinámicas ===
+// 🔥 Estas van después de las rutas específicas para evitar conflictos
+
+/** GET /complejos/:id - Obtiene complejo específico (público) */
+router.get("/:id", (req, res) => ctrl(req).get(req, res));
 
 // === Endpoints Administrativos ===
 // Requieren rol admin o super_admin
