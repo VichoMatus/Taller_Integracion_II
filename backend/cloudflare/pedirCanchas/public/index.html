@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buscar imágenes</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    #image-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    .image-item {
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 5px;
+      width: 300px;
+      margin-bottom: 15px;
+    }
+    .fetched-image {
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+    }
+    .image-info {
+      margin-top: 5px;
+      font-size: 12px;
+    }
+    #result {
+      white-space: pre-wrap;
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+    #searchForm, #idSearchForm {
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px 15px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+    input[type="text"] {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 250px;
+    }
+    .section {
+      border-bottom: 1px solid #eee;
+      padding-bottom: 20px;
+      margin-bottom: 20px;
+    }
+    h1, h2 {
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>Búsqueda de imágenes</h1>
+  <p>Aquí puedes buscar imágenes por su UUID (hash del nombre).</p>
+  
+  <div class="section">
+    <h2>Buscar por UUID</h2>
+    <form id="searchForm">
+      <input type="text" id="imageName" placeholder="Ingrese el UUID de la imagen (sin extensión)" required>
+      <button type="submit">Buscar imagen</button>
+    </form>
+    <p><small>Ejemplo: 20f45428-5aaf-4ab0-a41d-b34873c43558</small></p>
+  </div>
+  
+  <div id="image-container"></div>
+  <div id="result"></div>
+  
+  <script>
+    // Variables globales
+    const searchForm = document.getElementById('searchForm');
+    const result = document.getElementById('result');
+    const imageContainer = document.getElementById('image-container');
+    // Función para mostrar imagen
+    function showImage(imageUrl, imageTitle) {
+      imageContainer.innerHTML = '';
+      result.innerHTML = '';
+      
+      try {
+        const item = document.createElement('div');
+        item.className = 'image-item';
+        
+        const img = document.createElement('img');
+        img.className = 'fetched-image';
+        img.src = imageUrl;
+        img.alt = imageTitle || 'Imagen';
+        
+        // Información de la imagen
+        const info = document.createElement('div');
+        info.className = 'image-info';
+        info.innerHTML = `URL: ${imageUrl}<br>`;
+        if (imageTitle) {
+          info.innerHTML += `Título: ${imageTitle}`;
+        }
+        
+        item.appendChild(img);
+        item.appendChild(info);
+        imageContainer.appendChild(item);
+      } catch (err) {
+        result.innerHTML = `<div style="color: red;">❌ Error al mostrar la imagen: ${err.message}</div>`;
+      }
+    }
+    
+    // Función para buscar por UUID
+    async function searchByUuid(uuid) {
+      imageContainer.innerHTML = '';
+      result.innerHTML = '<div><strong>Buscando imagen por UUID...</strong></div>';
+      
+      try {
+        // La URL ahora es simplemente /image/{uuid}
+        const imageUrl = `/image/${uuid}`;
+        
+        // Verificar si la imagen existe realizando una petición HEAD
+        const checkResponse = await fetch(imageUrl, { method: 'HEAD' });
+        
+        if (checkResponse.ok) {
+          // La imagen existe, mostrarla
+          showImage(imageUrl, `Imagen con UUID: ${uuid}`);
+        } else {
+          result.innerHTML = `<div style="color: red;">❌ No se encontró ninguna imagen con el UUID: ${uuid}</div>`;
+        }
+      } catch (err) {
+        result.innerHTML = `<div style="color: red;">❌ Error al buscar la imagen: ${err.message}</div>`;
+      }
+    }
+    
+    // Event listener para el formulario de búsqueda por UUID
+    searchForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const uuid = document.getElementById('imageName').value.trim();
+      if (!uuid) {
+        result.innerHTML = '<div style="color: red;">Por favor, ingresa un UUID válido.</div>';
+        return;
+      }
+      searchByUuid(uuid);
+    });
+  </script>
+</body>
+</html>

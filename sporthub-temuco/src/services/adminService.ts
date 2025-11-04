@@ -48,6 +48,50 @@ export const adminService = {
   },
 
   // ========================================
+  // ESTADÍSTICAS DETALLADAS
+  // ========================================
+
+  /**
+   * Obtener estadísticas detalladas de un complejo específico
+   */
+  async getEstadisticasComplejo(complejoId: number): Promise<any> {
+    try {
+      const response = await apiBackend.get(`/admin/complejos/${complejoId}/estadisticas`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error('Error al obtener estadísticas del complejo: ' + (error.response?.data?.message || error.message));
+    }
+  },
+
+  /**
+   * Obtener reservas agrupadas por día de la semana (para gráfico de barras)
+   */
+  async getReservasPorDiaSemana(complejoId: number, dias: number = 30): Promise<any> {
+    try {
+      const response = await apiBackend.get(`/admin/complejos/${complejoId}/estadisticas/reservas-semana`, {
+        params: { dias }
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error('Error al obtener reservas por día: ' + (error.response?.data?.message || error.message));
+    }
+  },
+
+  /**
+   * Obtener reservas agrupadas por cancha (para gráfico comparativo)
+   */
+  async getReservasPorCancha(complejoId: number, dias: number = 30): Promise<any> {
+    try {
+      const response = await apiBackend.get(`/admin/complejos/${complejoId}/estadisticas/reservas-cancha`, {
+        params: { dias }
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error('Error al obtener reservas por cancha: ' + (error.response?.data?.message || error.message));
+    }
+  },
+
+  // ========================================
   // GESTIÓN DE COMPLEJOS
   // ========================================
 

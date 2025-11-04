@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { ok, fail } from "../../../interfaces/apiEnvelope";
 import { 
-  GetMisRecursos, GetMisComplejos, GetMisCanchas, GetMisReservas, GetMisEstadisticas,
+  GetMisRecursos, GetMisComplejos, GetMisCanchas, GetMisReservas, GetMisEstadisticas, GetEstadisticasComplejo, GetReservasPorDiaSemana, GetReservasPorCancha,
   CreateComplejo, GetComplejo, UpdateComplejo, DeleteComplejo,
   CreateCancha, GetCancha, UpdateCancha, DeleteCancha
 } from "../../application/UsersUseCases";
@@ -17,6 +17,9 @@ export class AdminController {
     private getMisCanchasUC: GetMisCanchas,
     private getMisReservasUC: GetMisReservas,
     private getMisEstadisticasUC: GetMisEstadisticas,
+    private getEstadisticasComplejoUC: GetEstadisticasComplejo,
+    private getReservasPorDiaSemanaUC: GetReservasPorDiaSemana,
+    private getReservasPorCanchaUC: GetReservasPorCancha,
     private createComplejoUC: CreateComplejo,
     private getComplejoUC: GetComplejo,
     private updateComplejoUC: UpdateComplejo,
@@ -107,6 +110,53 @@ export class AdminController {
       const ownerId = this.getOwnerId(req);
       const estadisticas = await this.getMisEstadisticasUC.execute(ownerId);
       res.json(ok(estadisticas));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
+    }
+  };
+
+  /**
+   * Obtiene estadísticas detalladas de un complejo específico.
+   * GET /admin/complejos/:id/estadisticas
+   */
+  getEstadisticasComplejo = async (req: Request, res: Response) => {
+    try {
+      const ownerId = this.getOwnerId(req);
+      const complejoId = Number(req.params.id);
+      const estadisticas = await this.getEstadisticasComplejoUC.execute(ownerId, complejoId);
+      res.json(ok(estadisticas));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
+    }
+  };
+
+  /**
+   * Obtiene reservas agrupadas por día de la semana para gráficos de barras.
+   * GET /admin/complejos/:id/estadisticas/reservas-semana
+   */
+  getReservasPorDiaSemana = async (req: Request, res: Response) => {
+    try {
+      const ownerId = this.getOwnerId(req);
+      const complejoId = Number(req.params.id);
+      const diasAtras = req.query.dias ? Number(req.query.dias) : undefined;
+      const datos = await this.getReservasPorDiaSemanaUC.execute(ownerId, complejoId, diasAtras);
+      res.json(ok(datos));
+    } catch (e: any) { 
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
+    }
+  };
+
+  /**
+   * Obtiene reservas agrupadas por cancha para gráficos de barras comparativos.
+   * GET /admin/complejos/:id/estadisticas/reservas-cancha
+   */
+  getReservasPorCancha = async (req: Request, res: Response) => {
+    try {
+      const ownerId = this.getOwnerId(req);
+      const complejoId = Number(req.params.id);
+      const diasAtras = req.query.dias ? Number(req.query.dias) : undefined;
+      const datos = await this.getReservasPorCanchaUC.execute(ownerId, complejoId, diasAtras);
+      res.json(ok(datos));
     } catch (e: any) { 
       res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details)); 
     }
