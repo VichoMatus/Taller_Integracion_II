@@ -5,7 +5,8 @@ import { Complejo } from "../../domain/complejo/Complejo";
  * Utiliza convención snake_case como es estándar en Python.
  */
 export type FastComplejo = {
-  id: number;
+  id?: number; // Opcional porque algunos endpoints usan id_complejo
+  id_complejo?: number; // Campo alternativo usado por algunos endpoints
   nombre: string;
   descripcion?: string;
   direccion: string;
@@ -33,7 +34,7 @@ export type FastComplejo = {
  * @returns Complejo en formato del dominio
  */
 export const toComplejo = (r: FastComplejo): Complejo => ({
-  id: r.id,
+  id: r.id || r.id_complejo!, // Usar id si existe, sino id_complejo
   nombre: r.nombre,
   descripcion: r.descripcion,
   direccion: r.direccion,
