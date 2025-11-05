@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import './perfilsuperadmin.css';
 import AdminLayout from '@/components/layout/AdminsLayout';
 import authService from '@/services/authService';
+import { useSesiones } from '@/hooks/useSuperAdminSesiones';
 
 // Interfaz para el usuario
 interface User {
@@ -37,6 +38,17 @@ export default function PerfilSuperAdministrador() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
+  // 🔥 HOOK DE SESIONES
+  const { 
+    sesiones, 
+    resumen, 
+    isLoading: loadingSesiones, 
+    error: errorSesiones,
+    refetch: refetchSesiones,
+    cerrarSesion,
+    cerrarTodasLasSesiones
+  } = useSesiones();
+
   // Cargar datos del usuario
   useEffect(() => {
     async function fetchUser() {
@@ -61,6 +73,52 @@ export default function PerfilSuperAdministrador() {
 
   const getInitial = (name: string) => {
     return name ? name.charAt(0).toUpperCase() : 'S';
+  };
+
+  // Funciones para formatear fechas y duraciones
+  const formatearFechaCompleta = (fecha: string) => {
+    return new Date(fecha).toLocaleString('es-CL', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+
+  const formatearDuracion = (minutos?: number) => {
+    if (!minutos) return 'En curso';
+    
+    const horas = Math.floor(minutos / 60);
+    const mins = Math.round(minutos % 60);
+    
+    if (horas > 0) {
+      return `${horas}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
+
+  // Manejar cierre de sesión individual
+  const handleCerrarSesion = async (id_sesion: number) => {
+    if (window.confirm('¿Estás seguro de cerrar esta sesión?')) {
+      const successResult = await cerrarSesion(id_sesion);
+      if (successResult) {
+        setSuccess('Sesión cerrada correctamente');
+        setTimeout(() => setSuccess(null), 3000);
+      }
+    }
+  };
+
+  // Manejar cierre de todas las sesiones
+  const handleCerrarTodasLasSesiones = async () => {
+    if (window.confirm('¿Cerrar todas las sesiones excepto la actual? Tendrás que iniciar sesión nuevamente en otros dispositivos.')) {
+      const successResult = await cerrarTodasLasSesiones();
+      if (successResult) {
+        setSuccess('Todas las sesiones han sido cerradas');
+        setTimeout(() => setSuccess(null), 3000);
+      }
+    }
   };
 
   // Manejar cambio de imagen
@@ -132,12 +190,8 @@ export default function PerfilSuperAdministrador() {
       }
 
       // TODO: Manejar subida de imagen
-      // Si hay una imagen nueva, necesitaremos un endpoint separado para subir archivos
-      // Por ahora, solo actualizamos los datos de texto
       if (editedData.imagen) {
         console.log("Imagen seleccionada:", editedData.imagen.name);
-        // Aquí iría la lógica para subir la imagen
-        // Necesitaremos un servicio adicional como uploadService
       }
 
       console.log("Actualizando perfil con:", updatePayload);
@@ -170,13 +224,11 @@ export default function PerfilSuperAdministrador() {
       setSuccess("Perfil actualizado correctamente");
       setImagePreview(null);
       
-      // Limpiar mensaje después de 3 segundos
       setTimeout(() => setSuccess(null), 3000);
 
     } catch (err: any) {
       console.error("Error al actualizar perfil:", err);
       
-      // Manejar diferentes tipos de errores
       if (err.response?.status === 401) {
         setError("Sesión expirada. Por favor, inicia sesión nuevamente.");
         setTimeout(() => {
@@ -196,7 +248,6 @@ export default function PerfilSuperAdministrador() {
 
   // Validar formato de teléfono
   const validatePhone = (phone: string): boolean => {
-    // Formato internacional: +código_país seguido de números
     const phoneRegex = /^\+[1-9]\d{1,14}$/;
     return phoneRegex.test(phone);
   };
@@ -444,13 +495,14 @@ export default function PerfilSuperAdministrador() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                 </svg>
-                Actividad
+                Mis Conexiones
               </button>
             </div>
 
             {/* Contenido de Tabs */}
             <div className="perfil-tab-content">
               
+              {/* TAB: Información Personal */}
               {activeTab === 'personal' && (
                 <div className="perfil-section">
                   <h2 className="perfil-section-title">Información de la Cuenta</h2>
@@ -516,6 +568,7 @@ export default function PerfilSuperAdministrador() {
                 </div>
               )}
 
+              {/* TAB: Seguridad */}
               {activeTab === 'seguridad' && (
                 <div className="perfil-section">
                   <h2 className="perfil-section-title">Configuración de Seguridad</h2>
@@ -532,7 +585,7 @@ export default function PerfilSuperAdministrador() {
                     <div className="perfil-security-content">
                       <div className="perfil-security-info">
                         <h4>Contraseña de Acceso</h4>
-                        <p>Última actualización: Hace 30 días</p>
+                        <p>Protege tu cuenta con una contraseña segura</p>
                       </div>
                       <button
                         className="perfil-btn perfil-btn-outline"
@@ -560,37 +613,208 @@ export default function PerfilSuperAdministrador() {
                 </div>
               )}
 
+              {/* TAB: Actividad/Conexiones */}
               {activeTab === 'actividad' && (
                 <div className="perfil-section">
-                  <h2 className="perfil-section-title">Actividad Reciente</h2>
-                  
-                  <div className="perfil-coming-soon">
-                    <div className="perfil-coming-soon-icon">🚧</div>
-                    <h3>Próximamente</h3>
-                    <p>Estamos trabajando en esta funcionalidad para mostrarte tu actividad reciente, inicios de sesión y acciones importantes en el sistema.</p>
-                    
-                    {/* TODO: Implementar historial de actividad
-                        - Inicios de sesión con fecha, hora, dispositivo e IP
-                        - Cambios en el perfil
-                        - Acciones administrativas
-                        - Gráficos de actividad por día/semana/mes
-                    */}
-                    
-                    <div className="perfil-placeholder-stats">
-                      <div className="perfil-placeholder-stat">
-                        <span className="perfil-placeholder-number">---</span>
-                        <span className="perfil-placeholder-label">Días activo</span>
-                      </div>
-                      <div className="perfil-placeholder-stat">
-                        <span className="perfil-placeholder-number">---</span>
-                        <span className="perfil-placeholder-label">Sesiones</span>
-                      </div>
-                      <div className="perfil-placeholder-stat">
-                        <span className="perfil-placeholder-number">---</span>
-                        <span className="perfil-placeholder-label">Acciones</span>
-                      </div>
-                    </div>
+                  <div className="stats-header">
+                    <h2 className="perfil-section-title">Mis Conexiones</h2>
+                    <button 
+                      className="btn-refresh"
+                      onClick={() => refetchSesiones()}
+                      disabled={loadingSesiones}
+                    >
+                      {loadingSesiones ? (
+                        <>
+                          <div className="spinner-small"></div>
+                          Actualizando...
+                        </>
+                      ) : (
+                        <>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                          </svg>
+                          Actualizar
+                        </>
+                      )}
+                    </button>
                   </div>
+
+                  {loadingSesiones ? (
+                    <div className="stats-loading">
+                      <div className="spinner"></div>
+                      <p>Cargando sesiones...</p>
+                    </div>
+                  ) : errorSesiones ? (
+                    <div className="stats-error">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                      </svg>
+                      <p>Error al cargar las sesiones</p>
+                      <button className="btn-retry" onClick={() => refetchSesiones()}>
+                        Reintentar
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Resumen de Sesiones */}
+                      {resumen && (
+                        <div className="sessions-summary">
+                          <div className="summary-card">
+                            <div className="summary-icon">📊</div>
+                            <div className="summary-content">
+                              <span className="summary-value">{resumen.total_sesiones}</span>
+                              <span className="summary-label">Sesiones Totales</span>
+                            </div>
+                          </div>
+
+                          <div className="summary-card">
+                            <div className="summary-icon">🟢</div>
+                            <div className="summary-content">
+                              <span className="summary-value">{resumen.sesiones_activas}</span>
+                              <span className="summary-label">Sesiones Activas</span>
+                            </div>
+                          </div>
+
+                          <div className="summary-card">
+                            <div className="summary-icon">⏱️</div>
+                            <div className="summary-content">
+                              <span className="summary-value">
+                                {formatearDuracion(resumen.tiempo_promedio_minutos)}
+                              </span>
+                              <span className="summary-label">Tiempo Promedio</span>
+                            </div>
+                          </div>
+
+                          <div className="summary-card">
+                            <div className="summary-icon">🕐</div>
+                            <div className="summary-content">
+                              <span className="summary-value" style={{ fontSize: '0.9rem' }}>
+                                {resumen.ultima_conexion ? 
+                                  new Date(resumen.ultima_conexion).toLocaleDateString('es-CL', {
+                                    day: '2-digit',
+                                    month: 'short'
+                                  })
+                                  : '-'
+                                }
+                              </span>
+                              <span className="summary-label">Última Conexión</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Lista de Sesiones */}
+                      <div className="sessions-list">
+                        <div className="sessions-list-header">
+                          <h3>Historial de Conexiones</h3>
+                          {sesiones.some(s => s.estado === 'activa') && sesiones.length > 1 && (
+                            <button 
+                              className="btn-close-all"
+                              onClick={handleCerrarTodasLasSesiones}
+                            >
+                              Cerrar todas excepto esta
+                            </button>
+                          )}
+                        </div>
+
+                        {sesiones.length === 0 ? (
+                          <div className="sessions-empty">
+                            <p>📋 No hay sesiones registradas</p>
+                          </div>
+                        ) : (
+                          <div className="sessions-table-container">
+                            <table className="sessions-table">
+                              <thead>
+                                <tr>
+                                  <th>#</th>
+                                  <th>Fecha y Hora de Inicio</th>
+                                  <th>Fecha y Hora de Cierre</th>
+                                  <th>Duración</th>
+                                  <th>Estado</th>
+                                  <th>Acciones</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {sesiones.map((sesion, index) => (
+                                  <tr 
+                                    key={sesion.id_sesion}
+                                    className={sesion.estado === 'activa' ? 'session-active' : ''}
+                                  >
+                                    <td className="session-number">{index + 1}</td>
+                                    <td className="session-date">
+                                      <div className="session-datetime">
+                                        <span className="session-date-main">
+                                          {new Date(sesion.fecha_inicio).toLocaleDateString('es-CL', {
+                                            day: '2-digit',
+                                            month: 'short',
+                                            year: 'numeric'
+                                          })}
+                                        </span>
+                                        <span className="session-time">
+                                          {new Date(sesion.fecha_inicio).toLocaleTimeString('es-CL', {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                            second: '2-digit'
+                                          })}
+                                        </span>
+                                      </div>
+                                    </td>
+                                    <td className="session-date">
+                                      {sesion.fecha_fin ? (
+                                        <div className="session-datetime">
+                                          <span className="session-date-main">
+                                            {new Date(sesion.fecha_fin).toLocaleDateString('es-CL', {
+                                              day: '2-digit',
+                                              month: 'short',
+                                              year: 'numeric'
+                                            })}
+                                          </span>
+                                          <span className="session-time">
+                                            {new Date(sesion.fecha_fin).toLocaleTimeString('es-CL', {
+                                              hour: '2-digit',
+                                              minute: '2-digit',
+                                              second: '2-digit'
+                                            })}
+                                          </span>
+                                        </div>
+                                      ) : (
+                                        <span className="session-ongoing">En curso</span>
+                                      )}
+                                    </td>
+                                    <td className="session-duration">
+                                      {formatearDuracion(sesion.duracion_minutos)}
+                                    </td>
+                                    <td>
+                                      <span className={`session-badge ${sesion.estado}`}>
+                                        {sesion.estado === 'activa' ? '🟢 Activa' : '⚫ Finalizada'}
+                                      </span>
+                                    </td>
+                                    <td className="session-actions">
+                                      {sesion.estado === 'activa' && (
+                                        <button
+                                          className="btn-close-session"
+                                          onClick={() => handleCerrarSesion(sesion.id_sesion)}
+                                          title="Cerrar sesión"
+                                        >
+                                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <line x1="18" y1="6" x2="6" y2="18"/>
+                                            <line x1="6" y1="6" x2="18" y2="18"/>
+                                          </svg>
+                                        </button>
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
