@@ -7,6 +7,7 @@ import SearchBar from '../../components/SearchBar';
 //import LocationMap from '../../components/LocationMap';
 import { useAuthStatus } from '@/hooks/useAuthStatus';
 import styles from './page.module.css';
+import { map } from 'zod';
 
 // 🗺️ DATOS DE EJEMPLO PARA COMPLEJOS DEPORTIVOS
 const complejosDeportivos = [
@@ -173,6 +174,29 @@ export default function MapaPage() {
         });
       }
     };
+    // Crear nuevos marcadores
+  // Crear nuevos marcadores
+  filteredComplejos.forEach((complejo) => {
+    const marker = new google.maps.Marker({
+      position: complejo.coordenadas as any,
+      // Forzamos el tipo a 'any' para que TS acepte el valor
+      map: map as any,
+      title: complejo.nombre,
+    });
+
+    const infoWindow = new google.maps.InfoWindow({
+      content: `<div><strong>${complejo.nombre}</strong><br/>${complejo.direccion}</div>`,
+    });
+
+    marker.addListener('click', () => {
+      handleComplexClick(complejo);
+      // También aquí usamos 'map as any' para que TS no marque error
+      infoWindow.open(map as any, marker);
+    });
+
+    markersRef.current.push(marker);
+  });
+
 
      // Si ya hay una instancia de google cargada
     if (typeof window !== 'undefined' && (window as any).google && (window as any).google.maps) {
