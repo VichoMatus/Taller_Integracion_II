@@ -72,6 +72,23 @@ export const API_ENDPOINTS = {
     canchas: (id: number) => `/api/v1/complejos/${id}/canchas`
   },
   
+  // Endpoints de canchas
+  canchas: {
+    base: '/api/v1/canchas',
+    byId: (id: number) => `/api/v1/canchas/${id}`
+  },
+  
+  // Endpoints de reservas
+  reservas: {
+    base: '/api/v1/reservas',
+    byId: (id: number) => `/api/v1/reservas/${id}`
+  },
+  
+  // Endpoints de reseñas
+  resenas: {
+    base: '/api/v1/resenas'
+  },
+  
   // Endpoints específicos de SuperAdmin
   super_admin: {
     parametros: '/api/v1/super_admin/parametros',

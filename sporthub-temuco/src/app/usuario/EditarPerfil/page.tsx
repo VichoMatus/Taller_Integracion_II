@@ -19,7 +19,9 @@ export default function EditarPerfil() {
     email: "",
     bio: "",
     avatar: null as string | null,
+    avatarFile: null as File | null,
   });
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const PHONE_PREFIX = "+56 9";
 
@@ -43,6 +45,7 @@ export default function EditarPerfil() {
           email: data.email,
           bio: data.bio || "",
           avatar: data.avatar_url || null,
+          avatarFile: null,
         });
       } catch {
         // Si falla, inicializa con el prefijo
@@ -122,8 +125,36 @@ export default function EditarPerfil() {
     }
   };
 
+  // Manejar cambio de imagen
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar tamaño (máx 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError("La imagen no debe superar los 5MB");
+        return;
+      }
+
+      // Validar tipo
+      if (!file.type.startsWith('image/')) {
+        setError("El archivo debe ser una imagen");
+        return;
+      }
+
+      setFormData(prev => ({ ...prev, avatarFile: file }));
+      
+      // Crear preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      setError(null);
+    }
+  };
+
   const handleChangePhoto = () => {
-    alert("Funcionalidad para cambiar foto (a implementar)");
+    document.getElementById('avatar-upload')?.click();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -136,13 +167,22 @@ export default function EditarPerfil() {
       // Extraer solo el número sin el prefijo para guardar
       const phoneNumber = formData.phone.replace(PHONE_PREFIX, "").trim();
       
-      const updatePayload = {
-        nombre: formData.nombre,
-        apellido: formData.apellido,
-        telefono: phoneNumber.length > 0 ? formData.phone : "", // Guardar con prefijo o vacío
-      };
+      // Preparar FormData para enviar imagen
+      const updateFormData = new FormData();
+      updateFormData.append('nombre', formData.nombre);
+      updateFormData.append('apellido', formData.apellido);
+      updateFormData.append('telefono', phoneNumber.length > 0 ? formData.phone : "");
+      
+      if (formData.bio) {
+        updateFormData.append('bio', formData.bio);
+      }
 
-      await authService.updateProfile(updatePayload);
+      // Agregar imagen si existe
+      if (formData.avatarFile) {
+        updateFormData.append('avatar', formData.avatarFile);
+      }
+
+      await authService.updateProfile(updateFormData);
       setSuccess("✅ Perfil actualizado correctamente");
       
       setTimeout(() => {
@@ -170,12 +210,21 @@ export default function EditarPerfil() {
               
               <div className="avatar-section">
                 <div className="avatar-iniciales-editar">
-                  {formData.avatar ? (
-                    <img src={formData.avatar} alt="Avatar" />
+                  {imagePreview || formData.avatar ? (
+                    <img src={imagePreview || formData.avatar || ''} alt="Avatar" />
                   ) : (
                     <span>{userInitial}</span>
                   )}
                 </div>
+                
+                <input 
+                  id="avatar-upload"
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  style={{ display: 'none' }}
+                />
+                
                 <button 
                   type="button"
                   onClick={handleChangePhoto} 
@@ -183,6 +232,15 @@ export default function EditarPerfil() {
                 >
                   📷 Cambiar Foto
                 </button>
+
+                {imagePreview && (
+                  <div className="image-preview-badge">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span>Nueva imagen seleccionada</span>
+                  </div>
+                )}
               </div>
 
               <form onSubmit={handleSubmit}>

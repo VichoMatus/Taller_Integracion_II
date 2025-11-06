@@ -412,6 +412,94 @@ class SuperAdminService {
   }
 
   /**
+   * ESTADÍSTICAS COMPLETAS SUPERADMIN
+   * =================================
+   */
+
+  /**
+   * Obtener estadísticas completas del sistema
+   * 
+   * Incluye:
+   * - Métricas generales (usuarios, canchas, admins, reservas hoy)
+   * - Métricas mensuales (ganancias, ocupación, valoración)
+   * - Reservas por día (últimos 30 días)
+   * - Reservas por deporte (distribución)
+   * - Top 5 canchas más populares
+   * - Top 5 horarios más solicitados
+   * 
+   * @returns Promise con todas las estadísticas del sistema
+   */
+  async obtenerEstadisticasCompletas(): Promise<any> {
+    console.log('📊 [superAdminService] Obteniendo estadísticas completas del sistema');
+    
+    const headers = this.getAuthHeaders();
+    
+    try {
+      const response = await apiBackend.get<any>('/super_admin/estadisticas/completas', { headers });
+      
+      console.log('✅ Estadísticas completas obtenidas:', response.data);
+      
+      // Manejar formato de respuesta { ok: true, data: {...} }
+      if (response.data && response.data.ok) {
+        return response.data.data;
+      }
+      
+      // Respuesta directa
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Error al obtener estadísticas completas:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        throw new Error('No autorizado. Se requiere rol super_admin.');
+      }
+      
+      throw new Error(error.response?.data?.error || 'Error al obtener estadísticas completas');
+    }
+  }
+
+  /**
+   * Obtener solo métricas generales
+   */
+  async obtenerMetricasGenerales() {
+    const estadisticas = await this.obtenerEstadisticasCompletas();
+    return estadisticas.metricas_generales;
+  }
+
+  /**
+   * Obtener solo métricas mensuales
+   */
+  async obtenerMetricasMensuales() {
+    const estadisticas = await this.obtenerEstadisticasCompletas();
+    return estadisticas.metricas_mensuales;
+  }
+
+  /**
+   * Obtener solo datos para gráficos
+   */
+  async obtenerDataGraficos() {
+    const estadisticas = await this.obtenerEstadisticasCompletas();
+    return {
+      reservas_por_dia: estadisticas.reservas_por_dia,
+      reservas_por_deporte: estadisticas.reservas_por_deporte
+    };
+  }
+
+  /**
+   * Obtener solo tops (canchas y horarios)
+   */
+  async obtenerTops() {
+    const estadisticas = await this.obtenerEstadisticasCompletas();
+    return {
+      top_canchas: estadisticas.top_canchas,
+      top_horarios: estadisticas.top_horarios
+    };
+  }
+
+  /**
    * MÉTODOS DE CAMBIO DE ROL
    * ========================
    */
