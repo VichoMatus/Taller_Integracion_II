@@ -228,8 +228,13 @@ export const canchaService = {
           page_size: data.page_size
         };
       } else if (response.data?.items) {
-        // Formato: { items: [...] }
+        // Formato: { items: [...], total: X } (común en FastAPI)
         canchas = response.data.items;
+        pagination = {
+          total: response.data.total,
+          page: response.data.page,
+          page_size: response.data.page_size
+        };
       } else if (Array.isArray(response.data)) {
         // Formato: [...]
         canchas = response.data;

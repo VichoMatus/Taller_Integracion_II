@@ -19,6 +19,7 @@ interface StatsCardProps {
   title: string;
   value: string | number;
   icon: React.ReactNode;
+  emoji?: string;                  // Emoji alternativo al icono SVG
   subtitle?: string;
   trend?: {
     value: number;
@@ -38,6 +39,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
   title,
   value,
   icon,
+  emoji,
   subtitle,
   trend,
   color = 'blue',
@@ -178,7 +180,11 @@ const StatsCard: React.FC<StatsCardProps> = ({
         </div>
         
         <div className={`${currentStyles.cardIcon} ${iconColorVariants[effectiveColor]}`}>
-          {icon}
+          {emoji ? (
+            <span style={{ fontSize: '32px', lineHeight: '1' }}>{emoji}</span>
+          ) : (
+            icon
+          )}
         </div>
       </div>
     </div>

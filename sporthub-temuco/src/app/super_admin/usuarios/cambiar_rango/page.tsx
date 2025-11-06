@@ -15,25 +15,16 @@ export default function CambiarRangoUsuarioPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [mostrarResultados, setMostrarResultados] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Cargar usuarios cuando el usuario empiece a buscar
+  // Cargar usuarios al montar el componente
   useEffect(() => {
     const cargarUsuarios = async () => {
-      if (searchTerm.trim().length === 0) {
-        setMostrarResultados(false);
-        setUsuarios([]);
-        return;
-      }
-
       try {
         setIsLoading(true);
         setError('');
-        setMostrarResultados(true);
         
-        console.log('🔍 [CambiarRangoUsuario] Buscando usuarios...');
+        console.log('🔍 [CambiarRangoUsuario] Cargando usuarios...');
         const data = await superAdminService.listarUsuarios();
         console.log('✅ [CambiarRangoUsuario] Usuarios cargados:', data);
         
@@ -46,20 +37,18 @@ export default function CambiarRangoUsuarioPage() {
       }
     };
 
-    // Debounce: esperar 500ms después de que el usuario deje de escribir
-    const timer = setTimeout(() => {
-      cargarUsuarios();
-    }, 500);
+    cargarUsuarios();
+  }, []);
 
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  // Seleccionar usuario
-  const handleSeleccionarUsuario = (usuario: Usuario) => {
-    setUsuarioSeleccionado(usuario);
-    setRolSeleccionado(usuario.rol as 'usuario' | 'admin' | 'super_admin');
-    setError('');
-    setSuccess('');
+  // Seleccionar usuario desde el dropdown
+  const handleSeleccionarUsuario = (idUsuario: string) => {
+    const usuario = usuarios.find(u => u.id_usuario.toString() === idUsuario);
+    if (usuario) {
+      setUsuarioSeleccionado(usuario);
+      setRolSeleccionado(usuario.rol as 'usuario' | 'admin' | 'super_admin');
+      setError('');
+      setSuccess('');
+    }
   };
 
   // Abrir modal de confirmación
@@ -94,18 +83,11 @@ export default function CambiarRangoUsuarioPage() {
       
       setSuccess(`✅ Rol cambiado exitosamente a "${rolSeleccionado}"`);
       
-      // Recargar usuarios
-      const data = await superAdminService.listarUsuarios();
-      setUsuarios(Array.isArray(data) ? data : []);
+      // Esperar 1.5 segundos y redirigir al panel de usuarios
+      setTimeout(() => {
+        router.push('/super_admin/usuarios');
+      }, 1500);
       
-      // Actualizar usuario seleccionado
-      const usuarioActualizado = Array.isArray(data) 
-        ? data.find(u => u.id_usuario === usuarioSeleccionado?.id_usuario)
-        : null;
-      if (usuarioActualizado) {
-        setUsuarioSeleccionado(usuarioActualizado);
-        setRolSeleccionado(usuarioActualizado.rol as 'usuario' | 'admin' | 'super_admin');
-      }
     } catch (err: any) {
       console.error('❌ [CambiarRangoUsuario] Error al cambiar rol:', err);
       setError('Error al cambiar el rol: ' + err.message);
@@ -115,14 +97,7 @@ export default function CambiarRangoUsuarioPage() {
   };
 
   // Filtrar usuarios
-  const usuariosFiltrados = usuarios.filter(u => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      u.nombre?.toLowerCase().includes(searchLower) ||
-      u.apellido?.toLowerCase().includes(searchLower) ||
-      u.email?.toLowerCase().includes(searchLower)
-    );
-  });
+  const usuariosFiltrados = usuarios;
 
   return (
     <div className="admin-page-layout">
@@ -275,27 +250,28 @@ export default function CambiarRangoUsuarioPage() {
       <div className="edit-court-container">
         <div className="edit-court-card">
           
-          {/* Sección: Buscar Usuario */}
+          {/* Sección: Seleccionar Usuario */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Buscar Usuario</h3>
+            <h3 className="edit-section-title">Seleccionar Usuario</h3>
             <div className="edit-form-group">
-              <label className="edit-form-label">Buscar por nombre, apellido o email:</label>
-              <input
-                type="text"
-                placeholder="Escribe para buscar..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+              <label className="edit-form-label">Usuario:</label>
+              <select
+                value={usuarioSeleccionado?.id_usuario || ''}
+                onChange={(e) => handleSeleccionarUsuario(e.target.value)}
                 className="edit-form-input"
-                autoFocus
-              />
+                disabled={isLoading}
+              >
+                <option value="">-- Seleccione un usuario --</option>
+                {usuarios.map((usuario) => (
+                  <option key={usuario.id_usuario} value={usuario.id_usuario}>
+                    {usuario.nombre} {usuario.apellido} ({usuario.email}) - Rol: {usuario.rol}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            {!mostrarResultados && searchTerm.trim().length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#9ca3af' }}>
-                <p style={{ fontSize: '14px' }}>Escribe en el campo de búsqueda para ver los usuarios disponibles</p>
-              </div>
-            ) : isLoading ? (
-              <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+            {isLoading && (
+              <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
                 <div style={{ 
                   display: 'inline-block',
                   width: '40px',
@@ -305,64 +281,7 @@ export default function CambiarRangoUsuarioPage() {
                   borderRadius: '50%',
                   animation: 'spin 1s linear infinite'
                 }}></div>
-                <p style={{ marginTop: '1rem', color: '#6b7280', fontSize: '14px' }}>Buscando usuarios...</p>
-              </div>
-            ) : mostrarResultados && usuariosFiltrados.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#9ca3af' }}>
-                <p style={{ fontSize: '14px' }}>No se encontraron usuarios con ese criterio de búsqueda</p>
-              </div>
-            ) : (
-              <div style={{ marginTop: '1rem' }}>
-                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '0.75rem' }}>
-                  {usuariosFiltrados.length} usuario{usuariosFiltrados.length !== 1 ? 's' : ''} encontrado{usuariosFiltrados.length !== 1 ? 's' : ''}
-                </p>
-                <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
-                  {usuariosFiltrados.map((usuario) => (
-                    <button
-                      key={usuario.id_usuario}
-                      onClick={() => handleSeleccionarUsuario(usuario)}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '1rem',
-                        marginBottom: '0.5rem',
-                        border: usuarioSeleccionado?.id_usuario === usuario.id_usuario ? '2px solid #f97316' : '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        backgroundColor: usuarioSeleccionado?.id_usuario === usuario.id_usuario ? '#fff7ed' : 'white',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (usuarioSeleccionado?.id_usuario !== usuario.id_usuario) {
-                          e.currentTarget.style.borderColor = '#fed7aa';
-                          e.currentTarget.style.backgroundColor = '#fffbf5';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (usuarioSeleccionado?.id_usuario !== usuario.id_usuario) {
-                          e.currentTarget.style.borderColor = '#e5e7eb';
-                          e.currentTarget.style.backgroundColor = 'white';
-                        }
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div>
-                          <div style={{ fontWeight: '600', color: '#111827', marginBottom: '0.25rem' }}>
-                            {usuario.nombre} {usuario.apellido}
-                          </div>
-                          <div style={{ fontSize: '13px', color: '#6b7280' }}>{usuario.email}</div>
-                        </div>
-                        <span className={`status-badge ${
-                          usuario.rol === 'super_admin' ? 'bg-purple-100 text-purple-800' :
-                          usuario.rol === 'admin' ? 'bg-blue-100 text-blue-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {usuario.rol}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                <p style={{ marginTop: '1rem', color: '#6b7280', fontSize: '14px' }}>Cargando usuarios...</p>
               </div>
             )}
           </div>
@@ -371,31 +290,6 @@ export default function CambiarRangoUsuarioPage() {
           {usuarioSeleccionado && (
             <div className="edit-section">
               <h3 className="edit-section-title">Cambiar Rol</h3>
-              
-              {/* Información del Usuario Seleccionado */}
-              <div style={{ 
-                padding: '1rem', 
-                backgroundColor: '#f9fafb', 
-                borderRadius: '8px', 
-                border: '1px solid #e5e7eb',
-                marginBottom: '1.5rem'
-              }}>
-                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '0.5rem' }}>Usuario seleccionado:</p>
-                <p style={{ fontWeight: '600', color: '#111827', marginBottom: '0.25rem' }}>
-                  {usuarioSeleccionado.nombre} {usuarioSeleccionado.apellido}
-                </p>
-                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '0.5rem' }}>{usuarioSeleccionado.email}</p>
-                <div>
-                  <span style={{ fontSize: '13px', color: '#6b7280' }}>Rol actual: </span>
-                  <span className={`status-badge ${
-                    usuarioSeleccionado.rol === 'super_admin' ? 'bg-purple-100 text-purple-800' :
-                    usuarioSeleccionado.rol === 'admin' ? 'bg-blue-100 text-blue-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {usuarioSeleccionado.rol}
-                  </span>
-                </div>
-              </div>
 
               {/* Selector de Rol */}
               <div className="edit-form-grid">

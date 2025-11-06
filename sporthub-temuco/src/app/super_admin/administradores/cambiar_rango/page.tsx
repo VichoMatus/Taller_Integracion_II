@@ -15,25 +15,16 @@ export default function CambiarRangoAdministradorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [mostrarResultados, setMostrarResultados] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Cargar administradores cuando el admin empiece a buscar
+  // Cargar administradores al montar el componente
   useEffect(() => {
     const cargarAdministradores = async () => {
-      if (searchTerm.trim().length === 0) {
-        setMostrarResultados(false);
-        setAdministradores([]);
-        return;
-      }
-
       try {
         setIsLoading(true);
         setError('');
-        setMostrarResultados(true);
         
-        console.log('🔍 [CambiarRangoAdmin] Buscando administradores...');
+        console.log('🔍 [CambiarRangoAdmin] Cargando administradores...');
         const data = await superAdminService.listarAdministradores();
         console.log('✅ [CambiarRangoAdmin] administradores cargados:', data);
         
@@ -46,20 +37,18 @@ export default function CambiarRangoAdministradorPage() {
       }
     };
 
-    // Debounce: esperar 500ms después de que el admin deje de escribir
-    const timer = setTimeout(() => {
-      cargarAdministradores();
-    }, 500);
+    cargarAdministradores();
+  }, []);
 
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  // Seleccionar administrador
-  const handleSeleccionarAdmin = (admin: Usuario) => {
-    setAdminSeleccionado(admin);
-    setRolSeleccionado(admin.rol as 'usuario' | 'admin' | 'super_admin');
-    setError('');
-    setSuccess('');
+  // Seleccionar administrador desde el dropdown
+  const handleSeleccionarAdmin = (idUsuario: string) => {
+    const admin = administradores.find(a => a.id_usuario.toString() === idUsuario);
+    if (admin) {
+      setAdminSeleccionado(admin);
+      setRolSeleccionado(admin.rol as 'usuario' | 'admin' | 'super_admin');
+      setError('');
+      setSuccess('');
+    }
   };
 
   // Abrir modal de confirmación
@@ -94,18 +83,11 @@ export default function CambiarRangoAdministradorPage() {
       
       setSuccess(`✅ Rol cambiado exitosamente a "${rolSeleccionado}"`);
       
-      // Recargar administradores
-      const data = await superAdminService.listarAdministradores();
-      setAdministradores(Array.isArray(data) ? data : []);
+      // Esperar 1.5 segundos y redirigir al panel de administradores
+      setTimeout(() => {
+        router.push('/super_admin/administradores');
+      }, 1500);
       
-      // Actualizar admin seleccionado
-      const adminActualizado = Array.isArray(data) 
-        ? data.find(u => u.id_usuario === adminSeleccionado?.id_usuario)
-        : null;
-      if (adminActualizado) {
-        setAdminSeleccionado(adminActualizado);
-        setRolSeleccionado(adminActualizado.rol as 'usuario' | 'admin' | 'super_admin');
-      }
     } catch (err: any) {
       console.error('❌ [CambiarRangoAdmin] Error al cambiar rol:', err);
       setError('Error al cambiar el rol: ' + err.message);
@@ -113,16 +95,6 @@ export default function CambiarRangoAdministradorPage() {
       setIsSaving(false);
     }
   };
-
-  // Filtrar administradores
-  const administradoresFiltrados = administradores.filter(u => {
-    const searchLower = searchTerm.toLowerCase();
-    return (
-      u.nombre?.toLowerCase().includes(searchLower) ||
-      u.apellido?.toLowerCase().includes(searchLower) ||
-      u.email?.toLowerCase().includes(searchLower)
-    );
-  });
 
   return (
     <div className="admin-page-layout">
@@ -277,125 +249,81 @@ export default function CambiarRangoAdministradorPage() {
           
           {/* Sección: Buscar Administrador */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Buscar Administrador</h3>
+            <h3 className="edit-section-title">Seleccionar Administrador</h3>
             <div className="edit-form-group">
-              <label className="edit-form-label">Buscar por nombre, apellido o email:</label>
-              <input
-                type="text"
-                placeholder="Escribe para buscar..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="edit-form-input"
-                autoFocus
-              />
-            </div>
-
-            {!mostrarResultados && searchTerm.trim().length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#9ca3af' }}>
-                <p style={{ fontSize: '14px' }}>Escribe en el campo de búsqueda para ver los administradores disponibles</p>
-              </div>
-            ) : isLoading ? (
-              <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-                <div style={{ 
-                  display: 'inline-block',
-                  width: '40px',
-                  height: '40px',
-                  border: '3px solid #f3f4f6',
-                  borderTop: '3px solid #f97316',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite'
-                }}></div>
-                <p style={{ marginTop: '1rem', color: '#6b7280', fontSize: '14px' }}>Buscando administradores...</p>
-              </div>
-            ) : mostrarResultados && administradoresFiltrados.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#9ca3af' }}>
-                <p style={{ fontSize: '14px' }}>No se encontraron administradores con ese criterio de búsqueda</p>
-              </div>
-            ) : (
-              <div style={{ marginTop: '1rem' }}>
-                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '0.75rem' }}>
-                  {administradoresFiltrados.length} admin{administradoresFiltrados.length !== 1 ? 's' : ''} encontrado{administradoresFiltrados.length !== 1 ? 's' : ''}
-                </p>
-                <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
-                  {administradoresFiltrados.map((admin) => (
-                    <button
-                      key={admin.id_usuario}
-                      onClick={() => handleSeleccionarAdmin(admin)}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '1rem',
-                        marginBottom: '0.5rem',
-                        border: adminSeleccionado?.id_usuario === admin.id_usuario ? '2px solid #f97316' : '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        backgroundColor: adminSeleccionado?.id_usuario === admin.id_usuario ? '#fff7ed' : 'white',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (adminSeleccionado?.id_usuario !== admin.id_usuario) {
-                          e.currentTarget.style.borderColor = '#fed7aa';
-                          e.currentTarget.style.backgroundColor = '#fffbf5';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (adminSeleccionado?.id_usuario !== admin.id_usuario) {
-                          e.currentTarget.style.borderColor = '#e5e7eb';
-                          e.currentTarget.style.backgroundColor = 'white';
-                        }
-                      }}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div>
-                          <div style={{ fontWeight: '600', color: '#111827', marginBottom: '0.25rem' }}>
-                            {admin.nombre} {admin.apellido}
-                          </div>
-                          <div style={{ fontSize: '13px', color: '#6b7280' }}>{admin.email}</div>
-                        </div>
-                        <span className={`status-badge ${
-                          admin.rol === 'super_admin' ? 'bg-purple-100 text-purple-800' :
-                          admin.rol === 'admin' ? 'bg-blue-100 text-blue-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {admin.rol}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
+              <label className="edit-form-label">Administrador:</label>
+              {isLoading ? (
+                <div style={{ textAlign: 'center', padding: '2rem' }}>
+                  <div style={{ 
+                    display: 'inline-block',
+                    width: '32px',
+                    height: '32px',
+                    border: '3px solid #f3f4f6',
+                    borderTop: '3px solid #f97316',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }}></div>
+                  <p style={{ marginTop: '1rem', color: '#6b7280', fontSize: '14px' }}>Cargando administradores...</p>
                 </div>
-              </div>
-            )}
+              ) : administradores.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#9ca3af' }}>
+                  <p style={{ fontSize: '14px' }}>No hay administradores disponibles</p>
+                </div>
+              ) : (
+                <select
+                  value={adminSeleccionado?.id_usuario || ''}
+                  onChange={(e) => handleSeleccionarAdmin(e.target.value)}
+                  className="edit-form-input"
+                  style={{
+                    padding: '12px',
+                    fontSize: '14px',
+                    borderRadius: '8px',
+                    border: '1px solid #e5e7eb',
+                    width: '100%',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="">-- Seleccione un administrador --</option>
+                  {administradores.map((admin) => (
+                    <option key={admin.id_usuario} value={admin.id_usuario}>
+                      {admin.nombre} {admin.apellido} ({admin.email}) - {admin.rol}
+                    </option>
+                  ))}
+                </select>
+              )}
+              
+              {adminSeleccionado && (
+                <div style={{ 
+                  marginTop: '1rem',
+                  padding: '1rem', 
+                  backgroundColor: '#f9fafb', 
+                  borderRadius: '8px', 
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '0.5rem' }}>Administrador seleccionado:</p>
+                  <p style={{ fontWeight: '600', color: '#111827', marginBottom: '0.25rem' }}>
+                    {adminSeleccionado.nombre} {adminSeleccionado.apellido}
+                  </p>
+                  <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '0.5rem' }}>{adminSeleccionado.email}</p>
+                  <div>
+                    <span style={{ fontSize: '13px', color: '#6b7280' }}>Rol actual: </span>
+                    <span className={`status-badge ${
+                      adminSeleccionado.rol === 'super_admin' ? 'bg-purple-100 text-purple-800' :
+                      adminSeleccionado.rol === 'admin' ? 'bg-blue-100 text-blue-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {adminSeleccionado.rol}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Sección: Cambiar Rol */}
           {adminSeleccionado && (
             <div className="edit-section">
-              <h3 className="edit-section-title">Cambiar Rol</h3>
-              
-              {/* Información del admin Seleccionado */}
-              <div style={{ 
-                padding: '1rem', 
-                backgroundColor: '#f9fafb', 
-                borderRadius: '8px', 
-                border: '1px solid #e5e7eb',
-                marginBottom: '1.5rem'
-              }}>
-                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '0.5rem' }}>admin seleccionado:</p>
-                <p style={{ fontWeight: '600', color: '#111827', marginBottom: '0.25rem' }}>
-                  {adminSeleccionado.nombre} {adminSeleccionado.apellido}
-                </p>
-                <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '0.5rem' }}>{adminSeleccionado.email}</p>
-                <div>
-                  <span style={{ fontSize: '13px', color: '#6b7280' }}>Rol actual: </span>
-                  <span className={`status-badge ${
-                    adminSeleccionado.rol === 'super_admin' ? 'bg-purple-100 text-purple-800' :
-                    adminSeleccionado.rol === 'admin' ? 'bg-blue-100 text-blue-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {adminSeleccionado.rol}
-                  </span>
-                </div>
-              </div>
+              <h3 className="edit-section-title">Nuevo Rol</h3>
 
               {/* Selector de Rol */}
               <div className="edit-form-grid">

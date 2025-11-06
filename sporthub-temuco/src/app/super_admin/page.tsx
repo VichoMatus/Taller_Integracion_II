@@ -52,25 +52,31 @@ export default function SuperAdminDashboard() {
       const adminsData = await superAdminService.listarAdministradores();
       setAdministradores(adminsData.slice(0, 3)); // Primeros 3 para la tabla
       
-      // Cargar canchas - El servicio devuelve { items: [...], total?, page?, page_size? }
+      // Cargar canchas - La respuesta incluye el total del sistema
       const canchasResponse = await canchaService.getCanchas({ page: 1, page_size: 3 }) as any;
       const canchasArray = Array.isArray(canchasResponse.items) ? canchasResponse.items : [];
       setCanchas(canchasArray);
       
-      // Usar el campo 'total' de la respuesta de paginación (si existe)
-      // Si no existe el total, usamos el length del array como fallback
+      // El backend devuelve el total de canchas en el campo 'total' de la respuesta paginada
       const totalCanchas = canchasResponse.total || canchasArray.length;
+      
+      console.log('🏠 Respuesta de canchas:', canchasResponse);
+      console.log('🏠 Total canchas del sistema:', totalCanchas);
+      
+      // Calcular total de usuarios (usuarios regulares + administradores, excluyendo super_admins)
+      const totalUsuariosConAdmins = usuariosData.length + adminsData.length;
       
       // Actualizar estadísticas
       const newStats = {
-        totalUsuarios: usuariosData.length,
+        totalUsuarios: totalUsuariosConAdmins, // Incluye usuarios regulares + administradores
         totalCanchas: totalCanchas,
         totalAdministradores: adminsData.length,
         reservasHoy: 0 // Por ahora 0, se implementará después
       };
       
       console.log('📊 Estadísticas del dashboard:', newStats);
-      console.log('👥 Total usuarios:', usuariosData.length);
+      console.log('👥 Total usuarios (incluyendo admins):', totalUsuariosConAdmins);
+      console.log('👤 Usuarios regulares:', usuariosData.length);
       console.log('🏠 Total canchas:', totalCanchas);
       console.log('🧑‍💼 Total administradores:', adminsData.length);
       
@@ -131,6 +137,7 @@ export default function SuperAdminDashboard() {
         <StatsCard
           title="Usuarios Totales"
           value={stats.totalUsuarios}
+          emoji="👥"
           icon={
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
@@ -145,6 +152,7 @@ export default function SuperAdminDashboard() {
         <StatsCard
           title="Canchas Registradas"
           value={stats.totalCanchas}
+          emoji="⚽"
           icon={
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -159,6 +167,7 @@ export default function SuperAdminDashboard() {
         <StatsCard
           title="Administradores"
           value={stats.totalAdministradores}
+          emoji="🛡️"
           icon={
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -172,6 +181,7 @@ export default function SuperAdminDashboard() {
         
         <StatsCard
           title="Reservas Hoy"
+          emoji="📅"
           value={stats.reservasHoy}
           icon={
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
