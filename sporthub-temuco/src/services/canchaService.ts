@@ -12,6 +12,7 @@ import {
   AddFotoInput,
   CanchaBackendResponse 
 } from '../types/cancha';
+import { getDeporteId, getNombreDeporteNormalizado } from '../utils/deportesMap';
 
 /**
  * Adaptador para convertir datos del backend al formato del frontend
@@ -85,6 +86,8 @@ const adaptCanchaFromBackend = (backendCancha: any) => {
  *   - deporte (optional)
  *   - cubierta (optional)
  *   - activo (optional)
+ * 
+ * 🔥 IMPORTANTE: Ahora incluye mapeo automático de deporte a id_deporte
  */
 const adaptCanchaToBackend = (frontendCancha: CreateCanchaInput | UpdateCanchaInput, isUpdate: boolean = false) => {
   const payload: any = {};
@@ -101,14 +104,28 @@ const adaptCanchaToBackend = (frontendCancha: CreateCanchaInput | UpdateCanchaIn
       payload.nombre = frontendCancha.nombre;
     }
 
-    // id_deporte - OPCIONAL
-    if ((frontendCancha as any).id_deporte !== undefined) {
-      payload.id_deporte = (frontendCancha as any).id_deporte;
-    }
-
-    // deporte - OPCIONAL (nombre del deporte)
+    // 🔥 ACTUALIZADO: Solo enviar nombre del deporte (sin ID)
+    // El backend FastAPI buscará el deporte por nombre y asignará el ID correcto
     if ((frontendCancha as any).tipo !== undefined) {
-      payload.deporte = (frontendCancha as any).tipo;
+      const tipoDeporte = (frontendCancha as any).tipo;
+      
+      // Normalizar el nombre del deporte
+      const deporteNormalizado = getNombreDeporteNormalizado(tipoDeporte);
+      payload.deporte = deporteNormalizado;
+      
+      // 🔥 DESHABILITADO: No enviar id_deporte porque los IDs están mal mapeados
+      // El backend debe resolver el ID correcto basado en el nombre del deporte
+      // const deporteId = getDeporteId(tipoDeporte);
+      // if (deporteId) {
+      //   payload.id_deporte = deporteId;
+      // }
+      
+      console.log(`🏀 [adaptCanchaToBackend] Deporte mapeado:`, {
+        tipoOriginal: tipoDeporte,
+        deporteNormalizado,
+        nota: 'ID del deporte será resuelto por el backend basado en el nombre',
+        payloadFinal: { deporte: payload.deporte }
+      });
     }
 
     // cubierta - OPCIONAL (default: false)
@@ -126,19 +143,26 @@ const adaptCanchaToBackend = (frontendCancha: CreateCanchaInput | UpdateCanchaIn
       payload.nombre = frontendCancha.nombre;
     }
 
-    // deporte - OPCIONAL
+    // 🔥 ACTUALIZADO: Solo enviar nombre del deporte para UPDATE
+    // El backend FastAPI buscará el deporte por nombre y asignará el ID correcto
     if ((frontendCancha as any).tipo !== undefined) {
-      payload.deporte = (frontendCancha as any).tipo;
+      const tipoDeporte = (frontendCancha as any).tipo;
+      
+      // Normalizar el nombre del deporte
+      const deporteNormalizado = getNombreDeporteNormalizado(tipoDeporte);
+      payload.deporte = deporteNormalizado;
+      
+      // 🔥 DESHABILITADO: No enviar id_deporte porque los IDs están mal mapeados
+      // El backend debe resolver el ID correcto basado en el nombre del deporte
+      // const deporteId = getDeporteId(tipoDeporte);
+      // if (deporteId) {
+      //   payload.id_deporte = deporteId;
+      // }
     }
 
     // cubierta - OPCIONAL
     if ((frontendCancha as any).techada !== undefined) {
       payload.cubierta = (frontendCancha as any).techada;
-    }
-
-    // id_deporte - OPCIONAL
-    if ((frontendCancha as any).id_deporte !== undefined) {
-      payload.id_deporte = (frontendCancha as any).id_deporte;
     }
 
     // activo - OPCIONAL

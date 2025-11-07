@@ -16,6 +16,11 @@ export default function CreateReservaPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<number>(0);
+  
+  // 🔥 NUEVO: Estados para modales personalizados
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
   // Estado del formulario
   const [formData, setFormData] = useState<CreateReservaInput>({
@@ -29,6 +34,21 @@ export default function CreateReservaPage() {
 
   // Calcular precio basado en horas y cancha seleccionada
   const [precioCalculado, setPrecioCalculado] = useState<number>(0);
+  
+  // 🔥 Funciones helper para mostrar modales personalizados
+  const showSuccess = (message: string) => {
+    setModalMessage(message);
+    setShowSuccessModal(true);
+    setTimeout(() => {
+      setShowSuccessModal(false);
+      router.push('/admin/reservas'); // Redirigir después de 2 segundos
+    }, 2000);
+  };
+
+  const showError = (message: string) => {
+    setModalMessage(message);
+    setShowErrorModal(true);
+  };
 
   // Obtener ID del usuario actual del token
   useEffect(() => {
@@ -190,8 +210,7 @@ export default function CreateReservaPage() {
       await reservaService.createReservaAdmin(createData);
       
       // Mostrar mensaje de éxito y redirigir
-      alert('Reserva creada exitosamente como administrador');
-      router.push('/admin/reservas');
+      showSuccess('Reserva creada exitosamente como administrador');
     } catch (err: any) {
       console.error('Error al crear la reserva:', err);
       const errorMessage = typeof err?.message === 'string' 
@@ -199,7 +218,7 @@ export default function CreateReservaPage() {
         : err?.response?.data?.message 
         || JSON.stringify(err?.message || err) 
         || 'No se pudo crear la reserva. Verifique los datos e intente nuevamente.';
-      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -391,6 +410,44 @@ export default function CreateReservaPage() {
           </div>
         </form>
       </div>
+
+      {/* Modal de Éxito */}
+      {showSuccessModal && (
+        <div className="modal-overlay">
+          <div className="modal-content modal-success">
+            <div className="modal-icon-success">
+              <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="modal-title">¡Éxito!</h3>
+            <p className="modal-description">{modalMessage}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Error */}
+      {showErrorModal && (
+        <div className="modal-overlay" onClick={() => setShowErrorModal(false)}>
+          <div className="modal-content modal-error" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-icon-error">
+              <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <h3 className="modal-title">Error</h3>
+            <p className="modal-description">{modalMessage}</p>
+            <div className="modal-footer">
+              <button 
+                className="btn-modal btn-modal-confirm" 
+                onClick={() => setShowErrorModal(false)}
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

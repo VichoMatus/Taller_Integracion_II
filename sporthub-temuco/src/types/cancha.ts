@@ -79,6 +79,7 @@ export interface CreateCanchaInput {
   descripcion?: string;
   capacidad: number;
   techada: boolean;
+  activa?: boolean; // Estado inicial de la cancha
   establecimientoId: number;
   imagenUrl?: string;
 }
@@ -90,6 +91,9 @@ export interface UpdateCanchaInput {
   id_deporte?: number; // ID numérico del deporte
   techada?: boolean;
   activa?: boolean;
+  precioPorHora?: number;
+  capacidad?: number;
+  descripcion?: string;
 }
 
 // Tipos para gestión de fotos de canchas

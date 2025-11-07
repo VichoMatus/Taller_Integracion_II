@@ -222,6 +222,31 @@ export const reservaService = {
   },
 
   /**
+   * Confirmar pago de reserva con método de pago específico (admin)
+   * ✅ Backend: POST /reservas/:id/confirmar
+   * ✅ Requiere: admin o super_admin
+   * @param id ID de la reserva
+   * @param metodoPago Método de pago (efectivo, transferencia, tarjeta)
+   */
+  async confirmarReservaConMetodo(id: number, metodoPago: string): Promise<ConfirmarReservaResponse> {
+    try {
+      console.log(`🔍 [confirmarReservaConMetodo] Confirmando reserva ${id} con método: ${metodoPago}`);
+      console.log(`🔍 [confirmarReservaConMetodo] URL completa: POST /reservas/${id}/confirmar`);
+      console.log(`🔍 [confirmarReservaConMetodo] Body:`, { metodoPago });
+      
+      const { data } = await apiBackend.post(`/reservas/${id}/confirmar`, { metodoPago });
+      
+      console.log(`✅ [confirmarReservaConMetodo] Reserva confirmada:`, data);
+      return data;
+    } catch (err: any) {
+      console.error(`❌ [confirmarReservaConMetodo] Error:`, err);
+      console.error(`❌ [confirmarReservaConMetodo] Status:`, err?.response?.status);
+      console.error(`❌ [confirmarReservaConMetodo] Response:`, err?.response?.data);
+      handleApiError(err);
+    }
+  },
+
+  /**
    * Obtener reservas de una cancha específica (admin)
    * ✅ Backend: GET /reservas/admin/cancha/:canchaId
    * ✅ Requiere: admin o super_admin
