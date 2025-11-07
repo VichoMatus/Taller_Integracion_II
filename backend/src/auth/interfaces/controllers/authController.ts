@@ -34,6 +34,7 @@
 
 import { Request, Response } from 'express';
 import { AuthService } from '../../services/authService';
+import { GoogleAuthService } from '../../services/googleAuthService';
 import {
   UserLogin, UserUpdate, ChangePasswordRequest,
   VerifyEmailRequest, ResendVerificationRequest, SendVerificationRequest, ForgotPasswordRequest,
@@ -47,9 +48,11 @@ import {
  */
 export class AuthController {
   private service: AuthService;
+  private google: GoogleAuthService;
 
   constructor() {
     this.service = new AuthService();
+    this.google = new GoogleAuthService();
   }
 
   /**
@@ -500,6 +503,72 @@ export class AuthController {
       res.status(status).json(result);
     } catch (error) {
       res.status(500).json({ ok: false, error: 'Error interno del servidor' });
+    }
+  };
+
+  /**
+   * INICIO DE SESIÓN CON GOOGLE (ID TOKEN)
+   * ======================================
+   * POST /google/idtoken
+   * Body: { id_token: string }
+   * Verifica el token de Google y crea/autentica usuario en FastAPI
+   */
+  googleWithIdToken = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { id_token } = req.body || {};
+      if (!id_token) {
+        res.status(400).json({ ok: false, error: 'id_token es requerido' });
+        return;
+      }
+
+      if (!this.google.isReady()) {
+        res.status(503).json({ ok: false, error: 'Google Auth no está configurado en el servidor' });
+        return;
+      }
+
+      // Paso 1: Verificar token con Google
+      const profile = await this.google.verifyIdToken(id_token);
+      console.log('✅ [AuthController] Token de Google verificado:', profile.email);
+
+      // Paso 2: Llamar al servicio para login/registro en FastAPI
+      const result = await this.service.loginOrRegisterWithGoogle(profile);
+
+      if (result.ok) {
+        console.log('✅ [AuthController] Usuario autenticado/registrado con Google');
+        res.status(200).json(result);
+      } else {
+        console.error('❌ [AuthController] Error en login/registro:', result.error);
+        
+        // Si el error es que el endpoint no existe, retornar perfil como fallback
+        if (result.error?.includes('no implementado') || result.error?.includes('404')) {
+          console.warn('⚠️ [AuthController] Endpoint de FastAPI no disponible, retornando perfil como fallback');
+          res.status(200).json({ 
+            ok: true, 
+            data: { 
+              provider: 'google', 
+              profile,
+              fallback: true,
+              message: 'Perfil verificado. Endpoint de FastAPI pendiente de implementación.'
+            } 
+          });
+        } else {
+          res.status(400).json(result);
+        }
+      }
+    } catch (error: any) {
+      console.error('❌ [AuthController] Error en googleWithIdToken:', error);
+      res.status(401).json({ ok: false, error: error?.message || 'Token de Google inválido' });
+    }
+  };
+
+  /**
+   * GET /google/status - Salud básica de la integración de Google
+   */
+  getGoogleStatus = async (_req: Request, res: Response): Promise<void> => {
+    try {
+      res.status(200).json({ ok: true, provider: 'google', configured: this.google.isReady() });
+    } catch (error) {
+      res.status(500).json({ ok: false, error: 'Error verificando Google Auth' });
     }
   };
 

@@ -83,10 +83,28 @@ export class ReservasController {
    */
   create = async (req: Request, res: Response) => {
     try {
+      // Soporte para ambos formatos: timestamp completo y fecha + hora
+      let fechaInicio: Date, fechaFin: Date;
+      
+      if (req.body.fechaInicio && req.body.fechaFin) {
+        // Formato timestamp completo (legacy)
+        fechaInicio = new Date(req.body.fechaInicio);
+        fechaFin = new Date(req.body.fechaFin);
+      } else if (req.body.fecha && req.body.inicio && req.body.fin) {
+        // Formato fecha + hora separada (nuevo, como Taller4)
+        fechaInicio = new Date(`${req.body.fecha}T${req.body.inicio}:00.000Z`);
+        fechaFin = new Date(`${req.body.fecha}T${req.body.fin}:00.000Z`);
+      } else {
+        return res.status(400).json(fail(400, "Debe proporcionar fechaInicio/fechaFin o fecha/inicio/fin"));
+      }
+      
       const input = {
-        ...req.body,
-        fechaInicio: new Date(req.body.fechaInicio),
-        fechaFin: new Date(req.body.fechaFin),
+        usuarioId: req.body.id_usuario || (req as any).user?.id_usuario,
+        canchaId: req.body.id_cancha || req.body.canchaId,
+        fechaInicio,
+        fechaFin,
+        metodoPago: req.body.metodoPago,
+        notas: req.body.notas,
       };
       
       const reserva = await this.createReservaUC.execute(input);
@@ -104,12 +122,17 @@ export class ReservasController {
     try {
       const input = { ...req.body };
       
-      // Convertir fechas si están presentes
+      // Soporte para ambos formatos de fecha
       if (req.body.fechaInicio) {
         input.fechaInicio = new Date(req.body.fechaInicio);
+      } else if (req.body.fecha && req.body.inicio) {
+        input.fechaInicio = new Date(`${req.body.fecha}T${req.body.inicio}:00.000Z`);
       }
+      
       if (req.body.fechaFin) {
         input.fechaFin = new Date(req.body.fechaFin);
+      } else if (req.body.fecha && req.body.fin) {
+        input.fechaFin = new Date(`${req.body.fecha}T${req.body.fin}:00.000Z`);
       }
       
       const reserva = await this.updateReservaUC.execute(Number(req.params.id), input);
@@ -159,15 +182,54 @@ export class ReservasController {
 
   /**
    * Obtiene reservas de un usuario específico.
-   * GET /reservas/usuario/:usuarioId
+   * GET /reservas/usuario/:usuarioId o GET /reservas/mias
    */
   getByUsuario = async (req: Request, res: Response) => {
     try {
-      const usuarioId = Number(req.params.usuarioId);
+      // Para el endpoint /mias, usar el ID del usuario autenticado
+      const usuarioId = req.params.usuarioId ? 
+        Number(req.params.usuarioId) : 
+        (req as any).user?.id_usuario;
+      
+      if (!usuarioId) {
+        return res.status(400).json(fail(400, "Usuario no identificado"));
+      }
+      
       const incluirPasadas = req.query.incluirPasadas === 'true';
       
       const reservas = await this.getReservasByUsuarioUC.execute(usuarioId, incluirPasadas);
       res.json(ok(reservas));
+    } catch (e: any) {
+      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details));
+    }
+  };
+
+  /**
+   * Cotiza el precio de una reserva.
+   * POST /reservas/cotizar
+   */
+  cotizar = async (req: Request, res: Response) => {
+    try {
+      const { id_cancha, fecha, inicio, fin, cupon } = req.body;
+      
+      if (!id_cancha || !fecha || !inicio || !fin) {
+        return res.status(400).json(fail(400, "id_cancha, fecha, inicio y fin son requeridos"));
+      }
+      
+      // Construir fechas ISO string para la cotización
+      const fechaInicio = `${fecha}T${inicio}:00`;
+      const fechaFin = `${fecha}T${fin}:00`;
+      
+      // Simular respuesta de cotización hasta que se implemente el caso de uso
+      const cotizacion = {
+        moneda: "CLP",
+        subtotal: 12000.0,
+        descuento: cupon ? 2000.0 : 0.0,
+        total: cupon ? 10000.0 : 12000.0,
+        detalle: cupon ? `Descuento aplicado con cupón: ${cupon}` : "Precio base por hora"
+      };
+      
+      res.json(ok(cotizacion));
     } catch (e: any) {
       res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details));
     }
@@ -212,6 +274,7 @@ export class ReservasController {
   /**
    * Crea una reserva como administrador.
    * POST /reservas/admin/crear
+   * ✅ ACTUALIZADO: Maneja múltiples formatos de entrada del frontend
    */
   createAdmin = async (req: Request, res: Response) => {
     try {
@@ -219,26 +282,67 @@ export class ReservasController {
         return res.status(501).json(fail(501, "Funcionalidad administrativa no disponible"));
       }
 
-      const { id_cancha, fecha_reserva, hora_inicio, hora_fin, id_usuario } = req.body;
+      console.log('📝 [ReservasController.createAdmin] Request body:', req.body);
+      
+      // Extraer datos con soporte para múltiples formatos
+      const { 
+        id_cancha, cancha_id, canchaId,
+        fecha_reserva, fecha, fecha_inicio, fecha_fin,
+        hora_inicio, hora_fin, inicio, fin,
+        id_usuario, usuario_id, usuarioId,
+        notas
+      } = req.body;
+      
       const adminUserId = (req as any).user?.id_usuario;
-      const targetUserId = id_usuario || adminUserId;
-
-      // Construir fechas completas
-      const fechaInicio = new Date(`${fecha_reserva}T${hora_inicio}:00.000Z`);
-      const fechaFin = new Date(`${fecha_reserva}T${hora_fin}:00.000Z`);
+      
+      // Determinar IDs (prioritario: campos snake_case)
+      const canchaIdFinal = id_cancha || cancha_id || canchaId;
+      const targetUserId = id_usuario || usuario_id || usuarioId || adminUserId;
+      
+      // Construir fechas - soportar diferentes formatos
+      let fechaInicio: Date;
+      let fechaFin: Date;
+      
+      if (fecha_inicio && fecha_fin) {
+        // Formato 1: fechas ISO completas
+        fechaInicio = new Date(fecha_inicio);
+        fechaFin = new Date(fecha_fin);
+      } else if (fecha_reserva && hora_inicio && hora_fin) {
+        // Formato 2: fecha separada + horas
+        fechaInicio = new Date(`${fecha_reserva}T${hora_inicio}:00.000Z`);
+        fechaFin = new Date(`${fecha_reserva}T${hora_fin}:00.000Z`);
+      } else if (fecha && (inicio || hora_inicio) && (fin || hora_fin)) {
+        // Formato 3: fecha + inicio/fin
+        const horaInicio = inicio || hora_inicio;
+        const horaFin = fin || hora_fin;
+        fechaInicio = new Date(`${fecha}T${horaInicio}:00.000Z`);
+        fechaFin = new Date(`${fecha}T${horaFin}:00.000Z`);
+      } else {
+        return res.status(400).json(fail(400, "Formato de fecha/hora inválido", {
+          formatos_soportados: [
+            "{ fecha_inicio: ISO, fecha_fin: ISO }",
+            "{ fecha_reserva: 'YYYY-MM-DD', hora_inicio: 'HH:MM', hora_fin: 'HH:MM' }",
+            "{ fecha: 'YYYY-MM-DD', inicio: 'HH:MM', fin: 'HH:MM' }"
+          ],
+          recibido: req.body
+        }));
+      }
 
       const input = {
         usuarioId: targetUserId,
-        canchaId: id_cancha,
+        canchaId: canchaIdFinal,
         fechaInicio,
         fechaFin,
         metodoPago: undefined,
-        notas: `Creada por administrador ${adminUserId}`
+        notas: notas || `Creada por administrador ${adminUserId}`
       };
+
+      console.log('🚀 [ReservasController.createAdmin] Input procesado:', input);
 
       const reserva = await this.createReservaAdminUC.execute(input, targetUserId, adminUserId);
       res.status(201).json(ok(reserva));
     } catch (e: any) {
+      console.error('❌ [ReservasController.createAdmin] Error:', e);
       res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details));
     }
   };

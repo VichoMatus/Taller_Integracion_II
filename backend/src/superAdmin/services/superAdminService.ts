@@ -319,4 +319,354 @@ export class SuperAdminService {
       return { ok: false, error: 'Error en la búsqueda' };
     }
   }
+
+  /**
+   * ESTADÍSTICAS COMPLETAS DE SUPERADMIN
+   * ====================================
+   */
+  async getEstadisticasCompletas(token?: string): Promise<ApiResponse> {
+    try {
+      const headers: any = {};
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      console.log('📊 [SuperAdminService] Iniciando recopilación de estadísticas...');
+
+      // Obtener fecha actual y hace 30 días para filtros
+      const hoy = new Date();
+      const hoyStr = hoy.toISOString().split('T')[0];
+      const hace30Dias = new Date(hoy);
+      hace30Dias.setDate(hace30Dias.getDate() - 30);
+      const hace30DiasStr = hace30Dias.toISOString().split('T')[0];
+      
+      const hace60Dias = new Date(hoy);
+      hace60Dias.setDate(hace60Dias.getDate() - 60);
+      const hace60DiasStr = hace60Dias.toISOString().split('T')[0];
+
+      // 1. MÉTRICAS GENERALES
+      console.log('📊 Obteniendo métricas generales...');
+      
+      // Obtener todos los usuarios (sin límite)
+      const usuariosResponse = await this.apiClient.get(API_ENDPOINTS.usuarios.base, { 
+        headers,
+        params: { page_size: 10000 } // Suficientemente grande para obtener todos
+      });
+      
+      const todosUsuarios = usuariosResponse.data?.usuarios || usuariosResponse.data || [];
+      const usuarios_totales = todosUsuarios.length;
+      const cantidad_administradores = todosUsuarios.filter(
+        (u: any) => u.rol === 'admin' || u.rol === 'super_admin'
+      ).length;
+
+      // Obtener todas las canchas
+      const canchasResponse = await this.apiClient.get(API_ENDPOINTS.canchas.base, { 
+        headers,
+        params: { page_size: 10000 }
+      });
+      const todasCanchas = canchasResponse.data?.canchas || canchasResponse.data || [];
+      const canchas_registradas = todasCanchas.length;
+
+      // Obtener reservas de hoy
+      const reservasHoyResponse = await this.apiClient.get(API_ENDPOINTS.reservas.base, {
+        headers,
+        params: { 
+          fecha_desde: hoyStr,
+          fecha_hasta: hoyStr,
+          page_size: 10000
+        }
+      });
+      const reservasHoy = reservasHoyResponse.data?.reservas || reservasHoyResponse.data || [];
+      const reservas_hoy = reservasHoy.length;
+
+      // 2. MÉTRICAS MENSUALES
+      console.log('📊 Obteniendo métricas mensuales...');
+      
+      const reservasMesResponse = await this.apiClient.get(API_ENDPOINTS.reservas.base, {
+        headers,
+        params: {
+          fecha_desde: hace30DiasStr,
+          fecha_hasta: hoyStr,
+          page_size: 10000
+        }
+      });
+      const reservasMes = reservasMesResponse.data?.reservas || reservasMesResponse.data || [];
+      const reservas_totales_mes = reservasMes.length;
+
+      // Calcular ganancias del mes (solo reservas confirmadas o pagadas)
+      const ganancias_mes = reservasMes
+        .filter((r: any) => r.estado_pago === 'pagado' || r.estado === 'confirmada')
+        .reduce((sum: number, r: any) => sum + (parseFloat(r.precio_total) || 0), 0);
+
+      // Calcular ocupación mensual
+      // Ocupación = (Reservas confirmadas / Slots totales disponibles) * 100
+      const diasEnMes = 30;
+      const horasPorDia = 14; // Ej: de 8am a 10pm
+      const slotsDisponibles = canchas_registradas * diasEnMes * horasPorDia;
+      const reservasConfirmadas = reservasMes.filter((r: any) => 
+        r.estado === 'confirmada' || r.estado === 'completada'
+      ).length;
+      const ocupacion_mensual = slotsDisponibles > 0 
+        ? (reservasConfirmadas / slotsDisponibles) * 100 
+        : 0;
+
+      // Obtener valoración promedio de canchas
+      const resenasResponse = await this.apiClient.get(API_ENDPOINTS.resenas.base, {
+        headers,
+        params: { page_size: 10000 }
+      });
+      const resenas = resenasResponse.data?.resenas || resenasResponse.data || [];
+      const valoracion_promedio = resenas.length > 0
+        ? resenas.reduce((sum: number, r: any) => sum + (r.calificacion || 0), 0) / resenas.length
+        : 0;
+
+      // 3. RESERVAS POR DÍA (últimos 30 días)
+      console.log('📊 Calculando reservas por día...');
+      
+      const reservasPorDiaMap = new Map<string, { cantidad: number; ingresos: number }>();
+      
+      // Inicializar todos los días del mes con 0
+      for (let i = 0; i < 30; i++) {
+        const fecha = new Date(hoy);
+        fecha.setDate(fecha.getDate() - (29 - i));
+        const fechaStr = fecha.toISOString().split('T')[0];
+        reservasPorDiaMap.set(fechaStr, { cantidad: 0, ingresos: 0 });
+      }
+
+      // Agregar reservas reales
+      reservasMes.forEach((reserva: any) => {
+        const fechaReserva = reserva.fecha_reserva?.split('T')[0] || reserva.fecha?.split('T')[0];
+        if (fechaReserva && reservasPorDiaMap.has(fechaReserva)) {
+          const data = reservasPorDiaMap.get(fechaReserva)!;
+          data.cantidad++;
+          if (reserva.estado_pago === 'pagado' || reserva.estado === 'confirmada') {
+            data.ingresos += parseFloat(reserva.precio_total) || 0;
+          }
+        }
+      });
+
+      const reservas_por_dia = Array.from(reservasPorDiaMap.entries()).map(([fecha, data]) => {
+        const fechaObj = new Date(fecha + 'T12:00:00');
+        const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        return {
+          fecha,
+          dia_semana: diasSemana[fechaObj.getDay()],
+          cantidad_reservas: data.cantidad,
+          ingresos: data.ingresos
+        };
+      });
+
+      // 4. RESERVAS POR DEPORTE
+      console.log('📊 Calculando reservas por deporte...');
+      
+      const reservasPorDeporteMap = new Map<string, { cantidad: number; ingresos: number }>();
+      
+      reservasMes.forEach((reserva: any) => {
+        const canchaId = reserva.cancha_id || reserva.id_cancha;
+        const cancha = todasCanchas.find((c: any) => c.id_cancha === canchaId || c.id === canchaId);
+        
+        if (cancha) {
+          const deporte = cancha.tipo_cancha || cancha.deporte || 'otros';
+          if (!reservasPorDeporteMap.has(deporte)) {
+            reservasPorDeporteMap.set(deporte, { cantidad: 0, ingresos: 0 });
+          }
+          const data = reservasPorDeporteMap.get(deporte)!;
+          data.cantidad++;
+          if (reserva.estado_pago === 'pagado' || reserva.estado === 'confirmada') {
+            data.ingresos += parseFloat(reserva.precio_total) || 0;
+          }
+        }
+      });
+
+      const totalReservasDeporte = Array.from(reservasPorDeporteMap.values())
+        .reduce((sum, d) => sum + d.cantidad, 0);
+
+      const reservas_por_deporte = Array.from(reservasPorDeporteMap.entries()).map(([deporte, data]) => ({
+        deporte,
+        cantidad_reservas: data.cantidad,
+        porcentaje: totalReservasDeporte > 0 ? (data.cantidad / totalReservasDeporte) * 100 : 0,
+        ingresos: data.ingresos
+      })).sort((a, b) => b.cantidad_reservas - a.cantidad_reservas);
+
+      // 5. TOP 5 CANCHAS MÁS POPULARES
+      console.log('📊 Calculando top canchas...');
+      
+      // Obtener reservas del mes anterior para calcular tendencias
+      const reservasMesAnteriorResponse = await this.apiClient.get(API_ENDPOINTS.reservas.base, {
+        headers,
+        params: {
+          fecha_desde: hace60DiasStr,
+          fecha_hasta: hace30DiasStr,
+          page_size: 10000
+        }
+      });
+      const reservasMesAnterior = reservasMesAnteriorResponse.data?.reservas || [];
+
+      const canchaStats = new Map<number, { 
+        cantidad: number; 
+        cantidadAnterior: number;
+        cancha: any;
+      }>();
+
+      // Contar reservas del mes actual
+      reservasMes.forEach((reserva: any) => {
+        const canchaId = reserva.cancha_id || reserva.id_cancha;
+        if (!canchaStats.has(canchaId)) {
+          const cancha = todasCanchas.find((c: any) => c.id_cancha === canchaId || c.id === canchaId);
+          canchaStats.set(canchaId, { cantidad: 0, cantidadAnterior: 0, cancha });
+        }
+        canchaStats.get(canchaId)!.cantidad++;
+      });
+
+      // Contar reservas del mes anterior
+      reservasMesAnterior.forEach((reserva: any) => {
+        const canchaId = reserva.cancha_id || reserva.id_cancha;
+        if (canchaStats.has(canchaId)) {
+          canchaStats.get(canchaId)!.cantidadAnterior++;
+        }
+      });
+
+      const top_canchas = Array.from(canchaStats.entries())
+        .map(([canchaId, stats]) => {
+          const cancha = stats.cancha;
+          if (!cancha) return null;
+
+          const ocupacion_porcentaje = (stats.cantidad / (diasEnMes * horasPorDia)) * 100;
+          
+          // Calcular tendencia
+          let tendencia: 'subida' | 'bajada' | 'estable' = 'estable';
+          let variacion_porcentaje = 0;
+          
+          if (stats.cantidadAnterior > 0) {
+            variacion_porcentaje = ((stats.cantidad - stats.cantidadAnterior) / stats.cantidadAnterior) * 100;
+            if (variacion_porcentaje > 5) tendencia = 'subida';
+            else if (variacion_porcentaje < -5) tendencia = 'bajada';
+          } else if (stats.cantidad > 0) {
+            tendencia = 'subida';
+            variacion_porcentaje = 100;
+          }
+
+          return {
+            cancha_id: canchaId,
+            cancha_nombre: cancha.nombre_cancha || cancha.nombre || `Cancha ${canchaId}`,
+            complejo_nombre: cancha.complejo_nombre || cancha.complejo || 'N/A',
+            tipo_deporte: cancha.tipo_cancha || cancha.deporte || 'N/A',
+            cantidad_reservas: stats.cantidad,
+            ocupacion_porcentaje: Math.round(ocupacion_porcentaje * 100) / 100,
+            tendencia,
+            variacion_porcentaje: Math.round(variacion_porcentaje * 100) / 100
+          };
+        })
+        .filter(c => c !== null)
+        .sort((a, b) => b!.cantidad_reservas - a!.cantidad_reservas)
+        .slice(0, 5);
+
+      // 6. TOP 5 HORARIOS MÁS SOLICITADOS
+      console.log('📊 Calculando top horarios...');
+      
+      const horarioStats = new Map<string, {
+        cantidad: number;
+        cantidadAnterior: number;
+        ingresos: number;
+        dia_semana: string;
+        hora: string;
+      }>();
+
+      const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+      // Analizar reservas del mes actual
+      reservasMes.forEach((reserva: any) => {
+        const fechaReserva = new Date(reserva.fecha_reserva || reserva.fecha);
+        const diaSemana = diasSemana[fechaReserva.getDay()];
+        const horaInicio = reserva.hora_inicio?.substring(0, 5) || '00:00';
+        const key = `${diaSemana}-${horaInicio}`;
+
+        if (!horarioStats.has(key)) {
+          horarioStats.set(key, {
+            cantidad: 0,
+            cantidadAnterior: 0,
+            ingresos: 0,
+            dia_semana: diaSemana,
+            hora: horaInicio
+          });
+        }
+        
+        const stats = horarioStats.get(key)!;
+        stats.cantidad++;
+        if (reserva.estado_pago === 'pagado' || reserva.estado === 'confirmada') {
+          stats.ingresos += parseFloat(reserva.precio_total) || 0;
+        }
+      });
+
+      // Analizar reservas del mes anterior
+      reservasMesAnterior.forEach((reserva: any) => {
+        const fechaReserva = new Date(reserva.fecha_reserva || reserva.fecha);
+        const diaSemana = diasSemana[fechaReserva.getDay()];
+        const horaInicio = reserva.hora_inicio?.substring(0, 5) || '00:00';
+        const key = `${diaSemana}-${horaInicio}`;
+
+        if (horarioStats.has(key)) {
+          horarioStats.get(key)!.cantidadAnterior++;
+        }
+      });
+
+      const top_horarios = Array.from(horarioStats.values())
+        .map(stats => {
+          let tendencia: 'subida' | 'bajada' | 'estable' = 'estable';
+          let variacion_porcentaje = 0;
+
+          if (stats.cantidadAnterior > 0) {
+            variacion_porcentaje = ((stats.cantidad - stats.cantidadAnterior) / stats.cantidadAnterior) * 100;
+            if (variacion_porcentaje > 5) tendencia = 'subida';
+            else if (variacion_porcentaje < -5) tendencia = 'bajada';
+          } else if (stats.cantidad > 0) {
+            tendencia = 'subida';
+            variacion_porcentaje = 100;
+          }
+
+          return {
+            dia_semana: stats.dia_semana,
+            hora_inicio: stats.hora,
+            cantidad_reservas: stats.cantidad,
+            ingresos: Math.round(stats.ingresos * 100) / 100,
+            tendencia,
+            variacion_porcentaje: Math.round(variacion_porcentaje * 100) / 100
+          };
+        })
+        .sort((a, b) => b.cantidad_reservas - a.cantidad_reservas)
+        .slice(0, 5);
+
+      // Construir respuesta final
+      const estadisticas = {
+        metricas_generales: {
+          usuarios_totales,
+          canchas_registradas,
+          cantidad_administradores,
+          reservas_hoy
+        },
+        metricas_mensuales: {
+          ganancias_mes: Math.round(ganancias_mes * 100) / 100,
+          reservas_totales_mes,
+          ocupacion_mensual: Math.round(ocupacion_mensual * 100) / 100,
+          valoracion_promedio: Math.round(valoracion_promedio * 100) / 100
+        },
+        reservas_por_dia,
+        reservas_por_deporte,
+        top_canchas,
+        top_horarios,
+        fecha_generacion: new Date().toISOString(),
+        periodo_analisis: `${hace30DiasStr} - ${hoyStr}`
+      };
+
+      console.log('✅ [SuperAdminService] Estadísticas generadas exitosamente');
+      
+      return { ok: true, data: estadisticas };
+    } catch (error: any) {
+      console.error('❌ [SuperAdminService] Error al obtener estadísticas:', error);
+      return { 
+        ok: false, 
+        error: error.response?.data?.message || error.message || 'Error al obtener estadísticas completas' 
+      };
+    }
+  }
 }

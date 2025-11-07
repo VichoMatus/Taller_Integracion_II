@@ -37,7 +37,7 @@ export const complejosService = {
    */
   async createComplejo(input: CreateComplejoInput) {
     try {
-      const response = await apiBackend.post('/api/complejos', input);
+      const response = await apiBackend.post('/complejos', input);
       return response.data;
     } catch (error: any) {
       throw new Error('Error al crear el complejo: ' + (error.response?.data?.message || error.message));
@@ -49,7 +49,7 @@ export const complejosService = {
    */
   async updateComplejo(id: number, input: UpdateComplejoInput) {
     try {
-      const response = await apiBackend.patch(`/api/complejos/${id}`, input);
+      const response = await apiBackend.patch(`/complejos/${id}`, input);
       return response.data;
     } catch (error: any) {
       throw new Error('Error al actualizar el complejo: ' + (error.response?.data?.message || error.message));
@@ -61,7 +61,7 @@ export const complejosService = {
    */
   async deleteComplejo(id: number) {
     try {
-      const response = await apiBackend.delete(`/api/complejos/${id}`);
+      const response = await apiBackend.delete(`/complejos/${id}`);
       return response.data;
     } catch (error: any) {
       throw new Error('Error al eliminar el complejo: ' + (error.response?.data?.message || error.message));
@@ -73,7 +73,7 @@ export const complejosService = {
    */
   async getCanchasDeComplejo(idComplejo: number) {
     try {
-      const response = await apiBackend.get(`/api/complejos/${idComplejo}/canchas`);
+      const response = await apiBackend.get(`/complejos/${idComplejo}/canchas`);
       return response.data;
     } catch (error: any) {
       throw new Error('Error al obtener canchas del complejo: ' + (error.response?.data?.message || error.message));
@@ -85,7 +85,7 @@ export const complejosService = {
    */
   async getHorariosDeComplejo(idComplejo: number): Promise<HorarioComplejo[]> {
     try {
-      const response = await apiBackend.get(`/api/complejos/${idComplejo}/horarios`);
+      const response = await apiBackend.get(`/complejos/${idComplejo}/horarios`);
       return response.data as HorarioComplejo[];
     } catch (error: any) {
       throw new Error('Error al obtener horarios del complejo: ' + (error.response?.data?.message || error.message));
@@ -97,7 +97,7 @@ export const complejosService = {
    */
   async getBloqueosDeComplejo(idComplejo: number) {
     try {
-      const response = await apiBackend.get(`/api/complejos/${idComplejo}/bloqueos`);
+      const response = await apiBackend.get(`/complejos/${idComplejo}/bloqueos`);
       return response.data;
     } catch (error: any) {
       throw new Error('Error al obtener bloqueos del complejo: ' + (error.response?.data?.message || error.message));
@@ -109,7 +109,7 @@ export const complejosService = {
    */
   async getResumenDeComplejo(idComplejo: number): Promise<ResumenComplejo> {
     try {
-      const response = await apiBackend.get(`/api/complejos/${idComplejo}/resumen`);
+      const response = await apiBackend.get(`/complejos/${idComplejo}/resumen`);
       return response.data as ResumenComplejo;
     } catch (error: any) {
       throw new Error('Error al obtener resumen del complejo: ' + (error.response?.data?.message || error.message));
@@ -117,18 +117,49 @@ export const complejosService = {
   },
 
   /**
-   * Obtener complejos de un administrador/dueño específico
+   * Obtener complejos de un administrador específico
+   * Usa el endpoint GET /complejos/admin/:adminId que llama a FastAPI /complejos/duenio/{duenio-id}
    * @param adminId - ID del administrador/dueño
    */
   async getComplejosByAdmin(adminId: number) {
     try {
       console.log(`📍 [complejosService] Obteniendo complejos del admin ID: ${adminId}`);
-      const response = await apiBackend.get(`/api/complejos/admin/${adminId}`);
-      console.log(`✅ [complejosService] Complejos obtenidos:`, response.data);
-      return response.data;
+      console.log(`📍 [complejosService] ℹ️ Usando endpoint /complejos/admin/${adminId}`);
+      console.log(`📍 [complejosService] URL base: ${apiBackend.defaults.baseURL || 'No definida'}`);
+      
+      // ✅ ENDPOINT CORRECTO: /complejos/admin/:adminId
+      // Este endpoint está en complejos.routes.ts línea 55
+      // Llama a FastAPI: GET /api/v1/complejos/duenio/{duenio-id}
+      const response = await apiBackend.get(`/complejos/admin/${adminId}`);
+      
+      console.log(`✅ [complejosService] Complejos obtenidos exitosamente`);
+      console.log(`📦 [complejosService] Respuesta:`, response.data);
+      
+      // El interceptor ya extrajo los datos de { ok, data }
+      const data = response.data;
+      
+      // Si ya es un array, devolverlo directamente
+      if (Array.isArray(data)) {
+        console.log(`📋 [complejosService] Encontrados ${data.length} complejos del admin`);
+        return data;
+      }
+      
+      // Si viene como { items: [...] }, extraer el array
+      if (data?.items) {
+        console.log(`📋 [complejosService] Encontrados ${data.items.length} complejos en data.items`);
+        return data.items;
+      }
+      
+      // Si no, devolver vacío
+      console.warn('⚠️ [complejosService] No se encontraron complejos en la respuesta');
+      return [];
     } catch (error: any) {
       console.error(`❌ [complejosService] Error al obtener complejos del admin:`, error);
-      throw new Error('Error al obtener complejos del administrador: ' + (error.response?.data?.message || error.message));
+      console.error(`   Status: ${error.response?.status}`);
+      console.error(`   Message: ${error.message}`);
+      console.error(`   Response data:`, error.response?.data);
+      
+      throw new Error('Error al cargar tus complejos: ' + (error.response?.data?.message || error.message));
     }
   }
 };

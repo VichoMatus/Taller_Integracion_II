@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import '@/app/admin/dashboard.css';
 import { superAdminService } from '@/services/superAdminService';
 import { Usuario } from '@/types/usuarios';
 
@@ -15,7 +14,7 @@ export default function AdministradoresPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const itemsPerPage = 4;
+  const itemsPerPage = 10;
   const [isAuthed, setIsAuthed] = useState(false);
   
   // 🔥 AGREGAR VERIFICACIÓN DE CLIENTE
@@ -60,7 +59,7 @@ export default function AdministradoresPage() {
   // Estado para almacenar todos los usuarios sin filtrar
   const [todosUsuarios, setTodosUsuarios] = useState<Usuario[]>([]);
 
-  // Función para cargar administradores
+  // Función para cargar administradores y complejos
   const cargarUsuarios = async () => {
     if (!mounted) return; // 🔥 No ejecutar si no está montado
     
@@ -137,9 +136,23 @@ export default function AdministradoresPage() {
     if (window.confirm('¿Estás seguro de que deseas desactivar este administrador?')) {
       try {
         await superAdminService.actualizarUsuario(adminId, { esta_activo: false });
+        alert('✅ Administrador desactivado exitosamente');
         cargarUsuarios(); // Recargar la lista
       } catch (error: any) {
         setError(error.message || 'Error al desactivar administrador');
+      }
+    }
+  };
+
+  // Función para activar administrador
+  const activarAdmin = async (adminId: string | number) => {
+    if (window.confirm('¿Estás seguro de que deseas activar este administrador?')) {
+      try {
+        await superAdminService.actualizarUsuario(adminId, { esta_activo: true });
+        alert('✅ Administrador activado exitosamente');
+        cargarUsuarios(); // Recargar la lista
+      } catch (error: any) {
+        setError(error.message || 'Error al activar administrador');
       }
     }
   };
@@ -178,6 +191,18 @@ export default function AdministradoresPage() {
         <h1 className="text-2xl font-bold text-gray-900">Panel de Gestión de Administradores</h1>
         
         <div className="admin-controls">
+          <button 
+            onClick={cargarUsuarios}
+            className="export-button"
+            disabled={isLoading}
+            title="Refrescar datos"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {isLoading ? 'Refrescando...' : 'Refrescar'}
+          </button>
+
           <button className="export-button">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -186,13 +211,13 @@ export default function AdministradoresPage() {
           </button>
           
           <button 
-            onClick={() => router.push('/super_admin/administradores/nuevo')}
+            onClick={() => router.push('/super_admin/administradores/cambiar_rango')}
             className="export-button"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            Agregar Administrador
+            Cambiar Rango Administrador
           </button>
         </div>
       </div>
@@ -255,8 +280,9 @@ export default function AdministradoresPage() {
                 <tr>
                   <th>Nombre</th>
                   <th>Email</th>
+                  <th>Teléfono</th>
+                  <th>Verificación</th>
                   <th>Estado</th>
-                  <th>Fecha de Registro</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -273,14 +299,19 @@ export default function AdministradoresPage() {
                       <div className="admin-cell-subtitle">{usuario.email}</div>
                     </td>
                     <td>
-                      <span className={`status-badge ${usuario.esta_activo ? 'status-activo' : 'status-inactivo'}`}>
-                        {usuario.esta_activo ? 'Activo' : 'Inactivo'}
+                      <div className="admin-cell-text">
+                        {usuario.telefono || 'No registrado'}
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`status-badge ${usuario.verificado ? 'status-activo' : 'status-inactivo'}`}>
+                        {usuario.verificado ? 'Verificado' : 'Sin verificar'}
                       </span>
                     </td>
                     <td>
-                      <div className="admin-cell-text">
-                        {new Date(usuario.fecha_creacion).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-                      </div>
+                      <span className={`status-badge ${usuario.esta_activo ? 'status-activo' : 'status-inactivo'}`}>
+                        {usuario.esta_activo ? 'Activo' : 'Inactivo'}
+                      </span>
                     </td>
                     <td>
                       <div className="admin-actions-container">
@@ -294,14 +325,24 @@ export default function AdministradoresPage() {
                           </svg>
                         </button>
                         
-                        {usuario.esta_activo && (
+                        {usuario.esta_activo ? (
                           <button 
                             className="btn-action btn-eliminar" 
                             title="Desactivar"
                             onClick={() => desactivarAdmin(usuario.id_usuario)}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
+                          </button>
+                        ) : (
+                          <button 
+                            className="btn-action btn-aprobar" 
+                            title="Activar"
+                            onClick={() => activarAdmin(usuario.id_usuario)}
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                           </button>
                         )}

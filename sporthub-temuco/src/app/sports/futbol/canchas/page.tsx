@@ -2,137 +2,225 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStatus } from '../../../../hooks/useAuthStatus';
+import { useComplejos } from '../../../../hooks/useComplejosCanchas';
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
 import LocationMap from '../../../../components/LocationMap';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
-import { complejosService } from '../../../../services/complejosService';
-
-// 🔥 IMPORTAR SERVICIO (igual que en la página principal)
 import { canchaService } from '../../../../services/canchaService';
 
 export default function Page() {
-  const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
+  const { user, isLoading: isAuthLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   
-  // 🔥 ESTADOS PARA LA API (usando la misma lógica de /sports/futbol/page.tsx)
   const [canchas, setCanchas] = useState<any[]>([]);
   const [filteredCanchas, setFilteredCanchas] = useState<any[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
   const [isLoadingCanchas, setIsLoadingCanchas] = useState(true);
   const [error, setError] = useState<string>('');
+  const [canchasYaCargadas, setCanchasYaCargadas] = useState(false); // 🔥 FLAG PARA EVITAR MÚLTIPLES CARGAS
 
-  // 🔥 FUNCIÓN PARA CARGAR CANCHAS (copiada exactamente de /sports/futbol/page.tsx)
-// 🔥 FUNCIÓN PARA CARGAR CANCHAS MODIFICADA
-const cargarCanchas = async () => {
-  try {
-    setIsLoadingCanchas(true);
-    setError('');
-    
-    console.log('🔄 [CanchasFutbol] Cargando TODAS las canchas del backend...');
-    
-    const todasLasCanchas = await canchaService.getCanchas();
-    console.log('✅ [CanchasFutbol] Todas las canchas obtenidas:', todasLasCanchas);
-    
-    // 🔥 FILTRAR CANCHAS DE FÚTBOL, FUTSAL Y FUTBOLITO
-    const canchasDeFutbol = todasLasCanchas.filter((cancha: any) => {
-      return ['futbol', 'futsal', 'futbolito'].includes(cancha.tipo);
+  const { 
+    complejos, 
+    loading: loadingComplejos, 
+    error: errorComplejos 
+  } = useComplejos();
+
+  // 🔥 EFECTO QUE SOLO SE EJECUTA UNA VEZ CUANDO LOS COMPLEJOS ESTÉN LISTOS
+  useEffect(() => {
+    console.log('🔄 [UseEffect] Estado:', {
+      loadingComplejos,
+      cantidadComplejos: complejos.length,
+      canchasYaCargadas
     });
     
-    console.log('⚽ [CanchasFutbol] Canchas de fútbol/futsal/futbolito encontradas:', canchasDeFutbol.length);
-    
-    // 🔥 OBTENER DATOS DE COMPLEJOS PARA CADA CANCHA
-    const canchasMapeadas = await Promise.all(
-      canchasDeFutbol.map(async (cancha: any) => {
-        let complejoData = null;
-        let addressInfo = `Complejo ${cancha.establecimientoId}`;
-        
-        // 🔥 INTENTAR OBTENER DATOS DEL COMPLEJO
-        if (cancha.establecimientoId) {
-          try {
-            console.log(`🔍 [CanchasFutbol] Cargando complejo ID ${cancha.establecimientoId} para cancha ${cancha.id}`);
-            complejoData = await complejosService.getComplejoById(cancha.establecimientoId);
-            
-            if (complejoData) {
-              addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
-              console.log(`✅ [CanchasFutbol] Complejo cargado: ${addressInfo}`);
-            }
-            
-          } catch (complejoError: any) {
-            console.warn(`⚠️ [CanchasFutbol] Error cargando complejo ${cancha.establecimientoId}:`, complejoError.message);
-            // Usar datos de fallback
-            const staticComplejo = getStaticComplejoData(cancha.establecimientoId);
-            addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
+    if (!loadingComplejos && complejos.length > 0 && !canchasYaCargadas) {
+      console.log('✅ [UseEffect] Condiciones cumplidas, cargando canchas...');
+      cargarCanchas();
+    }
+  }, [loadingComplejos, complejos.length, canchasYaCargadas]); // 🔥 DEPENDENCIAS ESPECÍFICAS
+
+  const cargarCanchas = async () => {
+    try {
+      setIsLoadingCanchas(true);
+      setError('');
+      
+      console.log('🔄 [CanchasFutbol] Iniciando carga de canchas...');
+      console.log('📸 [SNAPSHOT] Complejos disponibles:', complejos.length);
+      console.log('📸 [SNAPSHOT] IDs:', complejos.map(c => `${c.id_complejo}: ${c.nombre}`));
+      
+      const response: any = await canchaService.getCanchas();
+      
+      let todasLasCanchas: any[] = [];
+      
+      if (Array.isArray(response)) {
+        todasLasCanchas = response;
+      } else if (response && Array.isArray(response.data)) {
+        todasLasCanchas = response.data;
+      } else if (response && Array.isArray(response.canchas)) {
+        todasLasCanchas = response.canchas;
+      } else if (response && Array.isArray(response.items)) {
+        todasLasCanchas = response.items;
+      } else if (response && Array.isArray(response.results)) {
+        todasLasCanchas = response.results;
+      } else {
+        const allKeys = Object.keys(response || {});
+        for (const key of allKeys) {
+          if (Array.isArray(response[key])) {
+            todasLasCanchas = response[key];
+            break;
           }
         }
         
-        // 🔥 MAPEAR CANCHA CON DATOS DEL COMPLEJO
-        const mappedCancha = {
+        if (todasLasCanchas.length === 0) {
+          throw new Error(`No se encontró array de canchas`);
+        }
+      }
+      
+      console.log(`📊 Total canchas extraídas: ${todasLasCanchas.length}`);
+      
+      const canchasDeFutbol = todasLasCanchas.filter((cancha: any) => {
+        return ['futbol', 'futsal', 'futbolito'].includes(cancha.tipo);
+      });
+      
+      console.log(`⚽ Canchas de fútbol encontradas: ${canchasDeFutbol.length}`);
+      
+      if (canchasDeFutbol.length === 0) {
+        throw new Error('No se encontraron canchas de fútbol');
+      }
+      
+      // 🔥 MAPEO CON VERIFICACIÓN DE QUE LOS COMPLEJOS TIENEN IDs
+      const canchasMapeadas = canchasDeFutbol.map((cancha: any) => {
+        let addressInfo = `Complejo ${cancha.establecimientoId || 'Desconocido'}`;
+        let complejoNombre = `Complejo ${cancha.establecimientoId || 'Desconocido'}`;
+        let rating = cancha.rating || 4.5;
+        
+        if (cancha.establecimientoId && complejos.length > 0) {
+          console.log(`\n🔍 Buscando complejo ID ${cancha.establecimientoId} para cancha ${cancha.id}`);
+          
+          // 🔥 BÚSQUEDA CON CONVERSIÓN DE TIPOS Y VERIFICACIÓN
+          const complejoData = complejos.find(c => {
+            const idComplejo = c.id_complejo;
+            const idBuscado = cancha.establecimientoId;
+            
+            // Convertir ambos a número para comparar
+            const match = Number(idComplejo) === Number(idBuscado);
+            
+            if (match) {
+              console.log(`  ✅ MATCH encontrado: ${idComplejo} === ${idBuscado}`);
+            }
+            
+            return match;
+          });
+          
+          if (complejoData) {
+            complejoNombre = complejoData.nombre;
+            addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
+            rating = complejoData.rating_promedio || cancha.rating || 4.5;
+            
+            console.log(`  ✅ Complejo asignado: ${complejoData.nombre}`);
+          } else {
+            console.error(`  ❌ No se encontró complejo con ID ${cancha.establecimientoId}`);
+            console.error(`  📋 IDs disponibles:`, complejos.map(c => c.id_complejo));
+            
+            // Usar datos estáticos como fallback
+            const staticData = getStaticComplejoData(cancha.establecimientoId);
+            complejoNombre = staticData.nombre;
+            addressInfo = `${staticData.nombre} - ${staticData.direccion}`;
+          }
+        }
+        
+        return {
           id: cancha.id,
           imageUrl: `/sports/futbol/canchas/Cancha${cancha.id}.png`,
-          name: cancha.nombre,
-          address: addressInfo, // 🔥 USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
-          rating: cancha.rating || 4.5,
+          name: cancha.nombre || `Cancha ${cancha.id}`,
+          address: addressInfo,
+          rating: rating,
           tags: [
             cancha.techada ? "Techada" : "Al aire libre",
-            cancha.activa ? "Disponible" : "No disponible",
+            cancha.activa ? "Disponible" : "No disponible", 
             cancha.tipo.charAt(0).toUpperCase() + cancha.tipo.slice(1)
           ],
-          description: `Cancha de ${cancha.tipo} ${cancha.nombre} - ID: ${cancha.id}`,
+          description: `Cancha de ${cancha.tipo} en ${complejoNombre}`,
           price: cancha.precioPorHora?.toString() || "25",
           nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
-          sport: cancha.tipo
+          sport: cancha.tipo,
+          establecimientoId: cancha.establecimientoId,
+          techada: cancha.techada,
+          activa: cancha.activa,
+          complejoNombre: complejoNombre
         };
-        
-        console.log('🗺️ [CanchasFutbol] Cancha mapeada:', mappedCancha);
-        return mappedCancha;
-      })
-    );
-    
-    console.log('🎉 [CanchasFutbol] Canchas con datos de complejo cargadas:', canchasMapeadas.length);
-    setCanchas(canchasMapeadas);
-    setFilteredCanchas(canchasMapeadas);
-    
-  } catch (error: any) {
-    console.error('❌ [CanchasFutbol] ERROR cargando canchas:', error);
-    setError(`Error: ${error.message}`);
-    
-    // Fallback con datos estáticos...
-  } finally {
-    setIsLoadingCanchas(false);
-  }
-};
-
-// 🔥 FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO
-const getStaticComplejoData = (establecimientoId: number) => {
-  const staticComplejos = {
-    1: {
-      nombre: "Complejo Deportivo Norte",
-      direccion: "Av. Alemania 1234, Temuco, Chile"
-    },
-    2: {
-      nombre: "Complejo Deportivo Centro", 
-      direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
-    },
-    3: {
-      nombre: "Complejo Deportivo Sur",
-      direccion: "Calle Montt 890, Temuco, Chile"
-    },
-    default: {
-      nombre: "Complejo Deportivo",
-      direccion: "Av. Alemania 1234, Temuco, Chile"
+      });
+      
+      console.log('\n🎉 Canchas mapeadas correctamente:', canchasMapeadas.length);
+      console.log('📋 Resumen:');
+      canchasMapeadas.forEach(c => {
+        console.log(`  ${c.name} -> ${c.address}`);
+      });
+      
+      setCanchas(canchasMapeadas);
+      setFilteredCanchas(canchasMapeadas);
+      setCanchasYaCargadas(true); // 🔥 MARCAR COMO CARGADAS
+      
+    } catch (error: any) {
+      console.error('❌ Error:', error);
+      setError(`Error: ${error.message}`);
+      
+      // Fallback
+      const canchasEstaticas = [
+        {
+          id: 1,
+          imageUrl: "/sports/futbol/canchas/Cancha1.png",
+          name: "🚨 FALLBACK - Fútbol Centro",
+          address: "🚨 FALLBACK - Complejo Deportivo Norte - Av. Alemania 1234, Temuco",
+          rating: 4.8,
+          tags: ["DATOS OFFLINE", "Estacionamiento", "Iluminación"],
+          description: "🚨 Datos de fallback - API no disponible",
+          price: "35",
+          nextAvailable: "Próximo: 20:00-21:00",
+          sport: "futbol",
+          establecimientoId: 1,
+          techada: false,
+          activa: true,
+          complejoNombre: "🚨 FALLBACK - Complejo Norte"
+        }
+      ];
+      
+      setCanchas(canchasEstaticas);
+      setFilteredCanchas(canchasEstaticas);
+      setCanchasYaCargadas(true); // 🔥 MARCAR COMO CARGADAS INCLUSO SI HAY ERROR
+    } finally {
+      setIsLoadingCanchas(false);
     }
   };
-  
-  return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
-};
 
-  // 🔥 CARGAR CANCHAS AL MONTAR EL COMPONENTE
-  useEffect(() => {
-    cargarCanchas();
-  }, []);
+  const getStaticComplejoData = (establecimientoId: number) => {
+    const staticComplejos = {
+      1: {
+        nombre: "Complejo Deportivo Norte",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      },
+      2: {
+        nombre: "Complejo Deportivo Centro", 
+        direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+      },
+      3: {
+        nombre: "Complejo Deportivo Sur",
+        direccion: "Calle Montt 890, Temuco, Chile"
+      },
+      4: {
+        nombre: "Complejo Deportivo Este",
+        direccion: "Av. Balmaceda 456, Temuco, Chile"
+      },
+      default: {
+        nombre: "Complejo Deportivo",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      }
+    };
+    
+    return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
+  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -154,11 +242,6 @@ const getStaticComplejoData = (establecimientoId: number) => {
     router.push('/sports/futbol');
   };
 
-  const availableNow = filteredCanchas.filter(cancha => 
-    cancha.nextAvailable !== "No disponible hoy" && 
-    !cancha.nextAvailable.includes("Mañana")
-  ).length;
-
   const handleUserButtonClick = () => {
     if (isAuthenticated) {
       router.push('/usuario/EditarPerfil');
@@ -167,27 +250,34 @@ const getStaticComplejoData = (establecimientoId: number) => {
     }
   };
 
-  // 🔥 FUNCIÓN PARA REFRESCAR DATOS
   const handleRefresh = () => {
+    setCanchasYaCargadas(false); // 🔥 PERMITIR RECARGA
     cargarCanchas();
   };
 
-  // 🔥 MANEJADOR DE CLICK EN CANCHA (como en la página principal)
   const handleCanchaClick = (court: any) => {
-    console.log('Navegando a cancha:', court);
     router.push(`/sports/futbol/canchas/canchaseleccionada?id=${court.id}`);
   };
+
+  const isPageLoading = loadingComplejos || isLoadingCanchas;
+  const hasPageError = errorComplejos || error;
 
   return (
     <div className={styles.pageContainer}>
       <Sidebar userRole="usuario" sport="futbol" />
 
       <div className={styles.mainContent}>
-        {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>⚽</div>
-            <h1 className={styles.headerTitle}>Fútbol</h1>
+            <h1 className={styles.headerTitle}>
+              Fútbol
+              {loadingComplejos && <span style={{ fontSize: '14px', marginLeft: '10px', color: '#6b7280' }}>⏳ Cargando complejos...</span>}
+              {errorComplejos && <span style={{ fontSize: '14px', marginLeft: '10px', color: '#dc2626' }}>⚠️ Complejos offline</span>}
+              {!loadingComplejos && !errorComplejos && complejos.length > 0 && (
+                <span style={{ fontSize: '14px', marginLeft: '10px', color: '#059669' }}>✅ {complejos.length} complejos cargados</span>
+              )}
+            </h1>
           </div>
           <div className={styles.headerRight}>
             <SearchBar
@@ -208,7 +298,6 @@ const getStaticComplejoData = (establecimientoId: number) => {
           </div>
         </div>
 
-        {/* Breadcrumb */}
         <div className={styles.breadcrumb}>
           <button 
             className={styles.breadcrumbButton}
@@ -219,28 +308,36 @@ const getStaticComplejoData = (establecimientoId: number) => {
           </button>
         </div>
 
-        {/* 🔥 MENSAJE DE ERROR CON INDICADOR DE FALLBACK */}
-        {error && (
+        {hasPageError && (
           <div className={styles.errorMessage}>
             <span>⚠️</span>
-            <span>Error: {error} - Mostrando datos offline</span>
+            <span>
+              Error: {errorComplejos || error} - 
+              {errorComplejos ? ' Complejos offline' : ' API de canchas offline'} - 
+              Mostrando datos de respaldo
+            </span>
             <button onClick={handleRefresh}>Reintentar</button>
           </div>
         )}
 
-        {/* 🔥 MENSAJE DE CARGA */}
-        {isLoadingCanchas && (
+        {isPageLoading && (
           <div className={styles.loadingMessage}>
             <span>⚽</span>
-            <span>Cargando canchas de fútbol...</span>
+            <span>
+              {loadingComplejos ? 'Cargando complejos deportivos...' : 'Cargando canchas de fútbol...'}
+            </span>
           </div>
         )}
 
-        
-
-        {/* Filtros */}
         <div className={styles.filtersContainer}>
-          <h3 className={styles.filtersTitle}>Filtrar canchas de fútbol</h3>
+          <h3 className={styles.filtersTitle}>
+            Filtrar canchas de fútbol
+            {!isPageLoading && (
+              <span style={{ fontSize: '14px', fontWeight: 'normal', color: '#6b7280', marginLeft: '10px' }}>
+                ({filteredCanchas.length} {filteredCanchas.length === 1 ? 'cancha' : 'canchas'} disponible{filteredCanchas.length !== 1 ? 's' : ''})
+              </span>
+            )}
+          </h3>
           <div className={styles.filtersGrid}>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>
@@ -297,8 +394,7 @@ const getStaticComplejoData = (establecimientoId: number) => {
           </div>
         </div>
 
-        {/* Mensaje de no resultados */}
-        {filteredCanchas.length === 0 && searchTerm && !isLoadingCanchas && (
+        {filteredCanchas.length === 0 && searchTerm && !isPageLoading && (
           <div className={styles.noResults}>
             <h3>No se encontraron canchas de fútbol para &quot;{searchTerm}&quot;</h3>
             <p>Intenta con otros términos de búsqueda o ubicaciones</p>
@@ -308,8 +404,7 @@ const getStaticComplejoData = (establecimientoId: number) => {
           </div>
         )}
 
-        {/* 🔥 MENSAJE CUANDO NO HAY CANCHAS EN LA BD */}
-        {filteredCanchas.length === 0 && !searchTerm && !isLoadingCanchas && !error && (
+        {filteredCanchas.length === 0 && !searchTerm && !isPageLoading && !hasPageError && (
           <div className={styles.noData}>
             <h3>⚽ No hay canchas de fútbol registradas</h3>
             <p>Aún no se han registrado canchas de fútbol en el sistema</p>
@@ -317,8 +412,7 @@ const getStaticComplejoData = (establecimientoId: number) => {
           </div>
         )}
 
-        {/* Contenedor de tarjetas */}
-        {!isLoadingCanchas && filteredCanchas.length > 0 && (
+        {!isPageLoading && filteredCanchas.length > 0 && (
           <div className={styles.cardsContainer}>
             <div className={styles.cardsGrid}>
               {filteredCanchas.map((cancha, idx) => (
@@ -330,6 +424,28 @@ const getStaticComplejoData = (establecimientoId: number) => {
                 />
               ))}
             </div>
+          </div>
+        )}
+
+        {!isPageLoading && (
+          <div className={styles.mapSection}>
+            <h2 className={styles.sectionTitle}>
+              Ubicación en el mapa de las canchas
+              {!loadingComplejos && complejos.length > 0 && (
+                <span style={{ fontSize: '14px', marginLeft: '10px', color: '#6b7280' }}>
+                  📍 {complejos.length} complejos disponibles
+                </span>
+              )}
+            </h2>
+            
+            <LocationMap 
+              latitude={-38.7359}
+              longitude={-72.5904}
+              address="Temuco, Chile"
+              zoom={13}
+              height="400px"
+              sport="futbol"
+            />
           </div>
         )}
       </div>

@@ -51,6 +51,10 @@ export interface ReservaFilters {
   codigoConfirmacion?: string;
 }
 
+// ==========================================
+// FORMATOS LEGACY (Compatibilidad)
+// ==========================================
+
 export interface CreateReservaInput {
   usuarioId: number;
   canchaId: number;
@@ -69,7 +73,7 @@ export interface UpdateReservaInput {
   fechaFin?: string;   // ISO string
 }
 
-// Tipos para cotización de reservas
+// Tipos para cotización de reservas (legacy)
 export interface CotizacionInput {
   canchaId: number;
   fechaInicio: string;
@@ -84,6 +88,54 @@ export interface CotizacionResponse {
   disponible: boolean;
   mensaje?: string;
   holdId?: string; // Para mantener temporal la reserva
+}
+
+// ==========================================
+// FORMATOS NUEVOS (Taller4 - Sincronizados)
+// ==========================================
+
+export interface CreateReservaInputNew {
+  id_cancha: number;
+  fecha: string;      // YYYY-MM-DD
+  inicio: string;     // HH:MM
+  fin: string;        // HH:MM
+  notas?: string;
+}
+
+/**
+ * Formato para crear reservas como admin
+ * Backend espera: { id_cancha, fecha_reserva, hora_inicio, hora_fin, id_usuario }
+ */
+export interface CreateReservaAdminInput {
+  id_cancha: number;
+  fecha_reserva: string;  // YYYY-MM-DD
+  hora_inicio: string;    // HH:MM
+  hora_fin: string;       // HH:MM
+  id_usuario: number;
+  notas?: string;
+}
+
+export interface UpdateReservaInputNew {
+  fecha?: string;     // YYYY-MM-DD
+  inicio?: string;    // HH:MM
+  fin?: string;       // HH:MM
+  notas?: string;
+}
+
+export interface CotizacionInputNew {
+  id_cancha: number;
+  fecha: string;      // YYYY-MM-DD
+  inicio: string;     // HH:MM
+  fin: string;        // HH:MM
+  cupon?: string;     // Código promocional
+}
+
+export interface CotizacionResponseNew {
+  moneda: string;     // "CLP"
+  subtotal: number;
+  descuento: number;
+  total: number;
+  detalle?: string;
 }
 
 // Tipos para acciones específicas de reserva

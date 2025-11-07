@@ -24,6 +24,13 @@ export class ReservaApiRepository implements ReservaRepository {
         fechaHasta: filters.fechaHasta?.toISOString(),
       });
       const { data } = await this.http.get(`/reservas`, { params });
+      
+      // 🔍 DEBUG: Ver qué envía FastAPI
+      console.log('🔍 [ReservaApiRepository] Respuesta de FastAPI:', JSON.stringify(data, null, 2));
+      if (data?.items?.length > 0) {
+        console.log('🔍 [ReservaApiRepository] Primera reserva RAW de FastAPI:', JSON.stringify(data.items[0], null, 2));
+      }
+      
       return normalizePage<Reserva>(data, x => toReserva(x as FastReserva));
     } catch (e) {
       throw httpError(e);
@@ -190,15 +197,30 @@ export class ReservaApiRepository implements ReservaRepository {
 
   /**
    * Crea una reserva con privilegios administrativos.
+   * ✅ FORMATO CORREGIDO: Usa los nombres de campos que FastAPI espera
    */
   async createReservaAdmin(input: CreateReservaInput, targetUserId: number): Promise<Reserva> {
     try {
-      const payload = toSnake({
-        ...input,
-        fechaInicio: input.fechaInicio.toISOString(),
-        fechaFin: input.fechaFin.toISOString(),
-        usuarioId: targetUserId
-      });
+      // ✅ CONSTRUIR PAYLOAD CON FORMATO FASTAPI
+      // FastAPI espera: id_cancha, fecha, inicio, fin, id_usuario
+      const fechaInicio = new Date(input.fechaInicio);
+      const fechaFin = new Date(input.fechaFin);
+      
+      // Extraer componentes de fecha y hora
+      const fecha = fechaInicio.toISOString().split('T')[0]; // "2025-10-27"
+      const inicio = fechaInicio.toTimeString().substring(0, 5); // "17:11"
+      const fin = fechaFin.toTimeString().substring(0, 5); // "18:11"
+      
+      const payload = {
+        id_cancha: input.canchaId,
+        fecha: fecha,
+        inicio: inicio,
+        fin: fin,
+        id_usuario: targetUserId,
+        notas: input.notas || `Creada por administrador`
+      };
+      
+      console.log('🔧 [ReservaApiRepository.createReservaAdmin] Payload FastAPI:', payload);
       
       const { data } = await this.http.post<FastReserva>(`/reservas`, payload, {
         headers: {
@@ -208,6 +230,7 @@ export class ReservaApiRepository implements ReservaRepository {
       });
       return toReserva(data);
     } catch (e) {
+      console.error('❌ [ReservaApiRepository.createReservaAdmin] Error:', e);
       throw httpError(e);
     }
   }
