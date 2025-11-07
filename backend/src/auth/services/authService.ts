@@ -35,6 +35,7 @@ import {
   LogoutRequest, PushTokenRequest, SimpleMessage, AccessTokenOnly, EndpointStatus, EndpointType,
   RegisterInitRequest, RegisterInitResponse, RegisterVerifyRequest
 } from '../types/authTypes';
+import type { GoogleProfile } from '../config/google';
 
 /**
  * CLASE PRINCIPAL DEL SERVICIO AUTH
@@ -93,22 +94,47 @@ export class AuthService {
       original: userData.rol,
       normalizado: normalizedRole
     });
+
+    // ✅ OBTENER complejo_id para usuarios admin
+    let complejo_id = userData.complejo_id;
+    
+    if (normalizedRole === 'admin' && !complejo_id) {
+      try {
+        console.log('🏢 [AuthService.normalizeUserDataAsync] Obteniendo complejo_id para admin:', userData.id_usuario);
+        
+        // Hacer request al endpoint de complejos para obtener el complejo del admin
+        const complejoResponse = await this.apiClient.get(`/api/complejos/admin/${userData.id_usuario}`);
+        
+        if (complejoResponse.data?.ok && complejoResponse.data?.data?.length > 0) {
+          complejo_id = complejoResponse.data.data[0].id_complejo;
+          console.log('✅ [AuthService.normalizeUserDataAsync] complejo_id obtenido:', complejo_id);
+        } else {
+          console.log('⚠️ [AuthService.normalizeUserDataAsync] No se encontró complejo para admin:', userData.id_usuario);
+        }
+      } catch (error) {
+        console.error('❌ [AuthService.normalizeUserDataAsync] Error obteniendo complejo_id:', error);
+        // No lanzar error, continuar sin complejo_id
+      }
+    }
     
     return {
       ...userData,
-      rol: normalizedRole
+      rol: normalizedRole,
+      complejo_id
     };
   }
 
   /**
    * Versión síncrona para compatibilidad
+   * NOTA: No puede obtener complejo_id asincrónicamente, solo preserva si ya existe
    */
   private normalizeUserData(userData: any): any {
     if (!userData) return userData;
     
     return {
       ...userData,
-      rol: userData.rol ? this.normalizeRole(userData.rol) : userData.rol
+      rol: userData.rol ? this.normalizeRole(userData.rol) : userData.rol,
+      complejo_id: userData.complejo_id // Preservar complejo_id si ya existe
     };
   }
 
@@ -346,18 +372,19 @@ export class AuthService {
 
   /**
    * Obtener perfil del usuario actual
-   * @returns Promise<ApiResponse<UserPublic>> - Datos del usuario autenticado
+   * @returns Promise<ApiResponse<UserPublic>> - Perfil del usuario
    */
   async getMe(): Promise<ApiResponse<UserPublic>> {
     try {
       const response = await this.apiClient.get(API_ENDPOINTS.auth.me);
       
-      // 🔥 NORMALIZAR ROL: Convertir a minúsculas y super_admin → super_admin
-      const normalizedData = this.normalizeUserData(response.data);
+      // ✅ USAR VERSION ASINCRONA: Normalizar rol y obtener complejo_id para admins
+      const normalizedData = await this.normalizeUserDataAsync(response.data);
       
-      console.log('🔄 [AuthService.getMe] Rol normalizado:', {
+      console.log('🔄 [AuthService.getMe] Datos normalizados:', {
         original: response.data?.rol,
-        normalizado: normalizedData?.rol
+        normalizado: normalizedData?.rol,
+        complejo_id: normalizedData?.complejo_id
       });
       
       return { ok: true, data: normalizedData };
@@ -367,9 +394,7 @@ export class AuthService {
         error: error.response?.data?.detail || 'Error al obtener perfil' 
       };
     }
-  }
-
-  /**
+  }  /**
    * Actualizar perfil del usuario actual
    * @param updateData - Datos a actualizar del perfil
    * @returns Promise<ApiResponse<UserPublic>> - Perfil actualizado
@@ -666,5 +691,92 @@ export class AuthService {
       acc[endpoint] = status;
       return acc;
     }, {} as Record<EndpointType, EndpointStatus>);
+  }
+
+  /**
+   * MÉTODOS DE GOOGLE AUTH
+   * ======================
+   */
+
+  /**
+   * Login o registro con Google (delegado a FastAPI)
+   * 
+   * ⚠️ PENDIENTE: Requiere que FastAPI implemente el endpoint POST /api/v1/auth/google/login
+   * 
+   * Este endpoint debe:
+   * 1. Recibir: { provider: "google", google_id, email, nombre, apellido, avatar_url }
+   * 2. Buscar usuario por google_id o email
+   * 3. Si existe, retornar token
+   * 4. Si no existe, crear usuario con google_id (sin password) y retornar token
+   * 5. Marcar usuario como verificado (Google ya verificó el email)
+   * 
+   * @param profile - Perfil de Google verificado (sub, email, name, picture)
+   * @returns Promise<ApiResponse<TokenResponse>> - Tokens y datos del usuario
+   */
+  async loginOrRegisterWithGoogle(profile: GoogleProfile): Promise<ApiResponse<TokenResponse>> {
+    try {
+      const payload = {
+        provider: 'google',
+        google_id: profile.sub,
+        email: profile.email,
+        nombre: profile.given_name || (profile.name ? profile.name.split(' ')[0] : ''),
+        apellido: profile.family_name || (profile.name ? profile.name.split(' ').slice(1).join(' ') : ''),
+        avatar_url: profile.picture || null
+      };
+
+      console.log('🔄 [AuthService.loginOrRegisterWithGoogle] Enviando a FastAPI (endpoint pendiente):', payload);
+      
+      // Este endpoint NO existe aún en FastAPI, se agregará después
+      const googleLoginEndpoint = '/api/v1/auth/google/login';
+      
+      const response = await this.apiClient.post(googleLoginEndpoint, payload, {
+        validateStatus: (status) => status < 500
+      });
+
+      if (response.status >= 200 && response.status < 300) {
+        const data = response.data;
+        if (data?.access_token) {
+          this.authToken = data.access_token;
+        }
+        const normalized = {
+          ...data,
+          user: data?.user ? await this.normalizeUserDataAsync(data.user) : data?.user
+        };
+        return { ok: true, data: normalized };
+      }
+
+      // Endpoint no encontrado o error
+      if (response.status === 404) {
+        return {
+          ok: false,
+          error: 'Endpoint de Google login no implementado aún en FastAPI. Por favor contacta al equipo de backend.',
+        };
+      }
+
+      return {
+        ok: false,
+        error: response.data?.detail || `Error en Google login: ${response.status}`,
+      };
+      
+    } catch (error: any) {
+      console.error('❌ [AuthService.loginOrRegisterWithGoogle] Error:', {
+        message: error.message,
+        code: error?.code,
+        status: error?.response?.status,
+        data: error?.response?.data
+      });
+      
+      if (error.response?.status === 404) {
+        return {
+          ok: false,
+          error: 'El endpoint POST /api/v1/auth/google/login aún no está implementado en FastAPI.',
+        };
+      }
+      
+      return {
+        ok: false,
+        error: error.response?.data?.detail || error.message || 'Error conectando con FastAPI',
+      };
+    }
   }
 }

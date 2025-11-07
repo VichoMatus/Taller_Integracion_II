@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/services/authService';
+import { googleAuthService } from '@/services/googleAuthService';
+import Script from 'next/script';
 import '../Login.css';
 
 export default function LoginPage() {
@@ -12,9 +14,70 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false);
     const router = useRouter();
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    // Inicializar Google Sign-In cuando el script se carga
+    useEffect(() => {
+        if (googleScriptLoaded && typeof window !== 'undefined') {
+            googleAuthService.initializeGoogleSignIn(
+                // Success callback
+                async (response) => {
+                    try {
+                        setIsLoading(true);
+                        setError('');
+                        
+                        // response.credential contiene el id_token de Google
+                        const result = await googleAuthService.loginWithGoogle(response.credential);
+                        
+                        console.log('✅ Login con Google exitoso:', result);
+                        
+                        // Verificar si hay usuario y rol
+                        const user = result.user;
+                        const isFallback = result.fallback;
+                        
+                        if (isFallback) {
+                            console.warn('⚠️ Modo fallback - usando token temporal');
+                            setError(result.message || '');
+                        }
+                        
+                        // Redireccionar según rol
+                        if (user && user.rol) {
+                            switch (user.rol) {
+                                case 'admin':
+                                    router.push('/admin');
+                                    break;
+                                case 'super_admin':
+                                    router.push('/super_admin');
+                                    break;
+                                default:
+                                    router.push('/sports');
+                                    break;
+                            }
+                        } else {
+                            router.push('/sports');
+                        }
+                    } catch (err: any) {
+                        console.error('❌ Error en login con Google:', err);
+                        setError(err.message || 'Error al iniciar sesión con Google');
+                    } finally {
+                        setIsLoading(false);
+                    }
+                },
+                // Error callback
+                (errorMsg) => {
+                    setError(errorMsg);
+                }
+            );
+
+            // Renderizar el botón después de inicializar
+            setTimeout(() => {
+                googleAuthService.renderButton('googleSignInButton');
+            }, 100);
+        }
+    }, [googleScriptLoaded, router]);
+
+    const handleSubmit = async (e: any) => {
         e.preventDefault();
         
         if (!email.trim() || !password.trim()) {
@@ -73,35 +136,16 @@ export default function LoginPage() {
                 </h1>
             </header>
             
-            <div className="login-container">
-                <div className="login-form">
-                    <div className="login-left">
-                        <h1>Inicio Sesión</h1>
-                        <p>Inicie sesión para continuar con su cuenta</p>
-                        
-                        {error && (
-                            <div style={{ 
-                                backgroundColor: '#fee2e2', 
-                                border: '1px solid #fecaca', 
-                                color: '#dc2626', 
-                                padding: '0.75rem', 
-                                borderRadius: '0.5rem', 
-                                marginBottom: '1rem' 
-                            }}>
-                                {error}
-                            </div>
-                        )}
-                        
-                        <form onSubmit={handleSubmit}>
-                            <label htmlFor="email">Email</label>
-                            <input 
-                                type="email" 
-                                id="email" 
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                disabled={isLoading}
-                                required
-                            />
+            <div style={{ minHeight: '100vh', position: 'relative' }}>
+                <header style={{ backgroundColor: '#4F46E5', color: 'white', padding: '1rem', textAlign: 'center' }}>
+                    <h1 className="header-logo">SportHub</h1>
+                </header>
+                
+                <div className="login-container">
+                    <div className="login-form">
+                        <div className="login-left">
+                            <h1>Inicio Sesión</h1>
+                            <p>Inicie sesión para continuar con su cuenta</p>
                             
                             <label htmlFor="password">Contraseña</label>
                             <div style={{ display: 'flex', width: '100%', alignItems: 'stretch' }}>
@@ -172,15 +216,8 @@ export default function LoginPage() {
                             </button>
                         </form>
                         
-                        <div className="or">o</div>
-                        
-                        <button className="google-btn" disabled={isLoading}>
-                            <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" />
-                            Iniciar sesión con Google
-                        </button>
-                        
-                        <div className="signup">
-                            No tienes una cuenta? <Link href="/login/registro">Crea una</Link>
+                        <div className="login-right">
+                            <img src="/imagenes/logo_sporthub.jpg" alt="Sporthub logo" />
                         </div>
                     </div>
                     
@@ -193,8 +230,8 @@ export default function LoginPage() {
                         />
                     </div>
                 </div>
+                
             </div>
-            
-        </div>
+        </>
     );
 }

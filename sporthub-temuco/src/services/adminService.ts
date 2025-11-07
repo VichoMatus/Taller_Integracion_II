@@ -28,7 +28,7 @@ export const adminService = {
    */
   async getMisRecursos(): Promise<MisRecursosResponse> {
     try {
-      const response = await apiBackend.get('/api/admin/panel');
+      const response = await apiBackend.get('/admin/panel');
       return response.data;
     } catch (error: any) {
       throw new Error('Error al obtener mis recursos: ' + (error.response?.data?.message || error.message));
@@ -40,10 +40,54 @@ export const adminService = {
    */
   async getMisEstadisticas(): Promise<EstadisticasOwner> {
     try {
-      const response = await apiBackend.get('/api/admin/estadisticas');
+      const response = await apiBackend.get('/admin/estadisticas');
       return response.data;
     } catch (error: any) {
       throw new Error('Error al obtener estadísticas: ' + (error.response?.data?.message || error.message));
+    }
+  },
+
+  // ========================================
+  // ESTADÍSTICAS DETALLADAS
+  // ========================================
+
+  /**
+   * Obtener estadísticas detalladas de un complejo específico
+   */
+  async getEstadisticasComplejo(complejoId: number): Promise<any> {
+    try {
+      const response = await apiBackend.get(`/admin/complejos/${complejoId}/estadisticas`);
+      return response.data;
+    } catch (error: any) {
+      throw new Error('Error al obtener estadísticas del complejo: ' + (error.response?.data?.message || error.message));
+    }
+  },
+
+  /**
+   * Obtener reservas agrupadas por día de la semana (para gráfico de barras)
+   */
+  async getReservasPorDiaSemana(complejoId: number, dias: number = 30): Promise<any> {
+    try {
+      const response = await apiBackend.get(`/admin/complejos/${complejoId}/estadisticas/reservas-semana`, {
+        params: { dias }
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error('Error al obtener reservas por día: ' + (error.response?.data?.message || error.message));
+    }
+  },
+
+  /**
+   * Obtener reservas agrupadas por cancha (para gráfico comparativo)
+   */
+  async getReservasPorCancha(complejoId: number, dias: number = 30): Promise<any> {
+    try {
+      const response = await apiBackend.get(`/admin/complejos/${complejoId}/estadisticas/reservas-cancha`, {
+        params: { dias }
+      });
+      return response.data;
+    } catch (error: any) {
+      throw new Error('Error al obtener reservas por cancha: ' + (error.response?.data?.message || error.message));
     }
   },
 
@@ -56,7 +100,7 @@ export const adminService = {
    */
   async getMisComplejos(): Promise<Complejo[]> {
     try {
-      const response = await apiBackend.get('/api/admin/complejos');
+      const response = await apiBackend.get('/admin/complejos');
       return response.data;
     } catch (error: any) {
       throw new Error('Error al obtener complejos: ' + (error.response?.data?.message || error.message));
@@ -68,7 +112,7 @@ export const adminService = {
    */
   async createComplejo(data: CreateComplejoInput): Promise<Complejo> {
     try {
-      const response = await apiBackend.post('/api/admin/complejos', data);
+      const response = await apiBackend.post('/admin/complejos', data);
       return response.data;
     } catch (error: any) {
       throw new Error('Error al crear complejo: ' + (error.response?.data?.message || error.message));
@@ -80,7 +124,7 @@ export const adminService = {
    */
   async getComplejo(id: number): Promise<Complejo> {
     try {
-      const response = await apiBackend.get(`/api/admin/complejos/${id}`);
+      const response = await apiBackend.get(`/admin/complejos/${id}`);
       return response.data;
     } catch (error: any) {
       throw new Error('Error al obtener complejo: ' + (error.response?.data?.message || error.message));
@@ -92,7 +136,7 @@ export const adminService = {
    */
   async updateComplejo(id: number, data: UpdateComplejoInput): Promise<Complejo> {
     try {
-      const response = await apiBackend.put(`/api/admin/complejos/${id}`, data);
+      const response = await apiBackend.put(`/admin/complejos/${id}`, data);
       return response.data;
     } catch (error: any) {
       throw new Error('Error al actualizar complejo: ' + (error.response?.data?.message || error.message));
@@ -104,7 +148,7 @@ export const adminService = {
    */
   async deleteComplejo(id: number): Promise<void> {
     try {
-      await apiBackend.delete(`/api/admin/complejos/${id}`);
+      await apiBackend.delete(`/admin/complejos/${id}`);
     } catch (error: any) {
       throw new Error('Error al eliminar complejo: ' + (error.response?.data?.message || error.message));
     }
@@ -119,7 +163,7 @@ export const adminService = {
    */
   async getMisCanchas(): Promise<Cancha[]> {
     try {
-      const response = await apiBackend.get('/api/admin/canchas');
+      const response = await apiBackend.get('/admin/canchas');
       return response.data;
     } catch (error: any) {
       throw new Error('Error al obtener canchas: ' + (error.response?.data?.message || error.message));
@@ -131,7 +175,7 @@ export const adminService = {
    */
   async createCancha(data: CreateCanchaInput): Promise<Cancha> {
     try {
-      const response = await apiBackend.post('/api/admin/canchas', data);
+      const response = await apiBackend.post('/admin/canchas', data);
       return response.data;
     } catch (error: any) {
       throw new Error('Error al crear cancha: ' + (error.response?.data?.message || error.message));
@@ -143,7 +187,7 @@ export const adminService = {
    */
   async getCancha(id: number): Promise<Cancha> {
     try {
-      const response = await apiBackend.get(`/api/admin/canchas/${id}`);
+      const response = await apiBackend.get(`/admin/canchas/${id}`);
       return response.data;
     } catch (error: any) {
       throw new Error('Error al obtener cancha: ' + (error.response?.data?.message || error.message));
@@ -155,7 +199,7 @@ export const adminService = {
    */
   async updateCancha(id: number, data: UpdateCanchaInput): Promise<Cancha> {
     try {
-      const response = await apiBackend.put(`/api/admin/canchas/${id}`, data);
+      const response = await apiBackend.put(`/admin/canchas/${id}`, data);
       return response.data;
     } catch (error: any) {
       throw new Error('Error al actualizar cancha: ' + (error.response?.data?.message || error.message));
@@ -167,7 +211,7 @@ export const adminService = {
    */
   async deleteCancha(id: number): Promise<void> {
     try {
-      await apiBackend.delete(`/api/admin/canchas/${id}`);
+      await apiBackend.delete(`/admin/canchas/${id}`);
     } catch (error: any) {
       throw new Error('Error al eliminar cancha: ' + (error.response?.data?.message || error.message));
     }
@@ -182,7 +226,7 @@ export const adminService = {
    */
   async getMisReservas(filtros?: FiltrosReservasInput): Promise<ReservaOwner[]> {
     try {
-      const response = await apiBackend.get('/api/admin/reservas', { params: filtros });
+      const response = await apiBackend.get('/admin/reservas', { params: filtros });
       return response.data;
     } catch (error: any) {
       throw new Error('Error al obtener reservas: ' + (error.response?.data?.message || error.message));
@@ -198,7 +242,7 @@ export const adminService = {
    */
   async getStatus(): Promise<AdminStatusResponse> {
     try {
-      const response = await apiBackend.get('/api/admin/status');
+      const response = await apiBackend.get('/admin/status');
       return response.data;
     } catch (error: any) {
       throw new Error('Error al verificar status: ' + (error.response?.data?.message || error.message));
