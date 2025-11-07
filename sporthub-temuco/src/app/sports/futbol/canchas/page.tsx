@@ -2,130 +2,129 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStatus } from '../../../../hooks/useAuthStatus';
-import { useComplejos } from '../../../../hooks/useComplejos'; // 🔥 AGREGAR HOOK
+import { useComplejos } from '../../../../hooks/useComplejosCanchas';
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
 import LocationMap from '../../../../components/LocationMap';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
-
-// 🔥 IMPORTAR SERVICIO (igual que en la página principal)
 import { canchaService } from '../../../../services/canchaService';
 
 export default function Page() {
-  // 🔥 RENOMBRAR VARIABLES PARA EVITAR CONFLICTOS
   const { user, isLoading: isAuthLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   
-  // 🔥 ESTADOS PARA LA API
   const [canchas, setCanchas] = useState<any[]>([]);
   const [filteredCanchas, setFilteredCanchas] = useState<any[]>([]);
-  const [modalOpen, setModalOpen] = useState(false);
   const [isLoadingCanchas, setIsLoadingCanchas] = useState(true);
   const [error, setError] = useState<string>('');
+  const [canchasYaCargadas, setCanchasYaCargadas] = useState(false); // 🔥 FLAG PARA EVITAR MÚLTIPLES CARGAS
 
-  // 🔥 USAR HOOK DE COMPLEJOS
   const { 
     complejos, 
     loading: loadingComplejos, 
     error: errorComplejos 
   } = useComplejos();
 
-  // 🔥 FUNCIÓN PARA CARGAR CANCHAS CON DATOS REALES DE COMPLEJOS
+  // 🔥 EFECTO QUE SOLO SE EJECUTA UNA VEZ CUANDO LOS COMPLEJOS ESTÉN LISTOS
+  useEffect(() => {
+    console.log('🔄 [UseEffect] Estado:', {
+      loadingComplejos,
+      cantidadComplejos: complejos.length,
+      canchasYaCargadas
+    });
+    
+    if (!loadingComplejos && complejos.length > 0 && !canchasYaCargadas) {
+      console.log('✅ [UseEffect] Condiciones cumplidas, cargando canchas...');
+      cargarCanchas();
+    }
+  }, [loadingComplejos, complejos.length, canchasYaCargadas]); // 🔥 DEPENDENCIAS ESPECÍFICAS
+
   const cargarCanchas = async () => {
     try {
       setIsLoadingCanchas(true);
       setError('');
       
-      console.log('🔄 [CanchasFutbol] Cargando TODAS las canchas del backend...');
+      console.log('🔄 [CanchasFutbol] Iniciando carga de canchas...');
+      console.log('📸 [SNAPSHOT] Complejos disponibles:', complejos.length);
+      console.log('📸 [SNAPSHOT] IDs:', complejos.map(c => `${c.id_complejo}: ${c.nombre}`));
       
       const response: any = await canchaService.getCanchas();
       
-      // 🔥 DEBUG COMPLETO DE LA RESPUESTA
-      console.log('🔍 [DEBUG] Tipo de response:', typeof response);
-      console.log('🔍 [DEBUG] Es array?:', Array.isArray(response));
-      console.log('🔍 [DEBUG] Response completo:', response);
-      console.log('🔍 [DEBUG] Claves del objeto:', Object.keys(response || {}));
-      
-      // 🔥 VALIDACIÓN MÁS FLEXIBLE
       let todasLasCanchas: any[] = [];
       
       if (Array.isArray(response)) {
         todasLasCanchas = response;
-        console.log('✅ [DEBUG] Usando response directo como array');
       } else if (response && Array.isArray(response.data)) {
         todasLasCanchas = response.data;
-        console.log('✅ [DEBUG] Usando response.data como array');
       } else if (response && Array.isArray(response.canchas)) {
         todasLasCanchas = response.canchas;
-        console.log('✅ [DEBUG] Usando response.canchas como array');
       } else if (response && Array.isArray(response.items)) {
         todasLasCanchas = response.items;
-        console.log('✅ [DEBUG] Usando response.items como array');
       } else if (response && Array.isArray(response.results)) {
         todasLasCanchas = response.results;
-        console.log('✅ [DEBUG] Usando response.results como array');
       } else {
-        console.error('❌ [DEBUG] No se pudo extraer array de canchas');
-        console.error('❌ [DEBUG] Estructura recibida:', JSON.stringify(response, null, 2));
-        
-        // 🔥 INTENTAR EXTRAER CUALQUIER ARRAY QUE ENCUENTRE
         const allKeys = Object.keys(response || {});
-        console.log('🔍 [DEBUG] Buscando arrays en las claves:', allKeys);
-        
         for (const key of allKeys) {
           if (Array.isArray(response[key])) {
-            console.log(`🔍 [DEBUG] Encontré array en response.${key}:`, response[key].length, 'elementos');
             todasLasCanchas = response[key];
             break;
           }
         }
         
         if (todasLasCanchas.length === 0) {
-          throw new Error(`No se encontró array de canchas. Estructura: ${JSON.stringify(response)}`);
+          throw new Error(`No se encontró array de canchas`);
         }
       }
       
-      console.log(`📊 [DEBUG] Total canchas extraídas: ${todasLasCanchas.length}`);
+      console.log(`📊 Total canchas extraídas: ${todasLasCanchas.length}`);
       
-      // 🔥 FILTRAR CANCHAS DE FÚTBOL
       const canchasDeFutbol = todasLasCanchas.filter((cancha: any) => {
-        const esFutbol = ['futbol', 'futsal', 'futbolito'].includes(cancha.tipo);
-        console.log(`🔍 [DEBUG] Cancha ${cancha.id} (${cancha.tipo}): ${esFutbol ? 'SÍ ES FÚTBOL' : 'NO ES FÚTBOL'}`);
-        return esFutbol;
+        return ['futbol', 'futsal', 'futbolito'].includes(cancha.tipo);
       });
       
-      console.log(`⚽ [DEBUG] Canchas de fútbol encontradas: ${canchasDeFutbol.length}`);
+      console.log(`⚽ Canchas de fútbol encontradas: ${canchasDeFutbol.length}`);
       
       if (canchasDeFutbol.length === 0) {
-        console.warn('⚠️ [DEBUG] No hay canchas de fútbol, usando fallback');
-        throw new Error('No se encontraron canchas de fútbol en la respuesta del servidor');
+        throw new Error('No se encontraron canchas de fútbol');
       }
       
-      // 🔥 MAPEAR CANCHAS CON DATOS REALES DE COMPLEJOS
+      // 🔥 MAPEO CON VERIFICACIÓN DE QUE LOS COMPLEJOS TIENEN IDs
       const canchasMapeadas = canchasDeFutbol.map((cancha: any) => {
         let addressInfo = `Complejo ${cancha.establecimientoId || 'Desconocido'}`;
         let complejoNombre = `Complejo ${cancha.establecimientoId || 'Desconocido'}`;
         let rating = cancha.rating || 4.5;
         
-        // 🔥 BUSCAR COMPLEJO EN LA LISTA YA CARGADA
         if (cancha.establecimientoId && complejos.length > 0) {
-          const complejoData = complejos.find(c => c.id_complejo === cancha.establecimientoId);
+          console.log(`\n🔍 Buscando complejo ID ${cancha.establecimientoId} para cancha ${cancha.id}`);
+          
+          // 🔥 BÚSQUEDA CON CONVERSIÓN DE TIPOS Y VERIFICACIÓN
+          const complejoData = complejos.find(c => {
+            const idComplejo = c.id_complejo;
+            const idBuscado = cancha.establecimientoId;
+            
+            // Convertir ambos a número para comparar
+            const match = Number(idComplejo) === Number(idBuscado);
+            
+            if (match) {
+              console.log(`  ✅ MATCH encontrado: ${idComplejo} === ${idBuscado}`);
+            }
+            
+            return match;
+          });
           
           if (complejoData) {
             complejoNombre = complejoData.nombre;
             addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
             rating = complejoData.rating_promedio || cancha.rating || 4.5;
             
-            console.log(`✅ [CanchasFutbol] Complejo encontrado para cancha ${cancha.id}:`, {
-              nombre: complejoData.nombre,
-              direccion: complejoData.direccion,
-              rating: complejoData.rating_promedio
-            });
+            console.log(`  ✅ Complejo asignado: ${complejoData.nombre}`);
           } else {
-            console.warn(`⚠️ [CanchasFutbol] No se encontró complejo ${cancha.establecimientoId} para cancha ${cancha.id}`);
-            // 🔥 USAR DATOS ESTÁTICOS COMO FALLBACK
+            console.error(`  ❌ No se encontró complejo con ID ${cancha.establecimientoId}`);
+            console.error(`  📋 IDs disponibles:`, complejos.map(c => c.id_complejo));
+            
+            // Usar datos estáticos como fallback
             const staticData = getStaticComplejoData(cancha.establecimientoId);
             complejoNombre = staticData.nombre;
             addressInfo = `${staticData.nombre} - ${staticData.direccion}`;
@@ -147,7 +146,6 @@ export default function Page() {
           price: cancha.precioPorHora?.toString() || "25",
           nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
           sport: cancha.tipo,
-          // 🔥 DATOS ADICIONALES PARA LA RESERVA
           establecimientoId: cancha.establecimientoId,
           techada: cancha.techada,
           activa: cancha.activa,
@@ -155,15 +153,21 @@ export default function Page() {
         };
       });
       
-      console.log('🎉 [CanchasFutbol] Canchas con datos reales de complejo:', canchasMapeadas.length);
+      console.log('\n🎉 Canchas mapeadas correctamente:', canchasMapeadas.length);
+      console.log('📋 Resumen:');
+      canchasMapeadas.forEach(c => {
+        console.log(`  ${c.name} -> ${c.address}`);
+      });
+      
       setCanchas(canchasMapeadas);
       setFilteredCanchas(canchasMapeadas);
+      setCanchasYaCargadas(true); // 🔥 MARCAR COMO CARGADAS
       
     } catch (error: any) {
-      console.error('❌ [CanchasFutbol] ERROR completo:', error);
+      console.error('❌ Error:', error);
       setError(`Error: ${error.message}`);
       
-      // 🔥 FALLBACK CON DATOS ESTÁTICOS
+      // Fallback
       const canchasEstaticas = [
         {
           id: 1,
@@ -180,49 +184,17 @@ export default function Page() {
           techada: false,
           activa: true,
           complejoNombre: "🚨 FALLBACK - Complejo Norte"
-        },
-        {
-          id: 2,
-          imageUrl: "/sports/futbol/canchas/Cancha2.png",
-          name: "🚨 FALLBACK - Futsal Norte",
-          address: "🚨 FALLBACK - Complejo Deportivo Centro - Av. Pedro de Valdivia 567, Temuco",
-          rating: 3.5,
-          tags: ["DATOS OFFLINE", "Estacionamiento", "Futsal"],
-          description: "🚨 Datos de fallback - API no disponible",
-          price: "92",
-          nextAvailable: "Próximo: 14:30-15:30",
-          sport: "futsal",
-          establecimientoId: 2,
-          techada: true,
-          activa: true,
-          complejoNombre: "🚨 FALLBACK - Complejo Centro"
-        },
-        {
-          id: 3,
-          imageUrl: "/sports/futbol/canchas/Cancha3.png",
-          name: "🚨 FALLBACK - Futbolito Sur",
-          address: "🚨 FALLBACK - Complejo Deportivo Sur - Calle Montt 890, Temuco",
-          rating: 2.1,
-          tags: ["DATOS OFFLINE", "Estacionamiento", "Futbolito"],
-          description: "🚨 Datos de fallback - API no disponible",
-          price: "77",
-          nextAvailable: "Próximo: Mañana 09:00-10:00",
-          sport: "futbolito",
-          establecimientoId: 3,
-          techada: false,
-          activa: true,
-          complejoNombre: "🚨 FALLBACK - Complejo Sur"
         }
       ];
       
       setCanchas(canchasEstaticas);
       setFilteredCanchas(canchasEstaticas);
+      setCanchasYaCargadas(true); // 🔥 MARCAR COMO CARGADAS INCLUSO SI HAY ERROR
     } finally {
       setIsLoadingCanchas(false);
     }
   };
 
-  // 🔥 FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO (FALLBACK)
   const getStaticComplejoData = (establecimientoId: number) => {
     const staticComplejos = {
       1: {
@@ -237,6 +209,10 @@ export default function Page() {
         nombre: "Complejo Deportivo Sur",
         direccion: "Calle Montt 890, Temuco, Chile"
       },
+      4: {
+        nombre: "Complejo Deportivo Este",
+        direccion: "Av. Balmaceda 456, Temuco, Chile"
+      },
       default: {
         nombre: "Complejo Deportivo",
         direccion: "Av. Alemania 1234, Temuco, Chile"
@@ -245,13 +221,6 @@ export default function Page() {
     
     return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
   };
-
-  // 🔥 CARGAR CANCHAS CUANDO LOS COMPLEJOS ESTÉN LISTOS
-  useEffect(() => {
-    if (!loadingComplejos) {
-      cargarCanchas();
-    }
-  }, [loadingComplejos, complejos]); // 🔥 DEPENDENCIAS CORRECTAS
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -273,11 +242,6 @@ export default function Page() {
     router.push('/sports/futbol');
   };
 
-  const availableNow = filteredCanchas.filter(cancha => 
-    cancha.nextAvailable !== "No disponible hoy" && 
-    !cancha.nextAvailable.includes("Mañana")
-  ).length;
-
   const handleUserButtonClick = () => {
     if (isAuthenticated) {
       router.push('/usuario/EditarPerfil');
@@ -286,18 +250,15 @@ export default function Page() {
     }
   };
 
-  // 🔥 FUNCIÓN PARA REFRESCAR DATOS
   const handleRefresh = () => {
+    setCanchasYaCargadas(false); // 🔥 PERMITIR RECARGA
     cargarCanchas();
   };
 
-  // 🔥 MANEJADOR DE CLICK EN CANCHA
   const handleCanchaClick = (court: any) => {
-    console.log('Navegando a cancha:', court);
     router.push(`/sports/futbol/canchas/canchaseleccionada?id=${court.id}`);
   };
 
-  // 🔥 RENOMBRAR VARIABLES PARA EVITAR CONFLICTOS
   const isPageLoading = loadingComplejos || isLoadingCanchas;
   const hasPageError = errorComplejos || error;
 
@@ -306,12 +267,16 @@ export default function Page() {
       <Sidebar userRole="usuario" sport="futbol" />
 
       <div className={styles.mainContent}>
-        {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>⚽</div>
             <h1 className={styles.headerTitle}>
               Fútbol
+              {loadingComplejos && <span style={{ fontSize: '14px', marginLeft: '10px', color: '#6b7280' }}>⏳ Cargando complejos...</span>}
+              {errorComplejos && <span style={{ fontSize: '14px', marginLeft: '10px', color: '#dc2626' }}>⚠️ Complejos offline</span>}
+              {!loadingComplejos && !errorComplejos && complejos.length > 0 && (
+                <span style={{ fontSize: '14px', marginLeft: '10px', color: '#059669' }}>✅ {complejos.length} complejos cargados</span>
+              )}
             </h1>
           </div>
           <div className={styles.headerRight}>
@@ -333,7 +298,6 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Breadcrumb */}
         <div className={styles.breadcrumb}>
           <button 
             className={styles.breadcrumbButton}
@@ -344,7 +308,6 @@ export default function Page() {
           </button>
         </div>
 
-        {/* 🔥 MENSAJE DE ERROR CON INDICADOR DE FALLBACK */}
         {hasPageError && (
           <div className={styles.errorMessage}>
             <span>⚠️</span>
@@ -357,7 +320,6 @@ export default function Page() {
           </div>
         )}
 
-        {/* 🔥 MENSAJE DE CARGA */}
         {isPageLoading && (
           <div className={styles.loadingMessage}>
             <span>⚽</span>
@@ -367,15 +329,12 @@ export default function Page() {
           </div>
         )}
 
-        {/* Filtros */}
         <div className={styles.filtersContainer}>
           <h3 className={styles.filtersTitle}>
             Filtrar canchas de fútbol
-            {/* 🔥 CONTADOR DE RESULTADOS CON ESTADO */}
             {!isPageLoading && (
               <span style={{ fontSize: '14px', fontWeight: 'normal', color: '#6b7280', marginLeft: '10px' }}>
-                ({filteredCanchas.length} {filteredCanchas.length === 1 ? 'cancha' : 'canchas'} 
-                {hasPageError ? ' offline' : ' disponible' + (filteredCanchas.length !== 1 ? 's' : '')})
+                ({filteredCanchas.length} {filteredCanchas.length === 1 ? 'cancha' : 'canchas'} disponible{filteredCanchas.length !== 1 ? 's' : ''})
               </span>
             )}
           </h3>
@@ -435,7 +394,6 @@ export default function Page() {
           </div>
         </div>
 
-        {/* Mensaje de no resultados */}
         {filteredCanchas.length === 0 && searchTerm && !isPageLoading && (
           <div className={styles.noResults}>
             <h3>No se encontraron canchas de fútbol para &quot;{searchTerm}&quot;</h3>
@@ -446,7 +404,6 @@ export default function Page() {
           </div>
         )}
 
-        {/* 🔥 MENSAJE CUANDO NO HAY CANCHAS EN LA BD */}
         {filteredCanchas.length === 0 && !searchTerm && !isPageLoading && !hasPageError && (
           <div className={styles.noData}>
             <h3>⚽ No hay canchas de fútbol registradas</h3>
@@ -455,7 +412,6 @@ export default function Page() {
           </div>
         )}
 
-        {/* Contenedor de tarjetas */}
         {!isPageLoading && filteredCanchas.length > 0 && (
           <div className={styles.cardsContainer}>
             <div className={styles.cardsGrid}>
@@ -471,7 +427,6 @@ export default function Page() {
           </div>
         )}
 
-        {/* 🔥 MAPA CON INFORMACIÓN DE COMPLEJOS REALES */}
         {!isPageLoading && (
           <div className={styles.mapSection}>
             <h2 className={styles.sectionTitle}>
