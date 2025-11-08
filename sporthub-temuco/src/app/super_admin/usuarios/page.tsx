@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { superAdminService } from '@/services/superAdminService';
 import { Usuario, UserDisplay } from '@/types/usuarios';
 import { useSuperAdminProtection } from '@/hooks/useSuperAdminProtection';
-import '@/app/admin/dashboard.css';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -142,7 +141,7 @@ export default function UsuariosPage() {
   // Funciones de manejo de usuarios
   const handleEditUser = (userId: string) => {
     console.log('Editando usuario:', userId);
-    // router.push(`/super_admin/usuarios/editar/${userId}`);
+      router.push(`/super_admin/usuarios/editar/${userId}`);
   };
 
   const handleDeleteUser = async (userId: string) => {
@@ -201,6 +200,15 @@ export default function UsuariosPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
             Crear Usuario
+          </button>
+          <button 
+            onClick={() => router.push('/super_admin/usuarios/cambiar_rango')}
+            className="export-button"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Cambiar Rango Usuario
           </button>
         </div>
       </div>

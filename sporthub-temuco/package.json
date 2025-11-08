@@ -15,8 +15,8 @@
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.3",
     "next": "15.5.2",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "typescript": "^5"
   },
   "devDependencies": {
