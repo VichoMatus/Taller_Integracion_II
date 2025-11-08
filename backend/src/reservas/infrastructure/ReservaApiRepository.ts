@@ -121,11 +121,13 @@ export class ReservaApiRepository implements ReservaRepository {
 
   /**
    * Confirma el pago de una reserva en FastAPI.
+   * 🔄 ACTUALIZADO (6 nov 2025): Cambio de endpoint /confirmar-pago a /confirmar
+   * El frontend envía metodoPago: 'transferencia' | 'efectivo' | 'webpay'
    */
   async confirmarPago(id: number, metodoPago: MetodoPago): Promise<Reserva> {
     try {
-      const payload = { metodo_pago: metodoPago };
-      const { data } = await this.http.post<FastReserva>(`/reservas/${id}/confirmar-pago`, payload);
+      const payload = { metodoPago }; // Backend BFF usa camelCase, se convierte a snake_case en el cliente HTTP
+      const { data } = await this.http.post<FastReserva>(`/reservas/${id}/confirmar`, payload);
       return toReserva(data);
     } catch (e) {
       throw httpError(e);
