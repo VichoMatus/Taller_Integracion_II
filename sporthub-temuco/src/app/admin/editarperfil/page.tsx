@@ -35,8 +35,11 @@ export default function EditarPerfilAdministrador() {
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
-    telefono: ''
+    telefono: '',
+    imagen: null as File | null
   });
+
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -54,7 +57,8 @@ export default function EditarPerfilAdministrador() {
         setFormData({
           nombre: userData.nombre || '',
           apellido: userData.apellido || '',
-          telefono: userData.telefono || ''
+          telefono: userData.telefono || '',
+          imagen: null
         });
         
       } catch (err: any) {
@@ -68,30 +72,51 @@ export default function EditarPerfilAdministrador() {
     fetchUserData();
   }, [router]);
 
+  // Manejar cambio de imagen
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar tamaño (máx 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError("La imagen no debe superar los 5MB");
+        return;
+      }
+
+      // Validar tipo
+      if (!file.type.startsWith('image/')) {
+        setError("El archivo debe ser una imagen");
+        return;
+      }
+
+      setFormData(prev => ({ ...prev, imagen: file }));
+      
+      // Crear preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      setError(null);
+    }
+  };
+
   const formatPhoneNumber = (value: string): string => {
-    // Remover todo excepto números
     const numbers = value.replace(/\D/g, '');
     
-    // Si está vacío, retornar vacío
     if (numbers.length === 0) return '';
     
-    // Si empieza con 56, extraer los dígitos después del 56
     let phoneDigits = numbers;
     if (numbers.startsWith('56')) {
       phoneDigits = numbers.substring(2);
     }
     
-    // Limitar a 9 dígitos
     phoneDigits = phoneDigits.substring(0, 9);
     
-    // Si hay dígitos, formatear como +56 9 XXXX XXXX
     if (phoneDigits.length > 0) {
-      // Asegurarse que empiece con 9
       if (!phoneDigits.startsWith('9')) {
         phoneDigits = '9' + phoneDigits.substring(0, 8);
       }
       
-      // Formatear con espacios
       let formatted = '+56 9';
       if (phoneDigits.length > 1) {
         formatted += ' ' + phoneDigits.substring(1, 5);
@@ -126,9 +151,7 @@ export default function EditarPerfilAdministrador() {
   };
 
   const validatePhoneNumber = (phone: string): boolean => {
-    if (!phone || phone.trim() === '' || phone === '+56 9') return true; // Opcional
-    
-    // Debe tener exactamente +56 9 XXXX XXXX (17 caracteres con espacios)
+    if (!phone || phone.trim() === '' || phone === '+56 9') return true;
     const phoneRegex = /^\+56 9 \d{4} \d{4}$/;
     return phoneRegex.test(phone);
   };
@@ -149,34 +172,42 @@ export default function EditarPerfilAdministrador() {
         return;
       }
 
-      // Validar teléfono si tiene valor
       if (formData.telefono && formData.telefono !== '+56 9' && !validatePhoneNumber(formData.telefono)) {
         setError('El teléfono debe tener el formato +56 9 XXXX XXXX');
         return;
       }
 
-      const updateData: UpdateProfileData = {};
+      // Preparar FormData para enviar imagen
+      const updateFormData = new FormData();
       
       if (formData.nombre !== userData?.nombre) {
-        updateData.nombre = formData.nombre;
+        updateFormData.append('nombre', formData.nombre);
       }
       
       if (formData.apellido !== userData?.apellido) {
-        updateData.apellido = formData.apellido;
+        updateFormData.append('apellido', formData.apellido);
       }
       
-      // Solo guardar teléfono si es diferente y válido
       const cleanPhone = formData.telefono === '+56 9' ? '' : formData.telefono;
       if (cleanPhone !== userData?.telefono) {
-        updateData.telefono = cleanPhone;
+        updateFormData.append('telefono', cleanPhone);
       }
 
-      if (Object.keys(updateData).length === 0) {
+      // Agregar imagen si existe
+      if (formData.imagen) {
+        updateFormData.append('avatar', formData.imagen);
+      }
+
+      // Verificar si hay cambios
+      if (!formData.imagen && 
+          formData.nombre === userData?.nombre && 
+          formData.apellido === userData?.apellido && 
+          cleanPhone === userData?.telefono) {
         setSuccess('No se detectaron cambios para guardar');
         return;
       }
 
-      await authService.updateProfile(updateData);
+      await authService.updateProfile(updateFormData);
       
       setSuccess('Perfil actualizado correctamente');
       
@@ -224,9 +255,9 @@ export default function EditarPerfilAdministrador() {
               
               <div className="avatar-section-edit">
                 <div className="avatar-wrapper-edit">
-                  {userData?.avatar_url ? (
+                  {imagePreview || userData?.avatar_url ? (
                     <img 
-                      src={userData.avatar_url} 
+                      src={imagePreview || userData.avatar_url} 
                       alt="Avatar" 
                       className="avatar-img-edit"
                     />
@@ -241,14 +272,30 @@ export default function EditarPerfilAdministrador() {
                 <h2 className="sidebar-user-name">{userName}</h2>
                 <span className="sidebar-user-role">Administrador</span>
                 
-                <button className="change-photo-btn-modern">
+                <label htmlFor="image-upload" className="change-photo-btn-modern">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                     <circle cx="8.5" cy="8.5" r="1.5"/>
                     <polyline points="21 15 16 10 5 21"/>
                   </svg>
                   Cambiar Foto
-                </button>
+                  <input 
+                    id="image-upload"
+                    type="file" 
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+
+                {imagePreview && (
+                  <div className="image-preview-info">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span>Nueva imagen seleccionada</span>
+                  </div>
+                )}
               </div>
 
               <div className="info-card-edit">
@@ -402,7 +449,7 @@ export default function EditarPerfilAdministrador() {
                 </div>
               </div>
 
-              {/* Botón Cambiar Contraseña - Mismo tamaño */}
+              {/* Botón Cambiar Contraseña */}
               <button
                 className="change-password-btn-large"
                 onClick={() => router.push('/admin/cambiocontra')}

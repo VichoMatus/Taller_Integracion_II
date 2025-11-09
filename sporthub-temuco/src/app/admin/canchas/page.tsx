@@ -21,7 +21,27 @@ export default function CanchasPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0); // Para forzar recargas
   const [showInactive, setShowInactive] = useState(true); // 🔥 NUEVO: Toggle para mostrar/ocultar inactivas
-  const itemsPerPage = 4;
+  const [itemsPerPage, setItemsPerPage] = useState(4); // 🔥 Dinámico según resolución
+
+  // 🔥 Calcular items por página según altura de viewport
+  useEffect(() => {
+    const calculateItemsPerPage = () => {
+      const height = window.innerHeight;
+      // Cada fila de tabla ocupa ~80px, header ~200px, footer ~100px
+      // Espacio disponible para tabla: height - 300px
+      const availableHeight = height - 300;
+      const rowHeight = 80;
+      const calculatedItems = Math.floor(availableHeight / rowHeight);
+      // Mínimo 4, máximo 20
+      const finalItems = Math.max(4, Math.min(20, calculatedItems));
+      setItemsPerPage(finalItems);
+      console.log(`📐 Altura viewport: ${height}px → ${finalItems} canchas por página`);
+    };
+
+    calculateItemsPerPage();
+    window.addEventListener('resize', calculateItemsPerPage);
+    return () => window.removeEventListener('resize', calculateItemsPerPage);
+  }, []);
 
   // 🔥 Cargar canchas reales de la API usando endpoint de ADMIN
   const loadCourts = async () => {
@@ -327,6 +347,21 @@ export default function CanchasPage() {
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
+                      
+                      {/* Botón Duplicar/Clonar */}
+                      <button 
+                        className="btn-action" 
+                        title="Duplicar cancha"
+                        onClick={() => router.push(`/admin/canchas/crear?duplicarDesde=${court.id}`)}
+                        style={{ 
+                          backgroundColor: '#3b82f6',
+                          color: 'white'
+                        }}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
                       </button>
                       

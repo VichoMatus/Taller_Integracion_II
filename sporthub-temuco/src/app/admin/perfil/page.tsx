@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import './perfiladmin.css';
 import AdminLayout from '@/components/layout/AdminsLayout';
 import { authService } from '@/services/authService';
+import horasTrabajoService, { type ResumenSemanal } from '@/services/horasTrabajoService';
 import { useRouter } from 'next/navigation';
 
 interface UserProfile {
@@ -18,23 +19,15 @@ interface UserProfile {
 
 export default function PerfilAdministrador() {
   const [userData, setUserData] = useState<UserProfile | null>(null);
+  const [horasData, setHorasData] = useState<ResumenSemanal | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingHoras, setLoadingHoras] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hoveredDia, setHoveredDia] = useState<string | null>(null);
   const router = useRouter();
 
-  const horasPorDia = [
-    { dia: 'Lunes', horas: 6, color: '#5a6993' },
-    { dia: 'Martes', horas: 7, color: '#6b7aa3' },
-    { dia: 'Miércoles', horas: 5, color: '#7a89b3' },
-    { dia: 'Jueves', horas: 8, color: '#8998c3' },
-    { dia: 'Viernes', horas: 4, color: '#98a7d3' },
-    { dia: 'Sábado', horas: 2, color: '#a7b6e3' },
-    { dia: 'Domingo', horas: 0, color: '#b6c5f3' },
-  ];
-
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         
@@ -43,10 +36,38 @@ export default function PerfilAdministrador() {
           return;
         }
 
-        const userData = await authService.me() as UserProfile;
-        console.log('Datos del usuario desde auth/me:', userData);
+        // Cargar datos del usuario
+        const userDataResponse = await authService.me() as UserProfile;
+        console.log('Datos del usuario desde auth/me:', userDataResponse);
+        setUserData(userDataResponse);
+
+        // Intentar cargar datos de horas trabajadas
+        try {
+          setLoadingHoras(true);
+          const resumenHoras = await horasTrabajoService.obtenerResumenSemanal();
+          console.log('Resumen de horas:', resumenHoras);
+          setHorasData(resumenHoras);
+        } catch (errorHoras: any) {
+          console.warn('⚠️ Backend de horas no disponible, usando datos de ejemplo:', errorHoras.message);
+          // Si el backend no está listo, usar datos de ejemplo
+          setHorasData({
+            total_horas: 32,
+            promedio_diario: 4.6,
+            dia_mas_productivo: 'Jueves',
+            horas_por_dia: [
+              { dia: 'Lunes', horas: 6, color: '#5a6993' },
+              { dia: 'Martes', horas: 7, color: '#6b7aa3' },
+              { dia: 'Miércoles', horas: 5, color: '#7a89b3' },
+              { dia: 'Jueves', horas: 8, color: '#8998c3' },
+              { dia: 'Viernes', horas: 4, color: '#98a7d3' },
+              { dia: 'Sábado', horas: 2, color: '#a7b6e3' },
+              { dia: 'Domingo', horas: 0, color: '#b6c5f3' },
+            ]
+          });
+        } finally {
+          setLoadingHoras(false);
+        }
         
-        setUserData(userData);
       } catch (err) {
         console.error('Error fetching user data:', err);
         setError('Error al cargar los datos del perfil');
@@ -55,7 +76,7 @@ export default function PerfilAdministrador() {
       }
     };
 
-    fetchUserData();
+    fetchData();
   }, [router]);
 
   const getInitial = (name: string) => {
@@ -93,10 +114,12 @@ export default function PerfilAdministrador() {
   }
 
   const userName = userData ? `${userData.nombre} ${userData.apellido}`.trim() : "Administrador";
-  const totalHoras = horasPorDia.reduce((acc, dia) => acc + dia.horas, 0);
-  const promedioDiario = (totalHoras / 7).toFixed(1);
-  const maxHoras = Math.max(...horasPorDia.map(d => d.horas));
-  const diaMaxHoras = horasPorDia.find(d => d.horas === maxHoras)?.dia || 'N/A';
+  
+  // Usar datos reales o de ejemplo
+  const horasPorDia = horasData?.horas_por_dia || [];
+  const totalHoras = horasData?.total_horas || 0;
+  const promedioDiario = horasData?.promedio_diario || 0;
+  const diaMaxHoras = horasData?.dia_mas_productivo || 'N/A';
 
   return (
     <AdminLayout 
@@ -192,133 +215,150 @@ export default function PerfilAdministrador() {
               </div>
             </div>
 
-            {/* Gráfico de Horas - AMPLIADO */}
-            <div className="chart-card-large">
-              <div className="chart-card-header">
-                <div>
-                  <h3 className="chart-card-title">Análisis de Horas Trabajadas</h3>
-                  <p className="chart-card-subtitle">Resumen detallado de tu actividad semanal - Semana 12 de 2024</p>
-                </div>
-                <div className="header-actions">
-                  <button className="btn-period active">Semanal</button>
-                  <button className="btn-period">Mensual</button>
-                  <button className="btn-export">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                      <polyline points="7 10 12 15 17 10"/>
-                      <line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                    Exportar
-                  </button>
+            {/* Gráfico de Horas - DINÁMICO */}
+            {loadingHoras ? (
+              <div className="chart-card-large">
+                <div className="loading-spinner">
+                  <div className="spinner"></div>
+                  <p>Cargando estadísticas...</p>
                 </div>
               </div>
-
-              <div className="chart-body-large">
-                <div className="chart-bars-container-large">
-                  {horasPorDia.map((dia, index) => (
-                    <div
-                      key={dia.dia}
-                      className="chart-bar-wrapper-large"
-                      onMouseEnter={() => setHoveredDia(dia.dia)}
-                      onMouseLeave={() => setHoveredDia(null)}
-                    >
-                      {hoveredDia === dia.dia && (
-                        <div className="chart-tooltip-large">
-                          <div className="tooltip-header">
-                            <strong>{dia.dia}</strong>
-                          </div>
-                          <div className="tooltip-body">
-                            <span className="tooltip-hours">{dia.horas} horas</span>
-                            <span className="tooltip-percentage">{((dia.horas / totalHoras) * 100).toFixed(1)}% del total</span>
-                          </div>
-                        </div>
+            ) : (
+              <div className="chart-card-large">
+                <div className="chart-card-header">
+                  <div>
+                    <h3 className="chart-card-title">Análisis de Horas Trabajadas</h3>
+                    <p className="chart-card-subtitle">
+                      Resumen detallado de tu actividad semanal
+                      {horasData?.fecha_inicio && horasData?.fecha_fin && (
+                        <> - {new Date(horasData.fecha_inicio).toLocaleDateString('es-CL')} 
+                           al {new Date(horasData.fecha_fin).toLocaleDateString('es-CL')}</>
                       )}
-                      
-                      <div className="chart-bar-track-large">
-                        <div 
-                          className={`chart-bar-fill-large ${hoveredDia === dia.dia ? 'hovered' : ''}`}
-                          style={{ 
-                            height: `${(dia.horas / 10) * 100}%`,
-                            background: `linear-gradient(180deg, ${dia.color}, ${dia.color}dd)`
-                          }}
-                        >
-                          <div className="chart-bar-glow" style={{ background: dia.color }}></div>
-                          <div className="chart-bar-shine"></div>
+                    </p>
+                  </div>
+                  <div className="header-actions">
+                    <button className="btn-period active">Semanal</button>
+                    <button className="btn-period">Mensual</button>
+                    <button className="btn-export">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                      </svg>
+                      Exportar
+                    </button>
+                  </div>
+                </div>
+
+                <div className="chart-body-large">
+                  <div className="chart-bars-container-large">
+                    {horasPorDia.map((dia, index) => (
+                      <div
+                        key={dia.dia}
+                        className="chart-bar-wrapper-large"
+                        onMouseEnter={() => setHoveredDia(dia.dia)}
+                        onMouseLeave={() => setHoveredDia(null)}
+                      >
+                        {hoveredDia === dia.dia && (
+                          <div className="chart-tooltip-large">
+                            <div className="tooltip-header">
+                              <strong>{dia.dia}</strong>
+                            </div>
+                            <div className="tooltip-body">
+                              <span className="tooltip-hours">{dia.horas} horas</span>
+                              <span className="tooltip-percentage">
+                                {totalHoras > 0 ? ((dia.horas / totalHoras) * 100).toFixed(1) : 0}% del total
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                        
+                        <div className="chart-bar-track-large">
+                          <div 
+                            className={`chart-bar-fill-large ${hoveredDia === dia.dia ? 'hovered' : ''}`}
+                            style={{ 
+                              height: `${(dia.horas / 10) * 100}%`,
+                              background: `linear-gradient(180deg, ${dia.color}, ${dia.color}dd)`
+                            }}
+                          >
+                            <div className="chart-bar-glow" style={{ background: dia.color }}></div>
+                            <div className="chart-bar-shine"></div>
+                          </div>
                         </div>
+                        
+                        <span className="chart-bar-label-large">{dia.dia}</span>
+                        <span className="chart-bar-value-large">{dia.horas}h</span>
                       </div>
-                      
-                      <span className="chart-bar-label-large">{dia.dia}</span>
-                      <span className="chart-bar-value-large">{dia.horas}h</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="chart-card-footer-large">
-                <div className="chart-stats-large">
-                  <div className="chart-stat-item-large">
-                    <div className="stat-icon-wrapper" style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}>
-                      <span className="chart-stat-icon-large">📊</span>
-                    </div>
-                    <div className="chart-stat-info-large">
-                      <span className="chart-stat-label-large">Total Semanal</span>
-                      <span className="chart-stat-value-large">{totalHoras} horas</span>
-                    </div>
-                  </div>
-                  
-                  <div className="chart-stat-separator-large"></div>
-                  
-                  <div className="chart-stat-item-large">
-                    <div className="stat-icon-wrapper" style={{ background: 'linear-gradient(135deg, #f093fb, #f5576c)' }}>
-                      <span className="chart-stat-icon-large">📈</span>
-                    </div>
-                    <div className="chart-stat-info-large">
-                      <span className="chart-stat-label-large">Promedio Diario</span>
-                      <span className="chart-stat-value-large">{promedioDiario} horas</span>
-                    </div>
-                  </div>
-                  
-                  <div className="chart-stat-separator-large"></div>
-                  
-                  <div className="chart-stat-item-large">
-                    <div className="stat-icon-wrapper" style={{ background: 'linear-gradient(135deg, #4facfe, #00f2fe)' }}>
-                      <span className="chart-stat-icon-large">🎯</span>
-                    </div>
-                    <div className="chart-stat-info-large">
-                      <span className="chart-stat-label-large">Meta Semanal</span>
-                      <span className="chart-stat-value-large">40 horas</span>
-                    </div>
-                  </div>
-                  
-                  <div className="chart-stat-separator-large"></div>
-                  
-                  <div className="chart-stat-item-large">
-                    <div className="stat-icon-wrapper" style={{ background: 'linear-gradient(135deg, #fa709a, #fee140)' }}>
-                      <span className="chart-stat-icon-large">⭐</span>
-                    </div>
-                    <div className="chart-stat-info-large">
-                      <span className="chart-stat-label-large">Día Más Productivo</span>
-                      <span className="chart-stat-value-large">{diaMaxHoras}</span>
-                    </div>
+                    ))}
                   </div>
                 </div>
 
-                <div className="progress-section">
-                  <div className="progress-header">
-                    <span className="progress-label">Progreso hacia la meta</span>
-                    <span className="progress-value">{((totalHoras / 40) * 100).toFixed(0)}%</span>
+                <div className="chart-card-footer-large">
+                  <div className="chart-stats-large">
+                    <div className="chart-stat-item-large">
+                      <div className="stat-icon-wrapper" style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}>
+                        <span className="chart-stat-icon-large">📊</span>
+                      </div>
+                      <div className="chart-stat-info-large">
+                        <span className="chart-stat-label-large">Total Semanal</span>
+                        <span className="chart-stat-value-large">{totalHoras} horas</span>
+                      </div>
+                    </div>
+                    
+                    <div className="chart-stat-separator-large"></div>
+                    
+                    <div className="chart-stat-item-large">
+                      <div className="stat-icon-wrapper" style={{ background: 'linear-gradient(135deg, #f093fb, #f5576c)' }}>
+                        <span className="chart-stat-icon-large">📈</span>
+                      </div>
+                      <div className="chart-stat-info-large">
+                        <span className="chart-stat-label-large">Promedio Diario</span>
+                        <span className="chart-stat-value-large">{promedioDiario.toFixed(1)} horas</span>
+                      </div>
+                    </div>
+                    
+                    <div className="chart-stat-separator-large"></div>
+                    
+                    <div className="chart-stat-item-large">
+                      <div className="stat-icon-wrapper" style={{ background: 'linear-gradient(135deg, #4facfe, #00f2fe)' }}>
+                        <span className="chart-stat-icon-large">🎯</span>
+                      </div>
+                      <div className="chart-stat-info-large">
+                        <span className="chart-stat-label-large">Meta Semanal</span>
+                        <span className="chart-stat-value-large">40 horas</span>
+                      </div>
+                    </div>
+                    
+                    <div className="chart-stat-separator-large"></div>
+                    
+                    <div className="chart-stat-item-large">
+                      <div className="stat-icon-wrapper" style={{ background: 'linear-gradient(135deg, #fa709a, #fee140)' }}>
+                        <span className="chart-stat-icon-large">⭐</span>
+                      </div>
+                      <div className="chart-stat-info-large">
+                        <span className="chart-stat-label-large">Día Más Productivo</span>
+                        <span className="chart-stat-value-large">{diaMaxHoras}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="progress-bar-container">
-                    <div 
-                      className="progress-bar-fill"
-                      style={{ width: `${Math.min((totalHoras / 40) * 100, 100)}%` }}
-                    >
-                      <div className="progress-bar-glow"></div>
+
+                  <div className="progress-section">
+                    <div className="progress-header">
+                      <span className="progress-label">Progreso hacia la meta</span>
+                      <span className="progress-value">{((totalHoras / 40) * 100).toFixed(0)}%</span>
+                    </div>
+                    <div className="progress-bar-container">
+                      <div 
+                        className="progress-bar-fill"
+                        style={{ width: `${Math.min((totalHoras / 40) * 100, 100)}%` }}
+                      >
+                        <div className="progress-bar-glow"></div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
           </main>
 

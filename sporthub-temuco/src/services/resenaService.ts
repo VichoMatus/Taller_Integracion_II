@@ -38,6 +38,20 @@ export const resenaService = {
   },
 
   /**
+   * Obtiene una reseña específica por ID.
+   * @param id - ID de la reseña
+   * @returns Reseña encontrada
+   */
+  async obtenerResena(id: string | number): Promise<Resena> {
+    try {
+      const { data } = await apiBackend.get(`/resenas/${id}`);
+      return data.data || data;
+    } catch (err) {
+      handleApiError(err);
+    }
+  },
+
+  /**
    * Crea una nueva reseña.
    * Requiere tener una reserva confirmada del destino (cancha o complejo).
    * @param input - Datos de la reseña (id_cancha o id_complejo, calificacion, comentario)

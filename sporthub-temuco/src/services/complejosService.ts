@@ -117,40 +117,49 @@ export const complejosService = {
   },
 
   /**
-   * Obtener complejos de un administrador/dueño específico
+   * Obtener complejos de un administrador específico
+   * Usa el endpoint GET /complejos/admin/:adminId que llama a FastAPI /complejos/duenio/{duenio-id}
    * @param adminId - ID del administrador/dueño
    */
   async getComplejosByAdmin(adminId: number) {
     try {
       console.log(`📍 [complejosService] Obteniendo complejos del admin ID: ${adminId}`);
+      console.log(`📍 [complejosService] ℹ️ Usando endpoint /complejos/admin/${adminId}`);
+      console.log(`📍 [complejosService] URL base: ${apiBackend.defaults.baseURL || 'No definida'}`);
       
-      // 🔥 ENDPOINT CORREGIDO: Usar /complejos con query param duenioId
-      // Este endpoint público está en complejos.routes.ts línea 45
-      // El controller acepta duenioId como query parameter (línea 41)
-      const response = await apiBackend.get(`/complejos`, {
-        params: { duenioId: adminId }
-      });
-      console.log(`✅ [complejosService] Complejos obtenidos:`, response.data);
+      // ✅ ENDPOINT CORRECTO: /complejos/admin/:adminId
+      // Este endpoint está en complejos.routes.ts línea 55
+      // Llama a FastAPI: GET /api/v1/complejos/duenio/{duenio-id}
+      const response = await apiBackend.get(`/complejos/admin/${adminId}`);
+      
+      console.log(`✅ [complejosService] Complejos obtenidos exitosamente`);
+      console.log(`📦 [complejosService] Respuesta:`, response.data);
       
       // El interceptor ya extrajo los datos de { ok, data }
-      // El endpoint retorna { items: [...], total: ... }
       const data = response.data;
-      
-      // Si viene como { items: [...] }, extraer el array
-      if (data?.items) {
-        return data.items;
-      }
       
       // Si ya es un array, devolverlo directamente
       if (Array.isArray(data)) {
+        console.log(`📋 [complejosService] Encontrados ${data.length} complejos del admin`);
         return data;
       }
       
+      // Si viene como { items: [...] }, extraer el array
+      if (data?.items) {
+        console.log(`📋 [complejosService] Encontrados ${data.items.length} complejos en data.items`);
+        return data.items;
+      }
+      
       // Si no, devolver vacío
+      console.warn('⚠️ [complejosService] No se encontraron complejos en la respuesta');
       return [];
     } catch (error: any) {
       console.error(`❌ [complejosService] Error al obtener complejos del admin:`, error);
-      throw new Error('Error al obtener complejos del administrador: ' + (error.response?.data?.message || error.message));
+      console.error(`   Status: ${error.response?.status}`);
+      console.error(`   Message: ${error.message}`);
+      console.error(`   Response data:`, error.response?.data);
+      
+      throw new Error('Error al cargar tus complejos: ' + (error.response?.data?.message || error.message));
     }
   }
 };
