@@ -211,7 +211,11 @@ router.post("/cotizar", authMiddleware, (req, res) => ctrl(req).cotizar(req, res
 router.post("/", authMiddleware, (req, res) => ctrl(req).create(req, res));
 
 /** PATCH /reservas/:id - Reprogramar/editar reserva */
-router.patch("/:id", authMiddleware, (req, res) => ctrl(req).update(req, res));
+router.patch("/:id", (req, res, next) => {
+  console.log(`🔍 [PATCH /reservas/:id] Petición recibida para ID: ${req.params.id}`);
+  console.log(`🔍 [PATCH /reservas/:id] Body:`, JSON.stringify(req.body, null, 2));
+  next();
+}, authMiddleware, (req, res) => ctrl(req).update(req, res));
 
 /** POST /reservas/:id/confirmar - Confirmar reserva (admin/superadmin) */
 router.post("/:id/confirmar", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).confirmarPago(req, res));
