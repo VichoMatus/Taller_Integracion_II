@@ -146,16 +146,84 @@ export const useMisReservas = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /**
+   * Función para mapear la respuesta de la API a tipo Reserva
+   */
+  const mapApiReserva = (r: any): Reserva => {
+    console.log("🔍 [useMisReservas] Mapeando reserva:", r);
+    
+    const fechaReserva = r.fecha_reserva || "";
+    const horaInicio = r.hora_inicio || "";
+    const horaFin = r.hora_fin || "";
+    
+    // Combinar fecha y hora
+    const fechaInicio = fechaReserva && horaInicio 
+      ? `${fechaReserva}T${horaInicio}` 
+      : horaInicio || fechaReserva || "";
+    
+    const fechaFin = fechaReserva && horaFin 
+      ? `${fechaReserva}T${horaFin}` 
+      : horaFin || fechaReserva || "";
+    
+    return {
+      id: Number(r.id_reserva || r.id || 0),
+      usuarioId: Number(r.id_usuario || r.usuario_id || 0),
+      canchaId: Number(r.id_cancha || r.cancha_id || 0),
+      complejoId: Number(r.id_complejo || r.complejo_id || 0),
+      fechaInicio: fechaInicio,
+      fechaFin: fechaFin,
+      estado: r.estado || "pendiente",
+      precioTotal: Number(r.precio_total || r.monto_total || 0),
+      metodoPago: r.metodo_pago || undefined,
+      pagado: !!r.pagado,
+      notas: r.notas || undefined,
+      fechaCreacion: r.fecha_creacion || "",
+      fechaActualizacion: r.fecha_actualizacion || "",
+      codigoConfirmacion: r.codigo_confirmacion || undefined,
+      usuario: r.usuario || undefined,
+      cancha: r.cancha || undefined,
+      complejo: r.complejo || undefined,
+    };
+  };
+
   const refetch = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
+      console.log('🔍 [useMisReservas] Cargando mis reservas...');
       const data = await reservaService.getMisReservas();
-      setReservas(data);
+      console.log('📦 [useMisReservas] Respuesta de API:', data);
+      
+      if (Array.isArray(data)) {
+        console.log(`✅ [useMisReservas] Se encontraron ${data.length} reservas`);
+        
+        if (data.length === 0) {
+          console.log('ℹ️ [useMisReservas] No hay reservas para mostrar');
+          setReservas([]);
+        } else {
+          const reservasMapeadas = data.map((reserva, index) => {
+            console.log(`🔄 [useMisReservas] Mapeando reserva ${index + 1}:`, reserva);
+            return mapApiReserva(reserva);
+          });
+          
+          console.log('✅ [useMisReservas] Reservas mapeadas exitosamente:', reservasMapeadas.length);
+          setReservas(reservasMapeadas);
+        }
+      } else {
+        console.warn('⚠️ [useMisReservas] La respuesta no es un array:', data);
+        setReservas([]);
+      }
     } catch (err: any) {
-      setError(err?.message || 'Error al cargar mis reservas');
-      console.error('Error al cargar mis reservas:', err);
+      console.error('❌ [useMisReservas] Error al cargar mis reservas:', err);
+      
+      if (err.response?.status === 404) {
+        console.log('ℹ️ [useMisReservas] No se encontraron reservas (404)');
+        setReservas([]);
+        setError(null);
+      } else {
+        setError(err?.message || 'Error al cargar mis reservas');
+      }
     } finally {
       setLoading(false);
     }
@@ -166,13 +234,16 @@ export const useMisReservas = () => {
       setLoading(true);
       setError(null);
       
+      console.log(`🔍 [useMisReservas] Cancelando reserva ${id}...`);
       await reservaService.cancelarReserva(id);
+      console.log(`✅ [useMisReservas] Reserva ${id} cancelada exitosamente`);
+      
       await refetch(); // Recargar después de cancelar
       
       return true;
     } catch (err: any) {
+      console.error(`❌ [useMisReservas] Error al cancelar reserva ${id}:`, err);
       setError(err?.message || 'Error al cancelar reserva');
-      console.error('Error al cancelar reserva:', err);
       return false;
     } finally {
       setLoading(false);

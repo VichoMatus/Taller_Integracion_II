@@ -1,55 +1,24 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import './historial-reservas.css';
 import { Button } from '../componentes/compUser';
 import UserLayout from '../UsuarioLayout';
-import { reservaService } from '@/services/reservaService';
 import authService from '@/services/authService';
 import type { Reserva } from '@/types/reserva';
-
-// Función para mapear la respuesta de la API a tu tipo Reserva
-function mapApiReserva(r: any): Reserva {
-  console.log("Mapeando reserva individual:", r);
-  
-  const fechaReserva = r.fecha_reserva || "";
-  const horaInicio = r.hora_inicio || "";
-  const horaFin = r.hora_fin || "";
-  
-  const fechaInicio = fechaReserva && horaInicio 
-    ? `${fechaReserva}T${horaInicio}` 
-    : horaInicio || fechaReserva || "";
-  
-  const fechaFin = fechaReserva && horaFin 
-    ? `${fechaReserva}T${horaFin}` 
-    : horaFin || fechaReserva || "";
-  
-  return {
-    id: Number(r.id_reserva || r.id || 0),
-    usuarioId: Number(r.id_usuario || r.usuario_id || 0),
-    canchaId: Number(r.id_cancha || r.cancha_id || 0),
-    complejoId: Number(r.id_complejo || r.complejo_id || 0),
-    fechaInicio: fechaInicio,
-    fechaFin: fechaFin,
-    estado: r.estado || "pendiente",
-    precioTotal: Number(r.precio_total || r.monto_total || 0),
-    metodoPago: r.metodo_pago || undefined,
-    pagado: !!r.pagado,
-    notas: r.notas || undefined,
-    fechaCreacion: r.fecha_creacion || "",
-    fechaActualizacion: r.fecha_actualizacion || "",
-    codigoConfirmacion: r.codigo_confirmacion || undefined,
-    usuario: r.usuario || undefined,
-    cancha: r.cancha || undefined,
-    complejo: r.complejo || undefined,
-  };
-}
+import { useMisReservas } from '@/hooks/useReservas';
 
 export default function ReservaPage() {
-  const [reservas, setReservas] = useState<Reserva[]>([]);
+  // 🎯 Usando el hook personalizado para gestionar reservas
+  const { 
+    reservas, 
+    loading: isLoading, 
+    error, 
+    refetch: cargarReservas,
+    cancelarReserva: cancelarReservaHook 
+  } = useMisReservas();
+  
   const [reservaActiva, setReservaActiva] = useState<Reserva | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [userName, setUserName] = useState("Usuario");
   const [debugInfo, setDebugInfo] = useState<any>(null);
   
@@ -60,66 +29,38 @@ export default function ReservaPage() {
   const [showModal, setShowModal] = useState(false);
   const [selectedReserva, setSelectedReserva] = useState<Reserva | null>(null);
 
-  const cargarReservas = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const userData = await authService.me();
-      console.log("Usuario actual:", userData);
-      setUserName(`${userData.nombre ?? ''} ${userData.apellido ?? ''}`.trim() || 'Usuario');
-      
-      console.log("Obteniendo reservas...");
-      const misReservasApi = await reservaService.getMisReservas();
-      console.log("Respuesta de API:", misReservasApi);
-      
-      if (Array.isArray(misReservasApi)) {
-        console.log(`Se encontraron ${misReservasApi.length} reservas`);
-        
-        if (misReservasApi.length === 0) {
-          console.log("No hay reservas para mostrar");
-          setReservas([]);
-        } else {
-          const reservasMapeadas = misReservasApi.map((reserva, index) => {
-            console.log(`Mapeando reserva ${index + 1}:`, reserva);
-            return mapApiReserva(reserva);
-          });
-          
-          console.log("Reservas mapeadas:", reservasMapeadas);
-          setReservas(reservasMapeadas);
-        }
-      } else {
-        console.warn("La respuesta no es un array:", misReservasApi);
-        setReservas([]);
+  // 🔥 Cargar información del usuario al montar el componente
+  useEffect(() => {
+    const cargarUsuario = async () => {
+      try {
+        const userData = await authService.me();
+        console.log("Usuario actual:", userData);
+        setUserName(`${userData.nombre ?? ''} ${userData.apellido ?? ''}`.trim() || 'Usuario');
+      } catch (err) {
+        console.error("Error al cargar usuario:", err);
+        setDebugInfo({
+          error: {
+            message: err instanceof Error ? err.message : "Error desconocido",
+          },
+          timestamp: new Date().toISOString()
+        });
       }
-    } catch (error: any) {
-      console.error("Error al cargar reservas:", error);
+    };
+    
+    cargarUsuario();
+  }, []);
+
+  // 🔥 Manejar errores cuando hay error en el hook
+  useEffect(() => {
+    if (error) {
       setDebugInfo({
         error: {
-          message: error.message || "Error desconocido",
-          response: error.response?.data || {},
-          status: error.response?.status,
+          message: error,
         },
         timestamp: new Date().toISOString()
       });
-      
-      if (error.response?.status === 401) {
-        setError("Tu sesión ha expirado. Por favor inicia sesión nuevamente.");
-      } else if (error.response?.status === 404) {
-        console.log("No se encontraron reservas (404)");
-        setReservas([]);
-        setError(null);
-      } else {
-        setError("No se pudieron cargar tus reservas. Por favor, intenta de nuevo.");
-      }
-    } finally {
-      setIsLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    cargarReservas();
-  }, [cargarReservas]);
+  }, [error]);
 
   const handleCancelarReserva = async (id: number) => {
     if (!window.confirm("¿Estás seguro que deseas cancelar esta reserva?")) {
@@ -127,16 +68,16 @@ export default function ReservaPage() {
     }
 
     try {
-      setIsLoading(true);
-      await reservaService.cancelarReserva(id);
-      await cargarReservas();
-      alert("Reserva cancelada con éxito");
-      setShowModal(false);
-    } catch (error: any) {
-      console.error("Error al cancelar reserva:", error);
-      alert(error?.response?.data?.detail || error?.message || "Error al cancelar la reserva. Intente nuevamente.");
-    } finally {
-      setIsLoading(false);
+      const success = await cancelarReservaHook(id);
+      if (success) {
+        alert("Reserva cancelada con éxito");
+        setShowModal(false);
+      } else {
+        alert("Error al cancelar la reserva. Intente nuevamente.");
+      }
+    } catch (err: any) {
+      console.error("Error al cancelar reserva:", err);
+      alert(err?.message || "Error al cancelar la reserva. Intente nuevamente.");
     }
   };
 
