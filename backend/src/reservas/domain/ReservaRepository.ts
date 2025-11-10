@@ -41,8 +41,17 @@ export interface CreateReservaInput {
 
 /**
  * Datos para actualizar una reserva existente.
+ * Soporta dos formatos:
+ * 1. Formato nuevo FastAPI: { fecha, inicio, fin, notas }
+ * 2. Formato legacy: { fechaInicio, fechaFin, notas, estado, metodoPago, pagado }
  */
 export interface UpdateReservaInput {
+  // Formato nuevo (FastAPI)
+  fecha?: string;        // YYYY-MM-DD
+  inicio?: string;       // HH:MM
+  fin?: string;          // HH:MM
+  
+  // Formato legacy
   estado?: EstadoReserva;
   metodoPago?: MetodoPago;
   pagado?: boolean;
