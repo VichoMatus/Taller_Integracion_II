@@ -13,13 +13,14 @@ export default function EditarAdministradorPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [admin, setAdmin] = useState<Usuario | null>(null);
   const [mounted, setMounted] = useState(false);
 
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
-    email: '',
     telefono: '',
     esta_activo: true,
     verificado: false
@@ -63,7 +64,6 @@ export default function EditarAdministradorPage() {
         setFormData({
           nombre: data.nombre || '',
           apellido: data.apellido || '',
-          email: data.email || '',
           telefono: data.telefono || '',
           esta_activo: data.esta_activo,
           verificado: data.verificado
@@ -100,27 +100,29 @@ export default function EditarAdministradorPage() {
       return;
     }
 
-    if (!formData.email.trim() || !formData.email.includes('@')) {
-      setError('Ingresa un email válido');
-      return;
-    }
-
     try {
       setIsSaving(true);
       setError('');
+      setSuccess('');
 
       const payload: UsuarioUpdateRequest = {
         nombre: formData.nombre.trim(),
         apellido: formData.apellido.trim(),
-        email: formData.email.trim(),
         telefono: formData.telefono.trim() || null,
         esta_activo: formData.esta_activo,
         verificado: formData.verificado
       };
 
       await superAdminService.actualizarUsuario(adminId, payload);
-      alert('✅ Administrador actualizado exitosamente');
-      router.push('/super_admin/administradores');
+      
+      setSuccess('✅ Administrador actualizado exitosamente');
+      setShowSuccessModal(true);
+      
+      // Redirigir después de 1.5 segundos
+      setTimeout(() => {
+        router.push('/super_admin/administradores');
+      }, 1500);
+      
     } catch (error: any) {
       console.error('❌ Error actualizando administrador:', error);
       setError(error.message || 'Error al actualizar el administrador');
@@ -134,27 +136,28 @@ export default function EditarAdministradorPage() {
     if (!adminId || !admin) return;
 
     const action = admin.esta_activo ? 'desactivar' : 'activar';
-    const confirmMessage = admin.esta_activo
-      ? '¿Estás seguro de que deseas desactivar este administrador?'
-      : '¿Estás seguro de que deseas activar este administrador?';
-
-    if (!window.confirm(confirmMessage)) {
-      return;
-    }
 
     try {
       setIsSaving(true);
       setError('');
+      setSuccess('');
 
       await superAdminService.actualizarUsuario(adminId, {
         esta_activo: !admin.esta_activo
       });
 
-      alert(`✅ Administrador ${action === 'activar' ? 'activado' : 'desactivado'} exitosamente`);
+      setSuccess(`✅ Administrador ${action === 'activar' ? 'activado' : 'desactivado'} exitosamente`);
+      setShowSuccessModal(true);
       
       // Actualizar el estado local
       setAdmin(prev => prev ? { ...prev, esta_activo: !prev.esta_activo } : null);
       setFormData(prev => ({ ...prev, esta_activo: !prev.esta_activo }));
+      
+      // Redirigir después de 1.5 segundos
+      setTimeout(() => {
+        router.push('/super_admin/administradores');
+      }, 1500);
+      
     } catch (error: any) {
       console.error(`❌ Error al ${action} administrador:`, error);
       setError(error.message || `Error al ${action} el administrador`);
@@ -193,6 +196,73 @@ export default function EditarAdministradorPage() {
 
   return (
     <div className="admin-page-layout">
+      {/* Modal de Éxito */}
+      {showSuccessModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '400px',
+            width: '90%',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                backgroundColor: '#dcfce7',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1rem'
+              }}>
+                <svg style={{ width: '32px', height: '32px', color: '#16a34a' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '0.5rem' }}>
+                {success.replace('✅ ', '')}
+              </h3>
+              <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1.5rem' }}>
+                Redirigiendo al panel de administradores...
+              </p>
+              <button
+                onClick={() => router.push('/super_admin/administradores')}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#4f46e5',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#4338ca'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f46e5'}
+              >
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="admin-main-header">
         <div className="admin-header-nav">
@@ -212,13 +282,20 @@ export default function EditarAdministradorPage() {
           <button 
             type="submit" 
             form="editar-admin-form"
-            className="btn-guardar" 
+            className="btn-volver"
+            style={{ 
+              backgroundColor: '#4f46e5', 
+              color: 'white',
+              border: 'none'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#4338ca'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f46e5'}
             disabled={isSaving}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+            {isSaving ? 'Guardando...' : 'Guardar'}
           </button>
         </div>
       </div>
@@ -272,18 +349,20 @@ export default function EditarAdministradorPage() {
 
               <div className="edit-form-group">
                 <label htmlFor="email" className="edit-form-label">
-                  Email: *
+                  Email:
                 </label>
                 <input
                   type="email"
                   id="email"
                   name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
+                  value={admin?.email || ''}
                   className="edit-form-input"
-                  required
-                  disabled={isSaving}
+                  disabled
+                  readOnly
                 />
+                <p className="edit-form-hint">
+                  El email no puede ser modificado
+                </p>
               </div>
 
               <div className="edit-form-group">
@@ -304,38 +383,84 @@ export default function EditarAdministradorPage() {
             </div>
           </div>
 
-          {/* Estado y Verificación */}
+          {/* Estado de la Cuenta */}
           <div className="edit-section">
             <h3 className="edit-section-title">Estado de la Cuenta</h3>
             <div className="edit-form-grid">
-              <div className="edit-form-group checkbox-group">
-                <input
-                  type="checkbox"
-                  id="esta_activo"
-                  name="esta_activo"
-                  checked={formData.esta_activo}
-                  onChange={handleInputChange}
-                  className="edit-form-checkbox"
-                  disabled={isSaving}
-                />
-                <label htmlFor="esta_activo" className="edit-form-label-inline">
-                  Cuenta Activa
-                </label>
+              {/* Estado Activo */}
+              <div className="edit-form-group">
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '12px',
+                  padding: '12px',
+                  backgroundColor: formData.esta_activo ? '#dcfce7' : '#fee2e2',
+                  borderRadius: '8px',
+                  border: `2px solid ${formData.esta_activo ? '#16a34a' : '#dc2626'}`
+                }}>
+                  <input
+                    type="checkbox"
+                    id="esta_activo"
+                    name="esta_activo"
+                    checked={formData.esta_activo}
+                    onChange={handleInputChange}
+                    className="edit-form-checkbox"
+                    disabled={isSaving}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="esta_activo" style={{ 
+                    margin: 0, 
+                    fontWeight: '500',
+                    color: formData.esta_activo ? '#16a34a' : '#dc2626',
+                    cursor: 'pointer',
+                    fontSize: '0.95rem'
+                  }}>
+                    {formData.esta_activo ? '✓ Cuenta Activa' : '✗ Cuenta Inactiva'}
+                  </label>
+                </div>
+                <p className="edit-form-hint">
+                  {formData.esta_activo 
+                    ? 'El administrador puede iniciar sesión en el sistema'
+                    : 'El administrador no puede iniciar sesión en el sistema'}
+                </p>
               </div>
 
-              <div className="edit-form-group checkbox-group">
-                <input
-                  type="checkbox"
-                  id="verificado"
-                  name="verificado"
-                  checked={formData.verificado}
-                  onChange={handleInputChange}
-                  className="edit-form-checkbox"
-                  disabled={isSaving}
-                />
-                <label htmlFor="verificado" className="edit-form-label-inline">
-                  Email Verificado
-                </label>
+              {/* Verificado */}
+              <div className="edit-form-group">
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '12px',
+                  padding: '12px',
+                  backgroundColor: formData.verificado ? '#dbeafe' : '#fef3c7',
+                  borderRadius: '8px',
+                  border: `2px solid ${formData.verificado ? '#3b82f6' : '#f59e0b'}`
+                }}>
+                  <input
+                    type="checkbox"
+                    id="verificado"
+                    name="verificado"
+                    checked={formData.verificado}
+                    onChange={handleInputChange}
+                    className="edit-form-checkbox"
+                    disabled={isSaving}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="verificado" style={{ 
+                    margin: 0, 
+                    fontWeight: '500',
+                    color: formData.verificado ? '#3b82f6' : '#f59e0b',
+                    cursor: 'pointer',
+                    fontSize: '0.95rem'
+                  }}>
+                    {formData.verificado ? '✓ Email Verificado' : '✗ Email Sin Verificar'}
+                  </label>
+                </div>
+                <p className="edit-form-hint">
+                  {formData.verificado 
+                    ? 'El administrador ha confirmado su dirección de correo electrónico'
+                    : 'El administrador aún no ha verificado su correo electrónico'}
+                </p>
               </div>
             </div>
           </div>
@@ -409,7 +534,16 @@ export default function EditarAdministradorPage() {
                   style={{ 
                     backgroundColor: admin.esta_activo ? '#dc2626' : '#16a34a',
                     color: 'white',
-                    border: 'none'
+                    border: 'none',
+                    width: '100%',
+                    minHeight: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    padding: '0.75rem 1rem'
                   }}
                 >
                   {admin.esta_activo ? '🚫 Desactivar Administrador' : '✅ Activar Administrador'}

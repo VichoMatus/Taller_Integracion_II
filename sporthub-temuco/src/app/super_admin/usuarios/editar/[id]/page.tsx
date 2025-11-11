@@ -14,6 +14,7 @@ export default function EditarUsuarioPage() {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string>('');
 
   // Estado del formulario
@@ -22,7 +23,6 @@ export default function EditarUsuarioPage() {
     apellido: '',
     email: '',
     telefono: '',
-    rol: 'usuario' as 'usuario' | 'admin' | 'super_admin',
     esta_activo: true,
     verificado: false,
     avatar_url: ''
@@ -42,7 +42,6 @@ export default function EditarUsuarioPage() {
           apellido: usuario.apellido || '',
           email: usuario.email || '',
           telefono: usuario.telefono || '',
-          rol: usuario.rol || 'usuario',
           esta_activo: usuario.esta_activo !== undefined ? usuario.esta_activo : true,
           verificado: usuario.verificado || false,
           avatar_url: usuario.avatar_url || ''
@@ -138,7 +137,6 @@ export default function EditarUsuarioPage() {
         apellido: formData.apellido.trim(),
         email: formData.email.trim(),
         telefono: formData.telefono.trim() || null,
-        rol: formData.rol,
         esta_activo: formData.esta_activo,
         verificado: formData.verificado,
         avatar_url: formData.avatar_url || null
@@ -150,11 +148,12 @@ export default function EditarUsuarioPage() {
       console.log('✅ Usuario actualizado exitosamente:', usuarioActualizado);
       
       setSuccess('Usuario actualizado exitosamente');
+      setShowSuccessModal(true);
       
-      // Redirigir después de 2 segundos
+      // Redirigir después de 1.5 segundos
       setTimeout(() => {
         router.push('/super_admin/usuarios');
-      }, 2000);
+      }, 1500);
 
     } catch (err: any) {
       console.error('❌ Error al actualizar usuario:', err);
@@ -183,6 +182,73 @@ export default function EditarUsuarioPage() {
 
   return (
     <div className="admin-page-layout">
+      {/* Modal de Éxito */}
+      {showSuccessModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '400px',
+            width: '90%',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                backgroundColor: '#dcfce7',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1rem'
+              }}>
+                <svg style={{ width: '32px', height: '32px', color: '#16a34a' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#111827', marginBottom: '0.5rem' }}>
+                Usuario actualizado exitosamente
+              </h3>
+              <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1.5rem' }}>
+                Redirigiendo al panel de usuarios...
+              </p>
+              <button
+                onClick={() => router.push('/super_admin/usuarios')}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#4f46e5',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '0.875rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#4338ca'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f46e5'}
+              >
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="admin-main-header">
         <div className="admin-header-nav">
@@ -199,26 +265,28 @@ export default function EditarUsuarioPage() {
           <button 
             type="submit" 
             form="edit-usuario-form"
-            className="btn-guardar" 
+            className="btn-volver"
+            style={{ 
+              backgroundColor: '#4f46e5', 
+              color: 'white',
+              border: 'none'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#4338ca'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#4f46e5'}
             disabled={isLoading}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            {isLoading ? 'Guardando...' : 'Guardar Cambios'}
+            {isLoading ? 'Guardando...' : 'Guardar'}
           </button>
         </div>
       </div>
 
-      {/* Mensajes de error/éxito */}
+      {/* Mensajes de error */}
       {error && (
         <div className="error-container">
           <p><strong>Error:</strong> {error}</p>
-        </div>
-      )}
-      {success && (
-        <div className="success-container">
-          <p><strong>Éxito:</strong> {success}</p>
         </div>
       )}
 
@@ -302,60 +370,84 @@ export default function EditarUsuarioPage() {
             </div>
           </div>
 
-          {/* Rol y Estado */}
+          {/* Estado de la Cuenta */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Rol y Estado</h3>
+            <h3 className="edit-section-title">Estado de la Cuenta</h3>
             <div className="edit-form-grid">
-              {/* Rol */}
-              <div className="edit-form-group">
-                <label htmlFor="rol" className="edit-form-label">
-                  Rol: *
-                </label>
-                <select
-                  id="rol"
-                  name="rol"
-                  value={formData.rol}
-                  onChange={handleChange}
-                  className="edit-form-select"
-                  required
-                  disabled={isLoading}
-                >
-                  <option value="usuario">Usuario</option>
-                  <option value="admin">Administrador</option>
-                  <option value="super_admin">Super Administrador</option>
-                </select>
-              </div>
-
               {/* Estado Activo */}
-              <div className="edit-form-group checkbox-group">
-                <input
-                  type="checkbox"
-                  id="esta_activo"
-                  name="esta_activo"
-                  checked={formData.esta_activo}
-                  onChange={handleChange}
-                  className="edit-form-checkbox"
-                  disabled={isLoading}
-                />
-                <label htmlFor="esta_activo" className="edit-form-label-inline">
-                  Usuario Activo
-                </label>
+              <div className="edit-form-group">
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '12px',
+                  padding: '12px',
+                  backgroundColor: formData.esta_activo ? '#dcfce7' : '#fee2e2',
+                  borderRadius: '8px',
+                  border: `2px solid ${formData.esta_activo ? '#16a34a' : '#dc2626'}`
+                }}>
+                  <input
+                    type="checkbox"
+                    id="esta_activo"
+                    name="esta_activo"
+                    checked={formData.esta_activo}
+                    onChange={handleChange}
+                    className="edit-form-checkbox"
+                    disabled={isLoading}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="esta_activo" style={{ 
+                    margin: 0, 
+                    fontWeight: '500',
+                    color: formData.esta_activo ? '#16a34a' : '#dc2626',
+                    cursor: 'pointer',
+                    fontSize: '0.95rem'
+                  }}>
+                    {formData.esta_activo ? '✓ Usuario Activo' : '✗ Usuario Inactivo'}
+                  </label>
+                </div>
+                <p className="edit-form-hint">
+                  {formData.esta_activo 
+                    ? 'El usuario puede iniciar sesión en el sistema'
+                    : 'El usuario no puede iniciar sesión en el sistema'}
+                </p>
               </div>
 
               {/* Verificado */}
-              <div className="edit-form-group checkbox-group">
-                <input
-                  type="checkbox"
-                  id="verificado"
-                  name="verificado"
-                  checked={formData.verificado}
-                  onChange={handleChange}
-                  className="edit-form-checkbox"
-                  disabled={isLoading}
-                />
-                <label htmlFor="verificado" className="edit-form-label-inline">
-                  Email Verificado
-                </label>
+              <div className="edit-form-group">
+                <div style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '12px',
+                  padding: '12px',
+                  backgroundColor: formData.verificado ? '#dbeafe' : '#fef3c7',
+                  borderRadius: '8px',
+                  border: `2px solid ${formData.verificado ? '#3b82f6' : '#f59e0b'}`
+                }}>
+                  <input
+                    type="checkbox"
+                    id="verificado"
+                    name="verificado"
+                    checked={formData.verificado}
+                    onChange={handleChange}
+                    className="edit-form-checkbox"
+                    disabled={isLoading}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="verificado" style={{ 
+                    margin: 0, 
+                    fontWeight: '500',
+                    color: formData.verificado ? '#3b82f6' : '#f59e0b',
+                    cursor: 'pointer',
+                    fontSize: '0.95rem'
+                  }}>
+                    {formData.verificado ? '✓ Email Verificado' : '✗ Email Sin Verificar'}
+                  </label>
+                </div>
+                <p className="edit-form-hint">
+                  {formData.verificado 
+                    ? 'El usuario ha confirmado su dirección de correo electrónico'
+                    : 'El usuario aún no ha verificado su correo electrónico'}
+                </p>
               </div>
             </div>
           </div>

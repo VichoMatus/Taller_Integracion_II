@@ -44,45 +44,59 @@ export default function SuperAdminDashboard() {
     setError('');
     
     try {
-      // Cargar usuarios regulares
-      const usuariosData = await superAdminService.listarUsuarios();
-      setUsuarios(usuariosData.slice(0, 3)); // Primeros 3 para la tabla
+      let newStats: DashboardStats;
+      let usuariosData: Usuario[] = [];
+      let adminsData: Usuario[] = [];
       
-      // Cargar administradores
-      const adminsData = await superAdminService.listarAdministradores();
-      setAdministradores(adminsData.slice(0, 3)); // Primeros 3 para la tabla
+      // Intentar usar el endpoint de métricas generales
+      try {
+        console.log('📊 Intentando obtener métricas desde endpoint...');
+        const metricas = await superAdminService.obtenerMetricasGenerales();
+        
+        newStats = {
+          totalUsuarios: metricas.usuarios_totales || 0,
+          totalCanchas: metricas.canchas_registradas || 0,
+          totalAdministradores: metricas.cantidad_administradores || 0,
+          reservasHoy: metricas.reservas_hoy || 0
+        };
+        
+        console.log('✅ Métricas obtenidas desde endpoint:', newStats);
+        
+        // Cargar datos para las tablas
+        usuariosData = await superAdminService.listarUsuarios();
+        adminsData = await superAdminService.listarAdministradores();
+        
+      } catch (endpointError: any) {
+        // Fallback: calcular manualmente si el endpoint no está disponible
+        console.warn('⚠️ Endpoint de estadísticas no disponible, calculando manualmente');
+        
+        usuariosData = await superAdminService.listarUsuarios();
+        adminsData = await superAdminService.listarAdministradores();
+        
+        const canchasTemp = await canchaService.getCanchas({ page: 1, page_size: 3 }) as any;
+        const totalCanchas = canchasTemp.total || (Array.isArray(canchasTemp.items) ? canchasTemp.items.length : 0);
+        
+        newStats = {
+          totalUsuarios: usuariosData.length + adminsData.length,
+          totalCanchas: totalCanchas,
+          totalAdministradores: adminsData.length,
+          reservasHoy: 0
+        };
+        
+        console.log('✅ Métricas calculadas manualmente:', newStats);
+      }
       
-      // Cargar canchas - La respuesta incluye el total del sistema
+      // Actualizar estados
+      setStats(newStats);
+      setUsuarios(usuariosData.slice(0, 3));
+      setAdministradores(adminsData.slice(0, 3));
+      
+      // Cargar canchas para la tabla
       const canchasResponse = await canchaService.getCanchas({ page: 1, page_size: 3 }) as any;
       const canchasArray = Array.isArray(canchasResponse.items) ? canchasResponse.items : [];
       setCanchas(canchasArray);
       
-      // El backend devuelve el total de canchas en el campo 'total' de la respuesta paginada
-      const totalCanchas = canchasResponse.total || canchasArray.length;
-      
-      console.log('🏠 Respuesta de canchas:', canchasResponse);
-      console.log('🏠 Total canchas del sistema:', totalCanchas);
-      
-      // Calcular total de usuarios (usuarios regulares + administradores, excluyendo super_admins)
-      const totalUsuariosConAdmins = usuariosData.length + adminsData.length;
-      
-      // Actualizar estadísticas
-      const newStats = {
-        totalUsuarios: totalUsuariosConAdmins, // Incluye usuarios regulares + administradores
-        totalCanchas: totalCanchas,
-        totalAdministradores: adminsData.length,
-        reservasHoy: 0 // Por ahora 0, se implementará después
-      };
-      
-      console.log('📊 Estadísticas del dashboard:', newStats);
-      console.log('👥 Total usuarios (incluyendo admins):', totalUsuariosConAdmins);
-      console.log('👤 Usuarios regulares:', usuariosData.length);
-      console.log('🏠 Total canchas:', totalCanchas);
-      console.log('🧑‍💼 Total administradores:', adminsData.length);
-      
-      setStats(newStats);
-      
-      console.log('✅ Datos del dashboard cargados exitosamente');
+      console.log('✅ Dashboard cargado exitosamente');
     } catch (error: any) {
       console.error('❌ Error cargando datos del dashboard:', error);
       setError('Error al cargar los datos del dashboard');
