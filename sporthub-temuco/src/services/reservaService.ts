@@ -39,8 +39,11 @@ export const reservaService = {
     try {
       console.log('🔍 [getReservas] Obteniendo todas las reservas (admin)');
       const { data } = await apiBackend.get('/reservas', { params: filters });
-      console.log('✅ [getReservas] Reservas obtenidas:', Array.isArray(data) ? data.length : 'formato inesperado');
-      return data;
+      console.log('📦 [getReservas] Respuesta completa:', data);
+      // Backend envía { ok: true, data: { items: [...], total, page, pageSize } }
+      const reservas = data.data?.items || data.items || data.data || data;
+      console.log('✅ [getReservas] Reservas obtenidas:', Array.isArray(reservas) ? reservas.length : 'formato inesperado');
+      return reservas;
     } catch (err) {
       console.error('❌ [getReservas] Error:', err);
       handleApiError(err);
@@ -56,8 +59,10 @@ export const reservaService = {
     try {
       console.log(`🔍 [getReservaById] Obteniendo reserva ${id}`);
       const { data } = await apiBackend.get(`/reservas/${id}`);
-      console.log(`✅ [getReservaById] Reserva obtenida`);
-      return data;
+      console.log(`📦 [getReservaById] Respuesta completa:`, data);
+      console.log(`✅ [getReservaById] Reserva obtenida:`, data.data);
+      // Backend envía { ok: true, data: reserva }, necesitamos extraer data.data
+      return data.data || data;
     } catch (err) {
       console.error(`❌ [getReservaById] Error:`, err);
       handleApiError(err);
@@ -73,8 +78,10 @@ export const reservaService = {
     try {
       console.log('🔍 [createReserva] Creando reserva:', input);
       const { data } = await apiBackend.post('/reservas', input);
-      console.log('✅ [createReserva] Reserva creada:', data);
-      return data;
+      console.log('📦 [createReserva] Respuesta completa:', data);
+      console.log('✅ [createReserva] Reserva creada:', data.data);
+      // Backend envía { ok: true, data: reserva }, necesitamos extraer data.data
+      return data.data || data;
     } catch (err) {
       console.error('❌ [createReserva] Error:', err);
       handleApiError(err);
@@ -107,8 +114,10 @@ export const reservaService = {
     try {
       console.log(`🔍 [updateReserva] Actualizando reserva ${id}:`, input);
       const { data } = await apiBackend.patch(`/reservas/${id}`, input);
-      console.log(`✅ [updateReserva] Reserva actualizada`);
-      return data;
+      console.log(`📦 [updateReserva] Respuesta completa:`, data);
+      console.log(`✅ [updateReserva] Reserva actualizada:`, data.data);
+      // Backend envía { ok: true, data: reserva }, necesitamos extraer data.data
+      return data.data || data;
     } catch (err) {
       console.error(`❌ [updateReserva] Error:`, err);
       handleApiError(err);
@@ -217,6 +226,24 @@ export const reservaService = {
       return data;
     } catch (err) {
       console.error(`❌ [confirmarReserva] Error:`, err);
+      handleApiError(err);
+    }
+  },
+
+  /**
+   * Confirmar pago de reserva con método de pago específico (admin)
+   * 🆕 NUEVO (6 nov 2025): Permite especificar método de pago (efectivo/transferencia/webpay)
+   * ✅ Backend: POST /reservas/:id/confirmar
+   * ✅ Requiere: admin o super_admin
+   */
+  async confirmarReservaConMetodo(id: number, metodoPago: string): Promise<ConfirmarReservaResponse> {
+    try {
+      console.log(`🔍 [confirmarReservaConMetodo] Confirmando reserva ${id} con método: ${metodoPago}`);
+      const { data } = await apiBackend.post(`/reservas/${id}/confirmar`, { metodoPago });
+      console.log(`✅ [confirmarReservaConMetodo] Reserva confirmada con método ${metodoPago}:`, data);
+      return data;
+    } catch (err: any) {
+      console.error(`❌ [confirmarReservaConMetodo] Error:`, err);
       handleApiError(err);
     }
   },
