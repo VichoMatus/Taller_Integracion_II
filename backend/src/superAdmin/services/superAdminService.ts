@@ -2,34 +2,9 @@
  * SERVICIO SUPERADMIN - CLIENTE HTTP PARA API FASTAPI
  * ===================================================
  * 
- * Este servicio actúa como un cliente HTTP que consume la API FastAPI hosteada en   async getUsers(params: any = {}): Promise<ApiResponse> {
-    try {
-      console.log('🔄 [SuperAdminService] Consultando usuarios a FastAPI con params:', params);
-      
-      // 🎯 Asegurar que el filtro por rol se aplique correctamente
-      const filteredParams = {
-        ...params,
-        rol: params.rol || 'usuario'  // Por defecto, solo usuarios regulares
-      };
-      
-      console.log('🎯 [SuperAdminService] Parámetros con filtro aplicado:', filteredParams);
-      
-      const response = await this.apiClient.get(API_ENDPOINTS.usuarios.base, { params: filteredParams });
-      console.log('✅ [SuperAdminService] Respuesta de FastAPI recibida:', response.status);
-      console.log('📊 [SuperAdminService] Datos de FastAPI:', JSON.stringify(response.data, null, 2));
-      
-      return { ok: true, data: response.data };
-    } catch (error: any) {
-      console.error('❌ [SuperAdminService] Error consultando FastAPI:', {
-        status: error.response?.status,
-        data: error.response?.data,
-        message: error.message
-      });
-      return { ok: false, error: error.response?.data?.message || 'Error al obtener usuarios' };
-    }
-  }d.
- * Implementa el patrón Backend-for-Frontend (BFF), actuando como proxy entre el frontend
- * React/Next.js y la API externa.
+ * Este servicio actúa como un cliente HTTP que consume la API FastAPI hosteada en 
+ * un servidor externo. Implementa el patrón Backend-for-Frontend (BFF), actuando 
+ * como proxy entre el frontend React/Next.js y la API externa.
  * 
  * Funcionalidades principales:
  * - Autenticación con JWT tokens
@@ -55,6 +30,11 @@ import { LoginRequest, TokenResponse, ApiResponse } from '../types/superAdminTyp
 export class SuperAdminService {
   private apiClient: AxiosInstance; // Cliente HTTP configurado para la API FastAPI
   private authToken: string | null = null; // Token JWT almacenado en memoria
+  
+  // 🎯 SISTEMA DE CACHE TTL PARA ESTADÍSTICAS
+  private estadisticasCache: Map<string, { data: any; expiry: number }> = new Map();
+  private readonly CACHE_TTL_MINUTES = 10; // Cache por 10 minutos
+  private readonly MAX_CONCURRENCY = 3; // Máximo 3 requests paralelos
 
   /**
    * CONSTRUCTOR - Configuración inicial
@@ -81,6 +61,86 @@ export class SuperAdminService {
       }
       return config;
     });
+  }
+
+  /**
+   * 🎯 SISTEMA DE CACHE TTL
+   * =======================
+   */
+  
+  private getCacheKey(prefix: string, params?: any): string {
+    const paramsStr = params ? JSON.stringify(params) : '';
+    return `${prefix}_${Buffer.from(paramsStr).toString('base64').slice(0, 20)}`;
+  }
+
+  private getCachedData(key: string): any | null {
+    const cached = this.estadisticasCache.get(key);
+    if (cached && cached.expiry > Date.now()) {
+      console.log(`💾 [Cache] HIT para clave: ${key}`);
+      return cached.data;
+    }
+    if (cached) {
+      console.log(`⏰ [Cache] EXPIRADO para clave: ${key}`);
+      this.estadisticasCache.delete(key);
+    }
+    return null;
+  }
+
+  private setCachedData(key: string, data: any): void {
+    const expiry = Date.now() + (this.CACHE_TTL_MINUTES * 60 * 1000);
+    this.estadisticasCache.set(key, { data, expiry });
+    console.log(`💾 [Cache] SET para clave: ${key} (expira en ${this.CACHE_TTL_MINUTES}min)`);
+  }
+
+  private cleanExpiredCache(): void {
+    const now = Date.now();
+    for (const [key, value] of this.estadisticasCache.entries()) {
+      if (value.expiry <= now) {
+        this.estadisticasCache.delete(key);
+      }
+    }
+  }
+
+  /**
+   * ⚡ SISTEMA DE FETCH PARALELO CON CONCURRENCIA
+   * =============================================
+   */
+  
+  private async fetchAllParallel<T>(
+    requests: Array<{ key: string; fn: () => Promise<T> }>,
+    maxConcurrency: number = this.MAX_CONCURRENCY
+  ): Promise<Record<string, T | null>> {
+    const results: Record<string, T | null> = {};
+    
+    console.log(`⚡ [Parallel] Iniciando ${requests.length} requests con concurrencia máxima ${maxConcurrency}`);
+    const startTime = performance.now();
+    
+    // Ejecutar requests en lotes con concurrencia limitada
+    for (let i = 0; i < requests.length; i += maxConcurrency) {
+      const batch = requests.slice(i, i + maxConcurrency);
+      console.log(`⚡ [Parallel] Lote ${Math.floor(i / maxConcurrency) + 1}: ${batch.map(r => r.key).join(', ')}`);
+      
+      const batchPromises = batch.map(async ({ key, fn }) => {
+        try {
+          const result = await fn();
+          console.log(`✅ [Parallel] ${key} completado`);
+          return { key, result };
+        } catch (error) {
+          console.error(`❌ [Parallel] ${key} falló:`, error);
+          return { key, result: null as T | null };
+        }
+      });
+      
+      const batchResults = await Promise.all(batchPromises);
+      batchResults.forEach(({ key, result }) => {
+        results[key] = result;
+      });
+    }
+    
+    const endTime = performance.now();
+    console.log(`⚡ [Parallel] Completado en ${Math.round(endTime - startTime)}ms`);
+    
+    return results;
   }
 
   /**
@@ -321,19 +381,32 @@ export class SuperAdminService {
   }
 
   /**
-   * ESTADÍSTICAS COMPLETAS DE SUPERADMIN
-   * ====================================
+   * 🚀 ESTADÍSTICAS COMPLETAS OPTIMIZADAS CON CACHE Y PARALELIZACIÓN
+   * ================================================================
    */
   async getEstadisticasCompletas(token?: string): Promise<ApiResponse> {
     try {
+      // 1. Verificar cache primero
+      const cacheKey = this.getCacheKey('estadisticas_completas', { token: token ? 'present' : 'none' });
+      const cachedData = this.getCachedData(cacheKey);
+      
+      if (cachedData) {
+        console.log('💾 [SuperAdmin] Estadísticas servidas desde cache');
+        return { ok: true, data: cachedData };
+      }
+
+      // 2. Limpiar cache expirado
+      this.cleanExpiredCache();
+
       const headers: any = {};
       if (token) {
         headers.Authorization = `Bearer ${token}`;
       }
 
-      console.log('📊 [SuperAdminService] Iniciando recopilación de estadísticas...');
+      console.log('� [SuperAdmin] Iniciando recopilación OPTIMIZADA de estadísticas...');
+      const startTime = performance.now();
 
-      // Obtener fecha actual y hace 30 días para filtros
+      // 3. Calcular fechas una sola vez
       const hoy = new Date();
       const hoyStr = hoy.toISOString().split('T')[0];
       const hace30Dias = new Date(hoy);
@@ -344,64 +417,100 @@ export class SuperAdminService {
       hace60Dias.setDate(hace60Dias.getDate() - 60);
       const hace60DiasStr = hace60Dias.toISOString().split('T')[0];
 
-      // 1. MÉTRICAS GENERALES
-      console.log('📊 Obteniendo métricas generales...');
-      
-      // Obtener todos los usuarios (sin límite)
-      const usuariosResponse = await this.apiClient.get(API_ENDPOINTS.usuarios.base, { 
-        headers,
-        params: { page_size: 10000 } // Suficientemente grande para obtener todos
+      // 4. FETCH PARALELO CON CONCURRENCIA LIMITADA
+      const requests = [
+        {
+          key: 'usuarios',
+          fn: () => this.apiClient.get(API_ENDPOINTS.usuarios.base, { 
+            headers,
+            params: { page_size: 10000 }
+          })
+        },
+        {
+          key: 'canchas',
+          fn: () => this.apiClient.get(API_ENDPOINTS.canchas.base, { 
+            headers,
+            params: { page_size: 10000 }
+          })
+        },
+        {
+          key: 'reservasHoy',
+          fn: () => this.apiClient.get(API_ENDPOINTS.reservas.base, {
+            headers,
+            params: { 
+              fecha_desde: hoyStr,
+              fecha_hasta: hoyStr,
+              page_size: 10000
+            }
+          })
+        },
+        {
+          key: 'reservasMes',
+          fn: () => this.apiClient.get(API_ENDPOINTS.reservas.base, {
+            headers,
+            params: {
+              fecha_desde: hace30DiasStr,
+              fecha_hasta: hoyStr,
+              page_size: 10000
+            }
+          })
+        },
+        {
+          key: 'reservasMesAnterior',
+          fn: () => this.apiClient.get(API_ENDPOINTS.reservas.base, {
+            headers,
+            params: {
+              fecha_desde: hace60DiasStr,
+              fecha_hasta: hace30DiasStr,
+              page_size: 10000
+            }
+          })
+        },
+        {
+          key: 'resenas',
+          fn: () => this.apiClient.get(API_ENDPOINTS.resenas.base, {
+            headers,
+            params: { page_size: 10000 }
+          })
+        }
+      ];
+
+      // 5. EJECUTAR REQUESTS EN PARALELO
+      const responses = await this.fetchAllParallel(requests);
+
+      // 6. EXTRAER Y VALIDAR DATOS
+      const todosUsuarios = responses.usuarios?.data?.usuarios || responses.usuarios?.data || [];
+      const todasCanchas = responses.canchas?.data?.canchas || responses.canchas?.data || [];
+      const reservasHoy = responses.reservasHoy?.data?.reservas || responses.reservasHoy?.data || [];
+      const reservasMes = responses.reservasMes?.data?.reservas || responses.reservasMes?.data || [];
+      const reservasMesAnterior = responses.reservasMesAnterior?.data?.reservas || responses.reservasMesAnterior?.data || [];
+      const resenas = responses.resenas?.data?.resenas || responses.resenas?.data || [];
+
+      console.log('📊 [Stats] Datos obtenidos:', {
+        usuarios: todosUsuarios.length,
+        canchas: todasCanchas.length,
+        reservasHoy: reservasHoy.length,
+        reservasMes: reservasMes.length,
+        reservasMesAnterior: reservasMesAnterior.length,
+        resenas: resenas.length
       });
-      
-      const todosUsuarios = usuariosResponse.data?.usuarios || usuariosResponse.data || [];
+
+      // 7. CALCULAR MÉTRICAS DE FORMA EFICIENTE
       const usuarios_totales = todosUsuarios.length;
       const cantidad_administradores = todosUsuarios.filter(
         (u: any) => u.rol === 'admin' || u.rol === 'super_admin'
       ).length;
-
-      // Obtener todas las canchas
-      const canchasResponse = await this.apiClient.get(API_ENDPOINTS.canchas.base, { 
-        headers,
-        params: { page_size: 10000 }
-      });
-      const todasCanchas = canchasResponse.data?.canchas || canchasResponse.data || [];
       const canchas_registradas = todasCanchas.length;
-
-      // Obtener reservas de hoy
-      const reservasHoyResponse = await this.apiClient.get(API_ENDPOINTS.reservas.base, {
-        headers,
-        params: { 
-          fecha_desde: hoyStr,
-          fecha_hasta: hoyStr,
-          page_size: 10000
-        }
-      });
-      const reservasHoy = reservasHoyResponse.data?.reservas || reservasHoyResponse.data || [];
       const reservas_hoy = reservasHoy.length;
 
-      // 2. MÉTRICAS MENSUALES
-      console.log('📊 Obteniendo métricas mensuales...');
-      
-      const reservasMesResponse = await this.apiClient.get(API_ENDPOINTS.reservas.base, {
-        headers,
-        params: {
-          fecha_desde: hace30DiasStr,
-          fecha_hasta: hoyStr,
-          page_size: 10000
-        }
-      });
-      const reservasMes = reservasMesResponse.data?.reservas || reservasMesResponse.data || [];
-      const reservas_totales_mes = reservasMes.length;
-
-      // Calcular ganancias del mes (solo reservas confirmadas o pagadas)
+      // Ganancias del mes (solo reservas confirmadas/pagadas)
       const ganancias_mes = reservasMes
         .filter((r: any) => r.estado_pago === 'pagado' || r.estado === 'confirmada')
         .reduce((sum: number, r: any) => sum + (parseFloat(r.precio_total) || 0), 0);
 
-      // Calcular ocupación mensual
-      // Ocupación = (Reservas confirmadas / Slots totales disponibles) * 100
+      // Ocupación mensual
       const diasEnMes = 30;
-      const horasPorDia = 14; // Ej: de 8am a 10pm
+      const horasPorDia = 14;
       const slotsDisponibles = canchas_registradas * diasEnMes * horasPorDia;
       const reservasConfirmadas = reservasMes.filter((r: any) => 
         r.estado === 'confirmada' || r.estado === 'completada'
@@ -410,19 +519,12 @@ export class SuperAdminService {
         ? (reservasConfirmadas / slotsDisponibles) * 100 
         : 0;
 
-      // Obtener valoración promedio de canchas
-      const resenasResponse = await this.apiClient.get(API_ENDPOINTS.resenas.base, {
-        headers,
-        params: { page_size: 10000 }
-      });
-      const resenas = resenasResponse.data?.resenas || resenasResponse.data || [];
+      // Valoración promedio
       const valoracion_promedio = resenas.length > 0
         ? resenas.reduce((sum: number, r: any) => sum + (r.calificacion || 0), 0) / resenas.length
         : 0;
 
-      // 3. RESERVAS POR DÍA (últimos 30 días)
-      console.log('📊 Calculando reservas por día...');
-      
+      // 8. RESERVAS POR DÍA (últimos 30 días)
       const reservasPorDiaMap = new Map<string, { cantidad: number; ingresos: number }>();
       
       // Inicializar todos los días del mes con 0
@@ -452,13 +554,11 @@ export class SuperAdminService {
           fecha,
           dia_semana: diasSemana[fechaObj.getDay()],
           cantidad_reservas: data.cantidad,
-          ingresos: data.ingresos
+          ingresos: Math.round(data.ingresos * 100) / 100
         };
       });
 
-      // 4. RESERVAS POR DEPORTE
-      console.log('📊 Calculando reservas por deporte...');
-      
+      // 9. RESERVAS POR DEPORTE
       const reservasPorDeporteMap = new Map<string, { cantidad: number; ingresos: number }>();
       
       reservasMes.forEach((reserva: any) => {
@@ -484,31 +584,18 @@ export class SuperAdminService {
       const reservas_por_deporte = Array.from(reservasPorDeporteMap.entries()).map(([deporte, data]) => ({
         deporte,
         cantidad_reservas: data.cantidad,
-        porcentaje: totalReservasDeporte > 0 ? (data.cantidad / totalReservasDeporte) * 100 : 0,
-        ingresos: data.ingresos
+        porcentaje: totalReservasDeporte > 0 ? Math.round((data.cantidad / totalReservasDeporte) * 10000) / 100 : 0,
+        ingresos: Math.round(data.ingresos * 100) / 100
       })).sort((a, b) => b.cantidad_reservas - a.cantidad_reservas);
 
-      // 5. TOP 5 CANCHAS MÁS POPULARES
-      console.log('📊 Calculando top canchas...');
-      
-      // Obtener reservas del mes anterior para calcular tendencias
-      const reservasMesAnteriorResponse = await this.apiClient.get(API_ENDPOINTS.reservas.base, {
-        headers,
-        params: {
-          fecha_desde: hace60DiasStr,
-          fecha_hasta: hace30DiasStr,
-          page_size: 10000
-        }
-      });
-      const reservasMesAnterior = reservasMesAnteriorResponse.data?.reservas || [];
-
+      // 10. TOP 5 CANCHAS MÁS POPULARES CON TENDENCIAS
       const canchaStats = new Map<number, { 
         cantidad: number; 
         cantidadAnterior: number;
         cancha: any;
       }>();
 
-      // Contar reservas del mes actual
+      // Contar reservas actuales y anteriores
       reservasMes.forEach((reserva: any) => {
         const canchaId = reserva.cancha_id || reserva.id_cancha;
         if (!canchaStats.has(canchaId)) {
@@ -518,7 +605,6 @@ export class SuperAdminService {
         canchaStats.get(canchaId)!.cantidad++;
       });
 
-      // Contar reservas del mes anterior
       reservasMesAnterior.forEach((reserva: any) => {
         const canchaId = reserva.cancha_id || reserva.id_cancha;
         if (canchaStats.has(canchaId)) {
@@ -561,9 +647,7 @@ export class SuperAdminService {
         .sort((a, b) => b!.cantidad_reservas - a!.cantidad_reservas)
         .slice(0, 5);
 
-      // 6. TOP 5 HORARIOS MÁS SOLICITADOS
-      console.log('📊 Calculando top horarios...');
-      
+      // 11. TOP 5 HORARIOS MÁS SOLICITADOS
       const horarioStats = new Map<string, {
         cantidad: number;
         cantidadAnterior: number;
@@ -574,8 +658,9 @@ export class SuperAdminService {
 
       const diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
-      // Analizar reservas del mes actual
-      reservasMes.forEach((reserva: any) => {
+      // Analizar ambos meses
+      [...reservasMes, ...reservasMesAnterior].forEach((reserva: any, index) => {
+        const esActual = index < reservasMes.length;
         const fechaReserva = new Date(reserva.fecha_reserva || reserva.fecha);
         const diaSemana = diasSemana[fechaReserva.getDay()];
         const horaInicio = reserva.hora_inicio?.substring(0, 5) || '00:00';
@@ -592,21 +677,13 @@ export class SuperAdminService {
         }
         
         const stats = horarioStats.get(key)!;
-        stats.cantidad++;
-        if (reserva.estado_pago === 'pagado' || reserva.estado === 'confirmada') {
-          stats.ingresos += parseFloat(reserva.precio_total) || 0;
-        }
-      });
-
-      // Analizar reservas del mes anterior
-      reservasMesAnterior.forEach((reserva: any) => {
-        const fechaReserva = new Date(reserva.fecha_reserva || reserva.fecha);
-        const diaSemana = diasSemana[fechaReserva.getDay()];
-        const horaInicio = reserva.hora_inicio?.substring(0, 5) || '00:00';
-        const key = `${diaSemana}-${horaInicio}`;
-
-        if (horarioStats.has(key)) {
-          horarioStats.get(key)!.cantidadAnterior++;
+        if (esActual) {
+          stats.cantidad++;
+          if (reserva.estado_pago === 'pagado' || reserva.estado === 'confirmada') {
+            stats.ingresos += parseFloat(reserva.precio_total) || 0;
+          }
+        } else {
+          stats.cantidadAnterior++;
         }
       });
 
@@ -636,7 +713,10 @@ export class SuperAdminService {
         .sort((a, b) => b.cantidad_reservas - a.cantidad_reservas)
         .slice(0, 5);
 
-      // Construir respuesta final
+      // 12. CONSTRUIR RESPUESTA FINAL OPTIMIZADA
+      const endTime = performance.now();
+      const tiempoEjecucion = Math.round(endTime - startTime);
+      
       const estadisticas = {
         metricas_generales: {
           usuarios_totales,
@@ -646,7 +726,7 @@ export class SuperAdminService {
         },
         metricas_mensuales: {
           ganancias_mes: Math.round(ganancias_mes * 100) / 100,
-          reservas_totales_mes,
+          reservas_totales_mes: reservasMes.length,
           ocupacion_mensual: Math.round(ocupacion_mensual * 100) / 100,
           valoracion_promedio: Math.round(valoracion_promedio * 100) / 100
         },
@@ -654,19 +734,58 @@ export class SuperAdminService {
         reservas_por_deporte,
         top_canchas,
         top_horarios,
-        fecha_generacion: new Date().toISOString(),
-        periodo_analisis: `${hace30DiasStr} - ${hoyStr}`
+        metadata: {
+          fecha_generacion: new Date().toISOString(),
+          periodo_analisis: `${hace30DiasStr} - ${hoyStr}`,
+          tiempo_ejecucion_ms: tiempoEjecucion,
+          cache_usado: false,
+          requests_paralelos: requests.length
+        }
       };
 
-      console.log('✅ [SuperAdminService] Estadísticas generadas exitosamente');
+      // 13. GUARDAR EN CACHE
+      this.setCachedData(cacheKey, estadisticas);
+
+      console.log(`🚀 [SuperAdmin] Estadísticas generadas EXITOSAMENTE en ${tiempoEjecucion}ms`);
       
       return { ok: true, data: estadisticas };
     } catch (error: any) {
-      console.error('❌ [SuperAdminService] Error al obtener estadísticas:', error);
+      console.error('❌ [SuperAdmin] Error al obtener estadísticas OPTIMIZADAS:', error);
       return { 
         ok: false, 
         error: error.response?.data?.message || error.message || 'Error al obtener estadísticas completas' 
       };
     }
+  }
+
+  /**
+   * 📊 MÉTRICAS DE RENDIMIENTO Y CACHE
+   * ==================================
+   */
+  getCacheMetrics(): any {
+    const now = Date.now();
+    const cacheEntries = Array.from(this.estadisticasCache.entries()).map(([key, value]) => ({
+      key,
+      expiresIn: Math.max(0, Math.round((value.expiry - now) / 1000)),
+      size: JSON.stringify(value.data).length
+    }));
+
+    return {
+      cache_size: this.estadisticasCache.size,
+      cache_ttl_minutes: this.CACHE_TTL_MINUTES,
+      max_concurrency: this.MAX_CONCURRENCY,
+      entries: cacheEntries,
+      total_cache_size_bytes: cacheEntries.reduce((sum, entry) => sum + entry.size, 0)
+    };
+  }
+
+  /**
+   * 🧹 LIMPIEZA MANUAL DE CACHE
+   * ===========================
+   */
+  clearCache(): void {
+    const oldSize = this.estadisticasCache.size;
+    this.estadisticasCache.clear();
+    console.log(`🧹 [Cache] Limpiado manualmente. Eliminadas ${oldSize} entradas`);
   }
 }
