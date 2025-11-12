@@ -20,11 +20,41 @@ export default function EstadisticasPage() {
     }
   }, [mounted, cargarEstadisticas]);
 
+  // Debug: ver qué datos llegan
+  useEffect(() => {
+    if (estadisticas) {
+      console.log('📊 Estadísticas recibidas:', {
+        reservas_por_dia: estadisticas.reservas_por_dia,
+        reservas_por_deporte: estadisticas.reservas_por_deporte,
+        top_canchas: estadisticas.top_canchas,
+        top_horarios: estadisticas.top_horarios
+      });
+    }
+  }, [estadisticas]);
+
   // Transformar datos para los gráficos
-  const reservasPorDia = estadisticas?.reservas_por_dia?.map(item => ({
-    label: item.dia_semana.substring(0, 3),
-    value: item.cantidad_reservas
-  })) || [];
+  // ARREGLO: Agrupar reservas por día de la semana (suma acumulada)
+  const reservasPorDia = (() => {
+    if (!estadisticas?.reservas_por_dia) return [];
+    
+    const diasAgrupados = new Map<string, number>();
+    const ordenDias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+    
+    // Agrupar por día de la semana
+    estadisticas.reservas_por_dia.forEach(item => {
+      const dia = item.dia_semana;
+      const cantidadActual = diasAgrupados.get(dia) || 0;
+      diasAgrupados.set(dia, cantidadActual + item.cantidad_reservas);
+    });
+    
+    // Convertir a array ordenado
+    return ordenDias
+      .filter(dia => diasAgrupados.has(dia))
+      .map(dia => ({
+        label: dia.substring(0, 3),
+        value: diasAgrupados.get(dia) || 0
+      }));
+  })();
 
   const reservasPorDeporte = estadisticas?.reservas_por_deporte?.map(item => ({
     label: item.deporte,
@@ -159,8 +189,13 @@ export default function EstadisticasPage() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
               </div>
             ) : reservasPorDeporte.length === 0 ? (
-              <div className="flex justify-center items-center h-64 text-gray-500">
-                No hay datos disponibles
+              <div className="flex flex-col justify-center items-center h-64 text-gray-500">
+                <p className="text-lg mb-2">No hay datos disponibles</p>
+                <p className="text-sm text-gray-400">
+                  {estadisticas?.reservas_por_deporte === undefined 
+                    ? 'El backend no está enviando datos de "reservas_por_deporte"' 
+                    : 'No hay reservas registradas en el sistema'}
+                </p>
               </div>
             ) : (
               <BarChart 
@@ -204,8 +239,13 @@ export default function EstadisticasPage() {
                   </tr>
                 ) : canchasPopulares.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="text-center py-8 text-gray-500">
-                      No hay datos disponibles
+                    <td colSpan={4} className="text-center py-8">
+                      <div className="text-gray-500 mb-2">No hay datos disponibles</div>
+                      <div className="text-sm text-gray-400">
+                        {estadisticas?.top_canchas === undefined 
+                          ? 'El backend no está enviando datos de "top_canchas"' 
+                          : 'No hay canchas con reservas registradas'}
+                      </div>
                     </td>
                   </tr>
                 ) : (
