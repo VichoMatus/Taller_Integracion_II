@@ -3919,3 +3919,247 @@
     padding: 0.4rem 0.8rem;
   }
 }
+
+/* ========================================
+   ESTILOS PARA RESEÑAS - TABS Y BANNERS
+   ======================================== */
+
+/* Tabs de navegación tipo filtro */
+.filter-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0;
+}
+
+.filter-tab {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  background-color: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  position: relative;
+  bottom: -2px;
+}
+
+.filter-tab:hover:not(.active) {
+  background-color: #f3f4f6;
+  color: #374151;
+  transform: translateY(-2px);
+}
+
+.filter-tab.active {
+  font-weight: 700;
+  background-color: #3b82f6;
+  color: white;
+  border-bottom: 3px solid #2563eb;
+  border-radius: 8px 8px 0 0;
+}
+
+/* Banners informativos (azul, verde, rojo) */
+.info-banner {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 1px solid;
+  animation: slideInFromLeft 0.4s ease-out;
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.info-banner.info-blue {
+  background-color: #e0f2fe;
+  border-color: #7dd3fc;
+}
+
+.info-banner.info-green {
+  background-color: #f0fdf4;
+  border-color: #86efac;
+}
+
+.info-banner.info-red {
+  background-color: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.info-banner .info-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.info-banner .info-content {
+  flex: 1;
+}
+
+.info-banner .info-title {
+  margin: 0 0 0.5rem 0;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.info-banner.info-blue .info-title {
+  color: #075985;
+}
+
+.info-banner.info-green .info-title {
+  color: #166534;
+}
+
+.info-banner.info-red .info-title {
+  color: #991b1b;
+}
+
+.info-banner .info-text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.info-banner.info-blue .info-text {
+  color: #0c4a6e;
+}
+
+.info-banner.info-green .info-text {
+  color: #14532d;
+}
+
+.info-banner.info-red .info-text {
+  color: #7f1d1d;
+}
+
+/* Celda de calificación con emoji */
+.calificacion-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.calificacion-emoji {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.calificacion-numero {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.875rem;
+}
+
+/* Celda de comentario con ellipsis */
+.comentario-cell {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+/* Botones de selección de tipo (complejo/cancha) */
+.tipo-selector-container {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.tipo-selector-button {
+  flex: 1;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  background-color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.tipo-selector-button:hover {
+  border-color: #93c5fd;
+  background-color: #f9fafb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.tipo-selector-button.active {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.tipo-selector-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.tipo-selector-title {
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+  color: #1f2937;
+}
+
+.tipo-selector-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Responsive para tabs */
+@media (max-width: 768px) {
+  .filter-tabs {
+    flex-direction: column;
+    border-bottom: none;
+  }
+
+  .filter-tab {
+    border-bottom: none;
+    border-left: 3px solid transparent;
+    justify-content: flex-start;
+  }
+
+  .filter-tab.active {
+    border-left: 3px solid #2563eb;
+    border-bottom: none;
+    border-radius: 8px;
+  }
+
+  .info-banner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .info-banner .info-icon {
+    font-size: 2rem;
+  }
+
+  .comentario-cell {
+    max-width: 200px;
+  }
+  
+  .tipo-selector-container {
+    flex-direction: column;
+  }
+  
+  .tipo-selector-button {
+    width: 100%;
+  }
+}
