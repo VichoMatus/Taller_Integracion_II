@@ -1,10 +1,9 @@
 'use client';
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar'; 
 import SearchBar from '@/components/SearchBar'; 
-import LocationMap from '@/components/LocationMap'; 
 import styles from './page.module.css';
 
 import { useAuthStatus } from '@/hooks/useAuthStatus';
@@ -38,16 +37,20 @@ const staticContactData = {
 };
 
 // 🛹 COMPONENTE PRINCIPAL CON SUSPENSE
-function SkateParkSeleccionadoContent() {
+function SkateParcSeleccionadoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
+  
+  const mapInstanceRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
   
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [dataLoading, setDataLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [skatepark, setSkatepark] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   // 🛹 OBTENER ID DEL SKATEPARK DESDE URL
   const skateparkId = searchParams?.get('id') || searchParams?.get('pista');
@@ -206,7 +209,51 @@ function SkateParkSeleccionadoContent() {
     loadSkateparkData();
   }, [skateparkId]);
 
-  // 🛹 RESTO DE FUNCIONES ADAPTADAS
+  // �️ INICIALIZAR MAPA DE GOOGLE
+  useEffect(() => {
+    if (!skatepark || !skatepark.coordinates || isMapLoaded) return;
+    
+    const initMap = () => {
+      const mapElement = document.getElementById('skate-map');
+      if (!mapElement || typeof window === 'undefined' || !(window as any).google) return;
+      
+      const { google } = window as any;
+      mapInstanceRef.current = new google.maps.Map(mapElement, {
+        center: { lat: skatepark.coordinates.lat, lng: skatepark.coordinates.lng },
+        zoom: 15,
+      });
+      
+      markerRef.current = new google.maps.Marker({
+        position: { lat: skatepark.coordinates.lat, lng: skatepark.coordinates.lng },
+        map: mapInstanceRef.current,
+        title: skatepark.name,
+        animation: google.maps.Animation.DROP,
+      });
+      
+      const infoWindowContent = `<h4>🛹 ${skatepark.name}</h4><p>📍 ${skatepark.location}</p><p>🏟️ ${skatepark.capacity}</p><p>💰 $${skatepark.priceFrom}/h</p><p>⭐ ${skatepark.rating}/5</p>`;
+      const infoWindow = new google.maps.InfoWindow({ content: infoWindowContent });
+      (markerRef.current as any).infoWindow = infoWindow;
+      markerRef.current.addListener('click', () => {
+        document.querySelectorAll('[role="dialog"]').forEach((w: any) => w.style.display = 'none');
+        infoWindow.open(mapInstanceRef.current, markerRef.current);
+      });
+      infoWindow.open(mapInstanceRef.current, markerRef.current);
+      setIsMapLoaded(true);
+    };
+    
+    if (!(window as any).google) {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBMIE36wrh9juIn2RXAGVoBwnc-hhFfwd4&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => setTimeout(initMap, 100);
+      if (!document.querySelector(`script[src="${script.src}"]`)) document.head.appendChild(script);
+    } else {
+      setTimeout(initMap, 100);
+    }
+  }, [skatepark, isMapLoaded]);
+
+  // �🛹 RESTO DE FUNCIONES ADAPTADAS
   const handleUserButtonClick = () => {
     if (isAuthenticated) {
       router.push('/usuario/EditarPerfil');
@@ -424,14 +471,7 @@ function SkateParkSeleccionadoContent() {
           <div className={styles.locationSection}>
             <h3 className={styles.sectionTitle}>Ubicación del Skatepark</h3>
             <div className={styles.mapContainer}>
-              <LocationMap 
-                latitude={skatepark.coordinates.lat} 
-                longitude={skatepark.coordinates.lng}
-                address={skatepark.location}
-                zoom={15}
-                height="250px"
-                sport="skate"
-              />
+              <div id="skate-map" style={{ width: '100%', height: '400px', borderRadius: '8px', overflow: 'hidden' }} />
               <div className={styles.locationInfo}>
                 <p className={styles.locationAddress}>{skatepark.location}</p>
                 <button className={styles.directionsButton} onClick={handleDirections}>
@@ -556,7 +596,7 @@ function SkateParkSeleccionadoContent() {
 export default function SkateParkSeleccionado() {
   return (
     <Suspense fallback={<div>Cargando skatepark...</div>}>
-      <SkateParkSeleccionadoContent />
+      <SkateParcSeleccionadoContent />
     </Suspense>
   );
 }
