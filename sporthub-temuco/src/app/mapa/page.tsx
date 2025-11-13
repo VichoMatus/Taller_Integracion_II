@@ -37,7 +37,7 @@ const complejosDeportivos: ComplejoDeportivo[] = [
     id: 2,
     nombre: "Centro Deportivo Los Aromos",
     direccion: "Pedro de Valdivia 567, Temuco",
-    coordenadas: { lat: -38.7400, lng: -72.5950 },
+    coordenadas: { lat: -38.729646, lng: -72.6061522 },
     deportes: ["Pádel", "Voleibol", "Karting"],
     telefono: "(45) 555-5678",
     horario: "7:00 - 22:00",
