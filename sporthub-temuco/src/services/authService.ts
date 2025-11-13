@@ -369,23 +369,29 @@ export const authService = {
    * Verificar si el usuario está autenticado
    */
   isAuthenticated(): boolean {
-    return !!(localStorage.getItem('access_token') || localStorage.getItem('token'));
+    if (typeof window === 'undefined') return false; // SSR protection
+    return !!(localStorage.getItem('auth_token') || localStorage.getItem('access_token') || localStorage.getItem('token'));
   },
 
   /**
    * Obtener token actual
    */
   getToken(): string | null {
-    return localStorage.getItem('access_token') || localStorage.getItem('token');
+    if (typeof window === 'undefined') return null; // SSR protection
+    return localStorage.getItem('auth_token') || localStorage.getItem('access_token') || localStorage.getItem('token');
   },
 
   /**
    * Limpiar sesión
    */
   clearSession(): void {
+    if (typeof window === 'undefined') return; // SSR protection
     localStorage.removeItem('token');
     localStorage.removeItem('access_token');
+    localStorage.removeItem('auth_token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('userData');
+    localStorage.removeItem('user_role');
   },
 
   // ========================================
