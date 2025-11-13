@@ -125,11 +125,27 @@ export const googleAuthService = {
   async loginWithGoogle(idToken: string) {
     const googleResponse = await this.verifyGoogleToken(idToken);
     
-    if (!googleResponse.ok || !googleResponse.data) {
+    console.log('🔍 [loginWithGoogle] googleResponse completo:', googleResponse);
+    
+    // La respuesta puede venir en dos formatos:
+    // 1. {ok, data: {access_token, user}} - respuesta envuelta
+    // 2. {access_token, user} - respuesta directa
+    
+    let responseData: any;
+    
+    if (googleResponse.ok && googleResponse.data) {
+      // Formato envuelto
+      responseData = googleResponse.data;
+    } else if (googleResponse.access_token) {
+      // Formato directo
+      responseData = googleResponse;
+    } else {
       throw new Error('Error al verificar con Google');
     }
-
-    const responseData: any = googleResponse.data;
+    
+    console.log('🔍 [loginWithGoogle] responseData:', responseData);
+    console.log('🔍 [loginWithGoogle] responseData.access_token existe?', !!responseData.access_token);
+    console.log('🔍 [loginWithGoogle] responseData.user existe?', !!responseData.user);
 
     // Caso 1: Respuesta completa de FastAPI (access_token + user)
     if (responseData.access_token && responseData.user) {

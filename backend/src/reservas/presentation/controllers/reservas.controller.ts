@@ -120,24 +120,35 @@ export class ReservasController {
    */
   update = async (req: Request, res: Response) => {
     try {
+      console.log('🔍 [update] Request body:', JSON.stringify(req.body, null, 2));
+      console.log('🔍 [update] Params:', req.params);
+      
       const input = { ...req.body };
       
       // Soporte para ambos formatos de fecha
       if (req.body.fechaInicio) {
         input.fechaInicio = new Date(req.body.fechaInicio);
+        console.log('🔄 [update] Usando fechaInicio del body');
       } else if (req.body.fecha && req.body.inicio) {
         input.fechaInicio = new Date(`${req.body.fecha}T${req.body.inicio}:00.000Z`);
+        console.log('🔄 [update] Construido fechaInicio desde fecha+inicio');
       }
       
       if (req.body.fechaFin) {
         input.fechaFin = new Date(req.body.fechaFin);
+        console.log('🔄 [update] Usando fechaFin del body');
       } else if (req.body.fecha && req.body.fin) {
         input.fechaFin = new Date(`${req.body.fecha}T${req.body.fin}:00.000Z`);
+        console.log('🔄 [update] Construido fechaFin desde fecha+fin');
       }
       
+      console.log('📤 [update] Input procesado:', input);
+      
       const reserva = await this.updateReservaUC.execute(Number(req.params.id), input);
+      console.log('✅ [update] Reserva actualizada exitosamente');
       res.json(ok(reserva));
     } catch (e: any) {
+      console.error('❌ [update] Error:', e);
       res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details));
     }
   };
