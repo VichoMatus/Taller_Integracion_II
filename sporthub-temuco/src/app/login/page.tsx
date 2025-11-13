@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Script from 'next/script';
 import { authService } from '@/services/authService';
+import { googleAuthService } from '@/services/googleAuthService';
 import '../Login.css';
 
 export default function LoginPage() {
@@ -12,7 +14,37 @@ export default function LoginPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [googleReady, setGoogleReady] = useState(false);
     const router = useRouter();
+
+    useEffect(() => {
+        if (googleReady) {
+            googleAuthService.initializeGoogleSignIn(
+                async (response) => {
+                    try {
+                        setIsLoading(true);
+                        const result = await googleAuthService.loginWithGoogle(response.credential);
+                        const user = result.user;
+                        if (user?.rol) {
+                            switch (user.rol) {
+                                case 'admin': router.push('/admin'); break;
+                                case 'super_admin': router.push('/superadmin'); break;
+                                default: router.push('/sports');
+                            }
+                        } else {
+                            router.push('/sports');
+                        }
+                    } catch (err: any) {
+                        setError(err.message || 'Error al iniciar sesión con Google');
+                    } finally {
+                        setIsLoading(false);
+                    }
+                },
+                (errorMsg) => setError(errorMsg)
+            );
+            setTimeout(() => googleAuthService.renderButton('googleSignInButton'), 100);
+        }
+    }, [googleReady, router]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -57,7 +89,13 @@ export default function LoginPage() {
     };
 
     return (
-        <div style={{ minHeight: '100vh', position: 'relative' }}>
+        <>
+            <Script
+                src="https://accounts.google.com/gsi/client"
+                strategy="afterInteractive"
+                onLoad={() => setGoogleReady(true)}
+            />
+            <div style={{ minHeight: '100vh', position: 'relative' }}>
             <header style={{ backgroundColor: '#4F46E5', color: 'white', padding: '1rem', textAlign: 'center' }}>
                 <h1 
                     className="header-logo"
@@ -169,10 +207,7 @@ export default function LoginPage() {
                         
                         <div className="or">o</div>
                         
-                        <button className="google-btn" disabled={isLoading}>
-                            <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" />
-                            Iniciar sesión con Google
-                        </button>
+                        <div id="googleSignInButton" style={{ width: '100%', marginBottom: '1rem', minHeight: '44px' }}></div>
                         
                         <div className="signup">
                             No tienes una cuenta? <Link href="/login/registro">Crea una</Link>
@@ -189,7 +224,7 @@ export default function LoginPage() {
                     </div>
                 </div>
             </div>
-            
-        </div>
+            </div>
+        </>
     );
 }
