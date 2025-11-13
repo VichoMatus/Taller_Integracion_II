@@ -27,12 +27,17 @@ export default function LoginPage() {
                         const user = result.user;
                         if (user?.rol) {
                             switch (user.rol) {
-                                case 'admin': router.push('/admin'); break;
-                                case 'super_admin': router.push('/superadmin'); break;
-                                default: router.push('/sports');
+                                case 'admin': 
+                                    window.location.href = '/admin';
+                                    break;
+                                case 'super_admin': s
+                                    window.location.href = '/superadmin';
+                                    break;
+                                default: 
+                                    window.location.href = '/sports';
                             }
                         } else {
-                            router.push('/sports');
+                            window.location.href = '/sports';
                         }
                     } catch (err: any) {
                         setError(err.message || 'Error al iniciar sesión con Google');
