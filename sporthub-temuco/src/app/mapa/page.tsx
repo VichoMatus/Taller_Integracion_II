@@ -1,12 +1,24 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '../../components/layout/Sidebar';
 import SearchBar from '../../components/SearchBar';
-import LocationMap, { ComplejoDeportivo } from '../../components/LocationMap';
 import { useAuthStatus } from '@/hooks/useAuthStatus';
 import styles from './page.module.css';
+
+// 🗺️ INTERFAZ PARA COMPLEJOS DEPORTIVOS
+interface ComplejoDeportivo {
+  id: number;
+  nombre: string;
+  direccion: string;
+  coordenadas: { lat: number; lng: number };
+  deportes: string[];
+  telefono: string;
+  horario: string;
+  calificacion: number;
+  precio: string;
+}
 
 // 🗺️ DATOS DE EJEMPLO PARA COMPLEJOS DEPORTIVOS
 const complejosDeportivos: ComplejoDeportivo[] = [
@@ -63,6 +75,11 @@ export default function MapaPage() {
   const router = useRouter();
   const { user, isLoading, isAuthenticated, buttonProps } = useAuthStatus();
   
+  // 🗺️ REFS
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+  
   // 🗺️ ESTADOS
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSport, setSelectedSport] = useState('Todos los deportes');
@@ -70,8 +87,156 @@ export default function MapaPage() {
   const [mapCenter, setMapCenter] = useState({ lat: -38.7359, lng: -72.5904 }); // Temuco centro
   const [zoom, setZoom] = useState(13);
   const [filteredComplejos, setFilteredComplejos] = useState<ComplejoDeportivo[]>(complejosDeportivos);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
 
-  // 🗺️ FILTRAR COMPLEJOS
+  // 🗺️ EFECTO: Cargar Google Maps Script e inicializar el mapa
+  useEffect(() => {
+    const initMap = () => {
+      if (mapRef.current && !mapInstanceRef.current && typeof window !== 'undefined' && (window as any).google) {
+        const { google } = window as any;
+        
+        console.log('🗺️ [MapaPage] Inicializando mapa de Google Maps');
+        mapInstanceRef.current = new google.maps.Map(mapRef.current, {
+          center: mapCenter,
+          zoom: zoom,
+          styles: [
+            {
+              featureType: 'poi',
+              elementType: 'labels',
+              stylers: [{ visibility: 'on' }]
+            }
+          ]
+        });
+        
+        setIsMapLoaded(true);
+        console.log('✅ [MapaPage] Mapa inicializado correctamente');
+        
+        // Dibujar marcadores iniciales
+        drawMarkers();
+      }
+    };
+
+    // Si ya hay una instancia de google cargada
+    if (typeof window !== 'undefined' && (window as any).google && (window as any).google.maps) {
+      initMap();
+      return;
+    }
+
+    // Insertar el script de Google Maps si no existe
+    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+    if (!existingScript) {
+      console.log('📦 [MapaPage] Cargando script de Google Maps...');
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyBMIE36wrh9juIn2RXAGVoBwnc-hhFfwd4';
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+      script.onload = () => {
+        console.log('✅ [MapaPage] Script de Google Maps cargado');
+        initMap();
+      };
+    } else {
+      existingScript.addEventListener('load', initMap);
+    }
+
+    return () => {
+      markersRef.current.forEach((marker: any) => marker.setMap(null));
+      markersRef.current = [];
+    };
+  }, []);
+
+  // 🗺️ EFECTO: Actualizar centro y zoom del mapa
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+
+    const map = mapInstanceRef.current;
+    map.setCenter(mapCenter);
+    map.setZoom(zoom);
+  }, [mapCenter, zoom]);
+
+  // 🗺️ FUNCIÓN: Dibujar marcadores en el mapa
+  const drawMarkers = () => {
+    if (!mapInstanceRef.current || !isMapLoaded) return;
+
+    const map = mapInstanceRef.current;
+    if (!(window as any).google) return;
+
+    const { google } = window as any;
+
+    console.log(`🗺️ [MapaPage] Dibujando ${filteredComplejos.length} marcadores`);
+
+    // Quitar marcadores existentes
+    markersRef.current.forEach((marker: any) => marker.setMap(null));
+    markersRef.current = [];
+
+    // Crear marcadores para cada complejo
+    filteredComplejos.forEach((complejo) => {
+      const marker = new google.maps.Marker({
+        position: complejo.coordenadas,
+        map: map,
+        title: complejo.nombre,
+        animation: google.maps.Animation.DROP,
+      });
+
+      // Crear InfoWindow con información del complejo
+      const infoContent = `
+        <div style="padding: 12px; max-width: 250px;">
+          <h3 style="margin: 0 0 8px 0; color: #333; font-size: 16px;">${complejo.nombre}</h3>
+          <p style="margin: 4px 0; color: #666; font-size: 14px;">📍 ${complejo.direccion}</p>
+          <p style="margin: 4px 0; color: #666; font-size: 14px;">📞 ${complejo.telefono}</p>
+          <p style="margin: 4px 0; color: #666; font-size: 14px;">⏰ ${complejo.horario}</p>
+          <p style="margin: 4px 0; color: #666; font-size: 14px;">⭐ ${complejo.calificacion}/5</p>
+          <div style="margin-top: 8px;">
+            ${complejo.deportes.map(d => `<span style="display: inline-block; background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin: 2px;">${d}</span>`).join('')}
+          </div>
+        </div>
+      `;
+
+      const infoWindow = new google.maps.InfoWindow({
+        content: infoContent,
+      });
+
+      marker.addListener('click', () => {
+        // Cerrar otros InfoWindows
+        markersRef.current.forEach((m: any) => {
+          if (m.infoWindow) {
+            m.infoWindow.close();
+          }
+        });
+
+        infoWindow.open(map, marker);
+        handleComplexClick(complejo);
+        map.panTo(complejo.coordenadas);
+        map.setZoom(16);
+      });
+
+      // Guardar referencia al InfoWindow en el marker
+      (marker as any).infoWindow = infoWindow;
+
+      markersRef.current.push(marker);
+    });
+
+    console.log(`✅ [MapaPage] ${markersRef.current.length} marcadores dibujados`);
+  };
+
+  // 🗺️ EFECTO: Redibujar marcadores cuando cambian los complejos filtrados
+  useEffect(() => {
+    if (isMapLoaded) {
+      drawMarkers();
+    }
+  }, [filteredComplejos, isMapLoaded]);
+
+  // 🗺️ FUNCIONES DE CONTROL DEL MAPA
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev + 1, 20));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev - 1, 1));
+  };
+
+  // 🗺️ EFECTO: Filtrar complejos
   useEffect(() => {
     let filtered = complejosDeportivos;
 
@@ -230,20 +395,42 @@ export default function MapaPage() {
 
         {/* 🗺️ CONTENEDOR PRINCIPAL */}
         <div className={styles.mapContainer}>
-          {/* Mapa - Ahora usando el componente LocationMap */}
+          {/* Mapa */}
           <div className={styles.mapSection}>
-            <LocationMap 
-              latitude={mapCenter.lat}
-              longitude={mapCenter.lng}
-              zoom={zoom}
-              height="600px"
-              interactive={true}
-              complejos={filteredComplejos}
-              onComplexClick={handleComplexClick}
-              showControls={true}
+            <div className={styles.mapControls}>
+              <button 
+                className={styles.mapControl}
+                onClick={resetMap}
+                title="Centrar mapa"
+              >
+                🎯 Centrar
+              </button>
+              <button 
+                className={styles.mapControl}
+                onClick={handleZoomIn}
+                title="Acercar"
+              >
+                ➕
+              </button>
+              <button 
+                className={styles.mapControl}
+                onClick={handleZoomOut}
+                title="Alejar"
+              >
+                ➖
+              </button>
+            </div>
+            
+            <div 
+              ref={mapRef} 
+              style={{ 
+                width: '100%', 
+                height: '600px',
+                borderRadius: '8px',
+                overflow: 'hidden'
+              }} 
             />
           </div>
-            
 
           {/* Lista de complejos */}
           <div className={styles.complexList}>
