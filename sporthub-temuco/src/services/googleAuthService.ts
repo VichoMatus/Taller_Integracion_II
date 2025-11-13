@@ -136,7 +136,7 @@ export const googleAuthService = {
     if (googleResponse.ok && googleResponse.data) {
       // Formato envuelto
       responseData = googleResponse.data;
-    } else if (googleResponse.access_token) {
+    } else if ((googleResponse as any).access_token) {
       // Formato directo
       responseData = googleResponse;
     } else {
@@ -150,12 +150,21 @@ export const googleAuthService = {
     // Caso 1: Respuesta completa de FastAPI (access_token + user)
     if (responseData.access_token && responseData.user) {
       console.log('✅ Login completo con FastAPI - Token recibido');
+      console.log('🔍 Guardando en localStorage...');
+      console.log('  - access_token:', responseData.access_token.substring(0, 50) + '...');
+      console.log('  - user:', responseData.user);
       
       // Guardar token y datos del usuario
       localStorage.setItem('auth_token', responseData.access_token);
       localStorage.setItem('refresh_token', responseData.refresh_token || '');
       localStorage.setItem('userData', JSON.stringify(responseData.user));
       localStorage.setItem('user_role', responseData.user.rol || 'usuario');
+      
+      console.log('✅ Datos guardados en localStorage');
+      console.log('🔍 Verificando localStorage inmediatamente después:');
+      console.log('  - auth_token:', localStorage.getItem('auth_token') ? 'EXISTS' : 'NULL');
+      console.log('  - userData:', localStorage.getItem('userData') ? 'EXISTS' : 'NULL');
+      console.log('  - user_role:', localStorage.getItem('user_role'));
 
       return {
         success: true,
