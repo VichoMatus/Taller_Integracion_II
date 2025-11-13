@@ -34,7 +34,10 @@ export default function EditarCanchaPage() {
     capacidad: 10,
     descripcion: '',
     activa: true,
-    imagenUrl: ''
+    imagenUrl: '',
+    iluminacion: false,
+    largo: 0,
+    ancho: 0
   });
 
   // Cargar datos de la cancha
@@ -55,7 +58,10 @@ export default function EditarCanchaPage() {
           capacidad: cancha.capacidad || 10,
           descripcion: cancha.descripcion || '',
           activa: cancha.activa !== undefined ? cancha.activa : true,
-          imagenUrl: cancha.imagenUrl || ''
+          imagenUrl: cancha.imagenUrl || '',
+          iluminacion: cancha.iluminacion || false,
+          largo: cancha.largo || 0,
+          ancho: cancha.ancho || 0
         });
         
         if (cancha.imagenUrl) {
@@ -306,6 +312,62 @@ export default function EditarCanchaPage() {
                   Cancha Techada
                 </label>
               </div>
+
+              {/* Iluminación */}
+              <div className="edit-form-group checkbox-group">
+                <input
+                  type="checkbox"
+                  id="iluminacion"
+                  name="iluminacion"
+                  checked={formData.iluminacion}
+                  onChange={handleChange}
+                  className="edit-form-checkbox"
+                  disabled={isLoading}
+                />
+                <label htmlFor="iluminacion" className="edit-form-label-inline">
+                  Tiene Iluminación
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Dimensiones */}
+          <div className="edit-section">
+            <h3 className="edit-section-title">Dimensiones de la Cancha</h3>
+            <div className="edit-form-grid">
+              <div className="edit-form-group">
+                <label htmlFor="largo" className="edit-form-label">Largo (metros):</label>
+                <input
+                  type="number"
+                  id="largo"
+                  name="largo"
+                  value={formData.largo || ''}
+                  onChange={handleChange}
+                  className="edit-form-input"
+                  placeholder="Ej: 40"
+                  min="0"
+                  step="0.5"
+                  disabled={isLoading}
+                />
+                <small className="edit-form-help">Largo de la cancha en metros (opcional)</small>
+              </div>
+
+              <div className="edit-form-group">
+                <label htmlFor="ancho" className="edit-form-label">Ancho (metros):</label>
+                <input
+                  type="number"
+                  id="ancho"
+                  name="ancho"
+                  value={formData.ancho || ''}
+                  onChange={handleChange}
+                  className="edit-form-input"
+                  placeholder="Ej: 20"
+                  min="0"
+                  step="0.5"
+                  disabled={isLoading}
+                />
+                <small className="edit-form-help">Ancho de la cancha en metros (opcional)</small>
+              </div>
             </div>
           </div>
 
@@ -374,41 +436,106 @@ export default function EditarCanchaPage() {
             <div className="edit-form-grid-full">
               {/* Imagen de la Cancha */}
               <div className="edit-form-group-full">
-                <label htmlFor="imagen" className="edit-form-label">
-                  Imagen de la Cancha:
-                </label>
-                <input
-                  type="file"
-                  id="imagen"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="edit-form-input"
-                  disabled={isLoading}
-                />
-                <p className="edit-form-hint">
-                  Tamaño máximo: 5MB. Formatos: JPG, PNG, GIF
-                </p>
+                <label className="edit-form-label">Imagen de la Cancha:</label>
                 
-                {/* Preview de la imagen */}
-                {imagenPreview && (
-                  <div className="image-preview-container">
-                    <p className="image-preview-label">Vista previa:</p>
-                    <div className="image-preview-wrapper">
+                {!imagenPreview ? (
+                  <div>
+                    <input
+                      type="file"
+                      id="imagen"
+                      name="imagen"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      style={{ display: 'none' }}
+                      disabled={isLoading}
+                    />
+                    <label 
+                      htmlFor="imagen" 
+                      className="btn-guardar"
+                      style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem',
+                        cursor: isLoading ? 'not-allowed' : 'pointer',
+                        opacity: isLoading ? 0.5 : 1
+                      }}
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      Seleccionar Imagen
+                    </label>
+                    <p className="edit-form-hint" style={{ marginTop: '0.5rem' }}>
+                      Tamaño máximo: 5MB. Formatos: JPG, PNG, GIF
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{ marginTop: '1rem' }}>
+                    <div style={{
+                      position: 'relative',
+                      display: 'inline-block',
+                      borderRadius: '12px',
+                      overflow: 'hidden',
+                      boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                      border: '3px solid #10b981'
+                    }}>
                       <img 
                         src={imagenPreview} 
-                        alt="Preview" 
-                        className="image-preview"
+                        alt="Vista previa de la cancha" 
+                        style={{ 
+                          maxWidth: '400px', 
+                          maxHeight: '300px', 
+                          objectFit: 'cover',
+                          display: 'block'
+                        }} 
                       />
+                    </div>
+                    <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem' }}>
+                      <input
+                        type="file"
+                        id="imagen-change"
+                        name="imagen"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        style={{ display: 'none' }}
+                        disabled={isLoading}
+                      />
+                      <label 
+                        htmlFor="imagen-change" 
+                        className="btn-volver"
+                        style={{ 
+                          display: 'inline-flex', 
+                          alignItems: 'center', 
+                          gap: '0.5rem',
+                          cursor: isLoading ? 'not-allowed' : 'pointer'
+                        }}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Cambiar imagen
+                      </label>
                       <button
                         type="button"
                         onClick={() => {
                           setImagenPreview('');
                           setFormData(prev => ({ ...prev, imagenUrl: '' }));
+                          const input = document.getElementById('imagen') as HTMLInputElement;
+                          if (input) input.value = '';
                         }}
-                        className="image-delete-btn"
-                        disabled={isLoading}
+                        className="btn-volver"
+                        style={{ 
+                          display: 'inline-flex', 
+                          alignItems: 'center', 
+                          gap: '0.5rem',
+                          backgroundColor: '#ef4444',
+                          borderColor: '#ef4444'
+                        }}
                       >
-                        ×
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Eliminar
                       </button>
                     </div>
                   </div>

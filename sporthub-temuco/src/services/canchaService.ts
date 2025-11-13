@@ -5,6 +5,7 @@
  */
 
 import { apiBackend } from '../config/backend';
+import { getNombreDeporteNormalizado, getDeporteId } from '../utils/deportesMap';
 import { 
   CreateCanchaInput, 
   UpdateCanchaInput, 
@@ -75,38 +76,86 @@ const adaptCanchaFromBackend = (backendCancha: any) => {
  * {
  *   "nombre": string (required),
  *   "id_complejo": number (required),
- *   "deporte": string (required),
+ *   "deporte": string (required) - Acepta: futbol, basquet, tenis, padel, volley,
  *   "cubierta": boolean (required),
- *   "id_deporte": number (optional)
+ *   // Campos opcionales:
+ *   "precio_por_hora": number,
+ *   "capacidad": number,
+ *   "descripcion": string,
+ *   "iluminacion": boolean,
+ *   "largo": number,
+ *   "ancho": number,
+ *   "imagen_url": string
  * }
  * 
  * UPDATE (CanchaUpdateIn):
  *   - nombre (optional)
- *   - deporte (optional)
+ *   - deporte (optional) - Acepta: futbol, basquet, tenis, padel, volley
  *   - cubierta (optional)
  *   - activo (optional)
+ *   - precio_por_hora, capacidad, descripcion, iluminacion, largo, ancho, imagen_url (optional)
  */
 const adaptCanchaToBackend = (frontendCancha: CreateCanchaInput | UpdateCanchaInput, isUpdate: boolean = false) => {
   const payload: any = {};
 
   // === CAMPOS PARA CREATE ===
   if (!isUpdate) {
+    // Obligatorios
     payload.nombre = frontendCancha.nombre;
 
+    // DEPORTE: Normalizar nombre usando el mapeo
     if ((frontendCancha as any).tipo !== undefined) {
-      payload.deporte = (frontendCancha as any).tipo;
+      payload.deporte = getNombreDeporteNormalizado((frontendCancha as any).tipo);
+      console.log(`🏀 [adaptCanchaToBackend] Deporte normalizado: ${(frontendCancha as any).tipo} → ${payload.deporte}`);
     }
 
+    // ID_COMPLEJO: CRÍTICO - debe ser número entero
     if ((frontendCancha as any).establecimientoId !== undefined) {
-      payload.id_complejo = Number((frontendCancha as any).establecimientoId);
+      const idComplejo = Number((frontendCancha as any).establecimientoId);
+      if (isNaN(idComplejo) || idComplejo <= 0) {
+        throw new Error(`ID de complejo inválido: ${(frontendCancha as any).establecimientoId}`);
+      }
+      payload.id_complejo = idComplejo;
+      console.log(`🏢 [adaptCanchaToBackend] ID Complejo: ${idComplejo}`);
     }
 
-    payload.cubierta = (frontendCancha as any).techada !== undefined 
-      ? (frontendCancha as any).techada 
-      : false;
+    // CUBIERTA: convertir techada a cubierta
+    payload.cubierta = Boolean((frontendCancha as any).techada);
 
-    if ((frontendCancha as any).id_deporte !== undefined && (frontendCancha as any).id_deporte !== 0) {
-      payload.id_deporte = (frontendCancha as any).id_deporte;
+    // ACTIVA: agregar campo activa (opcional, default true)
+    payload.activa = (frontendCancha as any).activa !== undefined ? Boolean((frontendCancha as any).activa) : true;
+
+    // Opcionales - enviar si están definidos y convertir explícitamente a número
+    const precioPorHora = Number((frontendCancha as any).precioPorHora);
+    if (!isNaN(precioPorHora) && precioPorHora > 0) {
+      payload.precio_por_hora = precioPorHora;
+    }
+
+    const capacidad = Number((frontendCancha as any).capacidad);
+    if (!isNaN(capacidad) && capacidad > 0) {
+      payload.capacidad = capacidad;
+    }
+
+    if ((frontendCancha as any).descripcion !== undefined && (frontendCancha as any).descripcion.trim()) {
+      payload.descripcion = (frontendCancha as any).descripcion;
+    }
+
+    if ((frontendCancha as any).iluminacion !== undefined) {
+      payload.iluminacion = Boolean((frontendCancha as any).iluminacion);
+    }
+
+    const largo = Number((frontendCancha as any).largo);
+    if (!isNaN(largo) && largo > 0) {
+      payload.largo = largo;
+    }
+
+    const ancho = Number((frontendCancha as any).ancho);
+    if (!isNaN(ancho) && ancho > 0) {
+      payload.ancho = ancho;
+    }
+
+    if ((frontendCancha as any).imagenUrl !== undefined && (frontendCancha as any).imagenUrl) {
+      payload.imagen_url = (frontendCancha as any).imagenUrl;
     }
   }
 
@@ -125,11 +174,6 @@ const adaptCanchaToBackend = (frontendCancha: CreateCanchaInput | UpdateCanchaIn
     // cubierta - OPCIONAL
     if ((frontendCancha as any).techada !== undefined) {
       payload.cubierta = (frontendCancha as any).techada;
-    }
-
-    // id_deporte - OPCIONAL
-    if ((frontendCancha as any).id_deporte !== undefined) {
-      payload.id_deporte = (frontendCancha as any).id_deporte;
     }
 
     // activo - OPCIONAL
@@ -154,10 +198,26 @@ const adaptCanchaToBackend = (frontendCancha: CreateCanchaInput | UpdateCanchaIn
 
     // imagenUrl - OPCIONAL
     if ((frontendCancha as any).imagenUrl !== undefined) {
-      payload.imagenUrl = (frontendCancha as any).imagenUrl;
+      payload.imagen_url = (frontendCancha as any).imagenUrl;
+    }
+
+    // iluminacion - OPCIONAL
+    if ((frontendCancha as any).iluminacion !== undefined) {
+      payload.iluminacion = (frontendCancha as any).iluminacion;
+    }
+
+    // largo - OPCIONAL
+    if ((frontendCancha as any).largo !== undefined) {
+      payload.largo = (frontendCancha as any).largo;
+    }
+
+    // ancho - OPCIONAL
+    if ((frontendCancha as any).ancho !== undefined) {
+      payload.ancho = (frontendCancha as any).ancho;
     }
   }
 
+  console.log(`🔄 [adaptCanchaToBackend] ${isUpdate ? 'UPDATE' : 'CREATE'} payload final:`, payload);
   return payload;
 };
 
@@ -207,10 +267,20 @@ export const canchaService = {
   }) {
     try {
       // Preparar parámetros con soporte para ambos formatos (cubierta/techada)
-      const params = { ...filters };
+      const params: any = {};
+      
+      // Solo agregar parámetros que tengan valores válidos
+      Object.entries(filters || {}).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params[key] = value;
+        }
+      });
+      
       if (filters?.techada !== undefined && filters?.cubierta === undefined) {
         params.cubierta = filters.techada;
       }
+      
+      console.log('📤 Enviando petición a /canchas con parámetros:', params);
       
       const response = await apiBackend.get('/canchas', { params });
       
