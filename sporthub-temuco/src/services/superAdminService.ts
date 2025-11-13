@@ -363,11 +363,12 @@ class SuperAdminService {
    * =================================
    */
 
-  // Obtener estadísticas del sistema
+  // Obtener estadísticas del sistema (OPTIMIZADAS CON CACHE + PARALELIZACIÓN)
   async obtenerEstadisticas(): Promise<any> {
+    console.log('📊 [SuperAdminService] Solicitando estadísticas completas optimizadas...');
     const headers = this.getAuthHeaders();
     return this.handleRequest(
-      apiBackend.get<any>('/super_admin/system/statistics', { headers })
+      apiBackend.get<any>('/super_admin/estadisticas/completas', { headers })
     );
   }
 
