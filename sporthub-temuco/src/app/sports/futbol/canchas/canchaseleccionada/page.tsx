@@ -280,7 +280,7 @@ function FutbolCanchaSeleccionadaContent() {
       await resenaService.crearResena({
         id_cancha: parseInt(canchaId),
         calificacion: rating,
-        comentario: comment
+        comentario: comment.trim() || undefined // Enviar undefined si está vacío
       });
       
       console.log('✅ Reseña enviada exitosamente');
@@ -290,7 +290,10 @@ function FutbolCanchaSeleccionadaContent() {
       alert('¡Reseña publicada exitosamente!');
     } catch (error: any) {
       console.error('❌ Error enviando reseña:', error);
-      throw error;
+      // Extraer mensaje de error correctamente
+      const errorMessage = error?.response?.data?.message || error?.message || 'Error al enviar la reseña';
+      alert(`Error: ${errorMessage}`);
+      throw new Error(errorMessage); // Lanzar Error con mensaje string
     }
   };
 

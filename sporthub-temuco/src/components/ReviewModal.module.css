@@ -127,6 +127,7 @@
   font-family: inherit;
   resize: vertical;
   min-height: 100px;
+  max-height: 300px;
   transition: border-color 0.2s;
 }
 

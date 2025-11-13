@@ -31,11 +31,6 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
       return;
     }
     
-    if (comment.trim().length < 10) {
-      setError('El comentario debe tener al menos 10 caracteres');
-      return;
-    }
-    
     if (comment.length > 500) {
       setError('El comentario no puede superar los 500 caracteres');
       return;
@@ -107,7 +102,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
               id="comment"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Cuéntanos sobre tu experiencia (mínimo 10 caracteres)"
+              placeholder="Cuéntanos sobre tu experiencia (opcional)"
               className={styles.textarea}
               rows={4}
               maxLength={500}
