@@ -144,6 +144,399 @@ export class SuperAdminService {
   }
 
   /**
+   * 🔧 FUNCIONES AUXILIARES PARA PARSEO ROBUSTO DE RESPUESTAS
+   * =========================================================
+   * Estas funciones extraen datos de diferentes formatos de respuesta de FastAPI
+   */
+
+  /**
+   * Extrae array de usuarios de la respuesta, probando múltiples formatos
+   */
+  private extraerUsuarios(response: any): any[] {
+    if (!response || !response.data) {
+      console.warn('⚠️ [Parser] Response de usuarios vacía o inválida');
+      return [];
+    }
+
+    const data = response.data;
+    
+    // Formato 1: { data: { usuarios: [...] } }
+    if (data.usuarios && Array.isArray(data.usuarios)) {
+      console.log(`✅ [Parser] Usuarios encontrados en data.usuarios: ${data.usuarios.length}`);
+      return data.usuarios;
+    }
+    
+    // Formato 2: { data: { data: { usuarios: [...] } } }
+    if (data.data && data.data.usuarios && Array.isArray(data.data.usuarios)) {
+      console.log(`✅ [Parser] Usuarios encontrados en data.data.usuarios: ${data.data.usuarios.length}`);
+      return data.data.usuarios;
+    }
+    
+    // Formato 3: { data: [...] } (array directo)
+    if (Array.isArray(data)) {
+      console.log(`✅ [Parser] Usuarios como array directo: ${data.length}`);
+      return data;
+    }
+    
+    // Formato 4: { data: { data: [...] } }
+    if (data.data && Array.isArray(data.data)) {
+      console.log(`✅ [Parser] Usuarios en data.data como array: ${data.data.length}`);
+      return data.data;
+    }
+
+    // Formato 5: { data: { results: [...] } }
+    if (data.results && Array.isArray(data.results)) {
+      console.log(`✅ [Parser] Usuarios encontrados en data.results: ${data.results.length}`);
+      return data.results;
+    }
+
+    // Formato 6: { data: { items: [...] } }
+    if (data.items && Array.isArray(data.items)) {
+      console.log(`✅ [Parser] Usuarios encontrados en data.items: ${data.items.length}`);
+      return data.items;
+    }
+
+    console.warn('⚠️ [Parser] No se pudo extraer usuarios de la respuesta. Estructura:', Object.keys(data));
+    return [];
+  }
+
+  /**
+   * Extrae array de canchas de la respuesta
+   */
+  private extraerCanchas(response: any): any[] {
+    if (!response || !response.data) {
+      console.warn('⚠️ [Parser] Response de canchas vacía o inválida');
+      return [];
+    }
+
+    const data = response.data;
+    
+    // Formato 1: { data: { canchas: [...] } }
+    if (data.canchas && Array.isArray(data.canchas)) {
+      console.log(`✅ [Parser] Canchas encontradas en data.canchas: ${data.canchas.length}`);
+      return data.canchas;
+    }
+    
+    // Formato 2: { data: { data: { canchas: [...] } } }
+    if (data.data && data.data.canchas && Array.isArray(data.data.canchas)) {
+      console.log(`✅ [Parser] Canchas encontradas en data.data.canchas: ${data.data.canchas.length}`);
+      return data.data.canchas;
+    }
+    
+    // Formato 3: { data: [...] } (array directo)
+    if (Array.isArray(data)) {
+      console.log(`✅ [Parser] Canchas como array directo: ${data.length}`);
+      return data;
+    }
+    
+    // Formato 4: { data: { data: [...] } }
+    if (data.data && Array.isArray(data.data)) {
+      console.log(`✅ [Parser] Canchas en data.data como array: ${data.data.length}`);
+      return data.data;
+    }
+
+    // Formato 5: { data: { results: [...] } }
+    if (data.results && Array.isArray(data.results)) {
+      console.log(`✅ [Parser] Canchas encontradas en data.results: ${data.results.length}`);
+      return data.results;
+    }
+
+    // Formato 6: { data: { items: [...] } }
+    if (data.items && Array.isArray(data.items)) {
+      console.log(`✅ [Parser] Canchas encontradas en data.items: ${data.items.length}`);
+      return data.items;
+    }
+
+    console.warn('⚠️ [Parser] No se pudo extraer canchas de la respuesta. Estructura:', Object.keys(data));
+    return [];
+  }
+
+  /**
+   * Extrae array de reservas de la respuesta
+   */
+  private extraerReservas(response: any): any[] {
+    if (!response || !response.data) {
+      console.warn('⚠️ [Parser] Response de reservas vacía o inválida');
+      return [];
+    }
+
+    const data = response.data;
+    
+    // Formato 1: { data: { reservas: [...] } }
+    if (data.reservas && Array.isArray(data.reservas)) {
+      console.log(`✅ [Parser] Reservas encontradas en data.reservas: ${data.reservas.length}`);
+      return data.reservas;
+    }
+    
+    // Formato 2: { data: { data: { reservas: [...] } } }
+    if (data.data && data.data.reservas && Array.isArray(data.data.reservas)) {
+      console.log(`✅ [Parser] Reservas encontradas en data.data.reservas: ${data.data.reservas.length}`);
+      return data.data.reservas;
+    }
+    
+    // Formato 3: { data: [...] } (array directo)
+    if (Array.isArray(data)) {
+      console.log(`✅ [Parser] Reservas como array directo: ${data.length}`);
+      return data;
+    }
+    
+    // Formato 4: { data: { data: [...] } }
+    if (data.data && Array.isArray(data.data)) {
+      console.log(`✅ [Parser] Reservas en data.data como array: ${data.data.length}`);
+      return data.data;
+    }
+
+    // Formato 5: { data: { results: [...] } }
+    if (data.results && Array.isArray(data.results)) {
+      console.log(`✅ [Parser] Reservas encontradas en data.results: ${data.results.length}`);
+      return data.results;
+    }
+
+    // Formato 6: { data: { items: [...] } }
+    if (data.items && Array.isArray(data.items)) {
+      console.log(`✅ [Parser] Reservas encontradas en data.items: ${data.items.length}`);
+      return data.items;
+    }
+
+    console.warn('⚠️ [Parser] No se pudo extraer reservas de la respuesta. Estructura:', Object.keys(data));
+    return [];
+  }
+
+  /**
+   * Extrae array de reseñas de la respuesta
+   */
+  private extraerResenas(response: any): any[] {
+    if (!response || !response.data) {
+      console.warn('⚠️ [Parser] Response de reseñas vacía o inválida');
+      return [];
+    }
+
+    const data = response.data;
+    
+    // Formato 1: { data: { resenas: [...] } }
+    if (data.resenas && Array.isArray(data.resenas)) {
+      console.log(`✅ [Parser] Reseñas encontradas en data.resenas: ${data.resenas.length}`);
+      return data.resenas;
+    }
+    
+    // Formato 2: { data: { data: { resenas: [...] } } }
+    if (data.data && data.data.resenas && Array.isArray(data.data.resenas)) {
+      console.log(`✅ [Parser] Reseñas encontradas en data.data.resenas: ${data.data.resenas.length}`);
+      return data.data.resenas;
+    }
+    
+    // Formato 3: { data: [...] } (array directo)
+    if (Array.isArray(data)) {
+      console.log(`✅ [Parser] Reseñas como array directo: ${data.length}`);
+      return data;
+    }
+    
+    // Formato 4: { data: { data: [...] } }
+    if (data.data && Array.isArray(data.data)) {
+      console.log(`✅ [Parser] Reseñas en data.data como array: ${data.data.length}`);
+      return data.data;
+    }
+
+    // Formato 5: { data: { results: [...] } }
+    if (data.results && Array.isArray(data.results)) {
+      console.log(`✅ [Parser] Reseñas encontradas en data.results: ${data.results.length}`);
+      return data.results;
+    }
+
+    // Formato 6: { data: { items: [...] } }
+    if (data.items && Array.isArray(data.items)) {
+      console.log(`✅ [Parser] Reseñas encontradas en data.items: ${data.items.length}`);
+      return data.items;
+    }
+
+    console.warn('⚠️ [Parser] No se pudo extraer reseñas de la respuesta. Estructura:', Object.keys(data));
+    return [];
+  }
+
+  /**
+   * Normaliza el campo de ID de cancha en una reserva
+   */
+  private obtenerIdCancha(reserva: any): number | null {
+    // Probar diferentes campos comunes
+    const posiblesIds = [
+      reserva.cancha_id,
+      reserva.id_cancha,
+      reserva.canchaId,
+      reserva.cancha?.id,
+      reserva.cancha?.id_cancha
+    ];
+
+    for (const id of posiblesIds) {
+      if (id !== undefined && id !== null) {
+        // Convertir a número si es string
+        const numId = typeof id === 'string' ? parseInt(id, 10) : id;
+        if (!isNaN(numId)) {
+          return numId;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Normaliza el campo de tipo de deporte de una cancha
+   */
+  private obtenerTipoDeporte(cancha: any): string {
+    // Probar diferentes campos comunes
+    const posiblesDeportes = [
+      cancha.tipo_cancha,
+      cancha.deporte,
+      cancha.tipo_deporte,
+      cancha.tipoCancha,
+      cancha.sport,
+      cancha.type
+    ];
+
+    for (const deporte of posiblesDeportes) {
+      if (deporte && typeof deporte === 'string') {
+        return deporte.toLowerCase();
+      }
+    }
+
+    return 'otros';
+  }
+
+  /**
+   * Normaliza el nombre de una cancha
+   */
+  private obtenerNombreCancha(cancha: any): string {
+    const posiblesNombres = [
+      cancha.nombre_cancha,
+      cancha.nombre,
+      cancha.name,
+      cancha.nombreCancha
+    ];
+
+    for (const nombre of posiblesNombres) {
+      if (nombre && typeof nombre === 'string') {
+        return nombre;
+      }
+    }
+
+    // Fallback con ID si existe
+    const id = cancha.id_cancha || cancha.id;
+    return id ? `Cancha ${id}` : 'Cancha sin nombre';
+  }
+
+  /**
+   * Obtiene el nombre del complejo de una cancha
+   */
+  private obtenerNombreComplejo(cancha: any): string {
+    const posiblesNombres = [
+      cancha.complejo_nombre,
+      cancha.complejo?.nombre,
+      cancha.complejo?.nombre_complejo,
+      cancha.nombreComplejo,
+      cancha.complex_name
+    ];
+
+    for (const nombre of posiblesNombres) {
+      if (nombre && typeof nombre === 'string') {
+        return nombre;
+      }
+    }
+
+    return 'N/A';
+  }
+
+  /**
+   * Obtiene la fecha de una reserva de forma robusta
+   */
+  private obtenerFechaReserva(reserva: any): Date | null {
+    const posiblesFechas = [
+      reserva.fecha_reserva,
+      reserva.fecha,
+      reserva.date,
+      reserva.fechaReserva,
+      reserva.fecha_inicio,
+      reserva.fechaInicio
+    ];
+
+    for (const fecha of posiblesFechas) {
+      if (fecha) {
+        try {
+          const fechaObj = new Date(fecha);
+          if (!isNaN(fechaObj.getTime())) {
+            return fechaObj;
+          }
+        } catch (error) {
+          // Continuar con la siguiente opción
+        }
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Obtiene la hora de inicio de una reserva
+   */
+  private obtenerHoraInicio(reserva: any): string | null {
+    const posiblesHoras = [
+      reserva.hora_inicio,
+      reserva.horaInicio,
+      reserva.start_time,
+      reserva.hora
+    ];
+
+    for (const hora of posiblesHoras) {
+      if (hora && typeof hora === 'string') {
+        // Si tiene formato HH:MM:SS, tomar solo HH:MM
+        return hora.substring(0, 5);
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Verifica si una reserva está pagada/confirmada
+   */
+  private estaReservaPagada(reserva: any): boolean {
+    const estadoPago = reserva.estado_pago || reserva.estadoPago || '';
+    const estado = reserva.estado || reserva.status || '';
+    
+    return estadoPago === 'pagado' || 
+           estadoPago === 'completado' ||
+           estadoPago === 'paid' ||
+           estado === 'confirmada' ||
+           estado === 'completada' ||
+           estado === 'confirmed' ||
+           estado === 'completed';
+  }
+
+  /**
+   * Obtiene el precio de una reserva
+   */
+  private obtenerPrecioReserva(reserva: any): number {
+    const posiblesPrecios = [
+      reserva.precio_total,
+      reserva.precio,
+      reserva.total,
+      reserva.precioTotal,
+      reserva.amount,
+      reserva.monto
+    ];
+
+    for (const precio of posiblesPrecios) {
+      if (precio !== undefined && precio !== null) {
+        const precioNum = parseFloat(precio);
+        if (!isNaN(precioNum)) {
+          return precioNum;
+        }
+      }
+    }
+
+    return 0;
+  }
+
+  /**
    * MÉTODOS DE AUTENTICACIÓN
    * ========================
    */
@@ -478,15 +871,15 @@ export class SuperAdminService {
       // 5. EJECUTAR REQUESTS EN PARALELO
       const responses = await this.fetchAllParallel(requests);
 
-      // 6. EXTRAER Y VALIDAR DATOS
-      const todosUsuarios = responses.usuarios?.data?.usuarios || responses.usuarios?.data || [];
-      const todasCanchas = responses.canchas?.data?.canchas || responses.canchas?.data || [];
-      const reservasHoy = responses.reservasHoy?.data?.reservas || responses.reservasHoy?.data || [];
-      const reservasMes = responses.reservasMes?.data?.reservas || responses.reservasMes?.data || [];
-      const reservasMesAnterior = responses.reservasMesAnterior?.data?.reservas || responses.reservasMesAnterior?.data || [];
-      const resenas = responses.resenas?.data?.resenas || responses.resenas?.data || [];
+      // 6. EXTRAER Y VALIDAR DATOS CON PARSERS ROBUSTOS
+      const todosUsuarios = this.extraerUsuarios(responses.usuarios);
+      const todasCanchas = this.extraerCanchas(responses.canchas);
+      const reservasHoy = this.extraerReservas(responses.reservasHoy);
+      const reservasMes = this.extraerReservas(responses.reservasMes);
+      const reservasMesAnterior = this.extraerReservas(responses.reservasMesAnterior);
+      const resenas = this.extraerResenas(responses.resenas);
 
-      console.log('📊 [Stats] Datos obtenidos:', {
+      console.log('📊 [Stats] Datos extraídos exitosamente:', {
         usuarios: todosUsuarios.length,
         canchas: todasCanchas.length,
         reservasHoy: reservasHoy.length,
@@ -495,18 +888,27 @@ export class SuperAdminService {
         resenas: resenas.length
       });
 
-      // 7. CALCULAR MÉTRICAS DE FORMA EFICIENTE
+      // Advertencia si algún array está vacío
+      if (todosUsuarios.length === 0) console.warn('⚠️ [Stats] No se encontraron usuarios');
+      if (todasCanchas.length === 0) console.warn('⚠️ [Stats] No se encontraron canchas');
+      if (reservasMes.length === 0) console.warn('⚠️ [Stats] No se encontraron reservas del mes');
+
+      // 7. CALCULAR MÉTRICAS DE FORMA EFICIENTE CON PARSEO ROBUSTO
       const usuarios_totales = todosUsuarios.length;
-      const cantidad_administradores = todosUsuarios.filter(
-        (u: any) => u.rol === 'admin' || u.rol === 'super_admin'
-      ).length;
+      
+      // Contar administradores de forma robusta
+      const cantidad_administradores = todosUsuarios.filter((u: any) => {
+        const rol = u.rol || u.role || u.tipo_usuario;
+        return rol === 'admin' || rol === 'super_admin' || rol === 'superadmin';
+      }).length;
+      
       const canchas_registradas = todasCanchas.length;
       const reservas_hoy = reservasHoy.length;
 
-      // Ganancias del mes (solo reservas confirmadas/pagadas)
+      // Ganancias del mes (solo reservas confirmadas/pagadas) CON PARSEO ROBUSTO
       const ganancias_mes = reservasMes
-        .filter((r: any) => r.estado_pago === 'pagado' || r.estado === 'confirmada')
-        .reduce((sum: number, r: any) => sum + (parseFloat(r.precio_total) || 0), 0);
+        .filter((r: any) => this.estaReservaPagada(r))
+        .reduce((sum: number, r: any) => sum + this.obtenerPrecioReserva(r), 0);
 
       // Ocupación mensual
       const diasEnMes = 30;
@@ -519,12 +921,15 @@ export class SuperAdminService {
         ? (reservasConfirmadas / slotsDisponibles) * 100 
         : 0;
 
-      // Valoración promedio
+      // Valoración promedio CON PARSEO ROBUSTO
       const valoracion_promedio = resenas.length > 0
-        ? resenas.reduce((sum: number, r: any) => sum + (r.calificacion || 0), 0) / resenas.length
+        ? resenas.reduce((sum: number, r: any) => {
+            const calificacion = r.calificacion || r.rating || r.puntuacion || r.valoracion || 0;
+            return sum + parseFloat(calificacion);
+          }, 0) / resenas.length
         : 0;
 
-      // 8. RESERVAS POR DÍA (últimos 30 días)
+      // 8. RESERVAS POR DÍA (últimos 30 días) CON PARSEO ROBUSTO
       const reservasPorDiaMap = new Map<string, { cantidad: number; ingresos: number }>();
       
       // Inicializar todos los días del mes con 0
@@ -537,12 +942,17 @@ export class SuperAdminService {
 
       // Agregar reservas reales
       reservasMes.forEach((reserva: any) => {
-        const fechaReserva = reserva.fecha_reserva?.split('T')[0] || reserva.fecha?.split('T')[0];
-        if (fechaReserva && reservasPorDiaMap.has(fechaReserva)) {
+        const fechaObj = this.obtenerFechaReserva(reserva);
+        if (!fechaObj) return;
+        
+        const fechaReserva = fechaObj.toISOString().split('T')[0];
+        
+        if (reservasPorDiaMap.has(fechaReserva)) {
           const data = reservasPorDiaMap.get(fechaReserva)!;
           data.cantidad++;
-          if (reserva.estado_pago === 'pagado' || reserva.estado === 'confirmada') {
-            data.ingresos += parseFloat(reserva.precio_total) || 0;
+          
+          if (this.estaReservaPagada(reserva)) {
+            data.ingresos += this.obtenerPrecioReserva(reserva);
           }
         }
       });
@@ -558,25 +968,45 @@ export class SuperAdminService {
         };
       });
 
-      // 9. RESERVAS POR DEPORTE
+      // 9. RESERVAS POR DEPORTE CON PARSEO ROBUSTO
       const reservasPorDeporteMap = new Map<string, { cantidad: number; ingresos: number }>();
       
+      let reservasSinCancha = 0;
       reservasMes.forEach((reserva: any) => {
-        const canchaId = reserva.cancha_id || reserva.id_cancha;
-        const cancha = todasCanchas.find((c: any) => c.id_cancha === canchaId || c.id === canchaId);
+        const canchaId = this.obtenerIdCancha(reserva);
+        
+        if (!canchaId) {
+          reservasSinCancha++;
+          return;
+        }
+        
+        // Buscar cancha con ID normalizado
+        const cancha = todasCanchas.find((c: any) => {
+          const cId = c.id_cancha || c.id;
+          return cId === canchaId;
+        });
         
         if (cancha) {
-          const deporte = cancha.tipo_cancha || cancha.deporte || 'otros';
+          const deporte = this.obtenerTipoDeporte(cancha);
+          
           if (!reservasPorDeporteMap.has(deporte)) {
             reservasPorDeporteMap.set(deporte, { cantidad: 0, ingresos: 0 });
           }
+          
           const data = reservasPorDeporteMap.get(deporte)!;
           data.cantidad++;
-          if (reserva.estado_pago === 'pagado' || reserva.estado === 'confirmada') {
-            data.ingresos += parseFloat(reserva.precio_total) || 0;
+          
+          if (this.estaReservaPagada(reserva)) {
+            data.ingresos += this.obtenerPrecioReserva(reserva);
           }
+        } else {
+          reservasSinCancha++;
         }
       });
+
+      if (reservasSinCancha > 0) {
+        console.warn(`⚠️ [Stats] ${reservasSinCancha} reservas sin cancha asociada o ID inválido`);
+      }
 
       const totalReservasDeporte = Array.from(reservasPorDeporteMap.values())
         .reduce((sum, d) => sum + d.cantidad, 0);
@@ -588,25 +1018,33 @@ export class SuperAdminService {
         ingresos: Math.round(data.ingresos * 100) / 100
       })).sort((a, b) => b.cantidad_reservas - a.cantidad_reservas);
 
-      // 10. TOP 5 CANCHAS MÁS POPULARES CON TENDENCIAS
+      // 10. TOP 5 CANCHAS MÁS POPULARES CON TENDENCIAS (PARSEO ROBUSTO)
       const canchaStats = new Map<number, { 
         cantidad: number; 
         cantidadAnterior: number;
         cancha: any;
       }>();
 
-      // Contar reservas actuales y anteriores
+      // Contar reservas actuales
       reservasMes.forEach((reserva: any) => {
-        const canchaId = reserva.cancha_id || reserva.id_cancha;
+        const canchaId = this.obtenerIdCancha(reserva);
+        if (!canchaId) return;
+        
         if (!canchaStats.has(canchaId)) {
-          const cancha = todasCanchas.find((c: any) => c.id_cancha === canchaId || c.id === canchaId);
+          const cancha = todasCanchas.find((c: any) => {
+            const cId = c.id_cancha || c.id;
+            return cId === canchaId;
+          });
           canchaStats.set(canchaId, { cantidad: 0, cantidadAnterior: 0, cancha });
         }
         canchaStats.get(canchaId)!.cantidad++;
       });
 
+      // Contar reservas del mes anterior
       reservasMesAnterior.forEach((reserva: any) => {
-        const canchaId = reserva.cancha_id || reserva.id_cancha;
+        const canchaId = this.obtenerIdCancha(reserva);
+        if (!canchaId) return;
+        
         if (canchaStats.has(canchaId)) {
           canchaStats.get(canchaId)!.cantidadAnterior++;
         }
@@ -615,7 +1053,10 @@ export class SuperAdminService {
       const top_canchas = Array.from(canchaStats.entries())
         .map(([canchaId, stats]) => {
           const cancha = stats.cancha;
-          if (!cancha) return null;
+          if (!cancha) {
+            console.warn(`⚠️ [Stats] Cancha ID ${canchaId} no encontrada en lista de canchas`);
+            return null;
+          }
 
           const ocupacion_porcentaje = (stats.cantidad / (diasEnMes * horasPorDia)) * 100;
           
@@ -634,9 +1075,9 @@ export class SuperAdminService {
 
           return {
             cancha_id: canchaId,
-            cancha_nombre: cancha.nombre_cancha || cancha.nombre || `Cancha ${canchaId}`,
-            complejo_nombre: cancha.complejo_nombre || cancha.complejo || 'N/A',
-            tipo_deporte: cancha.tipo_cancha || cancha.deporte || 'N/A',
+            cancha_nombre: this.obtenerNombreCancha(cancha),
+            complejo_nombre: this.obtenerNombreComplejo(cancha),
+            tipo_deporte: this.obtenerTipoDeporte(cancha),
             cantidad_reservas: stats.cantidad,
             ocupacion_porcentaje: Math.round(ocupacion_porcentaje * 100) / 100,
             tendencia,
@@ -647,7 +1088,7 @@ export class SuperAdminService {
         .sort((a, b) => b!.cantidad_reservas - a!.cantidad_reservas)
         .slice(0, 5);
 
-      // 11. TOP 5 HORARIOS MÁS SOLICITADOS
+      // 11. TOP 5 HORARIOS MÁS SOLICITADOS CON PARSEO ROBUSTO
       const horarioStats = new Map<string, {
         cantidad: number;
         cantidadAnterior: number;
@@ -661,9 +1102,12 @@ export class SuperAdminService {
       // Analizar ambos meses
       [...reservasMes, ...reservasMesAnterior].forEach((reserva: any, index) => {
         const esActual = index < reservasMes.length;
-        const fechaReserva = new Date(reserva.fecha_reserva || reserva.fecha);
+        
+        const fechaReserva = this.obtenerFechaReserva(reserva);
+        if (!fechaReserva) return;
+        
         const diaSemana = diasSemana[fechaReserva.getDay()];
-        const horaInicio = reserva.hora_inicio?.substring(0, 5) || '00:00';
+        const horaInicio = this.obtenerHoraInicio(reserva) || '00:00';
         const key = `${diaSemana}-${horaInicio}`;
 
         if (!horarioStats.has(key)) {
@@ -679,8 +1123,8 @@ export class SuperAdminService {
         const stats = horarioStats.get(key)!;
         if (esActual) {
           stats.cantidad++;
-          if (reserva.estado_pago === 'pagado' || reserva.estado === 'confirmada') {
-            stats.ingresos += parseFloat(reserva.precio_total) || 0;
+          if (this.estaReservaPagada(reserva)) {
+            stats.ingresos += this.obtenerPrecioReserva(reserva);
           }
         } else {
           stats.cantidadAnterior++;
