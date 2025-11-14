@@ -1,82 +1,67 @@
 import api from "../config/backend";
-import {
-  Notificacion,
-  NotificacionCreateRequest,
-  NotificacionUpdateRequest,
-  NotificacionListQuery,
-  UnreadCount,
-} from "../types/notificaciones";
-import { handleApiError } from "../services/ApiError";
+import { Notificacion } from "@/types/notificaciones";
 
 export const notificacionesService = {
-  async list(params?: NotificacionListQuery): Promise<Notificacion[]> {
+  
+  // Listar notificaciones del usuario autenticado
+  async list(soloNoLeidas: boolean = false): Promise<Notificacion[]> {
     try {
-      const { data } = await api.get<Notificacion[]>("/notificaciones", { params });
-      return data;
+      const params = soloNoLeidas ? { solo_no_leidas: true } : {};
+      
+      const { data } = await api.get<Notificacion[]>('/api/v1/notificaciones', { params });
+      
+      return Array.isArray(data) ? data : [];
     } catch (err) {
-      handleApiError(err);
+      console.error('❌ Error listando notificaciones:', err);
+      return [];
     }
   },
 
-  async get(id: string | number): Promise<Notificacion> {
+  // Marcar una notificación como leída
+  async marcarLeida(id: number): Promise<Notificacion | null> {
     try {
-      const { data } = await api.get<Notificacion>(`/notificaciones/${id}`);
+      const { data } = await api.post<Notificacion>(`/api/v1/notificaciones/${id}/leer`);
       return data;
     } catch (err) {
-      handleApiError(err);
+      console.error('❌ Error marcando como leída:', err);
+      return null;
     }
   },
 
-  async create(payload: NotificacionCreateRequest): Promise<Notificacion> {
+  // Marcar todas las notificaciones como leídas
+  async marcarTodasLeidas(): Promise<boolean> {
     try {
-      const { data } = await api.post<Notificacion>("/notificaciones", payload);
-      return data;
+      await api.post<{ message: string }>('/api/v1/notificaciones/leer-todas');
+      return true;
     } catch (err) {
-      handleApiError(err);
+      console.error('❌ Error marcando todas como leídas:', err);
+      return false;
     }
   },
 
-  async update(id: string | number, payload: NotificacionUpdateRequest): Promise<Notificacion> {
+  // Crear notificación (solo para admin/testing)
+  async crear(titulo: string, cuerpo: string, id_destinatario: number): Promise<Notificacion | null> {
     try {
-      const { data } = await api.put<Notificacion>(`/notificaciones/${id}`, payload);
+      const { data } = await api.post<Notificacion>('/api/v1/notificaciones', {
+        titulo,
+        cuerpo,
+        id_destinatario
+      });
       return data;
     } catch (err) {
-      handleApiError(err);
+      console.error('❌ Error creando notificación:', err);
+      return null;
     }
   },
 
-  async remove(id: string | number): Promise<void> {
+  // Eliminar notificación
+  async remove(id: number): Promise<boolean> {
     try {
-      await api.delete<void>(`/notificaciones/${id}`);
+      await api.delete<void>(`/api/v1/notificaciones/${id}`);
+      return true;
     } catch (err) {
-      handleApiError(err);
+      console.error('❌ Error eliminando notificación:', err);
+      return false;
     }
-  },
-
-  async marcarLeida(id: string | number): Promise<Notificacion> {
-    try {
-      const { data } = await api.patch<Notificacion>(`/notificaciones/${id}/leer`);
-      return data;
-    } catch (err) {
-      handleApiError(err);
-    }
-  },
-
-  async marcarTodasLeidas(id_usuario: string | number): Promise<{ updated: number }> {
-    try {
-      const { data } = await api.patch<{ updated: number }>("/notificaciones/leer-todas", { id_usuario });
-      return data;
-    } catch (err) {
-      handleApiError(err);
-    }
-  },
-
-  async noLeidasCount(id_usuario: string | number): Promise<UnreadCount> {
-    try {
-      const { data } = await api.get<UnreadCount>("/notificaciones/no-leidas", { params: { id_usuario } });
-      return data;
-    } catch (err) {
-      handleApiError(err);
-    }
-  },
+  }
 };
