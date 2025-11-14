@@ -69,14 +69,30 @@ export const complejosService = {
   },
 
   /**
-   * Obtener canchas de un complejo
+   * Obtener canchas del admin logueado (todas sus canchas del complejo)
    */
   async getCanchasDeComplejo(idComplejo: number) {
     try {
-      const response = await apiBackend.get(`/complejos/${idComplejo}/canchas`);
-      return response.data;
+      // Usar el endpoint de canchas del admin que devuelve todas las canchas del complejo del admin
+      const response = await apiBackend.get('/canchas/admin', {
+        params: {
+          page: 1,
+          page_size: 100 // Obtener todas las canchas (max 100)
+        }
+      });
+      console.log('🏟️ [getCanchasDeComplejo] Respuesta del backend:', response.data);
+      
+      // El backend devuelve { ok: true, data: { items: [...], total: X, page: 1, page_size: 20 } }
+      const data = response.data.data || response.data;
+      const canchas = data.items || data;
+      
+      console.log('🏟️ [getCanchasDeComplejo] Canchas obtenidas:', canchas?.length || 0);
+      console.log('🏟️ [getCanchasDeComplejo] Total en BD:', data.total);
+      
+      return canchas;
     } catch (error: any) {
-      throw new Error('Error al obtener canchas del complejo: ' + (error.response?.data?.message || error.message));
+      console.error('❌ [getCanchasDeComplejo] Error:', error);
+      throw new Error('Error al obtener canchas del admin: ' + (error.response?.data?.message || error.message));
     }
   },
 
@@ -117,40 +133,49 @@ export const complejosService = {
   },
 
   /**
-   * Obtener complejos de un administrador/dueño específico
+   * Obtener complejos de un administrador específico
+   * Usa el endpoint GET /complejos/admin/:adminId que llama a FastAPI /complejos/duenio/{duenio-id}
    * @param adminId - ID del administrador/dueño
    */
   async getComplejosByAdmin(adminId: number) {
     try {
       console.log(`📍 [complejosService] Obteniendo complejos del admin ID: ${adminId}`);
+      console.log(`📍 [complejosService] ℹ️ Usando endpoint /complejos/admin/${adminId}`);
+      console.log(`📍 [complejosService] URL base: ${apiBackend.defaults.baseURL || 'No definida'}`);
       
-      // 🔥 ENDPOINT CORREGIDO: Usar /complejos con query param duenioId
-      // Este endpoint público está en complejos.routes.ts línea 45
-      // El controller acepta duenioId como query parameter (línea 41)
-      const response = await apiBackend.get(`/complejos`, {
-        params: { duenioId: adminId }
-      });
-      console.log(`✅ [complejosService] Complejos obtenidos:`, response.data);
+      // ✅ ENDPOINT CORRECTO: /complejos/admin/:adminId
+      // Este endpoint está en complejos.routes.ts línea 55
+      // Llama a FastAPI: GET /api/v1/complejos/duenio/{duenio-id}
+      const response = await apiBackend.get(`/complejos/admin/${adminId}`);
+      
+      console.log(`✅ [complejosService] Complejos obtenidos exitosamente`);
+      console.log(`📦 [complejosService] Respuesta:`, response.data);
       
       // El interceptor ya extrajo los datos de { ok, data }
-      // El endpoint retorna { items: [...], total: ... }
       const data = response.data;
-      
-      // Si viene como { items: [...] }, extraer el array
-      if (data?.items) {
-        return data.items;
-      }
       
       // Si ya es un array, devolverlo directamente
       if (Array.isArray(data)) {
+        console.log(`📋 [complejosService] Encontrados ${data.length} complejos del admin`);
         return data;
       }
       
+      // Si viene como { items: [...] }, extraer el array
+      if (data?.items) {
+        console.log(`📋 [complejosService] Encontrados ${data.items.length} complejos en data.items`);
+        return data.items;
+      }
+      
       // Si no, devolver vacío
+      console.warn('⚠️ [complejosService] No se encontraron complejos en la respuesta');
       return [];
     } catch (error: any) {
       console.error(`❌ [complejosService] Error al obtener complejos del admin:`, error);
-      throw new Error('Error al obtener complejos del administrador: ' + (error.response?.data?.message || error.message));
+      console.error(`   Status: ${error.response?.status}`);
+      console.error(`   Message: ${error.message}`);
+      console.error(`   Response data:`, error.response?.data);
+      
+      throw new Error('Error al cargar tus complejos: ' + (error.response?.data?.message || error.message));
     }
   }
 };
