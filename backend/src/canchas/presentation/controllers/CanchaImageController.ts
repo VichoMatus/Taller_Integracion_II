@@ -131,11 +131,26 @@ export class CanchaImageController {
         return res.status(400).json(fail(400, "Filename requerido"));
       }
 
-      // Redirigir directamente al servicio Cloudflare
-      const cloudflareEndpoint = process.env.CLOUDFLARE_IMAGES_ENDPOINT || 'http://localhost:3000';
-      const imageUrl = `${cloudflareEndpoint}/image/${filename.replace(/\.(webp|jpg|jpeg|png)$/i, '')}`;
-      
-      return res.redirect(302, imageUrl);
+      // Realizar la petición desde el BFF al servicio de imágenes (stream)
+      const imageService = new CanchaImageService();
+      const retriever = (imageService as any).imageRetriever;
+
+      const uuid = filename.replace(/\.(webp|jpg|jpeg|png)$/i, '');
+
+      // Comprobar metadatos (HEAD) para conocer content-type/size
+      const info = await retriever.getImageInfo(uuid);
+      if (!info || !info.exists) {
+        return res.status(404).json(fail(404, 'Imagen no encontrada'));
+      }
+
+      // Obtener stream y enviarlo al cliente
+      const stream = await retriever.getImage(uuid, 'stream');
+      if (info.contentType) res.setHeader('Content-Type', info.contentType);
+      if (info.size) res.setHeader('Content-Length', String(info.size));
+
+      // Pipear el stream directamente
+      (stream as any).pipe(res);
+      return;
     } catch (error: any) {
       return res.status(500).json(fail(500, "Error interno del servidor", error.message));
     }
