@@ -35,6 +35,8 @@ import resenasRoutes from './resenas/presentation/routes/resenas.routes';
 import uploadsRoutes from './uploads/presentation/routes/uploads.routes';
 import canchasRoutes from './canchas/routes/canchas.routes';
 import complejosRoutes from './complejos/presentation/routes/complejos.routes';
+import superAdminImageRoutes from './superAdmin/presentation/routes/superAdminImage.routes';
+import superAdminImageUploadRoutes from './superAdmin/presentation/routes/superAdminImageUpload.routes';
 import canchaImagesRoutes from './canchas/presentation/routes/canchaImages.routes';
 
 /**
@@ -193,6 +195,10 @@ app.use('/api/canchas', canchaImagesRoutes);
 
 // Rutas de complejos
 app.use('/api/complejos', complejosRoutes);
+// Ruta para pedir imagen de perfil de superadmin
+app.use('/api/superadmin', superAdminImageRoutes);
+// Ruta para subir imagen de perfil de superadmin
+app.use('/api/superadmin', superAdminImageUploadRoutes);
 
 // Rutas de administración (legacy)
 app.use('/api/super_admin', superAdminRoutes);
