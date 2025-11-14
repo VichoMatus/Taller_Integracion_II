@@ -48,70 +48,46 @@ export default function SuperAdminDashboard() {
       let usuariosData: Usuario[] = [];
       let adminsData: Usuario[] = [];
       
-      // Intentar usar el endpoint de métricas generales
+      // Usar SOLO el endpoint de métricas del backend BFF (sin fallback)
       try {
-        console.log('📊 Intentando obtener métricas desde endpoint...');
+        console.log('📊 [Dashboard] Solicitando métricas desde endpoint optimizado...');
         const metricas = await superAdminService.obtenerMetricasGenerales();
         
-        console.log('📊 Métricas recibidas del backend:', metricas);
+        console.log('📊 [Dashboard] ===== RESPUESTA COMPLETA DEL BACKEND =====');
+        console.log('📊 [Dashboard] Estructura completa:', JSON.stringify(metricas, null, 2));
+        console.log('📊 [Dashboard] Métricas extraídas:', {
+          usuarios_totales: metricas.usuarios_totales,
+          canchas_registradas: metricas.canchas_registradas,
+          cantidad_administradores: metricas.cantidad_administradores,
+          reservas_hoy: metricas.reservas_hoy
+        });
+        console.log('📊 [Dashboard] ==========================================');
         
         // Cargar datos para las tablas (siempre necesarios)
         usuariosData = await superAdminService.listarUsuarios();
         adminsData = await superAdminService.listarAdministradores();
         
-        // FALLBACK INTELIGENTE: Si los valores son 0, calcular manualmente
-        const backendTieneUsuarios = metricas.usuarios_totales > 0;
-        const backendTieneCanchas = metricas.canchas_registradas > 0;
+        // Usar DIRECTAMENTE los datos del backend BFF (sin validaciones ni fallbacks)
+        newStats = {
+          totalUsuarios: metricas.usuarios_totales || 0,
+          totalCanchas: metricas.canchas_registradas || 0,
+          totalAdministradores: metricas.cantidad_administradores || 0,
+          reservasHoy: metricas.reservas_hoy || 0
+        };
         
-        if (!backendTieneUsuarios || !backendTieneCanchas) {
-          console.warn('⚠️ Backend devolvió 0s, calculando manualmente...');
-          
-          // Calcular canchas si es necesario
-          let totalCanchas = metricas.canchas_registradas;
-          if (!backendTieneCanchas) {
-            const canchasTemp = await canchaService.getCanchas({ page: 1, page_size: 1000 }) as any;
-            totalCanchas = canchasTemp.total || (Array.isArray(canchasTemp.items) ? canchasTemp.items.length : 0);
-            console.log(`📊 Canchas calculadas manualmente: ${totalCanchas}`);
-          }
-          
-          newStats = {
-            totalUsuarios: backendTieneUsuarios ? metricas.usuarios_totales : (usuariosData.length + adminsData.length),
-            totalCanchas: totalCanchas,
-            totalAdministradores: backendTieneUsuarios ? metricas.cantidad_administradores : adminsData.length,
-            reservasHoy: metricas.reservas_hoy || 0
-          };
-          
-          console.log('✅ Métricas calculadas con fallback:', newStats);
-        } else {
-          // Todo bien, usar datos del backend
-          newStats = {
-            totalUsuarios: metricas.usuarios_totales,
-            totalCanchas: metricas.canchas_registradas,
-            totalAdministradores: metricas.cantidad_administradores,
-            reservasHoy: metricas.reservas_hoy
-          };
-          
-          console.log('✅ Métricas del backend correctas:', newStats);
+        console.log('✅ [Dashboard] Métricas asignadas al estado:', newStats);
+        
+        // Si hay 0s, mostrar advertencia para debugging
+        if (newStats.totalUsuarios === 0 || newStats.totalCanchas === 0) {
+          console.warn('⚠️ [Dashboard] El backend BFF está devolviendo 0s. Revisar:');
+          console.warn('   1. Logs del backend BFF (backend/src/superAdmin/services/superAdminService.ts)');
+          console.warn('   2. FastAPI está devolviendo datos');
+          console.warn('   3. Network tab: respuesta de /api/super_admin/estadisticas/completas');
         }
         
       } catch (endpointError: any) {
-        // Fallback: calcular manualmente si el endpoint no está disponible
-        console.warn('⚠️ Endpoint de estadísticas no disponible, calculando manualmente');
-        
-        usuariosData = await superAdminService.listarUsuarios();
-        adminsData = await superAdminService.listarAdministradores();
-        
-        const canchasTemp = await canchaService.getCanchas({ page: 1, page_size: 3 }) as any;
-        const totalCanchas = canchasTemp.total || (Array.isArray(canchasTemp.items) ? canchasTemp.items.length : 0);
-        
-        newStats = {
-          totalUsuarios: usuariosData.length + adminsData.length,
-          totalCanchas: totalCanchas,
-          totalAdministradores: adminsData.length,
-          reservasHoy: 0
-        };
-        
-        console.log('✅ Métricas calculadas manualmente:', newStats);
+        console.error('❌ [Dashboard] Error al obtener métricas del backend:', endpointError);
+        throw endpointError; // Propagar error para que se muestre en la UI
       }
       
       // Actualizar estados

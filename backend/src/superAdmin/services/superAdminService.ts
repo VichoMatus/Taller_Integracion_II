@@ -160,6 +160,10 @@ export class SuperAdminService {
 
     const data = response.data;
     
+    // 🔍 LOG DETALLADO: Ver estructura completa de la respuesta
+    console.log('🔍 [Parser] ESTRUCTURA COMPLETA DE USUARIOS:', JSON.stringify(data, null, 2).substring(0, 500));
+    console.log('🔍 [Parser] Claves en data:', Object.keys(data));
+    
     // Formato 1: { data: { usuarios: [...] } }
     if (data.usuarios && Array.isArray(data.usuarios)) {
       console.log(`✅ [Parser] Usuarios encontrados en data.usuarios: ${data.usuarios.length}`);
@@ -195,8 +199,23 @@ export class SuperAdminService {
       console.log(`✅ [Parser] Usuarios encontrados en data.items: ${data.items.length}`);
       return data.items;
     }
+    
+    // Formato 7: Paginado { data: { users: [...], total: X } }
+    if (data.users && Array.isArray(data.users)) {
+      console.log(`✅ [Parser] Usuarios encontrados en data.users (paginado): ${data.users.length}`);
+      return data.users;
+    }
+    
+    // Formato 8: Paginado anidado { data: { data: { users: [...] } } }
+    if (data.data && data.data.users && Array.isArray(data.data.users)) {
+      console.log(`✅ [Parser] Usuarios encontrados en data.data.users: ${data.data.users.length}`);
+      return data.data.users;
+    }
 
-    console.warn('⚠️ [Parser] No se pudo extraer usuarios de la respuesta. Estructura:', Object.keys(data));
+    console.error('❌ [Parser] No se pudo extraer usuarios. Estructura recibida:', {
+      keys: Object.keys(data),
+      sample: JSON.stringify(data).substring(0, 200)
+    });
     return [];
   }
 
@@ -210,6 +229,10 @@ export class SuperAdminService {
     }
 
     const data = response.data;
+    
+    // 🔍 LOG DETALLADO: Ver estructura completa de la respuesta
+    console.log('🔍 [Parser] ESTRUCTURA COMPLETA DE CANCHAS:', JSON.stringify(data, null, 2).substring(0, 500));
+    console.log('🔍 [Parser] Claves en data:', Object.keys(data));
     
     // Formato 1: { data: { canchas: [...] } }
     if (data.canchas && Array.isArray(data.canchas)) {
@@ -246,8 +269,17 @@ export class SuperAdminService {
       console.log(`✅ [Parser] Canchas encontradas en data.items: ${data.items.length}`);
       return data.items;
     }
+    
+    // Formato 7: Respuesta paginada común { total: X, page: Y, data: [...] }
+    if (data.data && Array.isArray(data.data) && typeof data.total === 'number') {
+      console.log(`✅ [Parser] Canchas en formato paginado (data): ${data.data.length} de ${data.total}`);
+      return data.data;
+    }
 
-    console.warn('⚠️ [Parser] No se pudo extraer canchas de la respuesta. Estructura:', Object.keys(data));
+    console.error('❌ [Parser] No se pudo extraer canchas. Estructura recibida:', {
+      keys: Object.keys(data),
+      sample: JSON.stringify(data).substring(0, 200)
+    });
     return [];
   }
 
@@ -811,19 +843,21 @@ export class SuperAdminService {
       const hace60DiasStr = hace60Dias.toISOString().split('T')[0];
 
       // 4. FETCH PARALELO CON CONCURRENCIA LIMITADA
+      // ⚠️ IMPORTANTE: page_size=10000 causa error 422 en FastAPI
+      // Solución: NO enviar page_size o usar valores menores (100)
       const requests = [
         {
           key: 'usuarios',
           fn: () => this.apiClient.get(API_ENDPOINTS.usuarios.base, { 
-            headers,
-            params: { page_size: 10000 }
+            headers
+            // Sin page_size - dejamos que FastAPI use su default
           })
         },
         {
           key: 'canchas',
           fn: () => this.apiClient.get(API_ENDPOINTS.canchas.base, { 
-            headers,
-            params: { page_size: 10000 }
+            headers
+            // Sin page_size - dejamos que FastAPI use su default
           })
         },
         {
@@ -832,8 +866,8 @@ export class SuperAdminService {
             headers,
             params: { 
               fecha_desde: hoyStr,
-              fecha_hasta: hoyStr,
-              page_size: 10000
+              fecha_hasta: hoyStr
+              // Sin page_size
             }
           })
         },
@@ -843,8 +877,8 @@ export class SuperAdminService {
             headers,
             params: {
               fecha_desde: hace30DiasStr,
-              fecha_hasta: hoyStr,
-              page_size: 10000
+              fecha_hasta: hoyStr
+              // Sin page_size
             }
           })
         },
@@ -854,16 +888,16 @@ export class SuperAdminService {
             headers,
             params: {
               fecha_desde: hace60DiasStr,
-              fecha_hasta: hace30DiasStr,
-              page_size: 10000
+              fecha_hasta: hace30DiasStr
+              // Sin page_size
             }
           })
         },
         {
           key: 'resenas',
           fn: () => this.apiClient.get(API_ENDPOINTS.resenas.base, {
-            headers,
-            params: { page_size: 10000 }
+            headers
+            // Sin page_size
           })
         }
       ];

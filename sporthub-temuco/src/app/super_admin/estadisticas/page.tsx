@@ -23,19 +23,33 @@ export default function EstadisticasPage() {
   // Debug: ver qué datos llegan
   useEffect(() => {
     if (estadisticas) {
-      console.log('📊 Estadísticas recibidas:', {
-        reservas_por_dia: estadisticas.reservas_por_dia,
-        reservas_por_deporte: estadisticas.reservas_por_deporte,
-        top_canchas: estadisticas.top_canchas,
-        top_horarios: estadisticas.top_horarios
-      });
+      console.log('📊 [Estadísticas] ===== DATOS RECIBIDOS DEL HOOK =====');
+      console.log('📊 [Estadísticas] Estructura completa:', JSON.stringify(estadisticas, null, 2));
+      console.log('📊 [Estadísticas] Detalle por sección:');
+      console.log('   - reservas_por_dia:', estadisticas.reservas_por_dia);
+      console.log('   - reservas_por_deporte:', estadisticas.reservas_por_deporte);
+      console.log('   - top_canchas:', estadisticas.top_canchas);
+      console.log('   - top_horarios:', estadisticas.top_horarios);
+      console.log('📊 [Estadísticas] Cantidades:');
+      console.log('   - reservas_por_dia length:', estadisticas.reservas_por_dia?.length || 0);
+      console.log('   - reservas_por_deporte length:', estadisticas.reservas_por_deporte?.length || 0);
+      console.log('   - top_canchas length:', estadisticas.top_canchas?.length || 0);
+      console.log('   - top_horarios length:', estadisticas.top_horarios?.length || 0);
+      console.log('📊 [Estadísticas] =======================================');
+    } else {
+      console.warn('⚠️ [Estadísticas] No hay datos de estadísticas (null)');
     }
   }, [estadisticas]);
 
   // Transformar datos para los gráficos
   // ARREGLO: Agrupar reservas por día de la semana (suma acumulada)
   const reservasPorDia = (() => {
-    if (!estadisticas?.reservas_por_dia) return [];
+    if (!estadisticas?.reservas_por_dia) {
+      console.warn('⚠️ [Estadísticas] No hay datos de reservas_por_dia para el gráfico');
+      return [];
+    }
+    
+    console.log('🔄 [Estadísticas] Transformando reservas_por_dia:', estadisticas.reservas_por_dia);
     
     const diasAgrupados = new Map<string, number>();
     const ordenDias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
@@ -48,18 +62,33 @@ export default function EstadisticasPage() {
     });
     
     // Convertir a array ordenado
-    return ordenDias
+    const resultado = ordenDias
       .filter(dia => diasAgrupados.has(dia))
       .map(dia => ({
         label: dia.substring(0, 3),
         value: diasAgrupados.get(dia) || 0
       }));
+    
+    console.log('✅ [Estadísticas] Datos transformados para gráfico por día:', resultado);
+    return resultado;
   })();
 
-  const reservasPorDeporte = estadisticas?.reservas_por_deporte?.map(item => ({
-    label: item.deporte,
-    value: item.cantidad_reservas
-  })) || [];
+  const reservasPorDeporte = (() => {
+    if (!estadisticas?.reservas_por_deporte) {
+      console.warn('⚠️ [Estadísticas] No hay datos de reservas_por_deporte');
+      return [];
+    }
+    
+    console.log('🔄 [Estadísticas] Transformando reservas_por_deporte:', estadisticas.reservas_por_deporte);
+    
+    const resultado = estadisticas.reservas_por_deporte.map(item => ({
+      label: item.deporte,
+      value: item.cantidad_reservas
+    }));
+    
+    console.log('✅ [Estadísticas] Datos transformados para gráfico por deporte:', resultado);
+    return resultado;
+  })();
 
   const canchasPopulares = estadisticas?.top_canchas?.map(item => ({
     nombre: item.cancha_nombre,
