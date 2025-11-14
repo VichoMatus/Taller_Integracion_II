@@ -165,13 +165,16 @@ export default function CreateReservaPage() {
       setError(null);
       
       // Convertir fechas a formato requerido por backend
+      // ⚠️ IMPORTANTE: Usar formato local, NO convertir a UTC para evitar diferencias horarias
       const fechaInicioDate = new Date(formData.fechaInicio);
       const fechaFinDate = new Date(formData.fechaFin);
       
-      // Extraer fecha y horas en formato que espera el backend
-      const fecha_reserva = fechaInicioDate.toISOString().split('T')[0]; // YYYY-MM-DD
-      const hora_inicio = fechaInicioDate.toTimeString().slice(0, 5); // HH:MM
-      const hora_fin = fechaFinDate.toTimeString().slice(0, 5); // HH:MM
+      // Extraer fecha y horas en formato local (NO UTC) para evitar desfase de zona horaria
+      // toLocaleDateString('en-CA') genera YYYY-MM-DD sin conversión UTC
+      // toLocaleTimeString('en-GB') genera HH:MM en formato 24h sin conversión UTC
+      const fecha_reserva = fechaInicioDate.toLocaleDateString('en-CA'); // YYYY-MM-DD formato ISO
+      const hora_inicio = fechaInicioDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }); // HH:MM
+      const hora_fin = fechaFinDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }); // HH:MM
       
       // Formato que espera el backend: { id_cancha, fecha_reserva, hora_inicio, hora_fin, id_usuario }
       const createData = {
