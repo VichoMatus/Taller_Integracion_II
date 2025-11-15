@@ -4,7 +4,8 @@ import { buildHttpClient } from "../../../infra/http/client";
 import { getBearerFromReq } from "../../../interfaces/auth";
 import { ResenaApiRepository } from "../../infrastructure/ResenaApiRepository";
 import { 
-  ListResenas, 
+  ListResenas,
+  GetResena,
   CreateResena, 
   UpdateResena, 
   DeleteResena,
@@ -28,6 +29,7 @@ const ctrl = (req: any) => {
   const repo = new ResenaApiRepository(http);
   return new ResenasController(
     new ListResenas(repo),
+    new GetResena(repo),
     new CreateResena(repo),
     new UpdateResena(repo),
     new DeleteResena(repo),
@@ -106,6 +108,11 @@ router.get("/status", async (req, res) => {
  * Query params: idCancha, idComplejo, order (recientes|mejor|peor), page, pageSize
  */
 router.get("/", (req, res) => ctrl(req).list(req, res));
+
+/** 
+ * GET /resenas/:id - Obtiene una reseña específica por ID
+ */
+router.get("/:id", (req, res) => ctrl(req).getOne(req, res));
 
 // === Endpoints Autenticados ===
 
