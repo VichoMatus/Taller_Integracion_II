@@ -35,7 +35,6 @@ import {
   LogoutRequest, PushTokenRequest, SimpleMessage, AccessTokenOnly, EndpointStatus, EndpointType,
   RegisterInitRequest, RegisterInitResponse, RegisterVerifyRequest
 } from '../types/authTypes';
-import type { GoogleProfile } from '../config/google';
 
 /**
  * CLASE PRINCIPAL DEL SERVICIO AUTH
@@ -691,92 +690,5 @@ export class AuthService {
       acc[endpoint] = status;
       return acc;
     }, {} as Record<EndpointType, EndpointStatus>);
-  }
-
-  /**
-   * MÉTODOS DE GOOGLE AUTH
-   * ======================
-   */
-
-  /**
-   * Login o registro con Google (delegado a FastAPI)
-   * 
-   * ⚠️ PENDIENTE: Requiere que FastAPI implemente el endpoint POST /api/v1/auth/google/login
-   * 
-   * Este endpoint debe:
-   * 1. Recibir: { provider: "google", google_id, email, nombre, apellido, avatar_url }
-   * 2. Buscar usuario por google_id o email
-   * 3. Si existe, retornar token
-   * 4. Si no existe, crear usuario con google_id (sin password) y retornar token
-   * 5. Marcar usuario como verificado (Google ya verificó el email)
-   * 
-   * @param profile - Perfil de Google verificado (sub, email, name, picture)
-   * @returns Promise<ApiResponse<TokenResponse>> - Tokens y datos del usuario
-   */
-  async loginOrRegisterWithGoogle(profile: GoogleProfile): Promise<ApiResponse<TokenResponse>> {
-    try {
-      const payload = {
-        provider: 'google',
-        google_id: profile.sub,
-        email: profile.email,
-        nombre: profile.given_name || (profile.name ? profile.name.split(' ')[0] : ''),
-        apellido: profile.family_name || (profile.name ? profile.name.split(' ').slice(1).join(' ') : ''),
-        avatar_url: profile.picture || null
-      };
-
-      console.log('🔄 [AuthService.loginOrRegisterWithGoogle] Enviando a FastAPI (endpoint pendiente):', payload);
-      
-      // Este endpoint NO existe aún en FastAPI, se agregará después
-      const googleLoginEndpoint = '/api/v1/auth/google/login';
-      
-      const response = await this.apiClient.post(googleLoginEndpoint, payload, {
-        validateStatus: (status) => status < 500
-      });
-
-      if (response.status >= 200 && response.status < 300) {
-        const data = response.data;
-        if (data?.access_token) {
-          this.authToken = data.access_token;
-        }
-        const normalized = {
-          ...data,
-          user: data?.user ? await this.normalizeUserDataAsync(data.user) : data?.user
-        };
-        return { ok: true, data: normalized };
-      }
-
-      // Endpoint no encontrado o error
-      if (response.status === 404) {
-        return {
-          ok: false,
-          error: 'Endpoint de Google login no implementado aún en FastAPI. Por favor contacta al equipo de backend.',
-        };
-      }
-
-      return {
-        ok: false,
-        error: response.data?.detail || `Error en Google login: ${response.status}`,
-      };
-      
-    } catch (error: any) {
-      console.error('❌ [AuthService.loginOrRegisterWithGoogle] Error:', {
-        message: error.message,
-        code: error?.code,
-        status: error?.response?.status,
-        data: error?.response?.data
-      });
-      
-      if (error.response?.status === 404) {
-        return {
-          ok: false,
-          error: 'El endpoint POST /api/v1/auth/google/login aún no está implementado en FastAPI.',
-        };
-      }
-      
-      return {
-        ok: false,
-        error: error.response?.data?.detail || error.message || 'Error conectando con FastAPI',
-      };
-    }
   }
 }
