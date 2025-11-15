@@ -4,29 +4,34 @@ import {
   ResenaCreateRequest,
   ResenaUpdateRequest,
   ResenaListQuery,
-  ResenaExtendida,
-  EstadisticasComplejo,
-  LikeResponse,
   ReportarResenaInput,
-  ReporteResponse,
-  ResponderResenaInput
+  ReporteResponse
 } from '../types/resena';
 import { handleApiError } from "../services/ApiError";
 
+/**
+ * Servicio para gestión de reseñas.
+ * Basado en la API de Taller4 implementada en el backend.
+ * 
+ * Endpoints disponibles:
+ * - GET    /resenas                    → Lista reseñas (con filtros)
+ * - POST   /resenas                    → Crea reseña (requiere reserva confirmada)
+ * - PATCH  /resenas/{id}               → Actualiza reseña (solo autor)
+ * - DELETE /resenas/{id}               → Elimina reseña (autor/admin/superadmin)
+ * - POST   /resenas/{id}/reportar      → Reporta reseña
+ */
 export const resenaService = {
-  async crearResena(input: ResenaCreateRequest): Promise<Resena> {
-    try {
-      const { data } = await apiBackend.post('/resenas', input);
-      return data;
-    } catch (err) {
-      handleApiError(err);
-    }
-  },
-
+  /**
+   * Lista reseñas con filtros opcionales.
+   * @param query - Filtros: id_cancha, id_complejo, order, page, page_size
+   * @returns Array de reseñas (incluye promedioRating y totalResenas si hay filtro por cancha/complejo)
+   */
   async listarResenas(query?: ResenaListQuery): Promise<Resena[]> {
     try {
       const { data } = await apiBackend.get('/resenas', { params: query });
-      return data;
+      
+      // El backend devuelve { ok, data } donde data es el array
+      return data.data || data;
     } catch (err) {
       handleApiError(err);
     }
@@ -69,16 +74,28 @@ export const resenaService = {
     }
   },
 
-  async actualizarResena(id: number | string, input: ResenaUpdateRequest): Promise<Resena> {
+  /**
+   * Actualiza una reseña existente.
+   * Solo el autor puede actualizar su reseña.
+   * @param id - ID de la reseña
+   * @param input - Campos a actualizar (calificacion, comentario)
+   * @returns Reseña actualizada
+   */
+  async actualizarResena(id: number, input: ResenaUpdateRequest): Promise<Resena> {
     try {
       const { data } = await apiBackend.patch(`/resenas/${id}`, input);
-      return data;
+      return data.data || data;
     } catch (err) {
       handleApiError(err);
     }
   },
 
-  async eliminarResena(id: number | string): Promise<void> {
+  /**
+   * Elimina una reseña.
+   * Permisos: autor, admin/dueño del complejo, o superadmin.
+   * @param id - ID de la reseña
+   */
+  async eliminarResena(id: number): Promise<void> {
     try {
       await apiBackend.delete(`/resenas/${id}`);
     } catch (err) {
@@ -86,10 +103,17 @@ export const resenaService = {
     }
   },
 
-  async obtenerResenasPorComplejo(complejoId: number): Promise<Resena[]> {
+  /**
+   * Reporta una reseña por contenido inapropiado.
+   * 1 reporte por usuario por reseña (UPSERT).
+   * @param id - ID de la reseña
+   * @param input - Motivo del reporte (opcional)
+   * @returns Datos del reporte
+   */
+  async reportarResena(id: number, input: ReportarResenaInput): Promise<ReporteResponse> {
     try {
-      const { data } = await apiBackend.get(`/resenas/complejo/${complejoId}`);
-      return data;
+      const { data } = await apiBackend.post(`/resenas/${id}/reportar`, input);
+      return data.data || data;
     } catch (err) {
       handleApiError(err);
     }
