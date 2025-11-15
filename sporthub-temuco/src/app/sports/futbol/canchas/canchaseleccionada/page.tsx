@@ -6,7 +6,6 @@ import Sidebar from '@/components/layout/Sidebar';
 import SearchBar from '@/components/SearchBar'; 
 import LocationMap from '@/components/LocationMap'; 
 import styles from './page.module.css';
-import { prepareFutbolReservationData, serializeReservationData } from '@/utils/reservationDataHandler';
 
 import { useAuthStatus } from '@/hooks/useAuthStatus';
 import { canchaService } from '../../../../../services/canchaService';
@@ -38,41 +37,6 @@ const staticContactData = {
   ]
 };
 
-// ⚽ FUNCIÓN PARA PREPARAR DATOS DE RESERVA
-const prepareReservationData = (cancha: any, complejoData: any) => {
-  return {
-    // 🔥 DATOS DE LA CANCHA
-    canchaId: cancha.id,
-    canchaNombre: cancha.name,
-    canchaType: cancha.tipo || 'futbol',
-    sport: 'futbol',
-    
-    // 🔥 DATOS DEL COMPLEJO
-    establecimientoId: cancha.establecimientoId,
-    complejoNombre: complejoData?.nombre || cancha.complejoNombre,
-    direccion: complejoData?.direccion || cancha.location,
-    
-    // 🔥 DATOS DE PRECIO Y DISPONIBILIDAD
-    precioPorHora: cancha.priceFrom,
-    horarios: complejoData?.horarioAtencion || cancha.schedule,
-    activa: cancha.activa,
-    techada: cancha.techada,
-    
-    // 🔥 DATOS ADICIONALES
-    capacidad: cancha.capacity,
-    rating: cancha.rating,
-    amenities: cancha.amenities,
-    images: cancha.images,
-    
-    // 🔥 COORDENADAS PARA MAPA
-    coordinates: cancha.coordinates,
-    
-    // 🔥 CONTACTO
-    phone: cancha.phone,
-    instagram: cancha.instagram
-  };
-};
-
 // ⚽ COMPONENTE PRINCIPAL CON SUSPENSE
 function FutbolCanchaSeleccionadaContent() {
   const router = useRouter();
@@ -83,7 +47,6 @@ function FutbolCanchaSeleccionadaContent() {
   const [dataLoading, setDataLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [cancha, setCancha] = useState<any>(null);
-  const [complejoData, setComplejoData] = useState<any>(null); // 🔥 NUEVO: ESTADO PARA COMPLEJO
   const [error, setError] = useState<string | null>(null);
 
   // ⚽ OBTENER ID DE LA CANCHA DESDE URL
@@ -108,30 +71,27 @@ function FutbolCanchaSeleccionadaContent() {
         console.log('✅ Cancha cargada:', canchaData);
 
         // ⚽ NUEVO: OBTENER DATOS DEL COMPLEJO
-        let complejoInfo = null;
+        let complejoData = null;
         let locationInfo = "Av. Alemania 1234, Temuco, Chile"; // Fallback estático
         let coordinates = { lat: -38.7359, lng: -72.5904 }; // Fallback estático
 
         if (canchaData.establecimientoId) {
           try {
             console.log('🔍 Cargando complejo ID:', canchaData.establecimientoId);
-            complejoInfo = await complejosService.getComplejoById(canchaData.establecimientoId);
-            console.log('✅ Complejo cargado:', complejoInfo);
-            
-            // 🔥 GUARDAR DATOS DEL COMPLEJO EN EL ESTADO
-            setComplejoData(complejoInfo);
+            complejoData = await complejosService.getComplejoById(canchaData.establecimientoId);
+            console.log('✅ Complejo cargado:', complejoData);
             
             // ⚽ USAR DIRECCIÓN REAL DEL COMPLEJO
-            if (complejoInfo.direccion) {
-              locationInfo = complejoInfo.direccion;
+            if (complejoData.direccion) {
+              locationInfo = complejoData.direccion;
               console.log('📍 Dirección obtenida del complejo:', locationInfo);
             }
             
             // ⚽ USAR COORDENADAS DEL COMPLEJO SI ESTÁN DISPONIBLES
-            if (complejoInfo.latitud && complejoInfo.longitud) {
+            if (complejoData.latitud && complejoData.longitud) {
               coordinates = {
-                lat: parseFloat(complejoInfo.latitud),
-                lng: parseFloat(complejoInfo.longitud)
+                lat: parseFloat(complejoData.latitud),
+                lng: parseFloat(complejoData.longitud)
               };
               console.log('🗺️ Coordenadas obtenidas del complejo:', coordinates);
             }
@@ -152,10 +112,10 @@ function FutbolCanchaSeleccionadaContent() {
           coordinates: coordinates,
           
           // ⚽ DESCRIPCIÓN SIMPLE CON DATOS REALES
-          description: `${canchaData.nombre} - Cancha de ${canchaData.tipo}${complejoInfo ? ` en ${complejoInfo.nombre}` : ''}`,
+          description: `${canchaData.nombre} - Cancha de ${canchaData.tipo}${complejoData ? ` en ${complejoData.nombre}` : ''}`,
           
           // ⚽ HORARIOS - USAR DEL COMPLEJO SI ESTÁ DISPONIBLE
-          schedule: complejoInfo?.horarioAtencion || "Lunes a Domingo • 08:00 a 23:00",
+          schedule: complejoData?.horarioAtencion || "Lunes a Domingo • 08:00 a 23:00",
           
           // ⚽ CAPACIDAD ESPECÍFICA PARA FÚTBOL
           capacity: (() => {
@@ -206,7 +166,7 @@ function FutbolCanchaSeleccionadaContent() {
           activa: canchaData.activa,
           
           // ⚽ INFORMACIÓN DEL COMPLEJO
-          complejoNombre: complejoInfo?.nombre || `Complejo ${canchaData.establecimientoId}`
+          complejoNombre: complejoData?.nombre || `Complejo ${canchaData.establecimientoId}`
         };
 
         setCancha(mappedCancha);
@@ -295,25 +255,9 @@ function FutbolCanchaSeleccionadaContent() {
     }).format(price);
   };
 
-  // 🔥 FUNCIÓN MEJORADA PARA MANEJAR RESERVA CON DATOS REALES
   const handleReserve = () => {
-  if (!cancha || !cancha.activa) {
-    alert('Esta cancha no está disponible para reserva');
-    return;
-  }
-
-  // 🔥 PREPARAR DATOS USANDO EL UTILITY
-  const reservationData = prepareFutbolReservationData(cancha, complejoData);
-  
-  // 🔥 SERIALIZAR DATOS PARA URL
-  const reservationParams = serializeReservationData(reservationData);
-
-  console.log('🔥 Datos de reserva preparados:', reservationData);
-  console.log('🔥 Parámetros URL:', reservationParams.toString());
-
-  // 🔥 NAVEGAR A LA PÁGINA DE RESERVA CON TODOS LOS DATOS
-  router.push(`/sports/reservacancha?${reservationParams.toString()}`);
-};
+    router.push(`/sports/reservacancha?canchaId=${cancha.id}`);
+  };
 
   const handleCall = () => {
     window.open(`tel:${cancha?.phone}`, '_self');

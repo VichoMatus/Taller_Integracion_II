@@ -33,24 +33,39 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
       if (isCheckingRef.current) return;
       
       isCheckingRef.current = true;
+      console.log('🔍 [useAuthProtection] Iniciando verificación...', { pathname, allowedRoles });
       
       try {
+        // Intentar obtener el token
         const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+        console.log('🔐 [useAuthProtection] Estado del token:', {
+          hasAccessToken: !!localStorage.getItem('access_token'),
+          hasLegacyToken: !!localStorage.getItem('token'),
+          finalToken: !!token
+        });
 
         if (!token) {
+          console.log('❌ [useAuthProtection] No hay token - Redirigiendo a login');
           router.push('/login');
           return;
         }
 
         const storedRole = localStorage.getItem('user_role') as UserRole | null;
         const storedUserData = localStorage.getItem('userData');
+        
+        console.log('🔍 [useAuthProtection] Datos almacenados:', { 
+          storedRole, 
+          hasStoredData: !!storedUserData 
+        });
 
         // Verificar rol almacenado sin normalización
         if (storedRole && storedUserData && allowedRoles.includes(storedRole)) {
+          console.log('✅ [useAuthProtection] Rol permitido:', storedRole);
           return;
         }
 
         // Verificar con el backend si no hay rol válido almacenado
+        console.log('🔍 [useAuthProtection] Verificando con /auth/me...');
         const response = await apiBackend.get('/auth/me');
         const userData = response.data?.data || response.data;
 
@@ -58,11 +73,19 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
           throw new Error('Datos de usuario inválidos');
         }
 
+        console.log('📦 [useAuthProtection] Datos recibidos:', userData);
+
         // Verificar rol sin normalización
         const userRole = userData.rol as UserRole;
         const isRoleAllowed = allowedRoles.includes(userRole);
 
         if (!isRoleAllowed) {
+          console.log('❌ [useAuthProtection] Rol no permitido:', {
+            rol: userRole,
+            rolesPermitidos: allowedRoles
+          });
+
+          // En lugar de limpiar todo el localStorage, solo limpiamos los datos del usuario
           localStorage.removeItem('userData');
           localStorage.removeItem('user_role');
           
@@ -72,6 +95,7 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
           } else if (userRole === 'usuario') {
             router.push('/sports');
           } else {
+            // Antes de redirigir a login, limpiamos los tokens
             localStorage.removeItem('access_token');
             localStorage.removeItem('token');
             router.push('/login');
@@ -79,19 +103,28 @@ export const useAuthProtection = (allowedRoles: UserRole[]) => {
           return;
         }
 
-        // Guardar datos exactamente como vienen del backend
+        // Guardar datos exactamente como vienen del backend y el token actual
         try {
+          // Primero verificar el token actual
           const token = localStorage.getItem('access_token') || localStorage.getItem('token');
           if (!token) {
             throw new Error('Token no encontrado después de /auth/me');
           }
 
+          // Guardar o actualizar datos
           localStorage.setItem('access_token', token);
-          localStorage.setItem('token', token);
+          localStorage.setItem('token', token); // Mantener compatibilidad
           localStorage.setItem('userData', JSON.stringify(userData));
           localStorage.setItem('user_role', userRole);
+
+          console.log('✅ [useAuthProtection] Datos actualizados:', {
+            rol: userRole,
+            rolesPermitidos: allowedRoles,
+            token: true,
+            userData: true
+          });
         } catch (err) {
-          console.error('❌ Error guardando datos de autenticación:', err);
+          console.error('❌ [useAuthProtection] Error guardando datos:', err);
           router.push('/login');
           return;
         }

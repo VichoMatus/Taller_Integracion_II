@@ -77,7 +77,17 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
         console.log('🔄 [authMiddleware] Normalizando role → rol:', decoded.role, '→', normalizedRole);
       }
       
-
+      // 🔥 NORMALIZAR OWNER_ID: Si no existe, usar id_usuario como fallback
+      if (!decoded?.owner_id && decoded?.id_usuario) {
+        decoded.owner_id = decoded.id_usuario;
+        console.log('🔄 [authMiddleware] Agregando owner_id desde id_usuario:', decoded.owner_id);
+      }
+      
+      // 🔥 NORMALIZAR ID: Asegurar que 'id' existe para compatibilidad
+      if (!decoded?.id) {
+        decoded.id = decoded?.id_usuario || decoded?.owner_id || decoded?.sub;
+        console.log('🔄 [authMiddleware] Normalizando id:', decoded.id);
+      }
       
       // Adjuntar información decodificada (posiblemente enriquecida) al request
       req.user = decoded;

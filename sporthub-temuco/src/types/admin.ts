@@ -64,67 +64,6 @@ export interface EstadisticasOwner {
   canchas_activas: number;
 }
 
-export interface EstadisticasComplejo {
-  complejo_id: number;
-  complejo_nombre: string;
-  total_canchas: number;
-  canchas_activas: number;
-  canchas_inactivas: number;
-  reservas_ultimo_mes: number;
-  reservas_confirmadas_ultimo_mes: number;
-  reservas_pendientes_ultimo_mes: number;
-  reservas_canceladas_ultimo_mes: number;
-  ingresos_ultimo_mes: number;
-  ocupacion_promedio: number;
-  fecha_desde: string;
-  fecha_hasta: string;
-}
-
-export interface ReservasDia {
-  dia_numero: number;
-  dia_nombre: string;
-  total_reservas: number;
-  reservas_confirmadas: number;
-  reservas_pendientes: number;
-  reservas_canceladas: number;
-  ingresos: number;
-}
-
-export interface ReservasPorDiaSemana {
-  complejo_id: number;
-  complejo_nombre: string;
-  dias: ReservasDia[];
-  fecha_desde: string;
-  fecha_hasta: string;
-  total_reservas: number;
-  dia_mas_popular: string;
-  dia_menos_popular: string;
-}
-
-export interface ReservasCancha {
-  cancha_id: number;
-  cancha_nombre: string;
-  tipo_cancha: string;
-  total_reservas: number;
-  reservas_confirmadas: number;
-  reservas_pendientes: number;
-  reservas_canceladas: number;
-  ingresos: number;
-  ocupacion_porcentaje: number;
-}
-
-export interface ReservasPorCancha {
-  complejo_id: number;
-  complejo_nombre: string;
-  canchas: ReservasCancha[];
-  fecha_desde: string;
-  fecha_hasta: string;
-  total_reservas: number;
-  cancha_mas_popular: string;
-  cancha_menos_popular: string;
-  ingresos_totales: number;
-}
-
 // === DTOs DE ENTRADA ===
 
 export interface CreateComplejoInput {

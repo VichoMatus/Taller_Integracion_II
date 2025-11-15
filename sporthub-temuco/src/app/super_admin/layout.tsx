@@ -3,10 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import AdminsLayout from '@/components/layout/AdminsLayout';
 import { useSuperAdminProtection } from '@/hooks/useSuperAdminProtection';
-// Importar estilos base del admin primero
-import '@/app/admin/dashboard.css';
-// Luego estilos específicos de super_admin (sobrescriben si es necesario)
-import './dashboard.css';
 
 export default function SuperadminLayout({
   children,
