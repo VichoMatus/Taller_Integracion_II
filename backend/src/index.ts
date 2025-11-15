@@ -35,9 +35,6 @@ import resenasRoutes from './resenas/presentation/routes/resenas.routes';
 import uploadsRoutes from './uploads/presentation/routes/uploads.routes';
 import canchasRoutes from './canchas/routes/canchas.routes';
 import complejosRoutes from './complejos/presentation/routes/complejos.routes';
-import superAdminImageRoutes from './superAdmin/presentation/routes/superAdminImage.routes';
-import superAdminImageUploadRoutes from './superAdmin/presentation/routes/superAdminImageUpload.routes';
-import canchaImagesRoutes from './canchas/presentation/routes/canchaImages.routes';
 
 /**
  * CONFIGURACIÓN E IMPORTACIONES
