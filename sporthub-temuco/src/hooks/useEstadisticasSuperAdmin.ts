@@ -26,13 +26,25 @@ export function useEstadisticasSuperAdmin() {
       setIsLoading(true);
       setError(null);
       
-      console.log('📊 Cargando estadísticas completas...');
+      console.log('📊 [Hook] Cargando estadísticas completas...');
       const data = await superAdminService.obtenerEstadisticasCompletas();
       
+      console.log('📊 [Hook] ===== DATOS COMPLETOS RECIBIDOS =====');
+      console.log('📊 [Hook] Estructura:', JSON.stringify(data, null, 2));
+      console.log('📊 [Hook] Secciones disponibles:', {
+        metricas_generales: !!data.metricas_generales,
+        metricas_mensuales: !!data.metricas_mensuales,
+        reservas_por_dia: data.reservas_por_dia?.length || 0,
+        reservas_por_deporte: data.reservas_por_deporte?.length || 0,
+        top_canchas: data.top_canchas?.length || 0,
+        top_horarios: data.top_horarios?.length || 0
+      });
+      console.log('📊 [Hook] ========================================');
+      
       setEstadisticas(data);
-      console.log('✅ Estadísticas cargadas exitosamente');
+      console.log('✅ [Hook] Estadísticas cargadas exitosamente');
     } catch (err: any) {
-      console.error('❌ Error al cargar estadísticas:', err);
+      console.error('❌ [Hook] Error al cargar estadísticas:', err);
       setError(err.message || 'Error al cargar estadísticas');
       setEstadisticas(null);
     } finally {

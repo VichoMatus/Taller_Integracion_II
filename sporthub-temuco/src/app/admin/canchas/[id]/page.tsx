@@ -17,15 +17,12 @@ export default function EditCourtPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Estados del formulario - AMPLIADO con todos los campos editables
+  // Estados del formulario - SOLO campos que acepta FastAPI UPDATE
   const [formData, setFormData] = useState<UpdateCanchaInput>({
     nombre: '',
     tipo: 'futbol',
     techada: false,
-    activa: true,
-    precioPorHora: 0,
-    capacidad: 10,
-    descripcion: ''
+    activa: true
   });
 
   // Cargar datos de la cancha
@@ -40,15 +37,12 @@ export default function EditCourtPage() {
       const data = await canchaService.getCanchaById(parseInt(courtId));
       setCancha(data);
       
-      // Llenar el formulario con los datos existentes - TODOS los campos editables
+      // Llenar el formulario con los datos existentes - SOLO campos editables
       setFormData({
         nombre: data.nombre,
         tipo: data.tipo,
         techada: data.techada,
-        activa: data.activa,
-        precioPorHora: data.precioPorHora || 0,
-        capacidad: data.capacidad || 10,
-        descripcion: data.descripcion || ''
+        activa: data.activa
       });
     } catch (err: any) {
       console.error('Error cargando cancha:', err);
@@ -68,7 +62,7 @@ export default function EditCourtPage() {
     }));
   };
 
-  // Guardar cambios con VALIDACIONES COMPLETAS
+  // Guardar cambios
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -76,36 +70,10 @@ export default function EditCourtPage() {
       setSaving(true);
       setError(null);
       
-      // ✅ VALIDACIÓN 1: Nombre (mínimo 3 caracteres)
-      if (!formData.nombre?.trim()) {
-        throw new Error('❌ El nombre de la cancha es requerido');
-      }
-      
-      if (formData.nombre.trim().length < 3) {
-        throw new Error('❌ El nombre debe tener al menos 3 caracteres');
-      }
-
-      // ⚠️ VALIDACIONES REMOVIDAS para campos no soportados
-      // (precioPorHora, capacidad, descripcion no se pueden editar por limitación del backend)
-      
-      // 🔥 CRÍTICO: Solo enviar campos que el backend soporta en UPDATE
-      // Según esquema de API: solo se pueden actualizar { nombre, deporte, cubierta, activo }
-      const updatePayload: UpdateCanchaInput = {
-        nombre: formData.nombre,
-        tipo: formData.tipo,
-        techada: formData.techada,
-        activa: formData.activa
-      };
-      
-      console.log('💾 Guardando cambios de cancha (solo campos soportados):', updatePayload);
-      console.log('⚠️ Campos NO enviados (no soportados por API):', {
-        precioPorHora: formData.precioPorHora,
-        capacidad: formData.capacidad,
-        descripcion: formData.descripcion
-      });
+      console.log('💾 Guardando cambios de cancha:', formData);
       
       // ✅ ACTUALIZADO: Usar método del servicio que usa el endpoint correcto PATCH /api/canchas/:id
-      const updatedCancha = await canchaService.updateCancha(parseInt(courtId), updatePayload);
+      const updatedCancha = await canchaService.updateCancha(parseInt(courtId), formData);
       
       console.log('✅ Cancha actualizada exitosamente:', updatedCancha);
       
@@ -200,9 +168,7 @@ export default function EditCourtPage() {
             <h3 className="edit-section-title">Información Básica</h3>
             <div className="edit-form-grid">
               <div className="edit-form-group">
-                <label htmlFor="nombre" className="edit-form-label">
-                  Nombre: <span style={{ color: '#ef4444' }}>*</span>
-                </label>
+                <label htmlFor="nombre" className="edit-form-label">Nombre:</label>
                 <input
                   type="text"
                   id="nombre"
@@ -210,19 +176,12 @@ export default function EditCourtPage() {
                   value={formData.nombre}
                   onChange={handleInputChange}
                   className="edit-form-input"
-                  placeholder="Mínimo 3 caracteres"
-                  minLength={3}
                   required
                 />
-                <small style={{ fontSize: '0.75rem', color: '#6b7280', display: 'block', marginTop: '0.25rem' }}>
-                  Campo obligatorio - Mínimo 3 caracteres
-                </small>
               </div>
               
               <div className="edit-form-group">
-                <label htmlFor="tipo" className="edit-form-label">
-                  Tipo de Cancha: <span style={{ color: '#ef4444' }}>*</span>
-                </label>
+                <label htmlFor="tipo" className="edit-form-label">Tipo de Cancha:</label>
                 <select
                   id="tipo"
                   name="tipo"
@@ -232,165 +191,81 @@ export default function EditCourtPage() {
                   required
                 >
                   <option value="futbol">Fútbol</option>
-                  <option value="basquet">Básquetbol</option>
+                  <option value="basquet">Básquet</option>
                   <option value="tenis">Tenis</option>
-                  <option value="padel">Pádel</option>
-                  <option value="volley">Voleibol</option>
-                  <option value="futbol_sala">Fútbol Sala</option>
+                  <option value="padel">Padel</option>
+                  <option value="volley">Volley</option>
                 </select>
               </div>
 
-            </div>
-          </div>
-
-          {/* Configuración de Precios y Capacidad - NO DISPONIBLE */}
-          <div className="edit-section" style={{ opacity: 0.6, position: 'relative' }}>
-            <div style={{ 
-              position: 'absolute', 
-              top: '10px', 
-              right: '10px', 
-              backgroundColor: '#fbbf24', 
-              color: '#78350f', 
-              padding: '0.25rem 0.75rem', 
-              borderRadius: '6px', 
-              fontSize: '0.75rem',
-              fontWeight: '600'
-            }}>
-              ⚠️ No disponible en UPDATE
-            </div>
-            <h3 className="edit-section-title">Configuración de Precios y Capacidad</h3>
-            <p style={{ fontSize: '0.875rem', color: '#f59e0b', marginBottom: '1rem', fontWeight: '600' }}>
-              ⚠️ El endpoint de actualización solo permite modificar: nombre, tipo de deporte, cubierta y estado activo
-            </p>
-            <div className="edit-form-grid">
               <div className="edit-form-group">
-                <label htmlFor="precioPorHora" className="edit-form-label">
-                  Precio por Hora (CLP): <span style={{ color: '#9ca3af' }}>(Solo lectura)</span>
+                <label className="edit-form-label">
+                  <input
+                    type="checkbox"
+                    name="techada"
+                    checked={formData.techada}
+                    onChange={handleInputChange}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Cancha techada/cubierta
                 </label>
-                <input
-                  type="number"
-                  id="precioPorHora"
-                  name="precioPorHora"
-                  value={cancha?.precioPorHora || 'No disponible'}
-                  disabled={true}
-                  className="edit-form-input"
-                  style={{ cursor: 'not-allowed', backgroundColor: '#f3f4f6' }}
-                />
-                <small style={{ fontSize: '0.75rem', color: '#6b7280', display: 'block', marginTop: '0.25rem' }}>
-                  Este campo solo se puede configurar al crear la cancha
-                </small>
-              </div>
-
-              <div className="edit-form-group">
-                <label htmlFor="capacidad" className="edit-form-label">
-                  Capacidad de Jugadores: <span style={{ color: '#9ca3af' }}>(Solo lectura)</span>
-                </label>
-                <input
-                  type="text"
-                  id="capacidad"
-                  name="capacidad"
-                  value={cancha?.capacidad || 'No disponible'}
-                  disabled={true}
-                  className="edit-form-input"
-                  style={{ cursor: 'not-allowed', backgroundColor: '#f3f4f6' }}
-                />
-                <small style={{ fontSize: '0.75rem', color: '#6b7280', display: 'block', marginTop: '0.25rem' }}>
-                  Este campo solo se puede configurar al crear la cancha
-                </small>
               </div>
             </div>
           </div>
 
-          {/* Características */}
+          {/* Estado Activo/Inactivo */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Características</h3>
+            <h3 className="edit-section-title">Estado</h3>
             <div className="edit-form-grid">
-              {/* Cancha Techada/Cubierta como select */}
               <div className="edit-form-group">
-                <label htmlFor="techada" className="edit-form-label">Cancha Techada/Cubierta:</label>
-                <select
-                  id="techada"
-                  name="techada"
-                  value={formData.techada ? 'si' : 'no'}
-                  onChange={(e) => {
-                    setFormData(prev => ({ 
-                      ...prev, 
-                      techada: e.target.value === 'si' 
-                    }));
-                  }}
-                  className="edit-form-input"
-                  style={{ cursor: 'pointer' }}
-                >
-                  <option value="no">🌤️ No (al aire libre)</option>
-                  <option value="si">🏠 Sí (techada/cubierta)</option>
-                </select>
-                <small style={{ fontSize: '0.75rem', color: '#6b7280', display: 'block', marginTop: '0.25rem' }}>
-                  Indica si la cancha tiene techo o está cubierta
-                </small>
-              </div>
-
-              {/* Estado de la cancha como select */}
-              <div className="edit-form-group">
-                <label htmlFor="activa" className="edit-form-label">Estado:</label>
-                <select
-                  id="activa"
-                  name="activa"
-                  value={formData.activa ? 'disponible' : 'inactiva'}
-                  onChange={(e) => {
-                    setFormData(prev => ({ 
-                      ...prev, 
-                      activa: e.target.value === 'disponible' 
-                    }));
-                  }}
-                  className="edit-form-input"
-                  style={{ cursor: 'pointer' }}
-                >
-                  <option value="disponible">🟢 Disponible (activa)</option>
-                  <option value="inactiva">🔴 Inactiva (no visible)</option>
-                </select>
-                <small style={{ fontSize: '0.75rem', color: '#6b7280', display: 'block', marginTop: '0.25rem' }}>
-                  Solo canchas disponibles aparecerán en búsquedas públicas
+                <label className="edit-form-label">
+                  <input
+                    type="checkbox"
+                    name="activa"
+                    checked={formData.activa}
+                    onChange={handleInputChange}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Cancha activa (disponible para reservas)
+                </label>
+                <small style={{ color: 'var(--text-gray)', fontSize: '0.8rem', display: 'block', marginTop: '0.5rem' }}>
+                  Si está desactivada, no aparecerá disponible para nuevas reservas
                 </small>
               </div>
             </div>
           </div>
 
-          {/* Descripción - NO DISPONIBLE */}
-          <div className="edit-section" style={{ opacity: 0.6, position: 'relative' }}>
-            <div style={{ 
-              position: 'absolute', 
-              top: '10px', 
-              right: '10px', 
-              backgroundColor: '#fbbf24', 
-              color: '#78350f', 
-              padding: '0.25rem 0.75rem', 
-              borderRadius: '6px', 
-              fontSize: '0.75rem',
-              fontWeight: '600'
-            }}>
-              ⚠️ No disponible actualmente
+          {/* Información de solo lectura */}
+          {cancha && (
+            <div className="edit-section">
+              <h3 className="edit-section-title">Información de Solo Lectura</h3>
+              <div className="edit-form-grid">
+                {cancha.precioPorHora && (
+                  <div className="edit-info-item">
+                    <span className="edit-info-label">Precio por hora:</span>
+                    <span className="edit-info-value">
+                      {new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(cancha.precioPorHora)}
+                    </span>
+                  </div>
+                )}
+                {cancha.capacidad && (
+                  <div className="edit-info-item">
+                    <span className="edit-info-label">Capacidad:</span>
+                    <span className="edit-info-value">{cancha.capacidad} personas</span>
+                  </div>
+                )}
+                {cancha.descripcion && (
+                  <div className="edit-info-item">
+                    <span className="edit-info-label">Descripción:</span>
+                    <span className="edit-info-value">{cancha.descripcion}</span>
+                  </div>
+                )}
+                <p style={{ color: 'var(--text-gray)', fontSize: '0.8rem', marginTop: '1rem' }}>
+                  Estos campos son de solo lectura y se configuran desde otros módulos del sistema.
+                </p>
+              </div>
             </div>
-            <h3 className="edit-section-title">Descripción</h3>
-            <p style={{ fontSize: '0.875rem', color: '#f59e0b', marginBottom: '0.5rem', fontWeight: '600' }}>
-              ⚠️ Esta funcionalidad estará disponible cuando el backend implemente el campo de descripciones
-            </p>
-            <div className="edit-form-group">
-              <label htmlFor="descripcion" className="edit-form-label">Descripción (Opcional):</label>
-              <textarea
-                id="descripcion"
-                name="descripcion"
-                value="No disponible"
-                disabled={true}
-                rows={4}
-                className="edit-form-input"
-                placeholder="⚠️ El backend aún no soporta este campo. Próximamente disponible."
-                style={{ minHeight: '100px', resize: 'vertical', cursor: 'not-allowed', backgroundColor: '#f3f4f6' }}
-              />
-              <small style={{ fontSize: '0.75rem', color: '#f59e0b', display: 'block', marginTop: '0.25rem', fontWeight: '600' }}>
-                ⚠️ Campo no disponible - El endpoint actual no acepta descripciones
-              </small>
-            </div>
-          </div>
+          )}
 
           {/* Información del Sistema */}
           {cancha && (

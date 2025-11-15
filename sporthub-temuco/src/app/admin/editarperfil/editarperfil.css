@@ -81,7 +81,6 @@
   margin-bottom: 0.5rem;
 }
 
-/* ============= AVATAR SECTION ============= */
 .avatar-section-edit {
   display: flex;
   flex-direction: column;
@@ -152,63 +151,29 @@
   box-shadow: 0 4px 12px rgba(90, 105, 147, 0.25);
 }
 
-/* ============= CHANGE PHOTO BUTTON ============= */
 .change-photo-btn-modern {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   padding: 0.85rem 1.25rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
+  background: var(--bg-light);
+  color: var(--admin-primary);
+  border: 2px solid var(--border);
   border-radius: 10px;
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.3s ease;
   width: 100%;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-  user-select: none;
 }
 
 .change-photo-btn-modern:hover {
-  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+  background: var(--bg-gray);
+  border-color: var(--admin-primary);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
 }
 
-.change-photo-btn-modern:active {
-  transform: translateY(0);
-}
-
-/* ============= IMAGE PREVIEW INFO ============= */
-.image-preview-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
-  border-radius: 8px;
-  color: #22543d;
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-top: 0.75rem;
-  animation: slideIn 0.3s ease-out;
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* ============= INFO CARD ============= */
 .info-card-edit {
   display: flex;
   gap: 1rem;
@@ -246,7 +211,6 @@
   font-weight: 700;
 }
 
-/* ============= BACK BUTTON ============= */
 .back-btn-modern {
   display: flex;
   align-items: center;

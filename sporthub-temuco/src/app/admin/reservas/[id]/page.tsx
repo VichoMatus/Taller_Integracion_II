@@ -15,33 +15,16 @@ export default function EditReservaPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
-  // 🔥 NUEVO: Estados para modales personalizados
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
 
-  // Estado del formulario - Solo campos editables según FastAPI
-  const [formData, setFormData] = useState({
+  // Estado del formulario
+  const [formData, setFormData] = useState<UpdateReservaInput>({
+    estado: 'pendiente',
+    metodoPago: 'efectivo',
+    pagado: false,
+    notas: '',
     fechaInicio: '',
-    fechaFin: '',
-    notas: ''
+    fechaFin: ''
   });
-  
-  // 🔥 Funciones helper para mostrar modales personalizados
-  const showSuccess = (message: string) => {
-    setModalMessage(message);
-    setShowSuccessModal(true);
-    setTimeout(() => {
-      setShowSuccessModal(false);
-      router.push('/admin/reservas'); // Redirigir después de 2 segundos
-    }, 2000);
-  };
-
-  const showError = (message: string) => {
-    setModalMessage(message);
-    setShowErrorModal(true);
-  };
 
   // Cargar datos de la reserva
   const loadReservaData = async () => {
@@ -53,28 +36,18 @@ export default function EditReservaPage() {
       const reservaData = await reservaService.getReservaById(parseInt(reservaId));
       setReserva(reservaData);
       
-      // ✅ Convertir fechas UTC a hora local para el input datetime-local
-      // Las fechas vienen en ISO UTC pero representan hora local de Chile
-      const fechaInicioDate = new Date(reservaData.fechaInicio);
-      const fechaFinDate = new Date(reservaData.fechaFin);
+      // Llenar el formulario con los datos existentes
+      // ⚠️ FIX ZONA HORARIA: Quitar 'Z' si existe para evitar conversión UTC
+      const fechaInicioSinZ = reservaData.fechaInicio.replace('Z', '').replace(/\.\d{3}/, '');
+      const fechaFinSinZ = reservaData.fechaFin.replace('Z', '').replace(/\.\d{3}/, '');
       
-      // Formatear para datetime-local en hora local (restar offset de timezone)
-      const formatDateTimeLocal = (date: Date): string => {
-        // Obtener componentes de fecha/hora sin conversión de timezone
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        
-        return `${year}-${month}-${day}T${hours}:${minutes}`;
-      };
-      
-      // Llenar el formulario con los datos existentes (solo campos editables)
       setFormData({
-        fechaInicio: formatDateTimeLocal(fechaInicioDate),
-        fechaFin: formatDateTimeLocal(fechaFinDate),
-        notas: reservaData.notas || ''
+        estado: reservaData.estado,
+        metodoPago: reservaData.metodoPago || 'efectivo',
+        pagado: reservaData.pagado,
+        notas: reservaData.notas || '',
+        fechaInicio: fechaInicioSinZ.slice(0, 16), // Para datetime-local (YYYY-MM-DDTHH:MM)
+        fechaFin: fechaFinSinZ.slice(0, 16)
       });
       
     } catch (err: any) {
@@ -108,43 +81,31 @@ export default function EditReservaPage() {
       setSaving(true);
       setError(null);
       
-      // Validar que las fechas estén presentes
-      if (!formData.fechaInicio || !formData.fechaFin) {
-        setError('Debe proporcionar fecha de inicio y fin');
-        setSaving(false);
-        return;
+      // ⚠️ FIX ZONA HORARIA: Extraer fecha y hora directamente del string datetime-local
+      // NO usar new Date().toISOString() porque convierte a UTC causando desfase
+      
+      // Extraer partes directamente del string sin conversiones
+      let updateData: any = { ...formData };
+      
+      if (formData.fechaInicio) {
+        const [fecha_date, hora_time] = formData.fechaInicio.split('T');
+        // Reconstruir en formato ISO pero sin la conversión UTC
+        updateData.fechaInicio = `${fecha_date}T${hora_time}:00`;
       }
       
-      // ✅ Extraer fecha y hora directamente sin conversión de timezone
-      // El input datetime-local devuelve: "2025-11-07T10:00"
-      // Queremos enviar: fecha: "2025-11-07", inicio: "10:00", fin: "11:00"
-      
-      const [fechaInicio, horaInicio] = formData.fechaInicio.split('T');
-      const [fechaFin, horaFin] = formData.fechaFin.split('T');
-      
-      // Validar que ambas fechas sean el mismo día
-      if (fechaInicio !== fechaFin) {
-        setError('La reserva debe comenzar y terminar el mismo día');
-        setSaving(false);
-        return;
+      if (formData.fechaFin) {
+        const [fecha_date, hora_time] = formData.fechaFin.split('T');
+        updateData.fechaFin = `${fecha_date}T${hora_time}:00`;
       }
-      
-      const updateData = {
-        fecha: fechaInicio,        // YYYY-MM-DD
-        inicio: horaInicio,        // HH:MM
-        fin: horaFin,              // HH:MM
-        notas: formData.notas || ''
-      };
-      
-      console.log('📤 [handleSave] Datos a enviar (formato FastAPI):', updateData);
       
       await reservaService.updateReserva(parseInt(reservaId), updateData);
       
-      // ✅ Éxito: mostrar modal y redirigir automáticamente
-      showSuccess('Reserva actualizada exitosamente');
+      // Mostrar mensaje de éxito y redirigir
+      alert('Reserva actualizada exitosamente');
+      router.push('/admin/reservas');
     } catch (err: any) {
       console.error('Error al actualizar la reserva:', err);
-      showError(err?.message || 'No se pudo actualizar la reserva. Verifique los datos e intente nuevamente.');
+      setError(err?.message || 'No se pudo actualizar la reserva. Verifique los datos e intente nuevamente.');
     } finally {
       setSaving(false);
     }
@@ -156,15 +117,18 @@ export default function EditReservaPage() {
   };
 
   // Función para formatear fecha para mostrar
+  // ⚠️ FIX ZONA HORARIA: Extraer fecha/hora directamente del string ISO sin conversión UTC
   const formatFecha = (fechaISO: string) => {
-    const fecha = new Date(fechaISO);
-    return fecha.toLocaleDateString('es-CL', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    // Si viene con Z al final, quitarla para evitar conversión UTC
+    const fechaSinZ = fechaISO.replace('Z', '').replace(/\.\d{3}/, '');
+    
+    // Extraer componentes manualmente
+    const [datePart, timePart] = fechaSinZ.split('T');
+    const [year, month, day] = datePart.split('-');
+    const [hour, minute] = (timePart || '00:00').split(':');
+    
+    // Formatear manualmente sin conversión
+    return `${day}/${month}/${year} ${hour}:${minute}`;
   };
 
   if (loading) {
@@ -230,68 +194,65 @@ export default function EditReservaPage() {
       {/* Formulario Principal */}
       <div className="edit-court-container">
         <form id="edit-reserva-form" onSubmit={handleSave} className="edit-court-card">
-          
-          {/* Información de Solo Lectura */}
+          {/* Información de la Reserva */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Información de la Reserva (Solo Lectura)</h3>
+            <h3 className="edit-section-title">Información de la Reserva</h3>
             <div className="edit-form-grid">
               <div className="edit-form-group">
-                <label className="edit-form-label">Estado:</label>
-                <div className="edit-form-readonly">
-                  <span className={`status-badge status-${reserva?.estado}`}>
-                    {reserva?.estado}
-                  </span>
-                </div>
+                <label htmlFor="estado" className="edit-form-label">Estado:</label>
+                <select
+                  id="estado"
+                  name="estado"
+                  value={formData.estado}
+                  onChange={handleInputChange}
+                  className="edit-form-select"
+                  required
+                >
+                  <option value="pendiente">Pendiente</option>
+                  <option value="confirmada">Confirmada</option>
+                  <option value="cancelada">Cancelada</option>
+                  <option value="completada">Completada</option>
+                  <option value="no_show">No Show</option>
+                </select>
               </div>
 
               <div className="edit-form-group">
-                <label className="edit-form-label">Usuario:</label>
-                <div className="edit-form-readonly">
-                  {reserva?.usuario ? 
-                    `${reserva.usuario.nombre || ''} ${reserva.usuario.apellido || ''}`.trim() || reserva.usuario.email 
-                    : `Usuario #${reserva?.usuarioId}`
-                  }
-                </div>
+                <label htmlFor="metodoPago" className="edit-form-label">Método de Pago:</label>
+                <select
+                  id="metodoPago"
+                  name="metodoPago"
+                  value={formData.metodoPago}
+                  onChange={handleInputChange}
+                  className="edit-form-select"
+                >
+                  <option value="efectivo">Efectivo</option>
+                  <option value="tarjeta">Tarjeta</option>
+                  <option value="transferencia">Transferencia</option>
+                  <option value="online">Online</option>
+                </select>
               </div>
 
               <div className="edit-form-group">
-                <label className="edit-form-label">Cancha:</label>
-                <div className="edit-form-readonly">
-                  {reserva?.cancha?.nombre || `Cancha #${reserva?.canchaId}`}
-                </div>
-              </div>
-
-              <div className="edit-form-group">
-                <label className="edit-form-label">Precio Total:</label>
-                <div className="edit-form-readonly">
-                  ${reserva?.precioTotal?.toLocaleString() || 0}
-                </div>
-              </div>
-
-              <div className="edit-form-group">
-                <label className="edit-form-label">Pagado:</label>
-                <div className="edit-form-readonly">
-                  <span className={`status-badge ${reserva?.pagado ? 'status-activo' : 'status-por-revisar'}`}>
-                    {reserva?.pagado ? 'Sí' : 'No'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="edit-form-group">
-                <label className="edit-form-label">Método de Pago:</label>
-                <div className="edit-form-readonly">
-                  {reserva?.metodoPago || 'No especificado'}
-                </div>
+                <label className="edit-form-label">
+                  <input
+                    type="checkbox"
+                    name="pagado"
+                    checked={formData.pagado}
+                    onChange={handleInputChange}
+                    style={{ marginRight: '0.5rem' }}
+                  />
+                  Reserva pagada
+                </label>
               </div>
             </div>
           </div>
 
-          {/* Campos Editables: Fechas y Horarios */}
+          {/* Fechas y Horarios */}
           <div className="edit-section">
-            <h3 className="edit-section-title">Reprogramar Reserva</h3>
+            <h3 className="edit-section-title">Fechas y Horarios</h3>
             <div className="edit-form-grid">
               <div className="edit-form-group">
-                <label htmlFor="fechaInicio" className="edit-form-label">Fecha y Hora de Inicio: *</label>
+                <label htmlFor="fechaInicio" className="edit-form-label">Fecha y Hora de Inicio:</label>
                 <input
                   type="datetime-local"
                   id="fechaInicio"
@@ -299,12 +260,11 @@ export default function EditReservaPage() {
                   value={formData.fechaInicio}
                   onChange={handleInputChange}
                   className="edit-form-input"
-                  required
                 />
               </div>
 
               <div className="edit-form-group">
-                <label htmlFor="fechaFin" className="edit-form-label">Fecha y Hora de Fin: *</label>
+                <label htmlFor="fechaFin" className="edit-form-label">Fecha y Hora de Fin:</label>
                 <input
                   type="datetime-local"
                   id="fechaFin"
@@ -312,17 +272,16 @@ export default function EditReservaPage() {
                   value={formData.fechaFin}
                   onChange={handleInputChange}
                   className="edit-form-input"
-                  required
                 />
               </div>
             </div>
           </div>
 
-          {/* Campos Editables: Notas */}
+          {/* Notas */}
           <div className="edit-section">
             <h3 className="edit-section-title">Notas Adicionales</h3>
             <div className="edit-form-group">
-              <label htmlFor="notas" className="edit-form-label">Notas o Motivo de Cambio:</label>
+              <label htmlFor="notas" className="edit-form-label">Notas:</label>
               <textarea
                 id="notas"
                 name="notas"
@@ -394,29 +353,6 @@ export default function EditReservaPage() {
           )}
         </form>
       </div>
-
-      {/* 🔥 Modal de éxito */}
-      {showSuccessModal && (
-        <div className="modal-success">
-          <div className="modal-icon-success">✓</div>
-          <p>{modalMessage}</p>
-        </div>
-      )}
-
-      {/* 🔥 Modal de error */}
-      {showErrorModal && (
-        <div className="modal-error">
-          <div className="modal-icon-error">✕</div>
-          <p>{modalMessage}</p>
-          <button 
-            onClick={() => setShowErrorModal(false)}
-            className="btn-secondary"
-            style={{ marginTop: '15px' }}
-          >
-            Cerrar
-          </button>
-        </div>
-      )}
     </div>
   );
 }

@@ -30,7 +30,7 @@ export default function PerfilAdministrador() {
   } = useEstadisticas(complejoId);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchUserData = async () => {
       try {
         setLoading(true);
         
@@ -77,7 +77,7 @@ export default function PerfilAdministrador() {
       }
     };
 
-    fetchData();
+    fetchUserData();
   }, [router]);
 
   if (loading) {

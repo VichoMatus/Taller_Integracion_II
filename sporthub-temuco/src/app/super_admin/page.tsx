@@ -44,45 +44,63 @@ export default function SuperAdminDashboard() {
     setError('');
     
     try {
-      // Cargar usuarios regulares
-      const usuariosData = await superAdminService.listarUsuarios();
-      setUsuarios(usuariosData.slice(0, 3)); // Primeros 3 para la tabla
+      let newStats: DashboardStats;
+      let usuariosData: Usuario[] = [];
+      let adminsData: Usuario[] = [];
       
-      // Cargar administradores
-      const adminsData = await superAdminService.listarAdministradores();
-      setAdministradores(adminsData.slice(0, 3)); // Primeros 3 para la tabla
+      // Usar SOLO el endpoint de métricas del backend BFF (sin fallback)
+      try {
+        console.log('📊 [Dashboard] Solicitando métricas desde endpoint optimizado...');
+        const metricas = await superAdminService.obtenerMetricasGenerales();
+        
+        console.log('📊 [Dashboard] ===== RESPUESTA COMPLETA DEL BACKEND =====');
+        console.log('📊 [Dashboard] Estructura completa:', JSON.stringify(metricas, null, 2));
+        console.log('📊 [Dashboard] Métricas extraídas:', {
+          usuarios_totales: metricas.usuarios_totales,
+          canchas_registradas: metricas.canchas_registradas,
+          cantidad_administradores: metricas.cantidad_administradores,
+          reservas_hoy: metricas.reservas_hoy
+        });
+        console.log('📊 [Dashboard] ==========================================');
+        
+        // Cargar datos para las tablas (siempre necesarios)
+        usuariosData = await superAdminService.listarUsuarios();
+        adminsData = await superAdminService.listarAdministradores();
+        
+        // Usar DIRECTAMENTE los datos del backend BFF (sin validaciones ni fallbacks)
+        newStats = {
+          totalUsuarios: metricas.usuarios_totales || 0,
+          totalCanchas: metricas.canchas_registradas || 0,
+          totalAdministradores: metricas.cantidad_administradores || 0,
+          reservasHoy: metricas.reservas_hoy || 0
+        };
+        
+        console.log('✅ [Dashboard] Métricas asignadas al estado:', newStats);
+        
+        // Si hay 0s, mostrar advertencia para debugging
+        if (newStats.totalUsuarios === 0 || newStats.totalCanchas === 0) {
+          console.warn('⚠️ [Dashboard] El backend BFF está devolviendo 0s. Revisar:');
+          console.warn('   1. Logs del backend BFF (backend/src/superAdmin/services/superAdminService.ts)');
+          console.warn('   2. FastAPI está devolviendo datos');
+          console.warn('   3. Network tab: respuesta de /api/super_admin/estadisticas/completas');
+        }
+        
+      } catch (endpointError: any) {
+        console.error('❌ [Dashboard] Error al obtener métricas del backend:', endpointError);
+        throw endpointError; // Propagar error para que se muestre en la UI
+      }
       
-      // Cargar canchas - La respuesta incluye el total del sistema
+      // Actualizar estados
+      setStats(newStats);
+      setUsuarios(usuariosData.slice(0, 3));
+      setAdministradores(adminsData.slice(0, 3));
+      
+      // Cargar canchas para la tabla
       const canchasResponse = await canchaService.getCanchas({ page: 1, page_size: 3 }) as any;
       const canchasArray = Array.isArray(canchasResponse.items) ? canchasResponse.items : [];
       setCanchas(canchasArray);
       
-      // El backend devuelve el total de canchas en el campo 'total' de la respuesta paginada
-      const totalCanchas = canchasResponse.total || canchasArray.length;
-      
-      console.log('🏠 Respuesta de canchas:', canchasResponse);
-      console.log('🏠 Total canchas del sistema:', totalCanchas);
-      
-      // Calcular total de usuarios (usuarios regulares + administradores, excluyendo super_admins)
-      const totalUsuariosConAdmins = usuariosData.length + adminsData.length;
-      
-      // Actualizar estadísticas
-      const newStats = {
-        totalUsuarios: totalUsuariosConAdmins, // Incluye usuarios regulares + administradores
-        totalCanchas: totalCanchas,
-        totalAdministradores: adminsData.length,
-        reservasHoy: 0 // Por ahora 0, se implementará después
-      };
-      
-      console.log('📊 Estadísticas del dashboard:', newStats);
-      console.log('👥 Total usuarios (incluyendo admins):', totalUsuariosConAdmins);
-      console.log('👤 Usuarios regulares:', usuariosData.length);
-      console.log('🏠 Total canchas:', totalCanchas);
-      console.log('🧑‍💼 Total administradores:', adminsData.length);
-      
-      setStats(newStats);
-      
-      console.log('✅ Datos del dashboard cargados exitosamente');
+      console.log('✅ Dashboard cargado exitosamente');
     } catch (error: any) {
       console.error('❌ Error cargando datos del dashboard:', error);
       setError('Error al cargar los datos del dashboard');

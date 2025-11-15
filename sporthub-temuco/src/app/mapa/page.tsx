@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useRef  } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '../../components/layout/Sidebar';
 import SearchBar from '../../components/SearchBar';
-//import LocationMap from '../../components/LocationMap';
+import LocationMap from '../../components/LocationMap';
 import { useAuthStatus } from '@/hooks/useAuthStatus';
 import styles from './page.module.css';
-import { map } from 'zod';
 
 // 🗺️ DATOS DE EJEMPLO PARA COMPLEJOS DEPORTIVOS
 const complejosDeportivos = [
@@ -71,16 +70,6 @@ export default function MapaPage() {
   const [mapCenter, setMapCenter] = useState({ lat: -38.7359, lng: -72.5904 }); // Temuco centro
   const [zoom, setZoom] = useState(13);
   const [filteredComplejos, setFilteredComplejos] = useState(complejosDeportivos);
-   /**
-   * Refs para el mapa y sus marcadores.
-   *
-   * - mapRef se asigna al contenedor del div donde se renderiza Google Maps.
-   * - mapInstanceRef guarda la instancia de google.maps.Map una vez cargado el script.
-   * - markersRef mantiene una lista de marcadores activos para poder limpiarlos cuando cambian los filtros.
-   */
-  const mapRef = useRef<HTMLDivElement | null>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const markersRef = useRef<any[]>([]);
 
   // 🗺️ FILTRAR COMPLEJOS
   useEffect(() => {
@@ -113,19 +102,7 @@ export default function MapaPage() {
   };
 
   const handleSearch = () => {
-    // Geocodificamos el término de búsqueda para centrar el mapa en la dirección o nombre ingresado.
-    if (!searchTerm.trim()) return;
-    if (typeof window !== 'undefined' && (window as any).google && (window as any).google.maps) {
-      const { google } = window as any;
-      const geocoder = new google.maps.Geocoder();
-      geocoder.geocode({ address: searchTerm }, (results: any, status: any) => {
-        if (status === 'OK' && results && results.length > 0) {
-          const location = results[0].geometry.location;
-          setMapCenter({ lat: location.lat(), lng: location.lng() });
-          setZoom(15);
-        }
-      });
-    }
+    console.log('Buscando:', searchTerm);
   };
 
   const handleUserButtonClick = () => {
@@ -159,103 +136,6 @@ export default function MapaPage() {
     setMapCenter({ lat: -38.7359, lng: -72.5904 });
     setZoom(13);
   };
-
-  /**
-   * Efecto para cargar el script de Google Maps e inicializar el mapa.
-   */
-  useEffect(() => {
-    // Inicializa el mapa cuando el script está listo
-    const initMap = () => {
-      if (mapRef.current && !mapInstanceRef.current && typeof window !== 'undefined' && (window as any).google) {
-        const { google } = window as any;
-        mapInstanceRef.current = new google.maps.Map(mapRef.current, {
-          center: mapCenter,
-          zoom: zoom,
-        });
-      }
-    };
-    // Crear nuevos marcadores
-  // Crear nuevos marcadores
-  filteredComplejos.forEach((complejo) => {
-    const marker = new google.maps.Marker({
-      position: complejo.coordenadas as any,
-      // Forzamos el tipo a 'any' para que TS acepte el valor
-      map: map as any,
-      title: complejo.nombre,
-    });
-
-    const infoWindow = new google.maps.InfoWindow({
-      content: `<div><strong>${complejo.nombre}</strong><br/>${complejo.direccion}</div>`,
-    });
-
-    marker.addListener('click', () => {
-      handleComplexClick(complejo);
-      // También aquí usamos 'map as any' para que TS no marque error
-      infoWindow.open(map as any, marker);
-    });
-
-    markersRef.current.push(marker);
-  });
-
-
-     // Si ya hay una instancia de google cargada
-    if (typeof window !== 'undefined' && (window as any).google && (window as any).google.maps) {
-      initMap();
-      return;
-    }
-    // Insertar el script de Google Maps si no existe
-    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
-    if (!existingScript) {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBMIE36wrh9juIn2RXAGVoBwnc-hhFfwd4&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      document.body.appendChild(script);
-      script.onload = initMap;
-    } else {
-      existingScript.addEventListener('load', initMap);
-    }
-    // Limpiar marcadores al desmontar
-    return () => {
-      markersRef.current.forEach((marker: any) => marker.setMap(null));
-      markersRef.current = [];
-    };
-  }, []);
-
-  /**
-   * Efecto para actualizar centro y zoom del mapa al cambiar el estado.
-   */
-  useEffect(() => {
-    if (mapInstanceRef.current) {
-      const map = mapInstanceRef.current;
-      map.setCenter(mapCenter);
-      map.setZoom(zoom);
-    }
-  }, [mapCenter, zoom]);
-
-  /**
-   * Efecto para dibujar los marcadores cuando cambian los complejos filtrados.
-   */
-  useEffect(() => {
-    const map = mapInstanceRef.current;
-    if (!map || !(window as any).google) return;
-    const { google } = window as any;
-    // Quitar marcadores existentes
-    markersRef.current.forEach((marker: any) => marker.setMap(null));
-    markersRef.current = [];
-    // Crear nuevos marcadores
-    filteredComplejos.forEach((complejo) => {
-      const marker = new google.maps.Marker({
-        position: complejo.coordenadas,
-        map: map,
-        title: complejo.nombre,
-      });
-      marker.addListener('click', () => {
-        handleComplexClick(complejo);
-      });
-      markersRef.current.push(marker);
-    });
-  }, [filteredComplejos]);
 
   return (
     <div className={styles.pageContainer}>
@@ -364,13 +244,16 @@ export default function MapaPage() {
                 ➖
               </button>
             </div>
-
-            <div
-              ref={mapRef}
-              style={{ width: '100%', height: '600px' }}
+            
+            <LocationMap
+              latitude={mapCenter.lat}
+              longitude={mapCenter.lng}
+              address="Temuco, Chile"
+              zoom={zoom}
+              height="600px"
+              sport="basquetbol"
             />
           </div>
-            
 
           {/* Lista de complejos */}
           <div className={styles.complexList}>
