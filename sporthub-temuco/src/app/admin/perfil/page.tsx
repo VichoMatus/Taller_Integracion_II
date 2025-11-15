@@ -5,9 +5,9 @@ import './perfiladmin.css';
 import AdminLayout from '@/components/layout/AdminsLayout';
 import { authService } from '@/services/authService';
 import { adminService } from '@/services/adminService';
-import { useEstadisticas } from '@/hooks/useEstadisticas';
 import { MeResponse } from '@/types/auth';
 import { MisRecursosResponse, Complejo } from '@/types/admin';
+import { useEstadisticas } from '@/hooks/useEstadisticas';
 import { useRouter } from 'next/navigation';
 
 export default function PerfilAdministrador() {
@@ -20,65 +20,14 @@ export default function PerfilAdministrador() {
   const [recursosError, setRecursosError] = useState<string | null>(null);
   const router = useRouter();
 
-  const complejoId = complejoSeleccionado || complejos[0]?.id || null;
-  
+  const complejoId = complejoSeleccionado ?? (complejos.length > 0 ? complejos[0]?.id || null : null);
+
+  // Hook de estadísticas
   const {
     estadisticas,
-    reservasPorDia,
-    reservasPorCancha,
-    isLoading: statsLoading,
-    cambiarPeriodo,
-    diasAnalisis,
-    cargarTodo
+    isLoading: loadingEstadisticas,
+    errorEstadisticas
   } = useEstadisticas(complejoId);
-
-  // Datos por defecto para demostración
-  const estadisticasDefault = {
-    complejo_nombre: "Mi Complejo Deportivo",
-    ingresos_ultimo_mes: 850000,
-    reservas_ultimo_mes: 45,
-    reservas_confirmadas_ultimo_mes: 42,
-    reservas_pendientes_ultimo_mes: 2,
-    reservas_canceladas_ultimo_mes: 1,
-    canchas_activas: 4,
-    total_canchas: 5,
-    ocupacion_promedio: 78.5,
-    fecha_desde: new Date().toISOString().split('T')[0],
-    fecha_hasta: new Date().toISOString().split('T')[0]
-  };
-
-  const reservasPorDiaDefault = {
-    dias: [
-      { dia_numero: 1, dia_nombre: "Lun", total_reservas: 8, ingresos: 120000 },
-      { dia_numero: 2, dia_nombre: "Mar", total_reservas: 6, ingresos: 95000 },
-      { dia_numero: 3, dia_nombre: "Mié", total_reservas: 7, ingresos: 110000 },
-      { dia_numero: 4, dia_nombre: "Jue", total_reservas: 9, ingresos: 135000 },
-      { dia_numero: 5, dia_nombre: "Vie", total_reservas: 12, ingresos: 180000 },
-      { dia_numero: 6, dia_nombre: "Sáb", total_reservas: 15, ingresos: 225000 },
-      { dia_numero: 0, dia_nombre: "Dom", total_reservas: 11, ingresos: 165000 }
-    ],
-    total_reservas: 68,
-    dia_mas_popular: "Sábado",
-    dia_menos_popular: "Martes"
-  };
-
-  const reservasPorCanchaDefault = {
-    canchas: [
-      { cancha_id: 1, cancha_nombre: "Cancha Fútbol 7", total_reservas: 18, ingresos: 270000, ocupacion_porcentaje: 85 },
-      { cancha_id: 2, cancha_nombre: "Cancha Fútbol 5 A", total_reservas: 15, ingresos: 225000, ocupacion_porcentaje: 75 },
-      { cancha_id: 3, cancha_nombre: "Cancha Fútbol 5 B", total_reservas: 12, ingresos: 180000, ocupacion_porcentaje: 65 },
-      { cancha_id: 4, cancha_nombre: "Cancha Tenis", total_reservas: 8, ingresos: 120000, ocupacion_porcentaje: 45 }
-    ],
-    total_reservas: 53,
-    cancha_mas_popular: "Cancha Fútbol 7",
-    cancha_menos_popular: "Cancha Tenis",
-    ingresos_totales: 795000
-  };
-
-  const statsReales = complejoId && estadisticas;
-  const stats = statsReales ? estadisticas : estadisticasDefault;
-  const reservasDia = statsReales && reservasPorDia ? reservasPorDia : reservasPorDiaDefault;
-  const reservasCancha = statsReales && reservasPorCancha ? reservasPorCancha : reservasPorCanchaDefault;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -96,17 +45,32 @@ export default function PerfilAdministrador() {
         try {
           const recursosResponse = await adminService.getMisRecursos();
           setRecursosData(recursosResponse);
-          setComplejos(recursosResponse.complejos || []);
           
-          if (recursosResponse.complejos?.length > 0) {
-            setComplejoSeleccionado(recursosResponse.complejos[0].id);
+          if (recursosResponse.complejos && recursosResponse.complejos.length > 0) {
+            const complejosValidos = recursosResponse.complejos.filter(complejo => 
+              complejo.id !== undefined && complejo.id !== null
+            );
+            
+            setComplejos(complejosValidos);
+            
+            if (complejosValidos.length > 0) {
+              setComplejoSeleccionado(complejosValidos[0].id);
+            } else {
+              setComplejoSeleccionado(null);
+            }
+          } else {
+            setComplejos([]);
+            setComplejoSeleccionado(null);
           }
         } catch (recursosError: any) {
+          console.error('Error cargando recursos:', recursosError);
           setRecursosError(recursosError.message || 'Error al cargar recursos');
           setComplejos([]);
+          setComplejoSeleccionado(null);
         }
         
       } catch (err) {
+        console.error('Error en fetchData:', err);
         setError('Error al cargar los datos del perfil');
       } finally {
         setLoading(false);
@@ -116,20 +80,9 @@ export default function PerfilAdministrador() {
     fetchData();
   }, [router]);
 
-  useEffect(() => {
-    if (complejoId) cargarTodo();
-  }, [complejoId, cargarTodo]);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-CL', {
-      style: 'currency',
-      currency: 'CLP'
-    }).format(amount);
-  };
-
   if (loading) {
     return (
-      <AdminLayout userRole="admin" userName="Admin" notificationCount={3}>
+      <AdminLayout userRole="admin" userName="Admin" notificationCount={0}>
         <div className="perfil-admin-container">
           <div className="loading-spinner">
             <div className="spinner"></div>
@@ -142,7 +95,7 @@ export default function PerfilAdministrador() {
 
   if (error) {
     return (
-      <AdminLayout userRole="admin" userName="Admin" notificationCount={3}>
+      <AdminLayout userRole="admin" userName="Admin" notificationCount={0}>
         <div className="perfil-admin-container">
           <div className="error-container">
             <p>{error}</p>
@@ -156,11 +109,16 @@ export default function PerfilAdministrador() {
   const userName = userData ? `${userData.nombre} ${userData.apellido}`.trim() : "Administrador";
   const getInitial = (name: string) => name ? name.charAt(0).toUpperCase() : 'A';
 
+  // Calcular datos adicionales
+  const totalCanchas = recursosData?.canchas?.length || 0;
+  const totalReservas = recursosData?.total_reservas || 0;
+  const ingresosMes = recursosData?.ingresos_mes || 0;
+
   return (
     <AdminLayout 
       userRole="admin" 
       userName={userData?.nombre || "Admin"} 
-      notificationCount={3}
+      notificationCount={0}
     >
       <div className="perfil-admin-container">
         <div className="perfil-admin-content">
@@ -229,6 +187,16 @@ export default function PerfilAdministrador() {
                     </div>
                   </div>
                 )}
+
+                <div className="perfil-detail-item">
+                  <div className="perfil-detail-icon">📊</div>
+                  <div className="perfil-detail-content">
+                    <span className="perfil-detail-label">Miembro desde</span>
+                    <span className="perfil-detail-value">
+                      {userData?.fecha_creacion ? new Date(userData.fecha_creacion).toLocaleDateString('es-CL') : 'Fecha no disponible'}
+                    </span>
+                  </div>
+                </div>
               </div>
 
               <div className="perfil-actions">
@@ -253,10 +221,9 @@ export default function PerfilAdministrador() {
             <div className="perfil-main-header-fixed">
               <div className="perfil-main-header-content">
                 <div>
-                  <h1 className="perfil-main-title">Panel de Administrador</h1>
+                  <h1 className="perfil-main-title">Perfil de Administrador</h1>
                   <p className="perfil-main-subtitle">
-                    Bienvenido {userData?.nombre}
-                    {!statsReales && " - Vista de demostración"}
+                    Bienvenido {userData?.nombre} - Este es tu Perfil de Administrador
                   </p>
                 </div>
                 
@@ -265,206 +232,196 @@ export default function PerfilAdministrador() {
                     <div className="complejo-selector">
                       <span>Complejo: </span>
                       <select 
-                        value={complejoSeleccionado || ''} 
+                        value={complejoSeleccionado ?? ''} 
                         onChange={(e) => setComplejoSeleccionado(Number(e.target.value))}
                         className="complejo-select"
                       >
-                        {complejos.map(complejo => (
-                          <option key={complejo.id} value={complejo.id}>
+                        {complejos.map((complejo, index) => (
+                          <option 
+                            key={`complejo-${complejo.id || index}-${complejo.nombre || 'sin-nombre'}`} 
+                            value={complejo.id}
+                          >
                             {complejo.nombre}
                           </option>
                         ))}
                       </select>
                     </div>
                   )}
-                  
-                  <div className="periodo-selector">
-                    <span>Período: </span>
-                    <select 
-                      value={diasAnalisis} 
-                      onChange={(e) => cambiarPeriodo(Number(e.target.value))}
-                      className="periodo-select"
-                      disabled={!statsReales}
-                    >
-                      <option value={7}>Última semana</option>
-                      <option value={30}>Último mes</option>
-                      <option value={90}>Últimos 3 meses</option>
-                    </select>
-                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Contenido Scroleable */}
+            {/* Contenido Scrolleable */}
             <div className="perfil-main-content">
               
-              {/* Banner informativo */}
-              {!statsReales && (
-                <div className={`demo-banner ${recursosError ? 'error' : 'info'}`}>
-                  <div className="demo-banner-icon">
-                    {recursosError ? '⚠️' : '👀'}
-                  </div>
+              {recursosError && (
+                <div className="demo-banner error">
+                  <div className="demo-banner-icon">⚠️</div>
                   <div className="demo-banner-content">
-                    <strong>
-                      {recursosError ? 'Configuración Requerida' : 'Vista de Demostración'}
-                    </strong>
-                    <p>
-                      {recursosError 
-                        ? 'Crea tu primer complejo para acceder a las estadísticas reales.'
-                        : 'Los datos mostrados son de demostración. Crea tu complejo para ver estadísticas reales.'
-                      }
-                    </p>
-                    <div className="demo-banner-actions">
-                      <button 
-                        className="btn-primary"
-                        onClick={() => router.push('/admin/complejos')}
-                      >
-                        {complejos.length === 0 ? 'Crear Mi Primer Complejo' : 'Gestionar Complejos'}
-                      </button>
-                      {recursosError && (
-                        <button 
-                          className="btn-secondary"
-                          onClick={() => window.location.reload()}
-                        >
-                          Reintentar
-                        </button>
-                      )}
-                    </div>
+                    <strong>Error al cargar recursos</strong>
+                    <p>{recursosError}</p>
                   </div>
                 </div>
               )}
 
-              {/* Estadísticas principales */}
-              <div className="stats-section">
+              {/* SECCIÓN DE RESUMEN EJECUTIVO */}
+              <div className="resumen-section">
                 <div className="section-header-premium">
                   <div className="section-title-wrapper">
-                    <span className="section-icon-premium">📊</span>
+                    <span className="section-icon-premium">🚀</span>
                     <div>
-                      <h2 className="section-title-premium">Estadísticas de las Canchas</h2>
+                      <h2 className="section-title-premium">Resumen Ejecutivo</h2>
                       <p className="section-subtitle-premium">
-                        {statsReales 
-                          ? `Datos en tiempo real de ${stats.complejo_nombre}` 
-                          : 'Vista previa - Datos de demostración'
-                        }
+                        Vista general de tu gestión deportiva
                       </p>
                     </div>
                   </div>
                 </div>
 
-                {/* KPIs */}
-                <div className="stats-grid">
-                  <div className="stat-card">
-                    <div className="stat-icon income">💰</div>
-                    <div className="stat-content">
-                      <h3>Ingresos Totales</h3>
-                      <p className="stat-value">
-                        {statsLoading && statsReales ? 'Cargando...' : formatCurrency(stats.ingresos_ultimo_mes)}
-                      </p>
-                      <span className="stat-label">Últimos {diasAnalisis} días</span>
-                      {!statsReales && <div className="demo-badge">Demo</div>}
+                <div className="resumen-grid">
+                  <div className="resumen-card destacado">
+                    <div className="resumen-icon">🏟️</div>
+                    <div className="resumen-content">
+                      <h3>Complejos Activos</h3>
+                      <div className="resumen-value">{complejos.length}</div>
+                      <p>Gestionando instalaciones deportivas</p>
                     </div>
                   </div>
 
-                  <div className="stat-card">
-                    <div className="stat-icon bookings">📅</div>
-                    <div className="stat-content">
-                      <h3>Total Reservas</h3>
-                      <p className="stat-value">
-                        {statsLoading && statsReales ? 'Cargando...' : stats.reservas_ultimo_mes}
-                      </p>
-                      <span className="stat-label">{stats.reservas_confirmadas_ultimo_mes} confirmadas</span>
-                      {!statsReales && <div className="demo-badge">Demo</div>}
+                  <div className="resumen-card">
+                    <div className="resumen-icon">⚽</div>
+                    <div className="resumen-content">
+                      <h3>Total Canchas</h3>
+                      <div className="resumen-value">{totalCanchas}</div>
+                      <p>Canchas disponibles para reservas</p>
                     </div>
                   </div>
 
-                  <div className="stat-card">
-                    <div className="stat-icon courts">🏟️</div>
-                    <div className="stat-content">
-                      <h3>Canchas Activas</h3>
-                      <p className="stat-value">
-                        {statsLoading && statsReales ? 'Cargando...' : stats.canchas_activas}
-                      </p>
-                      <span className="stat-label">de {stats.total_canchas} totales</span>
-                      {!statsReales && <div className="demo-badge">Demo</div>}
+                  <div className="resumen-card">
+                    <div className="resumen-icon">📅</div>
+                    <div className="resumen-content">
+                      <h3>Reservas Totales</h3>
+                      <div className="resumen-value">{totalReservas}</div>
+                      <p>Reservas procesadas en el sistema</p>
                     </div>
-                  </div>
-                </div>
-
-                {/* Gráficos */}
-                <div className="charts-container">
-                  <div className="chart-section">
-                    <h3>Reservas por Día - Semana Actual</h3>
-                    {statsLoading && statsReales ? (
-                      <div className="loading-chart">Cargando...</div>
-                    ) : (
-                      <div className="chart-content">
-                        <div className="days-grid">
-                          {reservasDia?.dias.map((dia) => (
-                            <div key={dia.dia_numero} className="day-bar">
-                              <div className="day-label">{dia.dia_nombre}</div>
-                              <div className="bar-container">
-                                <div 
-                                  className={`bar-fill ${!statsReales ? 'demo-data' : ''}`}
-                                  style={{ 
-                                    height: (reservasDia?.total_reservas || 0) > 0 
-                                      ? `${(dia.total_reservas / Math.max(...(reservasDia?.dias || []).map(d => d.total_reservas))) * 100}%`
-                                      : '10%'
-                                  }}
-                                ></div>
-                              </div>
-                              <div className="day-value">{dia.total_reservas}</div>
-                              <div className="day-income">{formatCurrency(dia.ingresos)}</div>
-                            </div>
-                          ))}
-                        </div>
-                        
-                        {!statsReales && (
-                          <div className="chart-summary">
-                            <span className="demo-indicator">📋 Datos de demostración - Crea tu complejo para ver estadísticas reales</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="chart-section">
-                    <h3>Rendimiento por Cancha</h3>
-                    {statsLoading && statsReales ? (
-                      <div className="loading-chart">Cargando...</div>
-                    ) : (
-                      <div className="chart-content">
-                        <div className="canchas-list">
-                          {reservasCancha?.canchas.slice(0, 4).map((cancha, index) => (
-                            <div key={cancha.cancha_id} className="cancha-item">
-                              <div className="cancha-rank">#{index + 1}</div>
-                              <div className="cancha-info">
-                                <div className="cancha-name">{cancha.cancha_nombre}</div>
-                                <div className="cancha-stats">
-                                  <span>{cancha.total_reservas} reservas</span>
-                                  <span>{formatCurrency(cancha.ingresos)}</span>
-                                </div>
-                              </div>
-                              <div className={`ocupacion-badge ${!statsReales ? 'demo-data' : ''} ${
-                                cancha.ocupacion_porcentaje >= 80 ? 'high' : 
-                                cancha.ocupacion_porcentaje >= 60 ? 'medium' : 'low'
-                              }`}>
-                                {cancha.ocupacion_porcentaje.toFixed(1)}%
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="chart-summary">
-                          <p>Cancha más popular: <strong>{reservasCancha?.cancha_mas_popular}</strong></p>
-                          <p>Ingresos totales: <strong>{formatCurrency(reservasCancha?.ingresos_totales || 0)}</strong></p>
-                          {!statsReales && <span className="demo-indicator">Datos de demo</span>}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Información del perfil administrativo */}
+              {/* SECCIÓN DE ESTADÍSTICAS RÁPIDAS */}
+              <div className="estadisticas-section">
+                <div className="section-header-premium">
+                  <div className="section-title-wrapper">
+                    <span className="section-icon-premium">📊</span>
+                    <div>
+                      <h2 className="section-title-premium">
+                        {complejos.length > 0 ? 'Estadísticas del Complejo' : 'Estadísticas Generales'}
+                      </h2>
+                      <p className="section-subtitle-premium">
+                        {estadisticas?.complejo_nombre || 'Selecciona un complejo para ver estadísticas detalladas'}
+                      </p>
+                      <br />
+                    </div>
+                  </div>
+
+                  <button 
+                    className="btn-estadisticas-completas"
+                    onClick={() => router.push('/admin/estadisticas')}
+                  >
+                    <span>Ver Estadísticas Completas</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Estados de carga y error */}
+                {loadingEstadisticas && (
+                  <div className="estadisticas-loading">
+                    <div className="spinner-small"></div>
+                    <p>Cargando estadísticas...</p>
+                  </div>
+                )}
+
+                {errorEstadisticas && (
+                  <div className="estadisticas-error">
+                    <p>⚠️ Error al cargar estadísticas</p>
+                    <p className="error-subtext">Las estadísticas detalladas estarán disponibles pronto</p>
+                  </div>
+                )}
+
+                {/* KPIs Principales - 3 TARJETAS */}
+                {!loadingEstadisticas && (
+                  <div className="kpis-grid">
+                    {/* Total Canchas */}
+                    <div className="kpi-card">
+                      <div className="kpi-icon-wrapper gradient-blue">
+                        <span className="kpi-icon">🏟️</span>
+                      </div>
+                      <div className="kpi-content">
+                        <h3 className="kpi-title">Canchas</h3>
+                        <div className="kpi-values">
+                          <span className="kpi-main-value">{estadisticas?.canchas_activas || 0}</span>
+                          <span className="kpi-sub-value">activas</span>
+                        </div>
+                        <div className="kpi-detail">
+                          <span className="kpi-detail-text">
+                            {estadisticas?.canchas_inactivas || 0} inactivas
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Reservas del Mes */}
+                    <div className="kpi-card">
+                      <div className="kpi-icon-wrapper gradient-green">
+                        <span className="kpi-icon">📅</span>
+                      </div>
+                      <div className="kpi-content">
+                        <h3 className="kpi-title">Reservas del Mes</h3>
+                        <div className="kpi-values">
+                          <span className="kpi-main-value">{estadisticas?.reservas_confirmadas_ultimo_mes || 0}</span>
+                          <span className="kpi-sub-value">confirmadas</span>
+                        </div>
+                        <div className="kpi-detail">
+                          <span className="kpi-detail-text">
+                            {estadisticas?.reservas_pendientes_ultimo_mes || 0} pendientes
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Ingresos Mensuales */}
+                    <div className="kpi-card">
+                      <div className="kpi-icon-wrapper gradient-purple">
+                        <span className="kpi-icon">💰</span>
+                      </div>
+                      <div className="kpi-content">
+                        <h3 className="kpi-title">Ingresos Mensuales</h3>
+                        <div className="kpi-values">
+                          <span className="kpi-main-value">
+                            ${(estadisticas?.ingresos_ultimo_mes || 0).toLocaleString('es-CL')}
+                          </span>
+                        </div>
+                        <div className="kpi-detail">
+                          <span className="kpi-detail-text">CLP</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Mensaje informativo */}
+                <div className="info-message">
+                  <div className="info-icon">💡</div>
+                  <div className="info-content">
+                    <strong>¿Necesitas más datos?</strong>
+                    <p>Accede a las estadísticas completas para ver análisis detallados, tendencias y reportes avanzados de tu complejo.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* INFORMACIÓN DEL ADMINISTRADOR */}
               <div className="perfil-info-section">
                 <div className="section-header-premium">
                   <div className="section-title-wrapper">
@@ -511,45 +468,70 @@ export default function PerfilAdministrador() {
 
                   <div className="info-card-premium">
                     <div className="info-card-icon-wrapper gradient-orange">
-                      <span className="info-card-icon-premium">📊</span>
+                      <span className="info-card-icon-premium">📱</span>
                     </div>
                     <div className="info-card-body">
-                      <h3 className="info-card-title">Total de Canchas</h3>
+                      <h3 className="info-card-title">Estado de Cuenta</h3>
                       <p className="info-card-value-premium">
-                        {recursosData?.total_canchas || recursosData?.canchas?.length || 0} cancha{((recursosData?.total_canchas || recursosData?.canchas?.length || 0) !== 1) ? 's' : ''}
+                        {userData?.verificado ? 'Verificada ✓' : 'Pendiente de verificación'}
                       </p>
                     </div>
                   </div>
 
                   <div className="info-card-premium">
                     <div className="info-card-icon-wrapper gradient-pink">
-                      <span className="info-card-icon-premium">
-                        {userData?.verificado ? '✅' : '⏳'}
-                      </span>
+                      <span className="info-card-icon-premium">🆔</span>
                     </div>
                     <div className="info-card-body">
-                      <h3 className="info-card-title">Estado de Cuenta</h3>
-                      <p className="info-card-value-premium">
-                        {userData?.verificado ? 'Verificada' : 'Pendiente'}
-                      </p>
-                      {userData?.verificado && (
-                        <span className="verified-badge-mini">✓ Verificado</span>
-                      )}
+                      <h3 className="info-card-title">ID de Usuario</h3>
+                      <p className="info-card-value-premium">#{userData?.id_usuario}</p>
                     </div>
                   </div>
 
                   <div className="info-card-premium">
-                    <div className="info-card-icon-wrapper gradient-cyan">
-                      <span className="info-card-icon-premium">📱</span>
+                    <div className="info-card-icon-wrapper gradient-teal">
+                      <span className="info-card-icon-premium">📅</span>
                     </div>
                     <div className="info-card-body">
-                      <h3 className="info-card-title">Teléfono de Contacto</h3>
-                      <p className="info-card-value-premium">{userData?.telefono || "No registrado"}</p>
+                      <h3 className="info-card-title">Miembro Desde</h3>
+                      <p className="info-card-value-premium">
+                        {userData?.fecha_creacion ? new Date(userData.fecha_creacion).toLocaleDateString('es-CL') : 'No disponible'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mensaje-admin-card">
+                    <div className="mensaje-admin-header">
+                      <div className="mensaje-admin-icon">💼</div>
+                      <div className="mensaje-admin-title">
+                        <h3>Mensaje Importante</h3>
+                        <p>Para administradores del sistema</p>
+                      </div>
+                    </div>
+                    <div className="mensaje-admin-content">
+                      <p>
+                        Como administrador de complejos deportivos, recuerda que tu rol es fundamental para garantizar 
+                        la mejor experiencia a los usuarios. Mantén actualizada la información de tus complejos, 
+                        revisa regularmente las reservas y asegúrate de que los precios y horarios sean precisos.
+                      </p>
+                      <div className="mensaje-admin-tips">
+                        <div className="tip-item">
+                          <span className="tip-icon">✅</span>
+                          <span>Verifica diariamente las reservas pendientes</span>
+                        </div>
+                        <div className="tip-item">
+                          <span className="tip-icon">✅</span>
+                          <span>Mantén actualizados los horarios de atención</span>
+                        </div>
+                        <div className="tip-item">
+                          <span className="tip-icon">✅</span>
+                          <span>Responde prontamente a las consultas de usuarios</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-
             </div>
           </main>
         </div>
