@@ -20,6 +20,9 @@ export interface Cancha {
   descripcion?: string;
   capacidad?: number;
   imagenUrl?: string;
+  iluminacion?: boolean;
+  largo?: number; // en metros
+  ancho?: number; // en metros
   fechaCreacion?: string; // ISO string
   fechaActualizacion?: string; // ISO string
   // Campo calculado para UI
@@ -74,26 +77,31 @@ export interface CanchaAdminFilters {
 export interface CreateCanchaInput {
   nombre: string;
   tipo: TipoCancha;
-  id_deporte?: number; // ID numérico del deporte (requerido por API)
   precioPorHora: number;
   descripcion?: string;
   capacidad: number;
   techada: boolean;
-  activa?: boolean; // Estado inicial de la cancha
+  activa?: boolean; // Estado inicial de la cancha (default: true)
   establecimientoId: number;
   imagenUrl?: string;
+  iluminacion?: boolean;
+  largo?: number; // en metros
+  ancho?: number; // en metros
 }
 
 // SOLO campos que FastAPI acepta en UPDATE (CanchaUpdateIn)
 export interface UpdateCanchaInput {
   nombre?: string;
   tipo?: TipoCancha;
-  id_deporte?: number; // ID numérico del deporte
   techada?: boolean;
   activa?: boolean;
   precioPorHora?: number;
   capacidad?: number;
   descripcion?: string;
+  imagenUrl?: string;
+  iluminacion?: boolean;
+  largo?: number; // en metros
+  ancho?: number; // en metros
 }
 
 // Tipos para gestión de fotos de canchas

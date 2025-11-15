@@ -22,10 +22,6 @@ export default function UsuariosPage() {
   const [currentPage, setCurrentPage] = useState(1);
 
   // Event handlers
-  const handleCreateUser = () => {
-    router.push('/super_admin/usuarios/crear');
-  };
-
   const handleExportReport = () => {
     // TODO: Implementar la exportación del informe
     console.log('Exportando informe de usuarios...');
@@ -195,18 +191,12 @@ export default function UsuariosPage() {
             Exportar informe
           </button>
           
-          <button className="export-button" onClick={handleCreateUser}>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-            Crear Usuario
-          </button>
           <button 
             onClick={() => router.push('/super_admin/usuarios/cambiar_rango')}
             className="export-button"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
             </svg>
             Cambiar Rango Usuario
           </button>
