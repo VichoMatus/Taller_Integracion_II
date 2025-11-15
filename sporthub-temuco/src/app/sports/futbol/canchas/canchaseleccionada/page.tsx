@@ -13,6 +13,7 @@ import { useAuthStatus } from '@/hooks/useAuthStatus';
 import { canchaService } from '../../../../../services/canchaService';
 import { complejosService } from '../../../../../services/complejosService';
 import { usuariosService } from '../../../../../services/usuariosService';
+import { resenaService } from '../../../../../services/resenaService';
 import { UsuarioContactoPublico } from '../../../../../types/usuarios';
 
 // ⚽ DATOS ESTÁTICOS PARA CAMPOS NO DISPONIBLES EN LA API
@@ -73,6 +74,11 @@ function FutbolCanchaSeleccionadaContent() {
   const [complejoData, setComplejoData] = useState<any>(null); // 🔥 NUEVO: ESTADO PARA COMPLEJO
   const [error, setError] = useState<string | null>(null);
   const [ownerContact, setOwnerContact] = useState<UsuarioContactoPublico | null>(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
 
   // ⚽ OBTENER ID DE LA CANCHA DESDE URL
   const canchaId = searchParams?.get('id') || searchParams?.get('cancha');
@@ -125,16 +131,18 @@ function FutbolCanchaSeleccionadaContent() {
             }
 
             // ⚽ NUEVO: OBTENER CONTACTO DEL DUEÑO
-            if (complejoData.duenioId) {
+            if (complejoInfo.duenioId) {
               try {
-                console.log('🔍 Cargando contacto del dueño ID:', complejoData.duenioId);
-                const contacto = await usuariosService.obtenerContacto(complejoData.duenioId);
+                console.log('👤 Cargando contacto del dueño ID:', complejoInfo.duenioId);
+                const contacto = await usuariosService.obtenerContacto(complejoInfo.duenioId);
                 console.log('✅ Contacto del dueño cargado:', contacto);
                 setOwnerContact(contacto);
               } catch (contactoError: any) {
                 console.error('⚠️ Error cargando contacto del dueño:', contactoError.message);
                 // No es crítico, continuar sin datos de contacto
               }
+            } else {
+              console.log('⚠️ El complejo no tiene duenioId asignado');
             }
             
           } catch (complejoError: any) {
