@@ -37,17 +37,13 @@ export default function EditReservaPage() {
       setReserva(reservaData);
       
       // Llenar el formulario con los datos existentes
-      // ⚠️ FIX ZONA HORARIA: Quitar 'Z' si existe para evitar conversión UTC
-      const fechaInicioSinZ = reservaData.fechaInicio.replace('Z', '').replace(/\.\d{3}/, '');
-      const fechaFinSinZ = reservaData.fechaFin.replace('Z', '').replace(/\.\d{3}/, '');
-      
       setFormData({
         estado: reservaData.estado,
         metodoPago: reservaData.metodoPago || 'efectivo',
         pagado: reservaData.pagado,
         notas: reservaData.notas || '',
-        fechaInicio: fechaInicioSinZ.slice(0, 16), // Para datetime-local (YYYY-MM-DDTHH:MM)
-        fechaFin: fechaFinSinZ.slice(0, 16)
+        fechaInicio: reservaData.fechaInicio.slice(0, 16), // Para datetime-local
+        fechaFin: reservaData.fechaFin.slice(0, 16)
       });
       
     } catch (err: any) {
@@ -81,22 +77,12 @@ export default function EditReservaPage() {
       setSaving(true);
       setError(null);
       
-      // ⚠️ FIX ZONA HORARIA: Extraer fecha y hora directamente del string datetime-local
-      // NO usar new Date().toISOString() porque convierte a UTC causando desfase
-      
-      // Extraer partes directamente del string sin conversiones
-      let updateData: any = { ...formData };
-      
-      if (formData.fechaInicio) {
-        const [fecha_date, hora_time] = formData.fechaInicio.split('T');
-        // Reconstruir en formato ISO pero sin la conversión UTC
-        updateData.fechaInicio = `${fecha_date}T${hora_time}:00`;
-      }
-      
-      if (formData.fechaFin) {
-        const [fecha_date, hora_time] = formData.fechaFin.split('T');
-        updateData.fechaFin = `${fecha_date}T${hora_time}:00`;
-      }
+      // Convertir fechas de datetime-local a ISO
+      const updateData = {
+        ...formData,
+        fechaInicio: formData.fechaInicio ? new Date(formData.fechaInicio).toISOString() : undefined,
+        fechaFin: formData.fechaFin ? new Date(formData.fechaFin).toISOString() : undefined
+      };
       
       await reservaService.updateReserva(parseInt(reservaId), updateData);
       
@@ -117,18 +103,15 @@ export default function EditReservaPage() {
   };
 
   // Función para formatear fecha para mostrar
-  // ⚠️ FIX ZONA HORARIA: Extraer fecha/hora directamente del string ISO sin conversión UTC
   const formatFecha = (fechaISO: string) => {
-    // Si viene con Z al final, quitarla para evitar conversión UTC
-    const fechaSinZ = fechaISO.replace('Z', '').replace(/\.\d{3}/, '');
-    
-    // Extraer componentes manualmente
-    const [datePart, timePart] = fechaSinZ.split('T');
-    const [year, month, day] = datePart.split('-');
-    const [hour, minute] = (timePart || '00:00').split(':');
-    
-    // Formatear manualmente sin conversión
-    return `${day}/${month}/${year} ${hour}:${minute}`;
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleDateString('es-CL', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (loading) {

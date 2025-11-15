@@ -203,12 +203,10 @@ export class ReservaApiRepository implements ReservaRepository {
    */
   async createReserva(input: CreateReservaInput): Promise<Reserva> {
     try {
-      // ⚠️ FIX ZONA HORARIA: NO usar toISOString() porque convierte a UTC
-      // FastAPI espera las fechas como están, sin conversión UTC
       const payload = toSnake({
         ...input,
-        fechaInicio: input.fechaInicio.toISOString().replace('Z', ''),
-        fechaFin: input.fechaFin.toISOString().replace('Z', ''),
+        fechaInicio: input.fechaInicio.toISOString(),
+        fechaFin: input.fechaFin.toISOString(),
       });
       const { data } = await this.http.post<FastReserva>(`/reservas`, payload);
       return toReserva(data);
@@ -244,20 +242,13 @@ export class ReservaApiRepository implements ReservaRepository {
         console.log('✅ [updateReserva] Usando formato nuevo directo:', payload);
       } else if (input.fechaInicio && input.fechaFin) {
         // Formato legacy: convertir a formato FastAPI
-        // ⚠️ FIX ZONA HORARIA: Si viene como string ISO "2024-11-14T20:00:00", extraer directamente
-        // Si viene como Date object, convertir sin usar toISOString() que agrega UTC
-        
-        let fechaInicioStr = typeof input.fechaInicio === 'string' ? input.fechaInicio : input.fechaInicio.toISOString();
-        let fechaFinStr = typeof input.fechaFin === 'string' ? input.fechaFin : input.fechaFin.toISOString();
-        
-        // Extraer fecha y hora directamente del string ISO (antes del Z si existe)
-        const [fechaInicio_date, fechaInicio_time] = fechaInicioStr.replace('Z', '').split('T');
-        const [fechaFin_date, fechaFin_time] = fechaFinStr.replace('Z', '').split('T');
+        const fechaInicio = new Date(input.fechaInicio);
+        const fechaFin = new Date(input.fechaFin);
         
         payload = {
-          fecha: fechaInicio_date, // YYYY-MM-DD
-          inicio: fechaInicio_time.substring(0, 5), // HH:MM
-          fin: fechaFin_time.substring(0, 5), // HH:MM
+          fecha: fechaInicio.toISOString().split('T')[0],
+          inicio: fechaInicio.toTimeString().substring(0, 5),
+          fin: fechaFin.toTimeString().substring(0, 5),
           notas: input.notas || ''
         };
         console.log('🔄 [updateReserva] Convertido de formato legacy:', payload);
@@ -297,16 +288,15 @@ export class ReservaApiRepository implements ReservaRepository {
     try {
       console.log('🔍 [verificarDisponibilidad] Verificando:', {
         canchaId: input.canchaId,
-        fechaInicio: input.fechaInicio,
-        fechaFin: input.fechaFin,
+        fechaInicio: input.fechaInicio.toISOString(),
+        fechaFin: input.fechaFin.toISOString(),
         reservaId: input.reservaId
       });
       
-      // ⚠️ FIX ZONA HORARIA: Remover 'Z' para evitar conversión UTC
       const payload = {
         cancha_id: input.canchaId,
-        fecha_inicio: input.fechaInicio.toISOString().replace('Z', ''),
-        fecha_fin: input.fechaFin.toISOString().replace('Z', ''),
+        fecha_inicio: input.fechaInicio.toISOString(),
+        fecha_fin: input.fechaFin.toISOString(),
         ...(input.reservaId && { reserva_id: input.reservaId }),
       };
       
@@ -420,18 +410,13 @@ export class ReservaApiRepository implements ReservaRepository {
     try {
       // ✅ CONSTRUIR PAYLOAD CON FORMATO FASTAPI
       // FastAPI espera: id_cancha, fecha, inicio, fin, id_usuario
-      // ⚠️ FIX ZONA HORARIA: Extraer fecha/hora directamente del string ISO sin conversiones UTC
+      const fechaInicio = new Date(input.fechaInicio);
+      const fechaFin = new Date(input.fechaFin);
       
-      let fechaInicioStr = typeof input.fechaInicio === 'string' ? input.fechaInicio : new Date(input.fechaInicio).toISOString();
-      let fechaFinStr = typeof input.fechaFin === 'string' ? input.fechaFin : new Date(input.fechaFin).toISOString();
-      
-      // Extraer componentes directamente del string ISO (quitar Z si existe)
-      const [fecha_date, fecha_time] = fechaInicioStr.replace('Z', '').split('T');
-      const [_, fin_time] = fechaFinStr.replace('Z', '').split('T');
-      
-      const fecha = fecha_date; // "2025-10-27"
-      const inicio = fecha_time.substring(0, 5); // "17:11"
-      const fin = fin_time.substring(0, 5); // "18:11"
+      // Extraer componentes de fecha y hora
+      const fecha = fechaInicio.toISOString().split('T')[0]; // "2025-10-27"
+      const inicio = fechaInicio.toTimeString().substring(0, 5); // "17:11"
+      const fin = fechaFin.toTimeString().substring(0, 5); // "18:11"
       
       const payload = {
         id_cancha: input.canchaId,
