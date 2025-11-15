@@ -1,40 +1,44 @@
-# Guía rápida: Subida y obtención de imágenes (Cloudflare R2)
+# Subida de foto de perfil SuperAdmin a Cloudflare R2
 
-## ¿Para qué sirve?
-Permite subir imágenes (canchas, perfil, superadmin) desde el frontend al backend, que las procesa y almacena en Cloudflare R2. Luego puedes pedirlas por endpoint para mostrarlas en la app.
+## Resumen
+Este backend expone un endpoint para que el frontend pueda subir la foto de perfil del superadmin. El backend procesa la imagen (reduce tamaño, convierte a webp, asigna nombre único) y la sube a Cloudflare R2. Luego retorna el nombre y la URL de la imagen.
 
-## Subir imagen desde el frontend (ejemplo básico)
+## Endpoint
+
+- **URL:** `/api/super_admin/profile-image`
+- **Método:** `POST`
+- **Autenticación:** (Recomendado) Enviar JWT en header Authorization
+- **Tipo de contenido:** `multipart/form-data`
+- **Campo de imagen:** `image`
+
+## Ejemplo de uso en frontend (React/Next.js)
+
 ```js
 const formData = new FormData();
-formData.append('image', archivoInput.files[0]);
+formData.append('image', archivoImagen); // archivoImagen es un File (input type="file")
 
-const res = await fetch('/api/superadmin/image/upload', {
+const response = await fetch('/api/super_admin/profile-image', {
   method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}` // si requiere autenticación
+  },
   body: formData
 });
-const data = await res.json();
-if (data.ok) {
-  alert('Imagen subida. ID: ' + data.id);
+
+const data = await response.json();
+if (data.filename && data.url) {
+  // Mostrar imagen subida
+  setImagenPerfil(data.url);
 }
 ```
-- El input debe tener `name="image"`.
-- El endpoint acepta archivos de hasta 50MB.
 
-## Mostrar imagen subida
-```js
-// Si el backend responde { ok: true, id, filename }
-const url = `/api/superadmin/image/${data.filename}`;
-imgElement.src = url;
-```
-
-## Endpoints útiles
-- `POST /api/superadmin/image/upload` — Sube imagen de perfil superadmin
-- `GET /api/superadmin/image/:filename` — Obtiene la imagen (stream desde Cloudflare)
+## Respuestas posibles
+- **200 OK**: `{ filename: "uuid.webp", url: "https://.../bucket/uuid.webp" }`
+- **400**: `{ error: "No se envió ninguna imagen." }`
+- **500**: `{ error: "Mensaje de error interno" }`
 
 ## Notas
-- Si usas autenticación, agrega el header `Authorization` en el fetch.
-- Si el frontend está en otro dominio, asegúrate de que CORS esté bien configurado en el backend.
-- Para canchas o perfil de usuario, cambia la ruta por la correspondiente (`/api/canchas/...`, `/api/usuario/...`)
-
----
-Cualquier duda, revisa los controladores en `backend/src/superAdmin/presentation/controllers/` o pregunta al equipo backend.
+- El backend se encarga de procesar y optimizar la imagen, el frontend solo debe enviarla.
+- Se recomienda proteger el endpoint con autenticación.
+- El campo del formulario debe llamarse `image`.
+- El backend retorna la URL lista para usar en `<img src=... />`.

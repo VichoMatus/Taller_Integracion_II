@@ -31,6 +31,7 @@ import { SuperAdminController } from '../interfaces/controllers/superAdminContro
 import { authMiddleware } from '../../auth/middlewares/authMiddleware';
 import { requireSuperAdmin } from '../guards/superAdminGuards';
 import cambioRolRoutes from '../../cambioRol/routes/cambioRolRoutes';
+import profileImageRoutes from './profileImageRoutes';
 
 // Crear router de Express y instancia del controlador
 const router = Router();
@@ -114,5 +115,8 @@ router.get('/search', authMiddleware, requireSuperAdmin, controller.globalSearch
  * Solo accesible para super_admin.
  */
 router.use('/usuarios', authMiddleware, requireSuperAdmin, cambioRolRoutes);
+
+// Rutas para manejo de imagen de perfil de superadmin
+router.use('/profile-image', profileImageRoutes);
 
 export default router;
