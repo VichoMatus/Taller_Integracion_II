@@ -1,8 +1,7 @@
 import { Request, Response } from "express";
 import { ok, fail } from "../../../interfaces/apiEnvelope";
 import { 
-  ListResenas,
-  GetResena,
+  ListResenas, 
   CreateResena, 
   UpdateResena, 
   DeleteResena,
@@ -17,7 +16,6 @@ import {
 export class ResenasController {
   constructor(
     private listResenasUC: ListResenas,
-    private getResenaUC: GetResena,
     private createResenaUC: CreateResena,
     private updateResenaUC: UpdateResena,
     private deleteResenaUC: DeleteResena,
@@ -31,37 +29,16 @@ export class ResenasController {
    */
   list = async (req: Request, res: Response) => {
     try {
-      // Aceptar tanto camelCase como snake_case para compatibilidad
-      const idCancha = req.query.idCancha || req.query.id_cancha;
-      const idComplejo = req.query.idComplejo || req.query.id_complejo;
-      const pageSize = req.query.pageSize || req.query.page_size;
-      
       const filters = {
-        idCancha: idCancha ? Number(idCancha) : undefined,
-        idComplejo: idComplejo ? Number(idComplejo) : undefined,
+        idCancha: req.query.idCancha ? Number(req.query.idCancha) : undefined,
+        idComplejo: req.query.idComplejo ? Number(req.query.idComplejo) : undefined,
         order: req.query.order as any,
         page: req.query.page ? Number(req.query.page) : undefined,
-        pageSize: pageSize ? Number(pageSize) : undefined,
+        pageSize: req.query.pageSize ? Number(req.query.pageSize) : undefined,
       };
-      
-      console.log('🔍 [ResenasController.list] Query params recibidos:', req.query);
-      console.log('📋 [ResenasController.list] Filtros procesados:', filters);
       
       const result = await this.listResenasUC.execute(filters);
       res.json(ok(result));
-    } catch (e: any) {
-      res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details));
-    }
-  };
-
-  /**
-   * Obtiene una reseña específica por ID.
-   * GET /resenas/:id
-   */
-  getOne = async (req: Request, res: Response) => {
-    try {
-      const resena = await this.getResenaUC.execute(Number(req.params.id));
-      res.json(ok(resena));
     } catch (e: any) {
       res.status(e?.statusCode ?? 500).json(fail(e?.statusCode ?? 500, e?.message ?? "Error", e?.details));
     }
@@ -73,18 +50,7 @@ export class ResenasController {
    */
   create = async (req: Request, res: Response) => {
     try {
-      // Convertir snake_case a camelCase para compatibilidad
-      const input = {
-        idCancha: req.body.id_cancha || req.body.idCancha,
-        idComplejo: req.body.id_complejo || req.body.idComplejo,
-        calificacion: req.body.calificacion,
-        comentario: req.body.comentario
-      };
-      
-      console.log('📝 [ResenasController.create] Body recibido:', req.body);
-      console.log('📝 [ResenasController.create] Input procesado:', input);
-      
-      const resena = await this.createResenaUC.execute(input);
+      const resena = await this.createResenaUC.execute(req.body);
       res.status(201).json(ok(resena));
     } catch (e: any) {
       res.status(e?.statusCode ?? 400).json(fail(e?.statusCode ?? 400, e?.message ?? "Error", e?.details));

@@ -250,18 +250,15 @@ export default function ReservasPage() {
   };
 
   // Función para formatear fecha
-  // ⚠️ FIX ZONA HORARIA: Extraer fecha/hora directamente del string ISO sin conversión UTC
   const formatFecha = (fechaISO: string) => {
-    // Si viene con Z al final, quitarla para evitar conversión UTC
-    const fechaSinZ = fechaISO.replace('Z', '').replace(/\.\d{3}/, ''); // Quitar Z y milisegundos
-    
-    // Extraer componentes manualmente
-    const [datePart, timePart] = fechaSinZ.split('T');
-    const [year, month, day] = datePart.split('-');
-    const [hour, minute] = (timePart || '00:00').split(':');
-    
-    // Formatear manualmente sin conversión
-    return `${day}/${month}/${year} ${hour}:${minute}`;
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleDateString('es-CL', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   // Filtrar reservas basado en búsqueda y estado

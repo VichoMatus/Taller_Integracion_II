@@ -62,14 +62,3 @@ export interface UsuarioListQuery {
   page?: number;
   size?: number;
 }
-
-/**
- * Información pública de contacto de un usuario
- * Accesible sin permisos especiales (solo requiere autenticación básica)
- */
-export interface UsuarioContactoPublico {
-  nombre: string;
-  apellido: string;
-  email: string;
-  telefono: string | null;
-}

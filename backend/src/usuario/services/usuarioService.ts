@@ -6,7 +6,6 @@ import {
   UsuarioCreateRequest,
   UsuarioUpdateRequest,
   UsuarioListQuery,
-  UsuarioContactoPublico,
 } from "../types/usuarioTypes";
 
 export class UsuarioService {
@@ -52,15 +51,6 @@ export class UsuarioService {
 
   async verificar(id: number | string): Promise<Usuario> {
     const { data } = await this.apiClient.patch(`/api/v1/usuarios/${id}/verificar`);
-    return data;
-  }
-
-  /**
-   * Obtiene información pública de contacto de un usuario
-   * Este endpoint es accesible sin permisos de super_admin
-   */
-  async obtenerContactoPublico(id: number | string): Promise<UsuarioContactoPublico> {
-    const { data } = await this.apiClient.get(`/api/v1/usuarios/${id}/contacto_publico`);
     return data;
   }
 }

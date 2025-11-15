@@ -17,31 +17,18 @@ export class ResenaApiRepository implements ResenaRepository {
    * GET /resenas con query params: id_cancha, id_complejo, order, page, page_size
    */
   async listResenas(filters: ResenaFilters): Promise<Resena[]> {
-    const params: any = {};
-    
-    if (filters.idCancha) params.id_cancha = filters.idCancha;
-    if (filters.idComplejo) params.id_complejo = filters.idComplejo;
-    if (filters.order) params.order = filters.order;
-    if (filters.page) params.page = filters.page;
-    if (filters.pageSize) params.page_size = filters.pageSize;
-    
-    console.log('🔍 [ResenaApiRepository.listResenas] Filtros recibidos:', filters);
-    console.log('📤 [ResenaApiRepository.listResenas] Params a enviar a FastAPI:', params);
-    console.log('🌐 [ResenaApiRepository.listResenas] URL completa:', this.http.defaults.baseURL + '/resenas');
-    
     try {
+      const params: any = {};
+      
+      if (filters.idCancha) params.id_cancha = filters.idCancha;
+      if (filters.idComplejo) params.id_complejo = filters.idComplejo;
+      if (filters.order) params.order = filters.order;
+      if (filters.page) params.page = filters.page;
+      if (filters.pageSize) params.page_size = filters.pageSize;
+      
       const { data } = await this.http.get<FastResena[]>(`/resenas`, { params });
-      
-      console.log('✅ [ResenaApiRepository.listResenas] Reseñas recibidas:', data?.length || 0);
-      
       return data.map(toResena);
-    } catch (e: any) {
-      console.error('❌ [ResenaApiRepository.listResenas] Error al obtener reseñas:', {
-        message: e.message,
-        status: e.response?.status,
-        data: e.response?.data,
-        paramsEnviados: params
-      });
+    } catch (e) {
       throw httpError(e);
     }
   }
