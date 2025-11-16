@@ -12,9 +12,8 @@ import { prepareFutbolReservationData, serializeReservationData } from '@/utils/
 import { useAuthStatus } from '@/hooks/useAuthStatus';
 import { canchaService } from '../../../../../services/canchaService';
 import { complejosService } from '../../../../../services/complejosService';
-import { usuariosService } from '../../../../../services/usuariosService';
-import { resenaService } from '../../../../../services/resenaService';
-import { UsuarioContactoPublico } from '../../../../../types/usuarios';
+import { resenaService } from '@/services/resenaService';
+import type { Resena } from '@/types/resena';
 
 // ⚽ DATOS ESTÁTICOS PARA CAMPOS NO DISPONIBLES EN LA API
 const staticContactData = {
@@ -73,11 +72,12 @@ function FutbolCanchaSeleccionadaContent() {
   const [cancha, setCancha] = useState<any>(null);
   const [complejoData, setComplejoData] = useState<any>(null); // 🔥 NUEVO: ESTADO PARA COMPLEJO
   const [error, setError] = useState<string | null>(null);
-  const [ownerContact, setOwnerContact] = useState<UsuarioContactoPublico | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+  
+  // 🆕 ESTADOS PARA RESEÑAS
+  const [reviews, setReviews] = useState<Resena[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
   const [showReviewModal, setShowReviewModal] = useState(false);
-  const [reviews, setReviews] = useState<any[]>([]);
-  const [reviewsLoading, setReviewsLoading] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
 
   // ⚽ OBTENER ID DE LA CANCHA DESDE URL
@@ -128,21 +128,6 @@ function FutbolCanchaSeleccionadaContent() {
                 lng: parseFloat(complejoInfo.longitud)
               };
               console.log('🗺️ Coordenadas obtenidas del complejo:', coordinates);
-            }
-
-            // ⚽ NUEVO: OBTENER CONTACTO DEL DUEÑO
-            if (complejoInfo.duenioId) {
-              try {
-                console.log('👤 Cargando contacto del dueño ID:', complejoInfo.duenioId);
-                const contacto = await usuariosService.obtenerContacto(complejoInfo.duenioId);
-                console.log('✅ Contacto del dueño cargado:', contacto);
-                setOwnerContact(contacto);
-              } catch (contactoError: any) {
-                console.error('⚠️ Error cargando contacto del dueño:', contactoError.message);
-                // No es crítico, continuar sin datos de contacto
-              }
-            } else {
-              console.log('⚠️ El complejo no tiene duenioId asignado');
             }
             
           } catch (complejoError: any) {
@@ -459,23 +444,27 @@ function FutbolCanchaSeleccionadaContent() {
 
   // 🔥 FUNCIÓN MEJORADA PARA MANEJAR RESERVA CON DATOS REALES
   const handleReserve = () => {
-  if (!cancha || !cancha.activa) {
-    alert('Esta cancha no está disponible para reserva');
-    return;
-  }
+    if (!cancha || !cancha.activa) {
+      alert('⚠️ Esta cancha no está disponible para reserva');
+      return;
+    }
 
-  // 🔥 PREPARAR DATOS USANDO EL UTILITY
-  const reservationData = prepareFutbolReservationData(cancha, complejoData);
-  
-  // 🔥 SERIALIZAR DATOS PARA URL
-  const reservationParams = serializeReservationData(reservationData);
+    // 🔥 PREPARAR DATOS USANDO EL UTILITY (incluir datos de contacto estáticos)
+    const reservationData = prepareFutbolReservationData(
+      cancha,
+      complejoData,
+      staticContactData
+    );
+    
+    // 🔥 SERIALIZAR DATOS PARA URL (base64)
+    const serialized = serializeReservationData(reservationData);
 
-  console.log('🔥 Datos de reserva preparados:', reservationData);
-  console.log('🔥 Parámetros URL:', reservationParams.toString());
+    console.log('🔥 Datos de reserva preparados:', reservationData);
+    console.log('🔥 Datos serializados:', serialized);
 
-  // 🔥 NAVEGAR A LA PÁGINA DE RESERVA CON TODOS LOS DATOS
-  router.push(`/sports/reservacancha?${reservationParams.toString()}`);
-};
+    // 🔥 NAVEGAR A LA PÁGINA DE RESERVA CON TODOS LOS DATOS
+    router.push(`/sports/reservacancha?data=${serialized}`);
+  };
 
   const handleCall = () => {
     window.open(`tel:${cancha?.phone}`, '_self');
@@ -711,63 +700,22 @@ function FutbolCanchaSeleccionadaContent() {
           <h3 className={styles.sectionTitle}>Contacto</h3>
           <div className={styles.contactCard}>
             <div className={styles.contactInfo}>
-              {ownerContact ? (
-                <>
-                  <div className={styles.contactItem}>
-                    <span className={styles.contactLabel}>Responsable:</span>
-                    <span className={styles.contactValue}>
-                      {ownerContact.nombre} {ownerContact.apellido}
-                    </span>
-                  </div>
-                  <div className={styles.contactItem}>
-                    <span className={styles.contactLabel}>Email:</span>
-                    <span className={styles.contactValue}>{ownerContact.email}</span>
-                  </div>
-                  {ownerContact.telefono && (
-                    <div className={styles.contactItem}>
-                      <span className={styles.contactLabel}>Teléfono:</span>
-                      <span className={styles.contactValue}>{ownerContact.telefono}</span>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  <div className={styles.contactItem}>
-                    <span className={styles.contactLabel}>Teléfono:</span>
-                    <span className={styles.contactValue}>{cancha.phone}</span>
-                  </div>
-                  <div className={styles.contactItem}>
-                    <span className={styles.contactLabel}>Instagram:</span>
-                    <span className={styles.contactValue}>{cancha.instagram}</span>
-                  </div>
-                </>
-              )}
+              <div className={styles.contactItem}>
+                <span className={styles.contactLabel}>Teléfono:</span>
+                <span className={styles.contactValue}>{cancha.phone}</span>
+              </div>
+              <div className={styles.contactItem}>
+                <span className={styles.contactLabel}>Instagram:</span>
+                <span className={styles.contactValue}>{cancha.instagram}</span>
+              </div>
             </div>
             <div className={styles.contactButtons}>
-              {ownerContact?.telefono ? (
-                <button 
-                  className={styles.contactButton} 
-                  onClick={() => window.open(`tel:${ownerContact.telefono}`, '_self')}
-                >
-                  📞 Llamar
-                </button>
-              ) : (
-                <button className={styles.contactButton} onClick={handleCall}>
-                  📞 Llamar
-                </button>
-              )}
-              {ownerContact?.email ? (
-                <button 
-                  className={styles.contactButton} 
-                  onClick={() => window.open(`mailto:${ownerContact.email}`, '_blank')}
-                >
-                  📧 Email
-                </button>
-              ) : (
-                <button className={styles.contactButton} onClick={handleInstagram}>
-                  💬 Abrir
-                </button>
-              )}
+              <button className={styles.contactButton} onClick={handleCall}>
+                📞 Llamar
+              </button>
+              <button className={styles.contactButton} onClick={handleInstagram}>
+                💬 Abrir
+              </button>
             </div>
           </div>
         </div>
