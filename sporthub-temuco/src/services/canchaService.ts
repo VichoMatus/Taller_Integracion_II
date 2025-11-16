@@ -46,6 +46,10 @@ const adaptCanchaFromBackend = (backendCancha: any) => {
       imagenUrl: backendCancha.foto_principal,
       fechaCreacion: backendCancha.fecha_creacion,
       fechaActualizacion: backendCancha.fecha_actualizacion,
+      // Campos de dimensiones e iluminación:
+      iluminacion: backendCancha.iluminacion || false,
+      largo: backendCancha.largo || 0,
+      ancho: backendCancha.ancho || 0,
       // Campo calculado para UI basado en activo:
       estado: (backendCancha.activo ? 'disponible' : 'inactiva') as 'disponible' | 'inactiva'
     };
@@ -64,6 +68,9 @@ const adaptCanchaFromBackend = (backendCancha: any) => {
       imagenUrl: backendCancha.imagenUrl,
       fechaCreacion: backendCancha.fechaCreacion,
       fechaActualizacion: backendCancha.fechaActualizacion,
+      iluminacion: backendCancha.iluminacion || false,
+      largo: backendCancha.largo || 0,
+      ancho: backendCancha.ancho || 0,
       estado: (backendCancha.activa ? 'disponible' : 'inactiva') as 'disponible' | 'inactiva'
     };
   }
@@ -166,29 +173,30 @@ const adaptCanchaToBackend = (frontendCancha: CreateCanchaInput | UpdateCanchaIn
       payload.nombre = frontendCancha.nombre;
     }
 
-    // deporte - OPCIONAL
+    // tipo/deporte - OPCIONAL - Normalizar y enviar como "tipo" (el BFF lo convertirá a "deporte")
     if ((frontendCancha as any).tipo !== undefined) {
-      payload.deporte = (frontendCancha as any).tipo;
+      payload.tipo = getNombreDeporteNormalizado((frontendCancha as any).tipo);
+      console.log(`🏀 [adaptCanchaToBackend UPDATE] Deporte normalizado: ${(frontendCancha as any).tipo} → ${payload.tipo}`);
     }
 
-    // cubierta - OPCIONAL
+    // techada - OPCIONAL (enviar como "techada", el BFF lo convertirá a "cubierta")
     if ((frontendCancha as any).techada !== undefined) {
-      payload.cubierta = (frontendCancha as any).techada;
+      payload.techada = Boolean((frontendCancha as any).techada);
     }
 
-    // activo - OPCIONAL
+    // activa - OPCIONAL (enviar como "activa", el BFF lo convertirá a "activo")
     if ((frontendCancha as any).activa !== undefined) {
-      payload.activo = (frontendCancha as any).activa;
+      payload.activa = Boolean((frontendCancha as any).activa);
     }
 
     // precioPorHora - OPCIONAL
     if ((frontendCancha as any).precioPorHora !== undefined) {
-      payload.precioPorHora = (frontendCancha as any).precioPorHora;
+      payload.precioPorHora = Number((frontendCancha as any).precioPorHora);
     }
 
     // capacidad - OPCIONAL
     if ((frontendCancha as any).capacidad !== undefined) {
-      payload.capacidad = (frontendCancha as any).capacidad;
+      payload.capacidad = Number((frontendCancha as any).capacidad);
     }
 
     // descripcion - OPCIONAL
@@ -198,22 +206,22 @@ const adaptCanchaToBackend = (frontendCancha: CreateCanchaInput | UpdateCanchaIn
 
     // imagenUrl - OPCIONAL
     if ((frontendCancha as any).imagenUrl !== undefined) {
-      payload.imagen_url = (frontendCancha as any).imagenUrl;
+      payload.imagenUrl = (frontendCancha as any).imagenUrl;
     }
 
     // iluminacion - OPCIONAL
     if ((frontendCancha as any).iluminacion !== undefined) {
-      payload.iluminacion = (frontendCancha as any).iluminacion;
+      payload.iluminacion = Boolean((frontendCancha as any).iluminacion);
     }
 
     // largo - OPCIONAL
     if ((frontendCancha as any).largo !== undefined) {
-      payload.largo = (frontendCancha as any).largo;
+      payload.largo = Number((frontendCancha as any).largo);
     }
 
     // ancho - OPCIONAL
     if ((frontendCancha as any).ancho !== undefined) {
-      payload.ancho = (frontendCancha as any).ancho;
+      payload.ancho = Number((frontendCancha as any).ancho);
     }
   }
 
