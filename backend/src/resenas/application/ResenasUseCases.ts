@@ -20,7 +20,7 @@ export class ListResenas {
 
 /**
  * Caso de uso para obtener una reseña específica por ID.
- * Como FastAPI no tiene GET /resenas/:id, obtenemos todas y filtramos.
+ * Llama directamente al endpoint GET /resenas/{id} de FastAPI.
  */
 export class GetResena {
   constructor(private repo: ResenaRepository) {}
@@ -33,24 +33,23 @@ export class GetResena {
   async execute(id: number): Promise<Resena> {
     console.log(`🔍 [GetResena] Buscando reseña con ID: ${id}`);
     
-    // Buscar en todas las reseñas (sin filtros, pero con paginación grande)
-    const resenas = await this.repo.listResenas({ 
-      pageSize: 1000 // Traer muchas para asegurar que encontramos la reseña
-    });
-    
-    console.log(`📊 [GetResena] Total de reseñas obtenidas: ${resenas.length}`);
-    
-    const resena = resenas.find(r => r.id === id);
-    
-    if (!resena) {
-      console.error(`❌ [GetResena] Reseña con ID ${id} no encontrada`);
-      const error: any = new Error(`Reseña con ID ${id} no encontrada`);
-      error.statusCode = 404;
+    try {
+      const resena = await this.repo.getResena(id);
+      console.log(`✅ [GetResena] Reseña encontrada:`, resena);
+      return resena;
+    } catch (error: any) {
+      console.error(`❌ [GetResena] Error al obtener reseña con ID ${id}:`, error.message);
+      
+      // Si es un error 404, lanzar un error más específico
+      if (error.statusCode === 404) {
+        const notFoundError: any = new Error(`Reseña con ID ${id} no encontrada`);
+        notFoundError.statusCode = 404;
+        throw notFoundError;
+      }
+      
+      // Re-lanzar otros errores
       throw error;
     }
-    
-    console.log(`✅ [GetResena] Reseña encontrada:`, resena);
-    return resena;
   }
 }
 

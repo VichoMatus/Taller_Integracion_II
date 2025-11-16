@@ -47,6 +47,31 @@ export class ResenaApiRepository implements ResenaRepository {
   }
 
   /**
+   * Obtiene una reseña específica por ID desde FastAPI.
+   * GET /resenas/{id}
+   */
+  async getResena(id: number): Promise<Resena> {
+    console.log('🔍 [ResenaApiRepository.getResena] Obteniendo reseña ID:', id);
+    console.log('🌐 [ResenaApiRepository.getResena] URL completa:', this.http.defaults.baseURL + `/resenas/${id}`);
+    
+    try {
+      const { data } = await this.http.get<FastResena>(`/resenas/${id}`);
+      
+      console.log('✅ [ResenaApiRepository.getResena] Reseña obtenida:', data);
+      
+      return toResena(data);
+    } catch (e: any) {
+      console.error('❌ [ResenaApiRepository.getResena] Error al obtener reseña:', {
+        id,
+        message: e.message,
+        status: e.response?.status,
+        data: e.response?.data
+      });
+      throw httpError(e);
+    }
+  }
+
+  /**
    * Crea una nueva reseña en FastAPI (requiere reserva confirmada).
    * POST /resenas
    * Body: { id_cancha?, id_complejo?, calificacion, comentario? }
