@@ -27,18 +27,21 @@ export default function ViewResenaPage() {
         setResena(data);
       } catch (err: any) {
         console.error('❌ Error al cargar reseña:', err);
-        
-        // Mensaje amigable según el tipo de error
+
         let mensajeError = 'Error al cargar la reseña';
-        
-        if (err.message && err.message.includes('missing FROM-clause')) {
+
+        const message = typeof err?.message === 'string' ? err.message : (err?.response?.data?.detail ? JSON.stringify(err.response.data.detail) : undefined);
+
+        if (err?.response?.status === 422 || (message && message.includes('less than or equal to 100'))) {
+          mensajeError = '⚠️ El backend rechazó la solicitud: el parámetro page_size excede el límite. Esto puede provocar que no se pueda buscar reseñas individuales.';
+        } else if (message && message.includes('missing FROM-clause')) {
           mensajeError = '⚠️ El endpoint de FastAPI para obtener reseñas individuales no está completamente implementado. Por ahora, solo puedes ver reseñas desde la lista principal.';
-        } else if (err.message && err.message.includes('no encontrada')) {
+        } else if (err?.response?.status === 404 || (message && message.includes('no encontrada'))) {
           mensajeError = `La reseña con ID ${resenaId} no fue encontrada.`;
-        } else if (err.message) {
-          mensajeError = err.message;
+        } else if (message) {
+          mensajeError = message;
         }
-        
+
         setError(mensajeError);
       } finally {
         setLoading(false);

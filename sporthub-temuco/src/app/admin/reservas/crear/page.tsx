@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { reservaService } from '@/services/reservaService';
+import { usuariosService } from '@/services/usuariosService';
 import { canchaService } from '@/services/canchaService';
 import { CreateReservaInput, MetodoPago } from '@/types/reserva';
 import { Cancha } from '@/types/cancha';
@@ -16,6 +17,8 @@ export default function CreateReservaPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<number>(0);
+  const [usuarioBusqueda, setUsuarioBusqueda] = useState<string>('');
+  const [usuarioEncontrado, setUsuarioEncontrado] = useState<any | null>(null);
 
   // Estado del formulario
   const [formData, setFormData] = useState<CreateReservaInput>({
@@ -118,6 +121,41 @@ export default function CreateReservaPage() {
       ...prev,
       [name]: type === 'checkbox' ? checked : processedValue
     }));
+  };
+
+  // Buscar usuario por ID (usar endpoint /usuarios/:id) — más fiable que /contacto
+  const handleBuscarUsuario = async () => {
+    setError(null);
+    setUsuarioEncontrado(null);
+
+    if (!usuarioBusqueda) {
+      setError('Ingresa un ID de usuario para buscar');
+      return;
+    }
+
+    try {
+      const id = Number(usuarioBusqueda);
+      if (!id) {
+        setError('El ID debe ser numérico');
+        return;
+      }
+
+      const usuario = await usuariosService.obtenerPublico(id);
+      setUsuarioEncontrado(usuario);
+      setFormData(prev => ({ ...prev, usuarioId: id }));
+    } catch (err: any) {
+      console.error('Error al buscar usuario:', err);
+      // Si GET /usuarios/:id devuelve 404, igual asignar el ID manualmente.
+      const status = err?.response?.status;
+      if (status === 404) {
+        const id = Number(usuarioBusqueda);
+        setFormData(prev => ({ ...prev, usuarioId: id }));
+        setUsuarioEncontrado(null);
+        setError('No se encontró información de contacto, se asignará el ID ingresado.');
+        return;
+      }
+      setError(err?.message || 'No se encontró el usuario');
+    }
   };
 
   // Validar formulario
@@ -268,21 +306,45 @@ export default function CreateReservaPage() {
             <div className="edit-form-grid">
               <div className="edit-form-group">
                 <label htmlFor="usuarioId" className="edit-form-label">Usuario: *</label>
-                <input
-                  type="text"
-                  id="usuarioDisplay"
-                  value={`Usuario actual (ID: ${currentUserId})`}
-                  className="edit-form-input"
-                  disabled
-                  style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
-                />
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    id="usuarioDisplay"
+                    value={usuarioEncontrado ? `${usuarioEncontrado.nombre || usuarioEncontrado.email || 'Usuario'} (ID: ${formData.usuarioId})` : `Usuario actual (ID: ${currentUserId})`}
+                    className="edit-form-input"
+                    disabled
+                    style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '.5rem' }}>
+                  <input
+                    type="text"
+                    name="usuarioBusqueda"
+                    placeholder="Buscar usuario por ID"
+                    value={usuarioBusqueda}
+                    onChange={(e) => setUsuarioBusqueda(e.target.value)}
+                    className="edit-form-input"
+                    style={{ flex: 1 }}
+                  />
+
+                  <button type="button" onClick={handleBuscarUsuario} className="btn-guardar" title="Buscar usuario">
+                    Buscar
+                  </button>
+
+                  <button type="button" onClick={() => { setUsuarioBusqueda(''); setUsuarioEncontrado(null); setFormData(prev => ({ ...prev, usuarioId: currentUserId })); }} className="btn-volver">
+                    Usar actual
+                  </button>
+                </div>
+
                 <input
                   type="hidden"
                   name="usuarioId"
                   value={formData.usuarioId}
                 />
+
                 <p className="text-sm text-gray-600 mt-1">
-                  ℹ️ La reserva se creará a nombre del usuario actual
+                  ℹ️ Puedes buscar un usuario por su ID. Si no se especifica, la reserva se creará a nombre del usuario actual.
                 </p>
               </div>
 

@@ -118,6 +118,20 @@ class UsuariosService {
     );
   }
 
+  // Obtener usuario por ID sin exigir rol super_admin en frontend
+  // Útil cuando la vista es admin y queremos consultar un usuario por su ID
+  async obtenerPublico(id: string | number): Promise<Usuario> {
+    try {
+      const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+      const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+      const { data } = await apiBackend.get<Usuario>(`/usuarios/${id}`, { headers });
+      return data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
+  }
+
   // Crear usuario
   async crear(payload: UsuarioCreateRequest): Promise<Usuario> {
     return this.handleRequest(

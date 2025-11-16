@@ -47,6 +47,48 @@ export const resenaService = {
       const { data } = await apiBackend.get(`/resenas/${id}`);
       return data.data || data;
     } catch (err) {
+      // Fallback: si el endpoint GET /resenas/:id falla en FastAPI o la ruta no existe,
+      // intentar obtener desde la lista y filtrar con page_size seguro.
+      try {
+        // FastAPI limita page_size <= 100, por lo que iteramos páginas de 100 hasta encontrar la reseña
+        const pageSize = 100;
+        let page = 1;
+        while (true) {
+          // En caso de que el BFF/FASTAPI valide page_size, enviamos page_size=100 explícito
+          const res = await apiBackend.get('/resenas', { params: { page, page_size: pageSize } });
+          const items = res.data?.data || res.data || [];
+          if (!Array.isArray(items) || items.length === 0) break;
+          const found = items.find((r: any) => Number(r.id) === Number(id));
+          if (found) return found;
+          // si el número de items es menor que pageSize, estamos al final
+          if (items.length < pageSize) break;
+          page += 1;
+          // límite de seguridad: no iterar más de 20 páginas
+          if (page > 20) break;
+        }
+      } catch (fallthroughErr: any) {
+        // Si recibimos un error 422 del backend (page_size demasiado grande) intentamos con menor page_size
+        console.warn('Fallback para obtener reseña por lista falló:', fallthroughErr);
+        if (fallthroughErr?.response?.status === 422) {
+          console.warn('BFF rechazó page_size, reintentando con page_size=50...');
+          try {
+            const fallbackPageSize = 50;
+            let fallbackPage = 1;
+            while (true) {
+              const res = await apiBackend.get('/resenas', { params: { page: fallbackPage, page_size: fallbackPageSize } });
+              const items = res.data?.data || res.data || [];
+              if (!Array.isArray(items) || items.length === 0) break;
+              const found = items.find((r: any) => Number(r.id) === Number(id));
+              if (found) return found;
+              if (items.length < fallbackPageSize) break;
+              fallbackPage += 1;
+              if (fallbackPage > 40) break;
+            }
+          } catch (err2: any) {
+            console.warn('Segundo fallback también falló:', err2);
+          }
+        }
+      }
       handleApiError(err);
     }
   },

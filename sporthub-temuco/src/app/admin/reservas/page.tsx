@@ -186,6 +186,20 @@ export default function ReservasPage() {
     }
   };
 
+  // Función para confirmar reserva como administrador
+  const confirmReservationAdmin = async (reservationId: number) => {
+    if (window.confirm('¿Confirmar esta reserva como administrador?')) {
+      try {
+        await reservaService.confirmarReserva(reservationId);
+        alert('Reserva confirmada correctamente');
+        loadReservas();
+      } catch (err: any) {
+        console.error('Error al confirmar reserva:', err);
+        alert(err?.message || 'Error al confirmar reserva');
+      }
+    }
+  };
+
   // Función para obtener el badge de estado
   const getStatusBadge = (estado: EstadoReserva) => {
     switch (estado) {
@@ -376,6 +390,19 @@ export default function ReservasPage() {
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
+                      {/* Botón Confirmar (solo si está pendiente) */}
+                      {reserva.estado === 'pendiente' && (
+                        <button
+                          className="btn-action btn-confirmar"
+                          title="Confirmar Reserva"
+                          onClick={() => confirmReservationAdmin(reserva.id)}
+                          style={{ backgroundColor: 'var(--success)', color: 'white' }}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                           </svg>
                         </button>
                       )}
