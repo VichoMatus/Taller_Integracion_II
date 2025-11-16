@@ -105,3 +105,104 @@ Por favor, asignar a: equipo Backend -> Estadísticas / Admin.
 
 Adjunto logs y líneas de código relevantes para facilitar la reproducción.
 
+---
+
+## B) Recomendaciones técnicas detalladas (ampliado)
+
+Aquí detallo las ideas y acciones concretas que quería sugerir para completar las correcciones del backend — son pasos prácticos para que el equipo Backend implemente una solución robusta y fácilmente testeable.
+
+### 1. Contrato (API contract) explícito y estable
+- Asegurar que los endpoints devuelven un objeto con la forma documentada. Ejemplos:
+
+  - GET /admin/complejos/{id}/estadisticas/reservas-semana?dias=N
+    - body de respuesta esperado:
+      ```json
+      {
+        "dias": [
+          {"fecha": "2025-10-01", "total_reservas": 0},
+          {"fecha": "2025-10-02", "total_reservas": 3}
+        ],
+        "total_reservas": 3
+      }
+      ```
+
+  - GET /admin/complejos/{id}/estadisticas/reservas-cancha?dias=N
+    - body de respuesta esperado:
+      ```json
+      {
+        "canchas": [
+          {"cancha_id": 12, "nombre": "Cancha A", "total_reservas": 5},
+          {"cancha_id": 13, "nombre": "Cancha B", "total_reservas": 0}
+        ],
+        "total_reservas": 5
+      }
+      ```
+
+  - Reglas de contrato:
+    - Siempre devolver arrays (incluso vacíos) para `dias` y `canchas`.
+    - `total_reservas` en cada elemento → número (use 0 por defecto cuando sea nulo).
+    - Incluir `total_reservas` agregado en el root del payload cuando sea posible.
+
+### 2. Ajustes en la lógica SQL / agregación
+- Use funciones `COALESCE` (o similar dependiente del motor DB) para **forzar 0** cuando la suma sea NULL.
+  - Ejemplo SQL (Postgres):
+    ```sql
+    SELECT DATE(t.fecha) AS fecha, COALESCE(SUM(1), 0) AS total_reservas
+    FROM reservas r
+    JOIN turnos t ON r.turno_id = t.id
+    WHERE t.complejo_id = :complejo_id
+      AND t.fecha BETWEEN :desde AND :hasta
+    GROUP BY DATE(t.fecha)
+    ORDER BY DATE(t.fecha);
+    ```
+
+  - Para canchas: `GROUP BY cancha_id` y `COALESCE(COUNT(r.id), 0)`.
+
+### 3. Manejo de errores: no devolver 500 por datos faltantes
+- En el controlador, validar la estructura antes de mapear y devolver 200 con `dias: []` o `canchas: []` y un mensaje de advertencia cuando la consulta no tenga filas.
+- Si hay un error de lógica (e.g., desconocido), devolver 500 con un mensaje legible y un `error_code` para facilitar el triage.
+
+### 4. Tests (unitarios e integración)
+- Unit tests sobre la función que crea los agregados:
+  - Validar que para una entrada sin reservas la respuesta contenga días con `total_reservas: 0` (o al menos `dias: []`).
+  - Validar que no se lanza excepción cuando `canchas` o `dias` es null.
+
+- Tests de integración (FastAPI / pytest para backend):
+  - test_reservas_semana_no_data -> crea un complejo con canchas y 0 reservas → GET espera `dias: []` o `dias` con totals 0.
+  - test_reservas_cancha_has_id -> asegura que cada cancha devuelta tiene un `cancha_id` y `nombre`.
+
+  Ejemplo (pytest + requests):
+  ```python
+  def test_reservas_semana_no_data(client):
+      res = client.get('/admin/complejos/1/estadisticas/reservas-semana?dias=7')
+      assert res.status_code == 200
+      data = res.json()
+      assert isinstance(data.get('dias'), list)
+      # la lista puede estar vacía; si se quiere llena con días, validar total_reservas
+      for d in data.get('dias', []):
+          assert 'fecha' in d and 'total_reservas' in d
+          assert isinstance(d['total_reservas'], int)
+  ```
+
+### 5. Logging y monitoreo
+- Agregar logs de WARN/INFO cuando la consulta devuelve `null` o `[]` para permitir detectar posibles errores por falta de datos.
+- Monitoreo/Alertas para endpoints de estadísticas que caigan más del 1% en su tasa de error (SLA interna).
+
+### 6. Rendimiento y caches
+- Agregar cache a nivel de layer (Redis o materialized view) para estadísticas de agregación que pueden ser costosas. Refrescar cache cada N minutos.
+
+### 7. Backward compatibility
+- Añadir un campo `schema_version` o `meta` si se va a cambiar el contrato. Permite al frontend mantener compatibilidad con versiones previas.
+
+### 8. Documentación API y contrato de datos
+- Documentar los endpoints en el swagger/openapi junto con ejemplos de respuesta para `0 reservas`, `algunas reservas` y `error`.
+
+### 9. Checklist para QA y Frontend
+- Validar que `GET /admin/complejos/{id}/estadisticas/reservas-semana` devuelve al menos `dias: []` y no lanza 500.
+- Validar `GET /admin/complejos/{id}/estadisticas/reservas-cancha` respecta `canchas: []` y `total_reservas`.
+- Frontend: comprobar que `admin` ahora no muestra error y que los `BarChart`/`StatsCard` usan 0 por defecto.
+
+---
+
+Si quieres, puedo preparar un PR de ejemplo con pruebas unitarias para el backend (si me das contexto sobre el stack: SQLAlchemy, ORMs, etc.), o bien un archivo de `postman` con las llamadas y asserts para que el equipo de QA pueda correr pruebas automáticas.
+
