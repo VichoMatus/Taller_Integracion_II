@@ -38,7 +38,7 @@ export default function PerfilSuperAdministrador() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // 🔥 HOOK DE SESIONES
+  // HOOK DE SESIONES
   const { 
     sesiones, 
     resumen, 
@@ -89,10 +89,8 @@ export default function PerfilSuperAdministrador() {
 
   const formatearDuracion = (minutos?: number) => {
     if (!minutos) return 'En curso';
-    
     const horas = Math.floor(minutos / 60);
     const mins = Math.round(minutos % 60);
-    
     if (horas > 0) {
       return `${horas}h ${mins}m`;
     }
@@ -129,14 +127,11 @@ export default function PerfilSuperAdministrador() {
         setError("La imagen no debe superar los 5MB");
         return;
       }
-
       if (!file.type.startsWith('image/')) {
         setError("El archivo debe ser una imagen");
         return;
       }
-
       setEditedData({ ...editedData, imagen: file });
-      
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -158,48 +153,33 @@ export default function PerfilSuperAdministrador() {
     setSuccess(null);
 
     try {
-      // Validaciones básicas
       if (!editedData.nombre.trim()) {
         setError("El nombre es obligatorio");
         setIsSaving(false);
         return;
       }
-
       if (!editedData.apellido.trim()) {
         setError("El apellido es obligatorio");
         setIsSaving(false);
         return;
       }
-
-      // Validar formato de teléfono si se proporciona
       if (editedData.telefono && !validatePhone(editedData.telefono)) {
         setError("El formato del teléfono no es válido. Ejemplo: +56912345678");
         setIsSaving(false);
         return;
       }
-
-      // Preparar payload para actualización
       const updatePayload: Partial<User> = {
         nombre: editedData.nombre.trim(),
         apellido: editedData.apellido.trim(),
       };
-
-      // Solo incluir teléfono si tiene valor
       if (editedData.telefono && editedData.telefono.trim()) {
         updatePayload.telefono = editedData.telefono.trim();
       }
-
-      // TODO: Manejar subida de imagen
       if (editedData.imagen) {
+        // Aquí deberías manejar la subida de imagen si tu backend lo permite
         console.log("Imagen seleccionada:", editedData.imagen.name);
       }
-
-      console.log("Actualizando perfil con:", updatePayload);
-
-      // Llamar al servicio para actualizar el perfil
       const updatedUser = await authService.updateProfile(updatePayload) as User;
-
-      // Actualizar el estado local con los datos actualizados
       setUser(updatedUser);
       setEditedData({
         nombre: updatedUser.nombre || '',
@@ -207,8 +187,6 @@ export default function PerfilSuperAdministrador() {
         telefono: updatedUser.telefono || '',
         imagen: null
       });
-
-      // Actualizar localStorage si existe userData
       const storedUserData = localStorage.getItem('userData');
       if (storedUserData) {
         const userData = JSON.parse(storedUserData);
@@ -219,16 +197,12 @@ export default function PerfilSuperAdministrador() {
         }
         localStorage.setItem('userData', JSON.stringify(userData));
       }
-
       setIsEditing(false);
       setSuccess("Perfil actualizado correctamente");
       setImagePreview(null);
-      
       setTimeout(() => setSuccess(null), 3000);
-
     } catch (err: any) {
       console.error("Error al actualizar perfil:", err);
-      
       if (err.response?.status === 401) {
         setError("Sesión expirada. Por favor, inicia sesión nuevamente.");
         setTimeout(() => {
@@ -810,6 +784,10 @@ export default function PerfilSuperAdministrador() {
                                 ))}
                               </tbody>
                             </table>
+                            {/* Mensaje de datos simulados */}
+                            <div style={{ textAlign: 'right', fontSize: '0.85em', color: '#888', marginTop: '0.5em' }}>
+                              Datos falsos para demostracion, a espera del backend
+                            </div>
                           </div>
                         )}
                       </div>
