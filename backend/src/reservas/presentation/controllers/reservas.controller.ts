@@ -92,9 +92,8 @@ export class ReservasController {
         fechaFin = new Date(req.body.fechaFin);
       } else if (req.body.fecha && req.body.inicio && req.body.fin) {
         // Formato fecha + hora separada (nuevo, como Taller4)
-        // ⚠️ NO usar .000Z para evitar conversión UTC - tratar como hora local de Chile
-        fechaInicio = new Date(`${req.body.fecha}T${req.body.inicio}:00`);
-        fechaFin = new Date(`${req.body.fecha}T${req.body.fin}:00`);
+        fechaInicio = new Date(`${req.body.fecha}T${req.body.inicio}:00.000Z`);
+        fechaFin = new Date(`${req.body.fecha}T${req.body.fin}:00.000Z`);
       } else {
         return res.status(400).json(fail(400, "Debe proporcionar fechaInicio/fechaFin o fecha/inicio/fin"));
       }
@@ -131,8 +130,7 @@ export class ReservasController {
         input.fechaInicio = new Date(req.body.fechaInicio);
         console.log('🔄 [update] Usando fechaInicio del body');
       } else if (req.body.fecha && req.body.inicio) {
-        // ⚠️ NO usar .000Z para evitar conversión UTC - tratar como hora local de Chile
-        input.fechaInicio = new Date(`${req.body.fecha}T${req.body.inicio}:00`);
+        input.fechaInicio = new Date(`${req.body.fecha}T${req.body.inicio}:00.000Z`);
         console.log('🔄 [update] Construido fechaInicio desde fecha+inicio');
       }
       
@@ -140,8 +138,7 @@ export class ReservasController {
         input.fechaFin = new Date(req.body.fechaFin);
         console.log('🔄 [update] Usando fechaFin del body');
       } else if (req.body.fecha && req.body.fin) {
-        // ⚠️ NO usar .000Z para evitar conversión UTC - tratar como hora local de Chile
-        input.fechaFin = new Date(`${req.body.fecha}T${req.body.fin}:00`);
+        input.fechaFin = new Date(`${req.body.fecha}T${req.body.fin}:00.000Z`);
         console.log('🔄 [update] Construido fechaFin desde fecha+fin');
       }
       
@@ -323,16 +320,14 @@ export class ReservasController {
         fechaFin = new Date(fecha_fin);
       } else if (fecha_reserva && hora_inicio && hora_fin) {
         // Formato 2: fecha separada + horas
-        // ⚠️ NO usar .000Z para evitar conversión UTC - tratar como hora local de Chile
-        fechaInicio = new Date(`${fecha_reserva}T${hora_inicio}:00`);
-        fechaFin = new Date(`${fecha_reserva}T${hora_fin}:00`);
+        fechaInicio = new Date(`${fecha_reserva}T${hora_inicio}:00.000Z`);
+        fechaFin = new Date(`${fecha_reserva}T${hora_fin}:00.000Z`);
       } else if (fecha && (inicio || hora_inicio) && (fin || hora_fin)) {
         // Formato 3: fecha + inicio/fin
         const horaInicio = inicio || hora_inicio;
         const horaFin = fin || hora_fin;
-        // ⚠️ NO usar .000Z para evitar conversión UTC - tratar como hora local de Chile
-        fechaInicio = new Date(`${fecha}T${horaInicio}:00`);
-        fechaFin = new Date(`${fecha}T${horaFin}:00`);
+        fechaInicio = new Date(`${fecha}T${horaInicio}:00.000Z`);
+        fechaFin = new Date(`${fecha}T${horaFin}:00.000Z`);
       } else {
         return res.status(400).json(fail(400, "Formato de fecha/hora inválido", {
           formatos_soportados: [

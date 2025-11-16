@@ -18,12 +18,6 @@ router.post("/", authMiddleware, requireSuperAdmin, controller.crear);
 // Listar (requiere autenticación y permisos de SuperAdmin)
 router.get("/", authMiddleware, requireSuperAdmin, controller.listar);
 
-// ⚠️ IMPORTANTE: Las rutas específicas deben ir ANTES de las rutas con parámetros genéricos
-// Obtener información de contacto público (solo requiere autenticación, no super_admin)
-// Este endpoint permite a cualquier usuario autenticado ver información de contacto
-// Útil para mostrar datos del dueño de una cancha
-router.get("/:id/contacto", authMiddleware, controller.obtenerContacto);
-
 // Obtener uno por id (requiere autenticación y permisos de SuperAdmin)
 router.get("/:id", authMiddleware, requireSuperAdmin, controller.obtener);
 
@@ -69,8 +63,7 @@ router.get("/status", async (req, res) => {
         delete: "DELETE /api/usuarios/:id",
         activate: "PATCH /api/usuarios/:id/activar",
         deactivate: "PATCH /api/usuarios/:id/desactivar",
-        verify: "PATCH /api/usuarios/:id/verificar",
-        contact: "GET /api/usuarios/:id/contacto"
+        verify: "PATCH /api/usuarios/:id/verificar"
       },
       timestamp: new Date().toISOString(),
       version: "1.0.0"

@@ -35,7 +35,6 @@ import resenasRoutes from './resenas/presentation/routes/resenas.routes';
 import uploadsRoutes from './uploads/presentation/routes/uploads.routes';
 import canchasRoutes from './canchas/routes/canchas.routes';
 import complejosRoutes from './complejos/presentation/routes/complejos.routes';
-import canchaImagesRoutes from './canchas/presentation/routes/canchaImages.routes';
 
 /**
  * CONFIGURACIÓN E IMPORTACIONES
@@ -188,8 +187,6 @@ app.use('/api/uploads', uploadsRoutes);
 
 // Rutas de canchas
 app.use('/api/canchas', canchasRoutes);
-// Rutas públicas/privadas relacionadas con imágenes de canchas
-app.use('/api/canchas', canchaImagesRoutes);
 
 // Rutas de complejos
 app.use('/api/complejos', complejosRoutes);

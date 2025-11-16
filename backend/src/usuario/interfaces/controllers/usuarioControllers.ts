@@ -121,18 +121,4 @@ export class UsuarioController {
       res.status(err?.response?.status || 500).json({ error: err?.message || "Error al verificar usuario" });
     }
   };
-
-  // GET /usuarios/:id/contacto
-  // Obtiene información pública de contacto (accesible con autenticación básica)
-  obtenerContacto = async (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
-      const contacto = await this.service.obtenerContactoPublico(id);
-      res.json(contacto);
-    } catch (err: any) {
-      res.status(err?.response?.status || 500).json({ 
-        error: err?.message || "Error al obtener información de contacto" 
-      });
-    }
-  };
 }

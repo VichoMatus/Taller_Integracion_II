@@ -6,8 +6,6 @@ import {
   UsuarioCreateRequest,
   UsuarioUpdateRequest,
   UsuarioListQuery,
-  UsuarioContactoPublico,
-  UsuarioRol,
 } from "../types/usuarios";
 
 class UsuariosService {
@@ -60,9 +58,8 @@ class UsuariosService {
       const response = await request;
       return response.data;
     } catch (error: any) {
-      // Solo cerrar sesión en 401 (token inválido/expirado)
-      // 403 significa "autenticado pero sin permisos" - no cerrar sesión
-      if (error?.response?.status === 401) {
+      // Si es error de autorización, limpiar token y redirigir
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
         tokenUtils.clearTokenAndRedirect();
       }
       handleApiError(error);
@@ -83,7 +80,7 @@ class UsuariosService {
     console.log('🔑 Token encontrado:', token.substring(0, 20) + '...');
     
     if (params?.rol) {
-      params.rol = params.rol.toLowerCase() as UsuarioRol;
+      params.rol = params.rol.toLowerCase();
     }
 
     // Crear headers
@@ -156,9 +153,9 @@ class UsuariosService {
 
   // Crear administrador
   async createAdministrador(payload: UsuarioCreateRequest): Promise<Usuario> {
-    const adminPayload: UsuarioCreateRequest = {
+    const adminPayload = {
       ...payload,
-      rol: 'admin' as UsuarioRol
+      rol: 'admin'
     };
     return this.crear(adminPayload);
   }
@@ -194,33 +191,6 @@ class UsuariosService {
     return this.handleRequest(
       apiBackend.patch<Usuario>(`/usuarios/${id}/verificar`)
     );
-  }
-
-  // Obtener información pública de contacto (no requiere super_admin)
-  async obtenerContacto(id: string | number): Promise<UsuarioContactoPublico> {
-    try {
-      const token = localStorage.getItem('access_token') || localStorage.getItem('token');
-      
-      if (!token) {
-        throw new Error('No hay token disponible');
-      }
-
-      const response = await apiBackend.get<UsuarioContactoPublico>(`/usuarios/${id}/contacto`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      return response.data;
-    } catch (error: any) {
-      // Solo cerrar sesión en 401, no en 403
-      if (error?.response?.status === 401) {
-        tokenUtils.clearTokenAndRedirect();
-      }
-      console.error('Error al obtener contacto del usuario:', error);
-      throw error;
-    }
   }
 }
 

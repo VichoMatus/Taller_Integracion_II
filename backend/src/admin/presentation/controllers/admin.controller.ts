@@ -32,21 +32,9 @@ export class AdminController {
 
   // === HELPER PARA OBTENER OWNER ID ===
   private getOwnerId(req: Request): number {
-    const user = (req as any)?.user;
-    
-    // 🔥 PRIORIDAD DE BÚSQUEDA:
-    // 1. owner_id (campo esperado en el token)
-    // 2. id_usuario (fallback si FastAPI no envía owner_id)
-    // 3. id (campo normalizado por el middleware)
-    // 4. x-user-id header (para pruebas)
-    const ownerId = user?.owner_id || user?.id_usuario || user?.id || Number(req.headers["x-user-id"]);
-    
-    if (!ownerId) {
-      console.error('❌ [AdminController] Owner ID no encontrado. Usuario decodificado:', user);
-      throw new Error("Owner ID no encontrado en el token. Verifica que FastAPI incluya 'owner_id' o 'id_usuario' en el JWT");
-    }
-    
-    console.log('✅ [AdminController] Owner ID obtenido:', ownerId);
+    // Obtener del JWT o header de prueba
+    const ownerId = (req as any)?.user?.id || Number(req.headers["x-user-id"]);
+    if (!ownerId) throw new Error("Owner ID no encontrado en el token");
     return ownerId;
   }
 

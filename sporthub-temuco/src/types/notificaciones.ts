@@ -1,42 +1,41 @@
 export type NotificacionEstado = "PENDIENTE" | "LEIDA";
 
 export interface Notificacion {
-  id_notificacion: number | string;
-  id_usuario: number | string;
+  id_notificacion: number;
+  id_destinatario: number;      // ✅ Cambio: era id_usuario
   titulo: string;
-  mensaje: string;
-  tipo?: string | null;       // "RESERVA", "SISTEMA", "PAGO"
-  data?: Record<string, any>; // payload extra
-  estado: NotificacionEstado;
-  fecha_creacion: string;
-  fecha_actualizacion: string;
+  cuerpo: string;               // ✅ Cambio: era mensaje
+  leida: boolean;               // ✅ Cambio: era estado
+  created_at: string;           // ✅ Cambio: era fecha_creacion
+  tipo?: string | null;
+  data?: Record<string, any>;
 }
 
 export interface NotificacionCreateRequest {
-  id_usuario: number | string;
+  id_destinatario: number;      // ✅ Cambio
   titulo: string;
-  mensaje: string;
+  cuerpo: string;               // ✅ Cambio
   tipo?: string | null;
   data?: Record<string, any>;
 }
 
 export interface NotificacionUpdateRequest {
   titulo?: string;
-  mensaje?: string;
+  cuerpo?: string;              // ✅ Cambio
   tipo?: string | null;
   data?: Record<string, any>;
-  estado?: NotificacionEstado;
+  leida?: boolean;              // ✅ Cambio
 }
 
 export interface NotificacionListQuery {
-  id_usuario?: number | string;
-  estado?: NotificacionEstado;
+  id_destinatario?: number;     // ✅ Cambio
+  solo_no_leidas?: boolean;     // ✅ Cambio: era estado
   tipo?: string;
   page?: number;
   size?: number;
 }
 
 export interface UnreadCount {
-  id_usuario: number | string;
+  id_usuario: number;
   no_leidas: number;
 }

@@ -1,10 +1,9 @@
 'use client';
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar'; 
 import SearchBar from '@/components/SearchBar'; 
-import LocationMap from '@/components/LocationMap'; 
 import styles from './page.module.css';
 
 import { useAuthStatus } from '@/hooks/useAuthStatus';
@@ -37,17 +36,22 @@ const staticContactData = {
   ]
 };
 
-// 🎾 COMPONENTE PRINCIPAL CON SUSPENSE
+// � COMPONENTE PRINCIPAL CON SUSPENSE
 function PadelCanchaSeleccionadaContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
+  
+  // 🗺️ REFS
+  const mapInstanceRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
   
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [dataLoading, setDataLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [cancha, setCancha] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   // 🎾 OBTENER ID DE LA CANCHA DESDE URL
   const canchaId = searchParams?.get('id') || searchParams?.get('cancha');
@@ -202,6 +206,49 @@ function PadelCanchaSeleccionadaContent() {
 
     loadCanchaData();
   }, [canchaId]);
+
+  useEffect(() => {
+    if (!cancha || !cancha.coordinates || isMapLoaded) return;
+    const initMap = () => {
+      const mapElement = document.getElementById('padel-map');
+      if (!mapElement || !mapInstanceRef.current || typeof window === 'undefined' || !(window as any).google) {
+        if (!(window as any).google) { setTimeout(() => initMap(), 500); return; }
+      }
+      if (mapElement && !mapInstanceRef.current && (window as any).google) {
+        const { google } = window as any;
+        mapInstanceRef.current = new google.maps.Map(mapElement, {
+          center: cancha.coordinates,
+          zoom: 15,
+          styles: [{ featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'on' }] }]
+        });
+        markerRef.current = new google.maps.Marker({
+          position: cancha.coordinates,
+          map: mapInstanceRef.current,
+          title: cancha.name,
+          animation: google.maps.Animation.DROP,
+        });
+        const infoContent = `<div style="padding: 12px;"><h4 style="margin: 0 0 8px 0;">🎯 ${cancha.name}</h4><p style="margin: 4px 0;">📍 ${cancha.location}</p><p style="margin: 4px 0;">💰 $${cancha.priceFrom}/h</p><p style="margin: 4px 0;">⭐ ${cancha.rating}/5</p></div>`;
+        const infoWindow = new google.maps.InfoWindow({ content: infoContent });
+        markerRef.current.addListener('click', () => infoWindow.open(mapInstanceRef.current, markerRef.current));
+        infoWindow.open(mapInstanceRef.current, markerRef.current);
+        setIsMapLoaded(true);
+      }
+    };
+    if (typeof window !== 'undefined' && (window as any).google && (window as any).google.maps) {
+      initMap(); return;
+    }
+    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+    if (!existingScript) {
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyBMIE36wrh9juIn2RXAGVoBwnc-hhFfwd4';
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+      script.onload = () => initMap();
+    }
+    return () => { if (markerRef.current) markerRef.current.setMap(null); };
+  }, [cancha, isMapLoaded]);
 
   // 🎾 RESTO DE FUNCIONES SIN CAMBIOS
   const handleUserButtonClick = () => {
@@ -419,21 +466,12 @@ function PadelCanchaSeleccionadaContent() {
         <div className={styles.locationImagesContainer}>
           {/* Location Section */}
           <div className={styles.locationSection}>
-            <h3 className={styles.sectionTitle}>Ubicación de la Cancha</h3>
-            <div className={styles.mapContainer}>
-              <LocationMap 
-                latitude={cancha.coordinates.lat} 
-                longitude={cancha.coordinates.lng}
-                address={cancha.location}
-                zoom={15}
-                height="250px"
-                sport="padel"
-              />
+            <h3 className={styles.sectionTitle}>Ubicación</h3>
+            <div className={styles.mapContainer} style={{ position: 'relative' }}>
+              <div id="padel-map" style={{ width: '100%', height: '400px', borderRadius: '8px', overflow: 'hidden' }} />
               <div className={styles.locationInfo}>
                 <p className={styles.locationAddress}>{cancha.location}</p>
-                <button className={styles.directionsButton} onClick={handleDirections}>
-                  🧭 Cómo llegar
-                </button>
+                <button className={styles.directionsButton} onClick={handleDirections}>🧭 Cómo llegar</button>
               </div>
             </div>
           </div>

@@ -65,11 +65,3 @@ export interface UserDisplay {
   verificado: boolean;
   esta_activo: boolean;
 }
-
-// Interfaz para información pública de contacto
-export interface UsuarioContactoPublico {
-  nombre: string;
-  apellido: string;
-  email: string;
-  telefono: string | null;
-}

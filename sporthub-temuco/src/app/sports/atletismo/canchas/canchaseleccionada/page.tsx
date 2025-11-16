@@ -1,10 +1,9 @@
 'use client';
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar'; 
 import SearchBar from '@/components/SearchBar'; 
-import LocationMap from '@/components/LocationMap'; 
 import styles from './page.module.css';
 
 import { useAuthStatus } from '@/hooks/useAuthStatus';
@@ -43,11 +42,18 @@ function AtletismoPistaSeleccionadaContent() {
   const searchParams = useSearchParams();
   const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   
+  // 🗺️ REFS PARA EL MAPA
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+  const infoWindowRef = useRef<any>(null);
+  
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [dataLoading, setDataLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [pista, setPista] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   // 🏃‍♂️ OBTENER ID DE LA PISTA DESDE URL
   const pistaId = searchParams?.get('id') || searchParams?.get('pista');
@@ -205,6 +211,95 @@ function AtletismoPistaSeleccionadaContent() {
 
     loadPistaData();
   }, [pistaId]);
+
+  // 🗺️ EFECTO: Cargar Google Maps cuando la pista está disponible
+  useEffect(() => {
+    if (!pista || !pista.coordinates || isMapLoaded) return;
+
+    const initMap = () => {
+      if (mapRef.current && !mapInstanceRef.current && typeof window !== 'undefined' && (window as any).google) {
+        const { google } = window as any;
+        
+        console.log('🗺️ [CanchaSeleccionada] Inicializando mapa de Google Maps');
+        console.log('📍 Coordenadas:', pista.coordinates);
+        
+        mapInstanceRef.current = new google.maps.Map(mapRef.current, {
+          center: pista.coordinates,
+          zoom: 15,
+          styles: [
+            {
+              featureType: 'poi',
+              elementType: 'labels',
+              stylers: [{ visibility: 'on' }]
+            }
+          ]
+        });
+        
+        // 🔴 CREAR MARCADOR PARA LA PISTA
+        markerRef.current = new google.maps.Marker({
+          position: pista.coordinates,
+          map: mapInstanceRef.current,
+          title: pista.name,
+          animation: google.maps.Animation.DROP,
+        });
+
+        // 📋 CREAR INFOWINDOW
+        const infoContent = `
+          <div style="padding: 12px; max-width: 250px;">
+            <h4 style="margin: 0 0 8px 0; color: #333; font-size: 16px;">🏃‍♂️ ${pista.name}</h4>
+            <p style="margin: 4px 0; color: #666; font-size: 14px;">📍 ${pista.location}</p>
+            <p style="margin: 4px 0; color: #666; font-size: 14px;">🏟️ ${pista.capacity}</p>
+            <p style="margin: 4px 0; color: #666; font-size: 14px;">💰 Desde ${pista.priceFrom}/h</p>
+            <p style="margin: 4px 0; color: #666; font-size: 14px;">⭐ ${pista.rating}/5 (${pista.reviews} reseñas)</p>
+          </div>
+        `;
+
+        infoWindowRef.current = new google.maps.InfoWindow({
+          content: infoContent,
+        });
+
+        markerRef.current.addListener('click', () => {
+          infoWindowRef.current.open(mapInstanceRef.current, markerRef.current);
+        });
+
+        // Abrir InfoWindow automáticamente
+        infoWindowRef.current.open(mapInstanceRef.current, markerRef.current);
+        
+        setIsMapLoaded(true);
+        console.log('✅ [CanchaSeleccionada] Mapa inicializado correctamente');
+      }
+    };
+
+    // Si ya hay una instancia de google cargada
+    if (typeof window !== 'undefined' && (window as any).google && (window as any).google.maps) {
+      initMap();
+      return;
+    }
+
+    // Insertar el script de Google Maps si no existe
+    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+    if (!existingScript) {
+      console.log('📦 [CanchaSeleccionada] Cargando script de Google Maps...');
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyBMIE36wrh9juIn2RXAGVoBwnc-hhFfwd4';
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+      script.onload = () => {
+        console.log('✅ [CanchaSeleccionada] Script de Google Maps cargado');
+        initMap();
+      };
+    } else {
+      existingScript.addEventListener('load', initMap);
+    }
+
+    return () => {
+      if (markerRef.current) {
+        markerRef.current.setMap(null);
+      }
+    };
+  }, [pista, isMapLoaded]);
 
   // 🏃‍♂️ RESTO DE FUNCIONES ADAPTADAS
   const handleUserButtonClick = () => {
@@ -416,18 +511,39 @@ function AtletismoPistaSeleccionadaContent() {
 
         {/* Location and Images Container */}
         <div className={styles.locationImagesContainer}>
-          {/* Location Section */}
+        {/* Location Section */}
           <div className={styles.locationSection}>
             <h3 className={styles.sectionTitle}>Ubicación de la Pista</h3>
-            <div className={styles.mapContainer}>
-              <LocationMap 
-                latitude={pista.coordinates.lat} 
-                longitude={pista.coordinates.lng}
-                address={pista.location}
-                zoom={15}
-                height="250px"
-                sport="atletismo"
+            <div className={styles.mapContainer} style={{ position: 'relative' }}>
+              <div 
+                ref={mapRef}
+                style={{ 
+                  width: '100%', 
+                  height: '400px',
+                  borderRadius: '8px',
+                  overflow: 'hidden'
+                }} 
               />
+              {!isMapLoaded && (
+                <div style={{
+                  position: 'absolute',
+                  top: '0',
+                  left: '0',
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'rgba(255, 255, 255, 0.9)',
+                  zIndex: 5,
+                  borderRadius: '8px'
+                }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>🗺️</div>
+                    <p style={{ color: '#666', fontSize: '16px' }}>Cargando mapa...</p>
+                  </div>
+                </div>
+              )}
               <div className={styles.locationInfo}>
                 <p className={styles.locationAddress}>{pista.location}</p>
                 <button className={styles.directionsButton} onClick={handleDirections}>
