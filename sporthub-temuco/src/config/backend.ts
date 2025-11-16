@@ -11,12 +11,9 @@ import axios from 'axios';
 // Configuración centralizada de URLs
 // HARDCODEADA TEMPORALMENTE PARA RESOLVER CACHÉ
 const getBackendUrl = () => {
-  console.log('🔧 [getBackendUrl] Iniciando detección de backend...');
-  
-  // Prioridad 1: Variable de entorno explícita
-  if (process.env.NEXT_PUBLIC_BACKEND_URL) {
-    console.log('🎯 [getBackendUrl] Usando variable de entorno NEXT_PUBLIC_BACKEND_URL:', process.env.NEXT_PUBLIC_BACKEND_URL);
-    return process.env.NEXT_PUBLIC_BACKEND_URL;
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    console.log('🎯 [getBackendUrl] Usando variable de entorno NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+    return process.env.NEXT_PUBLIC_API_URL;
   }
   
   // � DESARROLLO LOCAL: Si NODE_ENV es development, siempre usar localhost

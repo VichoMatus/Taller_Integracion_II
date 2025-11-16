@@ -9,16 +9,28 @@ export const useNotificaciones = () => {
   const [error, setError] = useState<string | null>(null);
 
   const cargarNotificaciones = useCallback(async () => {
+    // Verificar si hay token
+    if (typeof window === 'undefined') return;
+    
+    const token = localStorage.getItem('token') || localStorage.getItem('access_token');
+    if (!token) {
+      console.log('⏸️ [useNotificaciones] No hay token, saltando carga');
+      return;
+    }
+
     try {
+      console.log('🔍 [useNotificaciones] Cargando notificaciones...');
       setLoading(true);
       setError(null);
       
       const todas = await notificacionesService.list();
       
+      console.log('✅ [useNotificaciones] Notificaciones cargadas:', todas.length);
       setNotificaciones(todas);
       setNoLeidas(todas.filter(n => !n.leida).length);
       
     } catch (err: any) {
+      console.error('❌ [useNotificaciones] Error:', err);
       setError(err.message || 'Error al cargar notificaciones');
       setNotificaciones([]);
       setNoLeidas(0);
@@ -75,7 +87,7 @@ export const useNotificaciones = () => {
   useEffect(() => {
     cargarNotificaciones();
     
-    // Polling cada 30 segundos para nuevas notificaciones
+    // Polling cada 30 segundos
     const interval = setInterval(cargarNotificaciones, 30000);
     
     return () => clearInterval(interval);

@@ -5,11 +5,6 @@ import { NotificacionController } from "../interfaces/controllers/notificaciones
 const router = Router();
 const controller = new NotificacionController();
 
-/**
- * Montar en app:
- * app.use("/api/notificaciones", notificacionRouter)
- */
-
 // Crear notificación
 router.post("/", controller.crear);
 
@@ -25,13 +20,13 @@ router.put("/:id", controller.actualizar);
 // Eliminar
 router.delete("/:id", controller.eliminar);
 
-// Marcar como leída una notificación
-router.patch("/:id/leer", controller.marcarLeida);
+// Marcar como leída una notificación (CAMBIADO DE PATCH A POST)
+router.post("/:id/leer", controller.marcarLeida);
 
-// Marcar todas como leídas para un usuario
-router.patch("/leer-todas", controller.marcarTodasLeidas);
+// Marcar todas como leídas (CAMBIADO DE PATCH A POST)
+router.post("/leer-todas", controller.marcarTodasLeidas);
 
-// Contar no leídas de un usuario
+// Contar no leídas
 router.get("/no-leidas", controller.contarNoLeidas);
 
 export default router;
