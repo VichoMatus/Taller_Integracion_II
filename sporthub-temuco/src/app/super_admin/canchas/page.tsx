@@ -24,7 +24,11 @@ export default function CanchasPage() {
     try {
       setIsLoading(true);
       
-      const canchasResponse = await canchaService.getCanchas();
+      // Usar endpoint de admin con page_size alto para obtener todas las canchas
+      const canchasResponse = await canchaService.getCanchasAdmin({ 
+        page_size: 100,  // Suficiente para todos los complejos
+        incluir_inactivas: true  // Ver también canchas inactivas
+      });
       
       // Extraer array de canchas
       let canchasFromApi: any[] = [];

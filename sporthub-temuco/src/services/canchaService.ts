@@ -29,10 +29,21 @@ const adaptCanchaFromBackend = (backendCancha: any) => {
   
   if (usaSnakeCase) {
     // Formato FastAPI (snake_case) - CanchaOut
+    // Normalizar el tipo de deporte de BD al formato del frontend
+    let tipoNormalizado = backendCancha.deporte || 'futbol';
+    // Mapeo inverso: BD → Frontend
+    const mapeoInverso: Record<string, string> = {
+      'basquetbol': 'basquet',
+      'paddle': 'padel',
+      'voleibol': 'volley',
+      'futbolito': 'futbol_sala'
+    };
+    tipoNormalizado = mapeoInverso[tipoNormalizado] || tipoNormalizado;
+    
     return {
       id: backendCancha.id_cancha,
       nombre: backendCancha.nombre,
-      tipo: backendCancha.deporte || 'futbol',
+      tipo: tipoNormalizado,
       techada: backendCancha.cubierta || false,
       activa: backendCancha.activo !== undefined ? backendCancha.activo : true,
       establecimientoId: backendCancha.id_complejo,
