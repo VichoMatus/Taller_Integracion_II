@@ -53,8 +53,8 @@ export default function EstadisticasPage() {
   }, []);
 
   // Transformar datos para los charts
-  const reservasPorCanchaData = reservasPorCancha?.canchas?.map((c: any) => ({ label: c.cancha_nombre, value: c.total_reservas })) || [];
-  const reservasPorDiaData = reservasPorDia?.dias?.map((d: any) => ({ label: d.dia_nombre, value: d.total_reservas })) || [];
+  const reservasPorCanchaData = (reservasPorCancha?.canchas || []).filter(Boolean).map((c: any) => ({ label: c?.cancha_nombre || 'Sin nombre', value: Number(c?.total_reservas ?? 0) }));
+  const reservasPorDiaData = (reservasPorDia?.dias || []).filter(Boolean).map((d: any) => ({ label: d?.dia_nombre || 'Sin nombre', value: Number(d?.total_reservas ?? 0) }));
 
   return (
     <div className="admin-dashboard-container">
@@ -73,7 +73,12 @@ export default function EstadisticasPage() {
         <div className="info-banner info-red">
           <div className="info-content">
             <h3 className="info-title">No se pudieron cargar estadísticas</h3>
-            <p className="info-text">{errorEstadisticas || errorReservasDia || errorReservasCancha || 'Error desconocido'}</p>
+              <p className="info-text">{errorEstadisticas || errorReservasDia || errorReservasCancha || 'Error desconocido'}</p>
+              {(errorReservasDia || errorReservasCancha) && (
+                <p className="info-text" style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                  Si el mensaje indica datos incompletos, puede deberse a un fallo temporal del servicio de estadísticas; inténtalo nuevamente o contacta al equipo de backend para verificar el endpoint.
+                </p>
+              )}
             <div style={{ marginTop: '0.5rem' }}>
               <button onClick={() => cargarTodo()} className="btn-guardar">Reintentar</button>
             </div>
@@ -109,7 +114,7 @@ export default function EstadisticasPage() {
         <div className="top-canchas-grid">
           {reservasPorCancha?.canchas?.length ? (
             reservasPorCancha.canchas.slice(0, 4).map((c: any, i: number) => (
-              <div className="cancha-item" key={c.cancha_id}>{i + 1}.- {c.cancha_nombre} ({c.total_reservas})</div>
+              <div className="cancha-item" key={`${c.cancha_id ?? i}`}>{i + 1}.- {c.cancha_nombre} ({c.total_reservas})</div>
             ))
           ) : (
             <div>No hay datos de canchas</div>

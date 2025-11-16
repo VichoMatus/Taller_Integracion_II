@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { reservaService } from '@/services/reservaService';
 import Modal from '@/components/Modal';
+import { useAdminToast } from '@/components/admin/AdminToast';
 import { apiBackend } from '@/config/backend';
 import { Reserva, EstadoReserva } from '@/types/reserva';
 import '../dashboard.css';
@@ -16,7 +17,7 @@ export default function ReservasPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedEstado, setSelectedEstado] = useState<EstadoReserva | ''>('');
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Cargar reservas desde el backend usando endpoint admin
   const loadReservas = async () => {
@@ -146,7 +147,27 @@ export default function ReservasPage() {
 
   // Cargar datos al inicio y cuando cambien los filtros
   useEffect(() => {
+    // Recalcular items por página según altura disponible (más o menos filas)
+    const calculateItemsPerPage = () => {
+      try {
+        const height = window.innerHeight || 800;
+        // Reservar espacio para headers y controles
+        const availableHeight = height - 520;
+        const rowHeight = 78; // aproximación de altura por fila
+        const calculated = Math.max(4, Math.min(20, Math.floor(availableHeight / rowHeight)));
+        setItemsPerPage(calculated);
+      } catch (err) {
+        setItemsPerPage(10);
+      }
+    };
+
+    calculateItemsPerPage();
+    window.addEventListener('resize', calculateItemsPerPage);
+
+    // Cargar reservas cuando cambie la página, búsqueda o estado
     loadReservas();
+
+    return () => window.removeEventListener('resize', calculateItemsPerPage);
   }, [currentPage, searchTerm, selectedEstado]);
 
   // Función para navegar a editar reserva
@@ -168,11 +189,11 @@ export default function ReservasPage() {
     if (window.confirm('¿Deseas cancelar esta reserva como administrador? Esta acción es permanente.')) {
       try {
         await reservaService.cancelarReservaAdmin(reservationId);
-        alert('Reserva cancelada exitosamente');
+        showToast('success', 'Reserva cancelada exitosamente');
         loadReservas(); // Recargar la lista
       } catch (err: any) {
         console.error('Error al cancelar reserva:', err);
-        alert(err.message || 'No se pudo cancelar la reserva');
+        showToast('error', err.message || 'No se pudo cancelar la reserva');
       }
     }
   };
@@ -181,16 +202,17 @@ export default function ReservasPage() {
   // Modal-driven confirmation flow
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [confirmingReservationId, setConfirmingReservationId] = useState<number | null>(null);
-  const [isPago, setIsPago] = useState(false);
+  const [optionSelected, setOptionSelected] = useState<'none' | 'paid' | 'notPaid'>('none');
   const [selectedMetodo, setSelectedMetodo] = useState<string>('efectivo');
 
   const openConfirmModal = (reservationId: number) => {
-    console.log('[openConfirmModal] abrir modal para reserva', reservationId);
     setConfirmingReservationId(reservationId);
-    setIsPago(false);
+    setOptionSelected('none');
     setSelectedMetodo('efectivo');
     setShowConfirmModal(true);
   };
+
+  const { show: showToast } = useAdminToast();
 
   const closeConfirmModal = () => {
     setShowConfirmModal(false);
@@ -202,24 +224,42 @@ export default function ReservasPage() {
   }, [showConfirmModal]);
 
   const handleConfirmReservation = async () => {
-    console.log('[handleConfirmReservation] confirmar reserva', confirmingReservationId, { isPago, selectedMetodo });
     if (!confirmingReservationId) return;
 
     try {
-      if (isPago) {
-        console.log('[handleConfirmReservation] marcando como pagada, metodo=', selectedMetodo);
+      if (optionSelected === 'paid') {
         await reservaService.confirmarReservaConMetodo(confirmingReservationId, selectedMetodo);
-        alert(`Reserva confirmada y marcada como pagada (${selectedMetodo})`);
+        showToast('success', `Reserva confirmada y marcada como pagada (${selectedMetodo})`);
+      } else if (optionSelected === 'notPaid') {
+        // Si seleccionó 'Sin pagar' entonces cancelar la reserva, no confirmarla
+        await reservaService.cancelarReservaAdmin(confirmingReservationId);
+        showToast('info', 'Reserva cancelada: No fue confirmada porque no estaba pagada');
       } else {
-        console.log('[handleConfirmReservation] confirmando sin pago');
-        await reservaService.confirmarReserva(confirmingReservationId);
-        alert('Reserva confirmada sin marcar como pagada');
+        // Opción no seleccionada - no hace nada
+        return;
       }
       closeConfirmModal();
       loadReservas();
     } catch (err: any) {
       console.error('Error al confirmar reserva desde modal:', err);
-      alert(err?.message || 'Error al confirmar reserva');
+      showToast('error', err?.message || 'Error al confirmar reserva');
+    }
+  };
+
+  const handleNotPaid = async () => {
+    if (!confirmingReservationId) return;
+
+    // Cancelación automática: la reserva se cancela inmediatamente cuando el admin
+    // decide que no está pagada (no se muestra diálogo adicional).
+
+    try {
+      await reservaService.cancelarReservaAdmin(confirmingReservationId);
+      showToast('info', 'Reserva cancelada: no fue confirmada por no estar pagada');
+      closeConfirmModal();
+      loadReservas();
+    } catch (err: any) {
+      console.error('Error al cancelar reserva (sin pagar):', err);
+      showToast('error', err?.message || 'Error al cancelar reserva');
     }
   };
 
@@ -240,17 +280,17 @@ export default function ReservasPage() {
 
         console.log('[confirmReservationAdmin] confirmar con metodo', metodo);
         await reservaService.confirmarReservaConMetodo(reservationId, metodo);
-        alert('Reserva confirmada y marcada como pagada (' + metodo + ')');
+        showToast('success', 'Reserva confirmada y marcada como pagada (' + metodo + ')');
       } else {
         console.log('[confirmReservationAdmin] confirmar sin pago');
         await reservaService.confirmarReserva(reservationId);
-        alert('Reserva confirmada sin método de pago establecido');
+        showToast('info', 'Reserva confirmada sin método de pago establecido');
       }
 
       loadReservas();
     } catch (err: any) {
       console.error('Error al confirmar la reserva (estandar):', err);
-      alert(err?.message || 'No se pudo confirmar la reserva (estandar)');
+      showToast('error', err?.message || 'No se pudo confirmar la reserva (estandar)');
     }
   };
 
@@ -382,7 +422,22 @@ export default function ReservasPage() {
               </tr>
             </thead>
             <tbody>
-              {reservas.map((reserva, index) => (
+              {reservas
+                .filter(r => {
+                  // Filtros por búsqueda básica y estado
+                  const term = searchTerm.trim().toLowerCase();
+                  if (term) {
+                    const inUsuario = (r.usuario?.nombre || '').toLowerCase().includes(term) || (r.usuario?.apellido || '').toLowerCase().includes(term) || (r.usuario?.email || '').toLowerCase().includes(term);
+                    const inCancha = (r.cancha?.nombre || `cancha ${r.canchaId}`).toLowerCase().includes(term);
+                    if (!inUsuario && !inCancha) return false;
+                  }
+                  if (selectedEstado !== '') {
+                    return r.estado === (selectedEstado as EstadoReserva);
+                  }
+                  return true;
+                })
+                .slice((currentPage - 1) * itemsPerPage, (currentPage - 1) * itemsPerPage + itemsPerPage)
+                .map((reserva, index) => (
                 <tr key={reserva.id || `reserva-${index}`}>
                   <td>
                     <div className="admin-cell-title">
@@ -453,7 +508,7 @@ export default function ReservasPage() {
                           className="btn-action btn-confirmar"
                           type="button"
                           title="Confirmar Reserva"
-                          onClick={() => confirmReservationAdmin(reserva.id)}
+                          onClick={() => openConfirmModal(reserva.id)}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -474,7 +529,26 @@ export default function ReservasPage() {
         <div className="admin-table-footer">
           <div className="admin-pagination-info">
             <span>
-              Mostrando {Math.min(reservas.length, itemsPerPage)} de {reservas.length} reservas
+              {(() => {
+                // Calcular info de paginación
+                const filtered = reservas.filter(r => {
+                  const term = searchTerm.trim().toLowerCase();
+                  if (term) {
+                    const inUsuario = (r.usuario?.nombre || '').toLowerCase().includes(term) || (r.usuario?.apellido || '').toLowerCase().includes(term) || (r.usuario?.email || '').toLowerCase().includes(term);
+                    const inCancha = (r.cancha?.nombre || `cancha ${r.canchaId}`).toLowerCase().includes(term);
+                    if (!inUsuario && !inCancha) return false;
+                  }
+                  if (selectedEstado !== '') {
+                    return r.estado === (selectedEstado as EstadoReserva);
+                  }
+                  return true;
+                });
+
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = Math.min(startIndex + itemsPerPage, filtered.length);
+
+                return `Mostrando ${startIndex + 1} a ${endIndex} de ${filtered.length} reservas`;
+              })()}
             </span>
           </div>
           
@@ -494,7 +568,18 @@ export default function ReservasPage() {
             <button 
               className="btn-pagination" 
               onClick={() => setCurrentPage(prev => prev + 1)}
-              disabled={reservas.length < itemsPerPage}
+              disabled={reservas.filter(r => {
+                const term = searchTerm.trim().toLowerCase();
+                if (term) {
+                  const inUsuario = (r.usuario?.nombre || '').toLowerCase().includes(term) || (r.usuario?.apellido || '').toLowerCase().includes(term) || (r.usuario?.email || '').toLowerCase().includes(term);
+                  const inCancha = (r.cancha?.nombre || `cancha ${r.canchaId}`).toLowerCase().includes(term);
+                  if (!inUsuario && !inCancha) return false;
+                }
+                if (selectedEstado !== '') {
+                  return r.estado === (selectedEstado as EstadoReserva);
+                }
+                return true;
+              }).length < itemsPerPage}
             >
               Siguiente
             </button>
@@ -511,17 +596,26 @@ export default function ReservasPage() {
           </div>
           <div className="modal-body">
             <p>¿Deseas confirmar la reserva como administrador?</p>
-            <div style={{ marginTop: '12px' }}>
-              <label style={{ fontWeight: 600 }}>¿Ya se ha realizado el pago?</label>
-              <div style={{ marginTop: '8px' }}>
-                <label style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                  <input type="checkbox" checked={isPago} onChange={(e) => setIsPago(e.target.checked)} />
-                  <span>{isPago ? 'Sí, pago realizado' : 'No, pago pendiente'}</span>
-                </label>
-              </div>
+            <div style={{ marginTop: '12px' }} className="method-action-row">
+              <button
+                type="button"
+                onClick={() => setOptionSelected('paid')}
+                className={`btn-guardar ${optionSelected === 'paid' ? 'selected' : ''}`}
+                style={{ marginRight: 8 }}
+              >
+                Sí, elegir método de pago
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setOptionSelected('notPaid'); handleNotPaid(); }}
+                className="btn-volver"
+              >
+                Sin pagar
+              </button>
             </div>
 
-            {isPago && (
+            {optionSelected === 'paid' && (
               <div className="method-group">
                 <label style={{ fontWeight: 600, marginTop: 8 }}>Selecciona el método de pago</label>
                 {['efectivo', 'tarjeta', 'transferencia', 'online', 'webpay'].map((m) => (
@@ -533,10 +627,12 @@ export default function ReservasPage() {
               </div>
             )}
           </div>
-            <div className="modal-actions">
-            <button type="button" onClick={closeConfirmModal} className="btn-volver">Cancelar</button>
-            <button type="button" onClick={handleConfirmReservation} className="btn-guardar btn-confirmar">Confirmar</button>
-          </div>
+            {optionSelected === 'paid' && (
+              <div className="modal-actions">
+                <button type="button" onClick={closeConfirmModal} className="btn-volver">Cancelar</button>
+                <button type="button" onClick={handleConfirmReservation} className="btn-guardar btn-confirmar">Confirmar</button>
+              </div>
+            )}
         </div>
       </Modal>
     </>

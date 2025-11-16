@@ -1,3 +1,5 @@
+// Este componente usa hooks y DOM, debe ser un Client Component
+'use client';
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -20,13 +22,6 @@ const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
   const modalNode = (
     <div className="modal-overlay" role="dialog" aria-modal="true">
       <div className="modal-container">
-        <button
-          className="modal-close"
-          onClick={onClose}
-          aria-label="Cerrar modal"
-        >
-          ×
-        </button>
         <div className="modal-body">
           {children}
         </div>

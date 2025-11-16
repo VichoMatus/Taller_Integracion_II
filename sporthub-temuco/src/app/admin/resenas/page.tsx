@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { resenaService } from '@/services/resenaService';
 import { complejosService } from '@/services/complejosService';
 import { Resena, ResenaListQuery } from '@/types/resena';
+import { useAdminToast } from '@/components/admin/AdminToast';
 import '../dashboard.css';
 
 export default function ResenasPage() {
@@ -147,6 +148,8 @@ export default function ResenasPage() {
       setLoading(false);
     }
   };
+
+  const { show: showToast } = useAdminToast();
 
   // Cargar reseñas de todas las canchas del complejo
   const loadResenasCanchas = async () => {
@@ -348,11 +351,11 @@ export default function ResenasPage() {
     if (window.confirm('¿Estas seguro de que deseas eliminar esta resena?')) {
       try {
         await resenaService.eliminarResena(resenaId);
-        alert('Resena eliminada exitosamente');
+        showToast('success', 'Reseña eliminada exitosamente');
         loadResenas(); // Recargar la lista
       } catch (err: any) {
         console.warn('No se pudo eliminar (backend no disponible):', err);
-        alert('No se puede eliminar en modo desarrollo (backend no disponible)');
+        showToast('error', 'No se puede eliminar en modo desarrollo (backend no disponible)');
       }
     }
   };

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useAdminToast } from '@/components/admin/AdminToast';
 import { useRouter } from 'next/navigation';
 import { resenaService } from '@/services/resenaService';
 import { complejosService } from '@/services/complejosService';
@@ -9,6 +10,7 @@ import '../../dashboard.css';
 
 export default function CreateResenaPage() {
   const router = useRouter();
+  const { show } = useAdminToast();
   
   // Estados del componente
   const [loading, setLoading] = useState(false);
@@ -27,14 +29,13 @@ export default function CreateResenaPage() {
   
   // Obtener el ID del complejo del admin actual
   useEffect(() => {
-    const obtenerComplejoId = async () => {
+    const cargarCanchas = async () => {
       try {
-        const userData = localStorage.getItem('userData');
-        
-        if (!userData) {
-          setError('No se pudo identificar el complejo. Por favor, inicia sesión nuevamente.');
-          return;
-        }
+      const userData = localStorage.getItem('userData');
+    if (!userData) {
+      show('error', 'No se pudo identificar el complejo. Por favor, inicia sesión nuevamente.');
+      return;
+    }
         
         const user = JSON.parse(userData);
         console.log('👤 Usuario logueado:', user);
@@ -73,34 +74,28 @@ export default function CreateResenaPage() {
           } catch (err) {
             console.warn('⚠️ No se pudo actualizar localStorage:', err);
           }
+
+          // Cargar canchas del complejo para el selector
+          try {
+            const canchas = await complejosService.getCanchasDeComplejo(complejoId);
+            setCanchasDisponibles(canchas || []);
+          } catch (canchaErr) {
+            console.warn('⚠️ No se pudieron cargar las canchas del complejo:', canchaErr);
+          }
         } else {
           setError('No se encontró ningún complejo asociado a tu usuario. Contacta al administrador.');
+          const userData = localStorage.getItem('userData');
+          if (!userData) {
+            setError('No se pudo identificar el complejo. Por favor, inicia sesión nuevamente.');
+            return;
+          }
         }
       } catch (err: any) {
-        console.error('❌ Error al obtener complejo:', err);
-        setError(`Error al cargar información del complejo: ${err.message || 'Error desconocido'}`);
+        console.error('❌ Error cargando canchas del admin para reseñas:', err);
+        setError('No se pudo cargar las canchas disponibles');
       }
     };
-    
-    obtenerComplejoId();
-  }, []);
 
-  // Cargar canchas cuando se selecciona tipo "cancha"
-  useEffect(() => {
-    const cargarCanchas = async () => {
-      if (tipoResena === 'cancha' && formData.id_complejo > 0) {
-        try {
-          console.log('🏟️ Cargando canchas del complejo:', formData.id_complejo);
-          const canchas = await complejosService.getCanchasDeComplejo(formData.id_complejo);
-          console.log('✅ Canchas cargadas:', canchas);
-          setCanchasDisponibles(canchas || []);
-        } catch (err: any) {
-          console.error('❌ Error al cargar canchas:', err);
-          setError('Error al cargar canchas: ' + err.message);
-        }
-      }
-    };
-    
     cargarCanchas();
   }, [tipoResena, formData.id_complejo]);
 
@@ -192,7 +187,7 @@ export default function CreateResenaPage() {
     e.preventDefault();
     
     if (!isFormValid()) {
-      alert('Por favor completa todos los campos obligatorios correctamente');
+      show('info', 'Por favor completa todos los campos obligatorios correctamente');
       return;
     }
 
@@ -218,7 +213,7 @@ export default function CreateResenaPage() {
       console.log('📤 Enviando reseña:', payload);
       await resenaService.crearResena(payload);
       
-      alert('✅ Reseña creada exitosamente');
+      show('success', '✅ Reseña creada exitosamente');
       router.push('/admin/resenas');
     } catch (err: any) {
       console.error('❌ Error al crear reseña:', err);
@@ -250,11 +245,11 @@ export default function CreateResenaPage() {
       
       // Mostrar mensaje según el tipo de error
       if (errorMsg.includes('duplicate key') || errorMsg.includes('UniqueViolation')) {
-        alert(`❌ Ya existe una reseña tuya para este ${tipoResena === 'cancha' ? 'cancha' : 'complejo'}.\n\n⚠️ Solo puedes crear una reseña por cancha/complejo.`);
+        show('error', `❌ Ya existe una reseña tuya para este ${tipoResena === 'cancha' ? 'cancha' : 'complejo'}.\n\n⚠️ Solo puedes crear una reseña por cancha/complejo.`);
       } else if (errorMsg.includes('reserva') || errorMsg.includes('Debe tener una reserva')) {
-        alert(`❌ ${errorMsg}\n\n⚠️ Como administrador, solo puedes crear reseñas si tienes una reserva confirmada del complejo o cancha.\nO solicita al super-admin que te dé permisos especiales.`);
+        show('error', `❌ ${errorMsg}\n\n⚠️ Como administrador, solo puedes crear reseñas si tienes una reserva confirmada del complejo o cancha.\nO solicita al super-admin que te dé permisos especiales.`);
       } else {
-        alert(`❌ ${errorMsg}`);
+        show('error', `❌ ${errorMsg}`);
       }
     } finally {
       setLoading(false);

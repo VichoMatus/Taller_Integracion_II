@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useAdminToast } from '@/components/admin/AdminToast';
 import { useRouter } from 'next/navigation';
 import { reservaService } from '@/services/reservaService';
 import { usuariosService } from '@/services/usuariosService';
@@ -19,6 +20,10 @@ export default function CreateReservaPage() {
   const [currentUserId, setCurrentUserId] = useState<number>(0);
   const [usuarioBusqueda, setUsuarioBusqueda] = useState<string>('');
   const [usuarioEncontrado, setUsuarioEncontrado] = useState<any | null>(null);
+  const [autocompleteResults, setAutocompleteResults] = useState<any[]>([]);
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+
+  const { show: showToast } = useAdminToast();
 
   // Estado del formulario
   const [formData, setFormData] = useState<CreateReservaInput>({
@@ -147,6 +152,27 @@ export default function CreateReservaPage() {
       console.error('Error al buscar usuario:', err);
       // Si GET /usuarios/:id devuelve 404, igual asignar el ID manualmente.
       const status = err?.response?.status;
+      // Extraer mensaje legible
+      const errorData = err?.response?.data;
+      let friendly = 'Error desconocido';
+      if (errorData && typeof errorData === 'object') {
+        // BACKEND: {code:403, message: 'Permisos insuficientes - ...'}
+        if (errorData.message && typeof errorData.message === 'string') {
+          friendly = errorData.message;
+        } else {
+          // Convertir objeto a string más amigable
+          friendly = Object.entries(errorData).map(([k, v]) => `${k}: ${v}`).join(' — ');
+        }
+      } else {
+        friendly = err?.message || String(err);
+      }
+      // Si la API responde 403 (permiso insuficiente), no se puede obtener el público, pero igual podemos asignar el ID que el admin escribió.
+      if (status === 403) {
+        setFormData(prev => ({ ...prev, usuarioId: Number(usuarioBusqueda) }));
+        setUsuarioEncontrado(null);
+        setError(`No tienes permisos para ver datos de usuario. ${friendly}. Se asignará el ID ingresado.`);
+        return;
+      }
       if (status === 404) {
         const id = Number(usuarioBusqueda);
         setFormData(prev => ({ ...prev, usuarioId: id }));
@@ -154,7 +180,39 @@ export default function CreateReservaPage() {
         setError('No se encontró información de contacto, se asignará el ID ingresado.');
         return;
       }
-      setError(err?.message || 'No se encontró el usuario');
+      // Evitar pasar objetos al UI — convertir a string
+      setError(typeof friendly === 'string' ? friendly : JSON.stringify(friendly));
+    }
+  };
+
+  const handleMostrarUsuarios = async () => {
+    try {
+      setError(null);
+      const results = await usuariosService.buscar('', 20);
+      setAutocompleteResults(results || []);
+      setShowAutocomplete(results.length > 0);
+    } catch (err: any) {
+      console.error('Error al listar usuarios:', err);
+      const message = err?.response?.data?.message || err?.message || 'No se pudieron cargar usuarios';
+      setError(message);
+    }
+  };
+
+  const handleBuscarAutocomplete = async (q: string) => {
+    if (!q || q.length < 2) {
+      setAutocompleteResults([]);
+      setShowAutocomplete(false);
+      return;
+    }
+
+    try {
+      const results = await usuariosService.buscar(q, 6);
+      setAutocompleteResults(results || []);
+      setShowAutocomplete(results.length > 0);
+    } catch (err) {
+      console.error('Error en autocomplete usuarios:', err);
+      setAutocompleteResults([]);
+      setShowAutocomplete(false);
     }
   };
 
@@ -214,13 +272,24 @@ export default function CreateReservaPage() {
       const hora_inicio = fechaInicioDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }); // HH:MM
       const hora_fin = fechaFinDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }); // HH:MM
       
+      // Determinar id de usuario objetivo para la reserva
+      // Si hay un texto en el campo de búsqueda y el admin no usó "Buscar" explícitamente,
+      // respetamos ese valor (para mayor ergonomía). Si no es numérico, mostrar error.
+      let targetUserId = Number(formData.usuarioId);
+      if (usuarioBusqueda && Number(usuarioBusqueda)) {
+        const parsed = Number(usuarioBusqueda);
+        if (!isNaN(parsed) && parsed > 0) {
+          targetUserId = parsed;
+        }
+      }
+
       // Formato que espera el backend: { id_cancha, fecha_reserva, hora_inicio, hora_fin, id_usuario }
       const createData = {
         id_cancha: Number(formData.canchaId),
         fecha_reserva,
         hora_inicio,
         hora_fin,
-        id_usuario: Number(formData.usuarioId),
+        id_usuario: targetUserId || Number(formData.usuarioId) || currentUserId,
         notas: formData.notas || ''
       };
       
@@ -231,7 +300,7 @@ export default function CreateReservaPage() {
       await reservaService.createReservaAdmin(createData);
       
       // Mostrar mensaje de éxito y redirigir
-      alert('Reserva creada exitosamente como administrador');
+      showToast('success', 'Reserva creada exitosamente como administrador');
       router.push('/admin/reservas');
     } catch (err: any) {
       console.error('Error al crear la reserva:', err);
@@ -240,6 +309,7 @@ export default function CreateReservaPage() {
         : err?.response?.data?.message 
         || JSON.stringify(err?.message || err) 
         || 'No se pudo crear la reserva. Verifique los datos e intente nuevamente.';
+      showToast('error', errorMessage || 'No se pudo crear la reserva.');
       setError(errorMessage);
     } finally {
       setSaving(false);
@@ -321,9 +391,9 @@ export default function CreateReservaPage() {
                   <input
                     type="text"
                     name="usuarioBusqueda"
-                    placeholder="Buscar usuario por ID"
+                    placeholder="Buscar por nombre, email o ID"
                     value={usuarioBusqueda}
-                    onChange={(e) => setUsuarioBusqueda(e.target.value)}
+                    onChange={(e) => { setUsuarioBusqueda(e.target.value); handleBuscarAutocomplete(e.target.value); }}
                     className="edit-form-input"
                     style={{ flex: 1 }}
                   />
@@ -331,11 +401,25 @@ export default function CreateReservaPage() {
                   <button type="button" onClick={handleBuscarUsuario} className="btn-guardar" title="Buscar usuario">
                     Buscar
                   </button>
+                  <button type="button" onClick={handleMostrarUsuarios} className="btn-secondary" title="Mostrar usuarios">
+                    Mostrar usuarios
+                  </button>
 
                   <button type="button" onClick={() => { setUsuarioBusqueda(''); setUsuarioEncontrado(null); setFormData(prev => ({ ...prev, usuarioId: currentUserId })); }} className="btn-volver">
                     Usar actual
                   </button>
                 </div>
+
+                {showAutocomplete && autocompleteResults.length > 0 && (
+                  <div className="autocomplete-results admin-search-box">
+                    {autocompleteResults.map(u => (
+                      <div key={u.id} className="autocomplete-item" onClick={() => { setUsuarioBusqueda(String(u.id)); setUsuarioEncontrado(u); setFormData(prev => ({ ...prev, usuarioId: u.id })); setShowAutocomplete(false); }}>
+                        <div style={{ fontWeight: 700 }}>{u.nombre || u.email}</div>
+                        <div style={{ fontSize: '.85rem', color: 'var(--text-gray)' }}>ID: {u.id} — {u.email}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 <input
                   type="hidden"

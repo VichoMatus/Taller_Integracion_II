@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useAdminToast } from '@/components/admin/AdminToast';
 import { useRouter, useParams } from 'next/navigation';
 import { reservaService } from '@/services/reservaService';
 import { Reserva, UpdateReservaInput, EstadoReserva, MetodoPago } from '@/types/reserva';
@@ -101,7 +102,8 @@ export default function EditReservaPage() {
       await reservaService.updateReserva(parseInt(reservaId), updateData);
       
       // Mostrar mensaje de éxito y redirigir
-      alert('Reserva actualizada exitosamente');
+      const { show } = useAdminToast();
+      show('success', 'Reserva actualizada exitosamente');
       router.push('/admin/reservas');
     } catch (err: any) {
       console.error('Error al actualizar la reserva:', err);

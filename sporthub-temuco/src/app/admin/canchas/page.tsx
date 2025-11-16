@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { canchaService } from '@/services/canchaService';
+import { useAdminToast } from '@/components/admin/AdminToast';
 import '../dashboard.css';
 
 interface Court {
@@ -15,13 +16,14 @@ interface Court {
 
 export default function CanchasPage() {
   const router = useRouter();
+  const { show } = useAdminToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [courts, setCourts] = useState<Court[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0); // Para forzar recargas
   const [showInactive, setShowInactive] = useState(true); // 🔥 NUEVO: Toggle para mostrar/ocultar inactivas
-  const itemsPerPage = 4;
+  const [itemsPerPage, setItemsPerPage] = useState(4);
 
   // 🔥 Cargar canchas reales de la API usando endpoint de ADMIN
   const loadCourts = async () => {
@@ -96,7 +98,7 @@ export default function CanchasPage() {
       
       // NO usar datos mock - mostrar error real
       setCourts([]);
-      alert(`Error al cargar canchas: ${errorMsg}. Verifique que esté logueado como administrador.`);
+      show('error', `Error al cargar canchas: ${errorMsg}. Verifique que esté logueado como administrador.`);
     } finally {
       setIsLoading(false);
     }
@@ -105,6 +107,24 @@ export default function CanchasPage() {
   useEffect(() => {
     loadCourts();
   }, [refreshKey, showInactive]); // 🔥 Recargar cuando cambie el toggle de inactivas
+
+  useEffect(() => {
+    const calculateItemsPerPage = () => {
+      try {
+        const height = window.innerHeight || 800;
+        const available = height - 520;
+        const rowHeight = 100; // por fila en diseño admin
+        const calculated = Math.max(4, Math.min(12, Math.floor(available / rowHeight)));
+        setItemsPerPage(calculated);
+      } catch (err) {
+        setItemsPerPage(4);
+      }
+    };
+
+    calculateItemsPerPage();
+    window.addEventListener('resize', calculateItemsPerPage);
+    return () => window.removeEventListener('resize', calculateItemsPerPage);
+  }, []);
 
   // Detectar si viene del parámetro refresh en la URL
   useEffect(() => {
@@ -153,12 +173,12 @@ export default function CanchasPage() {
         console.log('✅ [AdminCanchas] Lista recargada desde servidor');
       }, 500);
       
-      alert('Cancha eliminada exitosamente');
+      show('success', 'Cancha eliminada exitosamente');
       console.log('✅ [AdminCanchas] Proceso de eliminación completado');
     } catch (error: any) {
       console.error('❌ [AdminCanchas] Error eliminando cancha:', error);
       const errorMsg = error?.message || 'Error desconocido';
-      alert(`Error al eliminar la cancha: ${errorMsg}`);
+      show('error', `Error al eliminar la cancha: ${errorMsg}`);
     }
   };
 

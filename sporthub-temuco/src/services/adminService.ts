@@ -71,9 +71,21 @@ export const adminService = {
       const response = await apiBackend.get(`/admin/complejos/${complejoId}/estadisticas/reservas-semana`, {
         params: { dias }
       });
-      return response.data;
+      // Normalizar payload: el backend puede devolver { ok:true, data: { dias: [...] } } o directamente { dias: [...] }
+      const payload = response.data?.data ?? response.data ?? {};
+      const diasArray = Array.isArray(payload?.dias) ? payload.dias : [];
+      return { ...payload, dias: diasArray };
     } catch (error: any) {
-      throw new Error('Error al obtener reservas por día: ' + (error.response?.data?.message || error.message));
+      // Si el backend falla con un error JS interno, convertirlo a mensaje legible
+      const raw = error?.response?.data?.message || error?.message || String(error);
+      const friendly = raw && typeof raw === 'string' && raw.includes('total_reservas')
+        ? 'Fallo al procesar estadísticas (datos incompletos del servidor). Reintenta más tarde.'
+        : raw;
+
+      console.warn('⚠️ [adminService] getReservasPorDiaSemana error normalizado:', { raw, friendly });
+
+      // Entregar fallback vacío para que el frontend pueda continuar renderizando
+      return { dias: [] };
     }
   },
 
@@ -85,9 +97,18 @@ export const adminService = {
       const response = await apiBackend.get(`/admin/complejos/${complejoId}/estadisticas/reservas-cancha`, {
         params: { dias }
       });
-      return response.data;
+      const payload = response.data?.data ?? response.data ?? {};
+      const canchasArray = Array.isArray(payload?.canchas) ? payload.canchas : [];
+      return { ...payload, canchas: canchasArray };
     } catch (error: any) {
-      throw new Error('Error al obtener reservas por cancha: ' + (error.response?.data?.message || error.message));
+      const raw = error?.response?.data?.message || error?.message || String(error);
+      const friendly = raw && typeof raw === 'string' && raw.includes('total_reservas')
+        ? 'Fallo al procesar estadísticas (datos incompletos del servidor). Reintenta más tarde.'
+        : raw;
+
+      console.warn('⚠️ [adminService] getReservasPorCancha error normalizado:', { raw, friendly });
+
+      return { canchas: [] };
     }
   },
 
