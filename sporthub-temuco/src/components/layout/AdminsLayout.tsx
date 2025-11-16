@@ -4,7 +4,6 @@ import React from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import './Sidebar.css';
-import AdminToastProvider from '@/components/admin/AdminToast';
 
 interface LayoutProps {
   userRole: 'admin' | 'usuario' | 'super_admin';
@@ -24,9 +23,7 @@ const Layout = ({ userRole, userName, notificationCount = 0, children }: LayoutP
           notificationCount={notificationCount} 
         />
         <main style={{ paddingLeft: 0, flex: 1, paddingBottom: '60px' }}>
-          <AdminToastProvider>
-            {children}
-          </AdminToastProvider>
+          {children}
         </main>
       </div>
     </div>

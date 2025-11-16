@@ -1,22 +1,35 @@
 'use client';
 
 import './seguridad.css';
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input, Button } from '../componentes/compUser';
 import UserLayout from '../UsuarioLayout';
 import authService from '@/services/authService';
+import Link from 'next/link';
 
 export default function SeguridadPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [allowEmails, setAllowEmails] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [userData, setUserData] = useState<any>(null);
 
-  // Calcular fuerza de contraseña (solo mínimo 8 caracteres es obligatorio)
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const data = await authService.me();
+        setUserData(data);
+      } catch (error) {
+        console.error("Error al cargar usuario:", error);
+      }
+    }
+    fetchUser();
+  }, []);
+
+  // Calcular fuerza de contraseña
   const checkPasswordStrength = (password: string) => {
     let strength = 0;
     if (password.length >= 8) strength += 40;
@@ -38,7 +51,7 @@ export default function SeguridadPage() {
     setError(null);
     setIsLoading(true);
 
-    // Validaciones básicas
+    // Validaciones
     if (!currentPassword.trim()) {
       setError("Por favor ingresa tu contraseña actual.");
       setIsLoading(false);
@@ -57,25 +70,19 @@ export default function SeguridadPage() {
       return;
     }
 
-    
-    // ...existing code...
     try {
       const response = await authService.changePassword({
         current_password: currentPassword,
         new_password: newPassword,
       });
       
-      console.log("Respuesta cambio contraseña:", response);
-      
-      // Verificar si la respuesta es un objeto y contiene mensaje de éxito
-      // Acceder directamente a response ya que puede no tener .data
       const responseMessage = ((response as any).message || 
                               (response as any).error || 
                               '').toLowerCase();
       
       if (responseMessage.includes('contraseña actualizada correctamente') || 
           responseMessage.includes('password updated successfully')) {
-        setSuccess("Contraseña cambiada exitosamente");
+        setSuccess("✅ Contraseña cambiada exitosamente");
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
@@ -83,239 +90,223 @@ export default function SeguridadPage() {
       } else if ((response as any).ok === false) {
         setError((response as any).error || (response as any).message || "Error desconocido");
       } else {
-        setSuccess("Contraseña cambiada exitosamente");
+        setSuccess("✅ Contraseña cambiada exitosamente");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setPasswordStrength(0);
       }
     } catch (err: any) {
-      console.error("Error completo:", err);
-      
-      // Verificar si hay un mensaje específico sobre contraseña incorrecta
       if (err?.response?.data?.detail?.includes("contraseña actual") || 
           err?.response?.data?.error?.includes("contraseña actual") || 
           err?.response?.data?.message?.includes("contraseña actual")) {
-        setError("La contraseña actual es incorrecta");
-      } 
-      else if (err?.response?.status === 401) {
-        setError("Tu sesión ha expirado. Por favor inicia sesión nuevamente.");
-      }
-      else if (err?.response?.data?.detail) {
-        setError(err.response.data.detail);
-      } 
-      else if (err?.message) {
-        setError(err.message);
-      } 
-      else {
-        setError("No se pudo cambiar la contraseña. Intente nuevamente.");
+        setError("❌ La contraseña actual es incorrecta");
+      } else if (err?.response?.status === 401) {
+        setError("❌ Tu sesión ha expirado. Por favor inicia sesión nuevamente.");
+      } else if (err?.response?.data?.detail) {
+        setError("❌ " + err.response.data.detail);
+      } else if (err?.message) {
+        setError("❌ " + err.message);
+      } else {
+        setError("❌ No se pudo cambiar la contraseña. Intente nuevamente.");
       }
     } finally {
       setIsLoading(false);
     }
-    // ...existing code...
-
-
   };
 
-  const seguridadLogs = [
-    { id: 1, fecha: "01-01-2025", hora: "12:00", evento: "Sesión Iniciada" },
-    { id: 2, fecha: "01-01-2025", hora: "12:25", evento: "Sesión Cerrada" },
-    { id: 3, fecha: "01-01-2025", hora: "18:13", evento: "Sesión Iniciada" },
-    { id: 4, fecha: "01-01-2025", hora: "19:51", evento: "Sesión Cerrada" },
-    { id: 5, fecha: "01-02-2025", hora: "01:48", evento: "Sesión Iniciada" },
-  ];
+  const userInitial = userData?.nombre ? userData.nombre.charAt(0).toUpperCase() : "U";
+  const fullName = userData ? `${userData.nombre} ${userData.apellido}` : "Usuario";
 
   return (
-    <UserLayout
-      userName="Usuario"
-      sport={undefined}
-      notificationCount={2}
-    >
+    <UserLayout userName={fullName}>
       <div className="seguridad-wrapper">
-        <div className="seguridad-header">
-          <h1 className="seguridad-titulo">Seguridad de la Cuenta</h1>
-          <p className="seguridad-subtitulo">Gestiona la seguridad de tu cuenta</p>
-        </div>
+        <div className="seguridad-container">
+          
+          {/* SIDEBAR IZQUIERDA */}
+          <div className="seguridad-left">
+            <div className="seguridad-header-gradient"></div>
+            
+            <div className="avatar-section-security">
+              <div className="avatar-iniciales-security">
+                {userData?.avatar_url ? (
+                  <img src={userData.avatar_url} alt="Avatar" />
+                ) : (
+                  <span>{userInitial}</span>
+                )}
+              </div>
+              <h2>{fullName}</h2>
+              <p className="rol-badge">{userData?.rol || "Usuario"}</p>
+            </div>
 
-        <div className="bloque-principal">
-          <div className="contenedor-flex">
+            <div className="security-info-box">
+              <h3>🔐 Configuración de Seguridad</h3>
+              <p>
+                Mantén tu cuenta protegida actualizando regularmente tu contraseña.
+                Usa una combinación de letras, números y símbolos para mayor seguridad.
+              </p>
+            </div>
 
-            <div className="seccion-izquierda">
-              <div className="security-card">
-                <h2 className="titulo-seccion">Cambiar Contraseña</h2>
+            <Link href="/usuario/perfil" className="btn-back-security">
+              ← Volver al Perfil
+            </Link>
+          </div>
+
+          {/* CONTENIDO DERECHA */}
+          <div className="seguridad-right">
+            <div className="seguridad-main-header">
+              <h1 className="seguridad-titulo">Seguridad de la Cuenta</h1>
+              <p className="seguridad-subtitulo">Gestiona la seguridad y privacidad de tu cuenta</p>
+            </div>
+
+            <div className="seguridad-content-scroll">
+              
+              {/* CAMBIAR CONTRASEÑA */}
+              <div className="seguridad-section">
+                <h3 className="seguridad-section-title">
+                  🔑 Cambiar Contraseña
+                </h3>
                 
                 <form onSubmit={handleChangePassword} className="password-form">
-                  <p className="texto-secundario">
-                    Protege tu cuenta con una contraseña segura y única.
-                  </p>
-
-                  {error && <div className="error-message" style={{ 
-                    background: '#fee2e2', 
-                    color: '#dc2626', 
-                    padding: '12px', 
-                    borderRadius: '8px',
-                    border: '1px solid #fecaca',
-                    marginBottom: '16px'
-                  }}>
-                    {error}
-                  </div>}
+                  {error && (
+                    <div className="mensaje-error">
+                      {error}
+                    </div>
+                  )}
                   
-                  {success && <div className="success-message" style={{ 
-                    background: '#d1fae5', 
-                    color: '#065f46', 
-                    padding: '12px', 
-                    borderRadius: '8px',
-                    border: '1px solid #a7f3d0',
-                    marginBottom: '16px'
-                  }}>
-                    {success}
-                  </div>}
+                  {success && (
+                    <div className="mensaje-exito">
+                      {success}
+                    </div>
+                  )}
 
-                  <div className="input-group">
-                    <label>Contraseña Actual *</label>
-                    <Input
-                      type="password"
-                      placeholder="Ingresa tu contraseña actual"
-                      value={currentPassword}
-                      onChange={(e) => setCurrentPassword(e.target.value)}
-                      className="security-input"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
+                  <div className="form-grid">
+                    <div className="input-group-security">
+                      <label className="input-label-security">Contraseña Actual *</label>
+                      <Input
+                        type="password"
+                        placeholder="Ingresa tu contraseña actual"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        className="input-security"
+                        required
+                        disabled={isLoading}
+                      />
+                    </div>
 
-                  <div className="input-group">
-                    <label>Nueva Contraseña *</label>
-                    <Input
-                      type="password"
-                      placeholder="Crea una nueva contraseña (mínimo 8 caracteres)"
-                      value={newPassword}
-                      onChange={handleNewPasswordChange}
-                      className="security-input"
-                      required
-                      disabled={isLoading}
-                    />
-                    
-                    {newPassword && (
-                      <div className="password-strength">
-                        <div className="strength-bar">
-                          <div 
-                            className={`strength-fill ${
-                              passwordStrength >= 60 ? 'strong' : 
-                              passwordStrength >= 40 ? 'medium' : 'weak'
-                            }`}
-                            style={{ width: `${passwordStrength}%` }}
-                          ></div>
+                    <div className="input-group-security">
+                      <label className="input-label-security">Nueva Contraseña *</label>
+                      <Input
+                        type="password"
+                        placeholder="Mínimo 8 caracteres"
+                        value={newPassword}
+                        onChange={handleNewPasswordChange}
+                        className="input-security"
+                        required
+                        disabled={isLoading}
+                      />
+                      
+                      {newPassword && (
+                        <div className="password-strength-container">
+                          <div className="strength-bar-bg">
+                            <div 
+                              className={`strength-bar-fill ${
+                                passwordStrength >= 80 ? 'strong' : 
+                                passwordStrength >= 60 ? 'good' :
+                                passwordStrength >= 40 ? 'medium' : 'weak'
+                              }`}
+                              style={{ width: `${passwordStrength}%` }}
+                            ></div>
+                          </div>
+                          <span className={`strength-label ${
+                            passwordStrength >= 80 ? 'strong' : 
+                            passwordStrength >= 60 ? 'good' :
+                            passwordStrength >= 40 ? 'medium' : 'weak'
+                          }`}>
+                            {passwordStrength >= 80 ? '💪 Muy Fuerte' : 
+                             passwordStrength >= 60 ? '✅ Fuerte' :
+                             passwordStrength >= 40 ? '⚠️ Media' : '❌ Débil'}
+                          </span>
                         </div>
-                        <span className="strength-text">
-                          {passwordStrength >= 60 ? 'Fuerte' : 
-                           passwordStrength >= 40 ? 'Media' : 'Débil'}
-                        </span>
-                      </div>
-                    )}
+                      )}
+                    </div>
+
+                    <div className="input-group-security">
+                      <label className="input-label-security">Confirmar Nueva Contraseña *</label>
+                      <Input
+                        type="password"
+                        placeholder="Repite tu nueva contraseña"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="input-security"
+                        required
+                        disabled={isLoading}
+                      />
+                      {confirmPassword && newPassword !== confirmPassword && (
+                        <span className="password-mismatch">❌ Las contraseñas no coinciden</span>
+                      )}
+                      {confirmPassword && newPassword === confirmPassword && (
+                        <span className="password-match">✅ Las contraseñas coinciden</span>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="input-group">
-                    <label>Confirmar Nueva Contraseña *</label>
-                    <Input
-                      type="password"
-                      placeholder="Repite tu nueva contraseña"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="security-input"
-                      required
-                      disabled={isLoading}
-                    />
-                  </div>
-
-                  <div className="requisitos-container">
-                    <h4>Requisitos de seguridad:</h4>
-                    <ul className="requisitos-list">
+                  <div className="requisitos-box">
+                    <h4>📋 Requisitos de Seguridad</h4>
+                    <ul className="requisitos-list-modern">
                       <li className={newPassword.length >= 8 ? 'valid' : ''}>
-                        Mínimo 8 caracteres *
+                        <span className="req-icon">{newPassword.length >= 8 ? '✅' : '⭕'}</span>
+                        <span>Mínimo 8 caracteres (Obligatorio)</span>
                       </li>
                       <li className={/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword) ? 'valid' : ''}>
-                        Mayúsculas y minúsculas (recomendado)
+                        <span className="req-icon">{/[A-Z]/.test(newPassword) && /[a-z]/.test(newPassword) ? '✅' : '⭕'}</span>
+                        <span>Mayúsculas y minúsculas (Recomendado)</span>
                       </li>
                       <li className={/[0-9]/.test(newPassword) ? 'valid' : ''}>
-                        Al menos un número (recomendado)
+                        <span className="req-icon">{/[0-9]/.test(newPassword) ? '✅' : '⭕'}</span>
+                        <span>Al menos un número (Recomendado)</span>
                       </li>
                       <li className={/[!@#$%^&*]/.test(newPassword) ? 'valid' : ''}>
-                        Al menos un símbolo (!@#$%^&*) (recomendado)
+                        <span className="req-icon">{/[!@#$%^&*]/.test(newPassword) ? '✅' : '⭕'}</span>
+                        <span>Al menos un símbolo !@#$%^&* (Recomendado)</span>
                       </li>
                     </ul>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--security-text-light)', marginTop: '8px', fontStyle: 'italic' }}>
-                      * Campo obligatorio
-                    </p>
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    variant="primary" 
-                    className="btn-security"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Actualizando...' : 'Actualizar Contraseña'}
-                  </Button>
+                  <div className="form-actions-security">
+                    <Button 
+                      type="submit" 
+                      variant="primary" 
+                      className="btn-save-security"
+                      disabled={isLoading || newPassword !== confirmPassword || newPassword.length < 8}
+                    >
+                      {isLoading ? '🔄 Actualizando...' : '💾 Actualizar Contraseña'}
+                    </Button>
+                  </div>
                 </form>
               </div>
 
-              <div className="security-card contact-admin">
-                <h2 className="titulo-seccion">¿Necesitas Ayuda?</h2>
-                <div className="contact-content">
-                  <p className="texto-secundario">
-                    Si detectas actividad sospechosa en tu cuenta, contacta inmediatamente a un administrador.
-                  </p>
-                  <Button variant="primary" className="btn-contact-admin">
-                    Contactar un Administrador
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div className="seccion-derecha">
-              <div className="security-card">
-                <h2 className="titulo-seccion">Actividad Reciente</h2>
-                <p className="texto-secundario">
-                  Registro de inicios de sesión en tu cuenta.
-                </p>
-                <div className="activity-log">
-                  {seguridadLogs.map((log) => (
-                    <div key={log.id} className="log-entry">
-                      <div className="log-icon">{log.evento.includes('Iniciada') ? '🔓' : '🔒'}</div>
-                      <div className="log-details">
-                        <div className="log-event">{log.evento}</div>
-                        <div className="log-meta">{log.fecha} • {log.hora}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="security-card">
-                <h2 className="titulo-seccion">Notificaciones por Correo</h2>
-                <div className="email-preferences">
-                  <div className="preference-item">
-                    <div className="preference-info">
-                      <h4>Alertas de seguridad</h4>
-                      <p>Recibe notificaciones sobre actividad importante</p>
-                    </div>
-                    <label className="toggle-switch">
-                      <input
-                        type="checkbox"
-                        checked={allowEmails}
-                        onChange={() => setAllowEmails(!allowEmails)}
-                      />
-                      <span className="toggle-slider"></span>
-                    </label>
+              {/* AYUDA */}
+              <div className="seguridad-section help-section">
+                <h3 className="seguridad-section-title">
+                  ❓ ¿Necesitas Ayuda?
+                </h3>
+                <div className="help-content">
+                  <div className="help-icon">🛡️</div>
+                  <div className="help-text">
+                    <h4>Seguridad y Soporte</h4>
+                    <p>
+                      Si detectas actividad sospechosa en tu cuenta o tienes problemas 
+                      para acceder, contacta inmediatamente a un administrador.
+                    </p>
                   </div>
-                  <p className="preference-note">
-                    Recibirás correos importantes sobre la seguridad de tu cuenta.
-                  </p>
-                  <Button variant="secondary" className="btn-security-outline">
-                    Guardar Preferencias
-                  </Button>
                 </div>
+                <button className="btn-contact-admin">
+                  📧 Contactar Administrador
+                </button>
               </div>
-            </div>
 
+            </div>
           </div>
         </div>
       </div>

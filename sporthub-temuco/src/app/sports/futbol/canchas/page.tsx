@@ -2,137 +2,50 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStatus } from '../../../../hooks/useAuthStatus';
+import { useComplejosCanchas } from '../../../../hooks/useComplejosCanchas'; // 🔥 NUEVO HOOK
 import CourtCard from '../../../../components/charts/CourtCard';
 import SearchBar from '../../../../components/SearchBar';
 import LocationMap from '../../../../components/LocationMap';
 import Sidebar from '../../../../components/layout/Sidebar';
 import styles from './page.module.css';
-import { complejosService } from '../../../../services/complejosService';
-
-// 🔥 IMPORTAR SERVICIO (igual que en la página principal)
-import { canchaService } from '../../../../services/canchaService';
 
 export default function Page() {
   const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
-  
-  // 🔥 ESTADOS PARA LA API (usando la misma lógica de /sports/futbol/page.tsx)
-  const [canchas, setCanchas] = useState<any[]>([]);
-  const [filteredCanchas, setFilteredCanchas] = useState<any[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [isLoadingCanchas, setIsLoadingCanchas] = useState(true);
-  const [error, setError] = useState<string>('');
 
-  // 🔥 FUNCIÓN PARA CARGAR CANCHAS (copiada exactamente de /sports/futbol/page.tsx)
-// 🔥 FUNCIÓN PARA CARGAR CANCHAS MODIFICADA
-const cargarCanchas = async () => {
-  try {
-    setIsLoadingCanchas(true);
-    setError('');
-    
-    console.log('🔄 [CanchasFutbol] Cargando TODAS las canchas del backend...');
-    
-    const todasLasCanchas = await canchaService.getCanchas();
-    console.log('✅ [CanchasFutbol] Todas las canchas obtenidas:', todasLasCanchas);
-    
-    // 🔥 FILTRAR CANCHAS DE FÚTBOL, FUTSAL Y FUTBOLITO
-    const canchasDeFutbol = todasLasCanchas.filter((cancha: any) => {
-      return ['futbol', 'futsal', 'futbolito'].includes(cancha.tipo);
-    });
-    
-    console.log('⚽ [CanchasFutbol] Canchas de fútbol/futsal/futbolito encontradas:', canchasDeFutbol.length);
-    
-    // 🔥 OBTENER DATOS DE COMPLEJOS PARA CADA CANCHA
-    const canchasMapeadas = await Promise.all(
-      canchasDeFutbol.map(async (cancha: any) => {
-        let complejoData = null;
-        let addressInfo = `Complejo ${cancha.establecimientoId}`;
-        
-        // 🔥 INTENTAR OBTENER DATOS DEL COMPLEJO
-        if (cancha.establecimientoId) {
-          try {
-            console.log(`🔍 [CanchasFutbol] Cargando complejo ID ${cancha.establecimientoId} para cancha ${cancha.id}`);
-            complejoData = await complejosService.getComplejoById(cancha.establecimientoId);
-            
-            if (complejoData) {
-              addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
-              console.log(`✅ [CanchasFutbol] Complejo cargado: ${addressInfo}`);
-            }
-            
-          } catch (complejoError: any) {
-            console.warn(`⚠️ [CanchasFutbol] Error cargando complejo ${cancha.establecimientoId}:`, complejoError.message);
-            // Usar datos de fallback
-            const staticComplejo = getStaticComplejoData(cancha.establecimientoId);
-            addressInfo = `${staticComplejo.nombre} - ${staticComplejo.direccion}`;
-          }
-        }
-        
-        // 🔥 MAPEAR CANCHA CON DATOS DEL COMPLEJO
-        const mappedCancha = {
-          id: cancha.id,
-          imageUrl: `/sports/futbol/canchas/Cancha${cancha.id}.png`,
-          name: cancha.nombre,
-          address: addressInfo, // 🔥 USAR NOMBRE Y DIRECCIÓN REAL DEL COMPLEJO
-          rating: cancha.rating || 4.5,
-          tags: [
-            cancha.techada ? "Techada" : "Al aire libre",
-            cancha.activa ? "Disponible" : "No disponible",
-            cancha.tipo.charAt(0).toUpperCase() + cancha.tipo.slice(1)
-          ],
-          description: `Cancha de ${cancha.tipo} ${cancha.nombre} - ID: ${cancha.id}`,
-          price: cancha.precioPorHora?.toString() || "25",
-          nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
-          sport: cancha.tipo
-        };
-        
-        console.log('🗺️ [CanchasFutbol] Cancha mapeada:', mappedCancha);
-        return mappedCancha;
-      })
-    );
-    
-    console.log('🎉 [CanchasFutbol] Canchas con datos de complejo cargadas:', canchasMapeadas.length);
-    setCanchas(canchasMapeadas);
-    setFilteredCanchas(canchasMapeadas);
-    
-  } catch (error: any) {
-    console.error('❌ [CanchasFutbol] ERROR cargando canchas:', error);
-    setError(`Error: ${error.message}`);
-    
-    // Fallback con datos estáticos...
-  } finally {
-    setIsLoadingCanchas(false);
-  }
-};
-
-// 🔥 FUNCIÓN PARA DATOS ESTÁTICOS DE COMPLEJO
-const getStaticComplejoData = (establecimientoId: number) => {
-  const staticComplejos = {
-    1: {
-      nombre: "Complejo Deportivo Norte",
-      direccion: "Av. Alemania 1234, Temuco, Chile"
-    },
-    2: {
-      nombre: "Complejo Deportivo Centro", 
-      direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
-    },
-    3: {
-      nombre: "Complejo Deportivo Sur",
-      direccion: "Calle Montt 890, Temuco, Chile"
-    },
-    default: {
-      nombre: "Complejo Deportivo",
-      direccion: "Av. Alemania 1234, Temuco, Chile"
+  // 🔥 USAR HOOK DE CANCHAS CON COMPLEJOS
+  const {
+    canchas,
+    loading: isLoadingCanchas,
+    error: errorHook
+  } = useComplejosCanchas({
+    deportes: ['futbol', 'futsal', 'futbolito'],
+    fallbackComplejos: {
+      1: {
+        nombre: "Complejo Deportivo Norte",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      },
+      2: {
+        nombre: "Complejo Deportivo Centro",
+        direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+      },
+      3: {
+        nombre: "Complejo Deportivo Sur",
+        direccion: "Calle Montt 890, Temuco, Chile"
+      }
     }
-  };
-  
-  return staticComplejos[establecimientoId as keyof typeof staticComplejos] || staticComplejos.default;
-};
+  });
 
-  // 🔥 CARGAR CANCHAS AL MONTAR EL COMPONENTE
+  // Estado local para filtrado
+  const [filteredCanchas, setFilteredCanchas] = useState<any[]>([]);
+  const error = errorHook || '';
+
+  // 🔥 ACTUALIZAR FILTRADO CUANDO CAMBIEN LAS CANCHAS
   useEffect(() => {
-    cargarCanchas();
-  }, []);
+    setFilteredCanchas(canchas);
+  }, [canchas]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -167,9 +80,9 @@ const getStaticComplejoData = (establecimientoId: number) => {
     }
   };
 
-  // 🔥 FUNCIÓN PARA REFRESCAR DATOS
+  // 🔥 FUNCIÓN PARA REFRESCAR DATOS (recarga la página para reiniciar el hook)
   const handleRefresh = () => {
-    cargarCanchas();
+    window.location.reload();
   };
 
   // 🔥 MANEJADOR DE CLICK EN CANCHA (como en la página principal)
