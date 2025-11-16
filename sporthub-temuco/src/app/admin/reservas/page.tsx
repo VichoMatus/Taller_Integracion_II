@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { reservaService } from '@/services/reservaService';
+import Modal from '@/components/Modal';
 import { apiBackend } from '@/config/backend';
 import { Reserva, EstadoReserva } from '@/types/reserva';
 import '../dashboard.css';
@@ -159,18 +160,8 @@ export default function ReservasPage() {
   };
 
   // Función para eliminar reserva (como admin)
-  const deleteReservation = async (reservationId: number) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar esta reserva? Esta acción no se puede deshacer.')) {
-      try {
-        await reservaService.deleteReservaAdmin(reservationId);
-        alert('Reserva eliminada exitosamente');
-        loadReservas(); // Recargar la lista
-      } catch (err: any) {
-        console.error('Error al eliminar reserva:', err);
-        alert(err.message || 'No se pudo eliminar la reserva');
-      }
-    }
-  };
+  // Nota: Eliminar reserva no se usa actualmente en el panel.
+  // Se mantiene la función si más adelante se habilita, pero por ahora no se expone en la UI.
 
   // Función para cancelar reserva como administrador (forzar cancelación)
   const cancelReservationAdmin = async (reservationId: number) => {
@@ -187,16 +178,79 @@ export default function ReservasPage() {
   };
 
   // Función para confirmar reserva como administrador
-  const confirmReservationAdmin = async (reservationId: number) => {
-    if (window.confirm('¿Confirmar esta reserva como administrador?')) {
-      try {
-        await reservaService.confirmarReserva(reservationId);
-        alert('Reserva confirmada correctamente');
-        loadReservas();
-      } catch (err: any) {
-        console.error('Error al confirmar reserva:', err);
-        alert(err?.message || 'Error al confirmar reserva');
+  // Modal-driven confirmation flow
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmingReservationId, setConfirmingReservationId] = useState<number | null>(null);
+  const [isPago, setIsPago] = useState(false);
+  const [selectedMetodo, setSelectedMetodo] = useState<string>('efectivo');
+
+  const openConfirmModal = (reservationId: number) => {
+    console.log('[openConfirmModal] abrir modal para reserva', reservationId);
+    setConfirmingReservationId(reservationId);
+    setIsPago(false);
+    setSelectedMetodo('efectivo');
+    setShowConfirmModal(true);
+  };
+
+  const closeConfirmModal = () => {
+    setShowConfirmModal(false);
+    setConfirmingReservationId(null);
+  };
+
+  useEffect(() => {
+    console.log('[ReservasPage] showConfirmModal=', showConfirmModal);
+  }, [showConfirmModal]);
+
+  const handleConfirmReservation = async () => {
+    console.log('[handleConfirmReservation] confirmar reserva', confirmingReservationId, { isPago, selectedMetodo });
+    if (!confirmingReservationId) return;
+
+    try {
+      if (isPago) {
+        console.log('[handleConfirmReservation] marcando como pagada, metodo=', selectedMetodo);
+        await reservaService.confirmarReservaConMetodo(confirmingReservationId, selectedMetodo);
+        alert(`Reserva confirmada y marcada como pagada (${selectedMetodo})`);
+      } else {
+        console.log('[handleConfirmReservation] confirmando sin pago');
+        await reservaService.confirmarReserva(confirmingReservationId);
+        alert('Reserva confirmada sin marcar como pagada');
       }
+      closeConfirmModal();
+      loadReservas();
+    } catch (err: any) {
+      console.error('Error al confirmar reserva desde modal:', err);
+      alert(err?.message || 'Error al confirmar reserva');
+    }
+  };
+
+  // Reintroducir el flujo estándar (sin modal) para depuración y pruebas rápidas
+  const confirmReservationAdmin = async (reservationId: number) => {
+    console.log('[confirmReservationAdmin] inicio', reservationId);
+    const continuar = window.confirm('¿Deseas confirmar esta reserva como administrador?');
+    if (!continuar) return;
+
+    const pagoRealizado = window.confirm('¿Ya se ha realizado el pago de esta reserva? (Aceptar = Sí, Cancelar = No)');
+
+    try {
+      if (pagoRealizado) {
+        let metodo = window.prompt('Indica el método de pago (efectivo, tarjeta, transferencia, online). Dejar vacío = efectivo.');
+        metodo = (metodo || 'efectivo').toLowerCase();
+        const validos = ['efectivo', 'tarjeta', 'transferencia', 'online', 'webpay'];
+        if (!validos.includes(metodo)) metodo = 'efectivo';
+
+        console.log('[confirmReservationAdmin] confirmar con metodo', metodo);
+        await reservaService.confirmarReservaConMetodo(reservationId, metodo);
+        alert('Reserva confirmada y marcada como pagada (' + metodo + ')');
+      } else {
+        console.log('[confirmReservationAdmin] confirmar sin pago');
+        await reservaService.confirmarReserva(reservationId);
+        alert('Reserva confirmada sin método de pago establecido');
+      }
+
+      loadReservas();
+    } catch (err: any) {
+      console.error('Error al confirmar la reserva (estandar):', err);
+      alert(err?.message || 'No se pudo confirmar la reserva (estandar)');
     }
   };
 
@@ -244,7 +298,8 @@ export default function ReservasPage() {
   }
 
   return (
-    <div className="admin-dashboard-container">
+    <>
+      <div className="admin-dashboard-container">
       {/* Header Principal */}
       <div className="estadisticas-header">
         <h1 className="text-2xl font-bold text-gray-900">Panel de Gestión de Reservas</h1>
@@ -383,10 +438,9 @@ export default function ReservasPage() {
                       {/* Botón Cancelar (solo si no está cancelada o completada) */}
                       {reserva.estado !== 'cancelada' && reserva.estado !== 'completada' && (
                         <button 
-                          className="btn-action" 
+                          className="btn-action btn-cancelar" 
                           title="Cancelar Reserva"
                           onClick={() => cancelReservationAdmin(reserva.id)}
-                          style={{ backgroundColor: 'var(--warning)', color: 'white' }}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -397,9 +451,9 @@ export default function ReservasPage() {
                       {reserva.estado === 'pendiente' && (
                         <button
                           className="btn-action btn-confirmar"
+                          type="button"
                           title="Confirmar Reserva"
                           onClick={() => confirmReservationAdmin(reserva.id)}
-                          style={{ backgroundColor: 'var(--success)', color: 'white' }}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -407,16 +461,7 @@ export default function ReservasPage() {
                         </button>
                       )}
                       
-                      {/* Botón Eliminar */}
-                      <button 
-                        className="btn-action btn-eliminar" 
-                        title="Eliminar"
-                        onClick={() => deleteReservation(reserva.id)}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                      {/* Eliminado: botón Borrar no se utiliza. */}
                     </div>
                   </td>
                 </tr>
@@ -456,6 +501,44 @@ export default function ReservasPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+      {/* Modal para confirmar reserva y método de pago */}
+      <Modal open={showConfirmModal} onClose={closeConfirmModal}>
+        <div className="modal-container">
+          <div className="modal-header">
+            <h3 className="modal-title">Confirmar Reserva</h3>
+            <button className="modal-close" onClick={closeConfirmModal}>×</button>
+          </div>
+          <div className="modal-body">
+            <p>¿Deseas confirmar la reserva como administrador?</p>
+            <div style={{ marginTop: '12px' }}>
+              <label style={{ fontWeight: 600 }}>¿Ya se ha realizado el pago?</label>
+              <div style={{ marginTop: '8px' }}>
+                <label style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <input type="checkbox" checked={isPago} onChange={(e) => setIsPago(e.target.checked)} />
+                  <span>{isPago ? 'Sí, pago realizado' : 'No, pago pendiente'}</span>
+                </label>
+              </div>
+            </div>
+
+            {isPago && (
+              <div className="method-group">
+                <label style={{ fontWeight: 600, marginTop: 8 }}>Selecciona el método de pago</label>
+                {['efectivo', 'tarjeta', 'transferencia', 'online', 'webpay'].map((m) => (
+                  <div key={m} className={`method-option ${selectedMetodo === m ? 'selected' : ''}`} onClick={() => setSelectedMetodo(m)}>
+                    <input type="radio" id={`m-${m}`} name="metodoPago" value={m} checked={selectedMetodo === m} onChange={() => setSelectedMetodo(m)} />
+                    <label htmlFor={`m-${m}`} style={{ textTransform: 'capitalize' }}>{m}</label>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+            <div className="modal-actions">
+            <button type="button" onClick={closeConfirmModal} className="btn-volver">Cancelar</button>
+            <button type="button" onClick={handleConfirmReservation} className="btn-guardar btn-confirmar">Confirmar</button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 }

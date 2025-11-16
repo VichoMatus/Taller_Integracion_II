@@ -1531,6 +1531,25 @@
   transform: scale(1.05);
 }
 
+/* Botones confirmación y cancelación (usados en admin reservas) */
+.btn-action.btn-confirmar {
+  background-color: #10b981; /* verde */
+  color: white;
+}
+.btn-action.btn-confirmar:hover {
+  background-color: #059669;
+  transform: scale(1.05);
+}
+
+.btn-action.btn-cancelar {
+  background-color: #ef4444; /* rojo */
+  color: white;
+}
+.btn-action.btn-cancelar:hover {
+  background-color: #dc2626;
+  transform: scale(1.05);
+}
+
 /* Paginación */
 .admin-pagination-container {
   padding: 16px 24px;
@@ -2068,7 +2087,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
+  z-index: 999999; /* asegurar que se muestre sobre todo */
   animation: modalFadeIn 0.2s ease-out;
 }
 
@@ -2140,6 +2159,37 @@
   padding: 24px;
   max-height: 60vh;
   overflow-y: auto;
+}
+
+/* Modal actions (botones) */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.method-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.method-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.method-option.selected {
+  border-color: var(--teal-500);
+  background-color: #ecfeff;
 }
 
 .modal-info-grid {

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ModalProps {
   open: boolean;
@@ -8,23 +9,37 @@ interface ModalProps {
 
 const Modal: React.FC<ModalProps> = ({ open, onClose, children }) => {
   if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 backdrop-blur-sm">
-      <div className="relative bg-[#f2f4f3] rounded-[28px] shadow-2xl px-10 py-10 min-w-[350px] max-w-[90vw]">
+
+  // Evitar scroll del body mientras el modal está abierto
+  useEffect(() => {
+    const original = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = original; };
+  }, []);
+
+  const modalNode = (
+    <div className="modal-overlay" role="dialog" aria-modal="true">
+      <div className="modal-container">
         <button
-          className="absolute top-[13px] right-[18px] text-gray-700 text-4xl font-bold hover:text-black bg-transparent border-none outline-none"
+          className="modal-close"
           onClick={onClose}
           aria-label="Cerrar modal"
-          style={{ padding: 0, margin: 0 }}
         >
           ×
         </button>
-        <div className="flex flex-col items-center justify-center">
+        <div className="modal-body">
           {children}
         </div>
       </div>
     </div>
   );
+
+  // Renderizar en body para evitar stacking-context issues
+  if (typeof document !== 'undefined') {
+    return createPortal(modalNode, document.body);
+  }
+
+  return null;
 };
 
 export default Modal;
