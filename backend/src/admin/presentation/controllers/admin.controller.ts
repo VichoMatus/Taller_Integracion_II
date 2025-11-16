@@ -32,38 +32,22 @@ export class AdminController {
 
   // === HELPER PARA OBTENER OWNER ID ===
   private getOwnerId(req: Request): number {
-    // 🔥 PRIMERO: Intentar obtener del JWT decodificado
     const user = (req as any)?.user;
     
-    // Log para debugging
-    console.log('🔍 [AdminController] Obteniendo owner ID:', {
-      hasUser: !!user,
-      userId: user?.id || user?.id_usuario || user?.sub,
-      role: user?.role || user?.rol,
-      allUserData: user
-    });
-    
-    // 🔥 VERIFICAR que el usuario sea admin u owner
-    const userRole = user?.role || user?.rol;
-    if (userRole !== 'admin' && userRole !== 'owner' && userRole !== 'super_admin') {
-      console.error('❌ [AdminController] Usuario sin permisos de admin/owner:', {
-        role: userRole,
-        userId: user?.id || user?.sub
-      });
-      throw new Error('Acceso denegado: Se requiere rol de administrador o propietario');
-    }
-    
-    // 🔥 EXTRAER ID del usuario (que es el owner_id para admins)
-    // El token puede tener: id, id_usuario, sub (subject)
-    const ownerId = user?.id || user?.id_usuario || user?.sub || Number(req.headers["x-user-id"]);
+    // 🔥 PRIORIDAD DE BÚSQUEDA:
+    // 1. owner_id (campo esperado en el token)
+    // 2. id_usuario (fallback si FastAPI no envía owner_id)
+    // 3. id (campo normalizado por el middleware)
+    // 4. x-user-id header (para pruebas)
+    const ownerId = user?.owner_id || user?.id_usuario || user?.id || Number(req.headers["x-user-id"]);
     
     if (!ownerId) {
-      console.error('❌ [AdminController] No se pudo extraer owner ID del token:', user);
-      throw new Error("Owner ID no encontrado en el token");
+      console.error('❌ [AdminController] Owner ID no encontrado. Usuario decodificado:', user);
+      throw new Error("Owner ID no encontrado en el token. Verifica que FastAPI incluya 'owner_id' o 'id_usuario' en el JWT");
     }
     
     console.log('✅ [AdminController] Owner ID obtenido:', ownerId);
-    return Number(ownerId);
+    return ownerId;
   }
 
   // === PANEL OWNER ===

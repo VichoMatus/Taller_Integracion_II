@@ -16,32 +16,13 @@ import { fail } from "../../../interfaces/apiEnvelope";
 export const requireRole =
   (...roles: Array<"admin" | "super_admin">) =>
   (req: Request, res: Response, next: NextFunction) => {
-    // 🔥 Obtiene el rol del usuario autenticado (soporta 'role' y 'rol')
-    const user = (req as any)?.user;
-    const role = user?.rol || user?.role || (req.headers["x-user-role"] as string | undefined);
+    // Obtiene el rol del usuario autenticado o header de prueba
+    const role =
+      (req as any)?.user?.rol || (req.headers["x-user-role"] as string | undefined);
 
-    console.log('🔍 [requireRole] Verificando roles:', {
-      requiredRoles: roles,
-      userRole: role,
-      hasUser: !!user,
-      userRol: user?.rol,
-      userRole: user?.role
-    });
+    if (!role) return res.status(401).json(fail(401, "No autenticado"));
+    if (!roles.includes(role as any)) return res.status(403).json(fail(403, "Permisos insuficientes - requiere rol de administrador"));
 
-    if (!role) {
-      console.warn('⚠️ [requireRole] No autenticado - sin rol');
-      return res.status(401).json(fail(401, "No autenticado"));
-    }
-
-    if (!roles.includes(role as any)) {
-      console.warn('⚠️ [requireRole] Permisos insuficientes:', {
-        userRole: role,
-        requiredRoles: roles
-      });
-      return res.status(403).json(fail(403, "Permisos insuficientes - requiere rol de administrador"));
-    }
-
-    console.log('✅ [requireRole] Acceso autorizado:', role);
     next();
   };
 

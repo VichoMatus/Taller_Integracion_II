@@ -35,15 +35,10 @@ export class ResenaApiRepository implements ResenaRepository {
     console.log('🌐 [ResenaApiRepository.listResenas] URL completa:', this.http.defaults.baseURL + '/resenas');
     
     try {
-      const params: any = {};
-      
-      if (filters.idCancha) params.id_cancha = filters.idCancha;
-      if (filters.idComplejo) params.id_complejo = filters.idComplejo;
-      if (filters.order) params.order = filters.order;
-      if (filters.page) params.page = filters.page;
-      if (filters.pageSize) params.page_size = filters.pageSize;
-      
       const { data } = await this.http.get<FastResena[]>(`/resenas`, { params });
+      
+      console.log('✅ [ResenaApiRepository.listResenas] Reseñas recibidas:', data?.length || 0);
+      
       return data.map(toResena);
     } catch (e: any) {
       console.error('❌ [ResenaApiRepository.listResenas] Error al obtener reseñas:', {
