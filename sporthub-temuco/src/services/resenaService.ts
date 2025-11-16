@@ -54,20 +54,12 @@ export const resenaService = {
   /**
    * Crea una nueva reseña.
    * Requiere tener una reserva confirmada del destino (cancha o complejo).
-   * @param input - Datos de la reseña (id_cancha o id_complejo, calificacion, comentario)
+   * @param input - Datos de la reseña (canchaId o complejoId, calificacion, comentario)
    * @returns Reseña creada
    */
   async crearResena(input: ResenaCreateRequest): Promise<Resena> {
     try {
-      // Transformar snake_case a camelCase para el BFF
-      const bffInput = {
-        idCancha: input.id_cancha,
-        idComplejo: input.id_complejo,
-        calificacion: input.calificacion,
-        comentario: input.comentario
-      };
-      
-      const { data } = await apiBackend.post('/resenas', bffInput);
+      const { data } = await apiBackend.post('/resenas', input);
       return data.data || data;
     } catch (err) {
       handleApiError(err);

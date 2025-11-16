@@ -82,18 +82,31 @@ export class AdminApiRepository implements AdminRepository {
       // Obtener datos del complejo
       const complejo = await this.getComplejo(ownerId, complejoId);
       
-      // Obtener todas las canchas del complejo
+      // Obtener todas las canchas del complejo con manejo robusto de respuesta
       const { data: canchasData } = await this.http.get(`/canchas`, { 
         params: { complejo_id: complejoId } 
       });
-      const canchas = (canchasData.items || canchasData || []) as Cancha[];
+      
+      // Extracción segura de canchas desde diferentes estructuras posibles
+      let canchas: Cancha[] = [];
+      if (Array.isArray(canchasData)) {
+        canchas = canchasData;
+      } else if (canchasData && typeof canchasData === 'object') {
+        if (Array.isArray(canchasData.items)) {
+          canchas = canchasData.items;
+        } else if (Array.isArray(canchasData.data)) {
+          canchas = canchasData.data;
+        }
+      }
+      
+      console.log(`✅ [AdminApiRepository.getEstadisticasComplejo] Canchas del complejo ${complejoId}:`, canchas.length);
       
       // Calcular fecha hace un mes
       const fechaHasta = new Date();
       const fechaDesde = new Date();
       fechaDesde.setDate(fechaDesde.getDate() - 30);
       
-      // Obtener reservas del último mes para este complejo
+      // Obtener reservas del último mes para este complejo con manejo robusto
       const { data: reservasData } = await this.http.get(`/reservas`, { 
         params: { 
           complejo_id: complejoId,
@@ -101,7 +114,20 @@ export class AdminApiRepository implements AdminRepository {
           fecha_hasta: fechaHasta.toISOString().split('T')[0]
         } 
       });
-      const reservas = (reservasData.items || reservasData || []) as ReservaOwner[];
+      
+      // Extracción segura de reservas desde diferentes estructuras posibles
+      let reservas: ReservaOwner[] = [];
+      if (Array.isArray(reservasData)) {
+        reservas = reservasData;
+      } else if (reservasData && typeof reservasData === 'object') {
+        if (Array.isArray(reservasData.items)) {
+          reservas = reservasData.items;
+        } else if (Array.isArray(reservasData.data)) {
+          reservas = reservasData.data;
+        }
+      }
+      
+      console.log(`✅ [AdminApiRepository.getEstadisticasComplejo] Reservas del complejo ${complejoId}:`, reservas.length);
       
       // Contar canchas activas e inactivas
       const canchasActivas = canchas.filter(c => c.activa !== false && c.estado !== 'inactiva').length;
@@ -156,7 +182,7 @@ export class AdminApiRepository implements AdminRepository {
       const fechaDesde = new Date();
       fechaDesde.setDate(fechaDesde.getDate() - diasAtras);
       
-      // Obtener reservas del período para este complejo
+      // Obtener reservas del período para este complejo con manejo robusto
       const { data: reservasData } = await this.http.get(`/reservas`, { 
         params: { 
           complejo_id: complejoId,
@@ -164,7 +190,20 @@ export class AdminApiRepository implements AdminRepository {
           fecha_hasta: fechaHasta.toISOString().split('T')[0]
         } 
       });
-      const reservas = (reservasData.items || reservasData || []) as ReservaOwner[];
+      
+      // Extracción segura de reservas desde diferentes estructuras posibles
+      let reservas: ReservaOwner[] = [];
+      if (Array.isArray(reservasData)) {
+        reservas = reservasData;
+      } else if (reservasData && typeof reservasData === 'object') {
+        if (Array.isArray(reservasData.items)) {
+          reservas = reservasData.items;
+        } else if (Array.isArray(reservasData.data)) {
+          reservas = reservasData.data;
+        }
+      }
+      
+      console.log(`✅ [AdminApiRepository.getReservasPorDiaSemana] Reservas del complejo ${complejoId}:`, reservas.length);
       
       // Nombres de los días en español
       const nombresDias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -183,9 +222,22 @@ export class AdminApiRepository implements AdminRepository {
         });
       }
       
-      // Agrupar reservas por día de la semana
+      // Agrupar reservas por día de la semana con validación de datos
       reservas.forEach(reserva => {
+        // Validar que la reserva tenga fecha
+        if (!reserva || !reserva.fecha) {
+          console.warn('⚠️ [AdminApiRepository.getReservasPorDiaSemana] Reserva sin fecha, omitiendo:', reserva);
+          return;
+        }
+        
         const fechaReserva = new Date(reserva.fecha);
+        
+        // Validar que la fecha sea válida
+        if (isNaN(fechaReserva.getTime())) {
+          console.warn('⚠️ [AdminApiRepository.getReservasPorDiaSemana] Fecha inválida, omitiendo:', reserva.fecha);
+          return;
+        }
+        
         const diaSemana = fechaReserva.getDay(); // 0=Domingo, 1=Lunes, etc.
         
         const datoDia = datosPorDia.get(diaSemana)!;
@@ -194,7 +246,8 @@ export class AdminApiRepository implements AdminRepository {
         switch (reserva.estado) {
           case 'confirmada':
             datoDia.reservas_confirmadas++;
-            datoDia.ingresos += reserva.precio_total || 0;
+            // Usar || 0 para manejar null/undefined de manera segura
+            datoDia.ingresos += (reserva.precio_total ?? 0);
             break;
           case 'pendiente':
             datoDia.reservas_pendientes++;
@@ -255,18 +308,31 @@ export class AdminApiRepository implements AdminRepository {
       // Obtener datos del complejo
       const complejo = await this.getComplejo(ownerId, complejoId);
       
-      // Obtener todas las canchas del complejo
+      // Obtener todas las canchas del complejo con manejo robusto
       const { data: canchasData } = await this.http.get(`/canchas`, { 
         params: { complejo_id: complejoId } 
       });
-      const canchas = (canchasData.items || canchasData || []) as Cancha[];
+      
+      // Extracción segura de canchas desde diferentes estructuras posibles
+      let canchas: Cancha[] = [];
+      if (Array.isArray(canchasData)) {
+        canchas = canchasData;
+      } else if (canchasData && typeof canchasData === 'object') {
+        if (Array.isArray(canchasData.items)) {
+          canchas = canchasData.items;
+        } else if (Array.isArray(canchasData.data)) {
+          canchas = canchasData.data;
+        }
+      }
+      
+      console.log(`✅ [AdminApiRepository.getReservasPorCancha] Canchas del complejo ${complejoId}:`, canchas.length);
       
       // Calcular rango de fechas
       const fechaHasta = new Date();
       const fechaDesde = new Date();
       fechaDesde.setDate(fechaDesde.getDate() - diasAtras);
       
-      // Obtener reservas del período para este complejo
+      // Obtener reservas del período para este complejo con manejo robusto
       const { data: reservasData } = await this.http.get(`/reservas`, { 
         params: { 
           complejo_id: complejoId,
@@ -274,7 +340,20 @@ export class AdminApiRepository implements AdminRepository {
           fecha_hasta: fechaHasta.toISOString().split('T')[0]
         } 
       });
-      const reservas = (reservasData.items || reservasData || []) as ReservaOwner[];
+      
+      // Extracción segura de reservas desde diferentes estructuras posibles
+      let reservas: ReservaOwner[] = [];
+      if (Array.isArray(reservasData)) {
+        reservas = reservasData;
+      } else if (reservasData && typeof reservasData === 'object') {
+        if (Array.isArray(reservasData.items)) {
+          reservas = reservasData.items;
+        } else if (Array.isArray(reservasData.data)) {
+          reservas = reservasData.data;
+        }
+      }
+      
+      console.log(`✅ [AdminApiRepository.getReservasPorCancha] Reservas del complejo ${complejoId}:`, reservas.length);
       
       // Inicializar contadores para cada cancha
       const datosPorCancha: Map<number, ReservasCancha> = new Map();
@@ -293,8 +372,14 @@ export class AdminApiRepository implements AdminRepository {
         });
       });
       
-      // Agrupar reservas por cancha
+      // Agrupar reservas por cancha con validación robusta
       reservas.forEach(reserva => {
+        // Validar que la reserva tenga cancha_id
+        if (!reserva || typeof reserva.cancha_id !== 'number') {
+          console.warn('⚠️ [AdminApiRepository.getReservasPorCancha] Reserva sin cancha_id válido, omitiendo:', reserva);
+          return;
+        }
+        
         const datoCancha = datosPorCancha.get(reserva.cancha_id);
         
         if (datoCancha) {
@@ -303,7 +388,8 @@ export class AdminApiRepository implements AdminRepository {
           switch (reserva.estado) {
             case 'confirmada':
               datoCancha.reservas_confirmadas++;
-              datoCancha.ingresos += reserva.precio_total || 0;
+              // Usar ?? 0 para manejar null/undefined de manera segura
+              datoCancha.ingresos += (reserva.precio_total ?? 0);
               break;
             case 'pendiente':
               datoCancha.reservas_pendientes++;
@@ -312,6 +398,8 @@ export class AdminApiRepository implements AdminRepository {
               datoCancha.reservas_canceladas++;
               break;
           }
+        } else {
+          console.warn(`⚠️ [AdminApiRepository.getReservasPorCancha] Reserva para cancha_id ${reserva.cancha_id} no encontrada en las canchas del complejo`);
         }
       });
       

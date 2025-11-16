@@ -70,9 +70,9 @@ export default function ResenasPage() {
         
         // Si no está en userData, hacer llamada a la API
         console.log('🔍 Complejo ID no encontrado en userData, consultando API...');
-        console.log('🔍 ID de usuario:', user.id_usuario || user.id);
+        console.log('🔍 ID de usuario:', user.id);
         
-        const userId = user.id_usuario || user.id;
+        const userId = user.id;
         
         if (!userId) {
           console.error('❌ No se encontró ID de usuario');
@@ -129,9 +129,9 @@ export default function ResenasPage() {
       console.log('🏢 [loadResenasComplejo] Cargando reseñas del complejo:', complejoId);
       
       const filters: ResenaListQuery = {
-        id_complejo: complejoId,
+        complejoId: complejoId,
         page: currentPage,
-        page_size: itemsPerPage,
+        pageSize: itemsPerPage,
         order: orderBy
       };
       
@@ -183,8 +183,8 @@ export default function ResenasPage() {
       for (const cancha of canchas) {
         console.log('🏟️ [loadResenasCanchas] Estructura de cancha individual:', JSON.stringify(cancha, null, 2));
         
-        // FastAPI devuelve id_cancha, no id
-        const canchaId = cancha.id_cancha || cancha.id;
+        // El BFF devuelve id en camelCase
+        const canchaId = cancha.id;
         
         if (!canchaId) {
           console.warn('⚠️ [loadResenasCanchas] Cancha sin ID, saltando:', cancha);
@@ -195,10 +195,10 @@ export default function ResenasPage() {
         
         try {
           const filters: ResenaListQuery = {
-            id_cancha: canchaId,
+            canchaId: canchaId,
             order: orderBy,
             page: 1,
-            page_size: 100 // Obtener todas para luego paginar localmente
+            pageSize: 100 // Obtener todas para luego paginar localmente
           };
           
           const resenasCancha = await resenaService.listarResenas(filters);
@@ -271,12 +271,12 @@ export default function ResenasPage() {
       console.log('🔍 [loadResenas] Cargando reseñas del complejo:', complejoId);
       
       const filters: ResenaListQuery = {
-        id_complejo: complejoId, // ✅ REQUERIDO: La API necesita filtro por id_cancha O id_complejo
+        complejoId: complejoId, // ✅ REQUERIDO: La API necesita filtro por canchaId O complejoId
         page: currentPage,
-        size: itemsPerPage,
+        pageSize: itemsPerPage,
         ...(selectedCalificacion && { 
-          calificacion_min: selectedCalificacion, 
-          calificacion_max: selectedCalificacion 
+          calificacionMin: selectedCalificacion, 
+          calificacionMax: selectedCalificacion 
         })
       };
       
@@ -288,24 +288,24 @@ export default function ResenasPage() {
       // Usar datos mock en caso de error para development
       setResenas([
         {
-          id_resena: 1,
-          id_usuario: 1,
-          id_cancha: 1,
-          id_reserva: 1,
+          id: 1,
+          usuarioId: 1,
+          canchaId: 1,
           calificacion: 5,
           comentario: 'Excelente cancha, muy bien mantenida y con buen cesped.',
-          fecha_creacion: new Date().toISOString(),
-          fecha_actualizacion: new Date().toISOString()
+          estado: 'activa',
+          fechaCreacion: new Date().toISOString(),
+          fechaActualizacion: new Date().toISOString()
         },
         {
-          id_resena: 2,
-          id_usuario: 2,
-          id_cancha: 1,
-          id_reserva: 2,
+          id: 2,
+          usuarioId: 2,
+          canchaId: 1,
           calificacion: 4,
           comentario: 'Muy buena experiencia, solo faltaba un poco mas de iluminacion.',
-          fecha_creacion: new Date(Date.now() - 86400000).toISOString(),
-          fecha_actualizacion: new Date(Date.now() - 86400000).toISOString()
+          estado: 'activa',
+          fechaCreacion: new Date(Date.now() - 86400000).toISOString(),
+          fechaActualizacion: new Date(Date.now() - 86400000).toISOString()
         }
       ]);
     } finally {
@@ -350,7 +350,8 @@ export default function ResenasPage() {
   const deleteResena = async (resenaId: number | string) => {
     if (window.confirm('¿Estas seguro de que deseas eliminar esta resena?')) {
       try {
-        await resenaService.eliminarResena(resenaId);
+        const id = typeof resenaId === 'string' ? parseInt(resenaId, 10) : resenaId;
+        await resenaService.eliminarResena(id);
         showToast('success', 'Reseña eliminada exitosamente');
         loadResenas(); // Recargar la lista
       } catch (err: any) {
