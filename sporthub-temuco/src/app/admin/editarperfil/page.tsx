@@ -31,32 +31,36 @@ export default function EditarPerfilAdministrador() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  
+
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
-    telefono: ''
+    telefono: '',
+    imagen: null as File | null
   });
+
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         setLoading(true);
-        
+
         if (!authService.isAuthenticated()) {
           router.push('/login');
           return;
         }
 
         const userData = await authService.me() as UserProfile;
-        
+
         setUserData(userData);
         setFormData({
           nombre: userData.nombre || '',
           apellido: userData.apellido || '',
-          telefono: userData.telefono || ''
+          telefono: userData.telefono || '',
+          imagen: null
         });
-        
+        setImagePreview(null);
       } catch (err: any) {
         console.error('Error cargando datos:', err);
         setError('Error al cargar los datos del perfil');
@@ -68,29 +72,57 @@ export default function EditarPerfilAdministrador() {
     fetchUserData();
   }, [router]);
 
+  // Manejar cambio de imagen
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar tamaño (máx 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError("La imagen no debe superar los 5MB");
+        return;
+      }
+
+      // Validar tipo
+      if (!file.type.startsWith('image/')) {
+        setError("El archivo debe ser una imagen");
+        return;
+      }
+
+      setFormData(prev => ({ ...prev, imagen: file }));
+
+      // Crear preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      setError(null);
+    }
+  };
+
   const formatPhoneNumber = (value: string): string => {
     // Remover todo excepto números
     const numbers = value.replace(/\D/g, '');
-    
+
     // Si está vacío, retornar vacío
     if (numbers.length === 0) return '';
-    
+
     // Si empieza con 56, extraer los dígitos después del 56
     let phoneDigits = numbers;
     if (numbers.startsWith('56')) {
       phoneDigits = numbers.substring(2);
     }
-    
+
     // Limitar a 9 dígitos
     phoneDigits = phoneDigits.substring(0, 9);
-    
+
     // Si hay dígitos, formatear como +56 9 XXXX XXXX
     if (phoneDigits.length > 0) {
       // Asegurarse que empiece con 9
       if (!phoneDigits.startsWith('9')) {
         phoneDigits = '9' + phoneDigits.substring(0, 8);
       }
-      
+
       // Formatear con espacios
       let formatted = '+56 9';
       if (phoneDigits.length > 1) {
@@ -99,10 +131,10 @@ export default function EditarPerfilAdministrador() {
       if (phoneDigits.length > 5) {
         formatted += ' ' + phoneDigits.substring(5, 9);
       }
-      
+
       return formatted;
     }
-    
+
     return '+56 9';
   };
 
@@ -127,7 +159,7 @@ export default function EditarPerfilAdministrador() {
 
   const validatePhoneNumber = (phone: string): boolean => {
     if (!phone || phone.trim() === '' || phone === '+56 9') return true; // Opcional
-    
+
     // Debe tener exactamente +56 9 XXXX XXXX (17 caracteres con espacios)
     const phoneRegex = /^\+56 9 \d{4} \d{4}$/;
     return phoneRegex.test(phone);
@@ -155,35 +187,34 @@ export default function EditarPerfilAdministrador() {
         return;
       }
 
-      const updateData: UpdateProfileData = {};
-      
-      if (formData.nombre !== userData?.nombre) {
-        updateData.nombre = formData.nombre;
-      }
-      
-      if (formData.apellido !== userData?.apellido) {
-        updateData.apellido = formData.apellido;
-      }
-      
-      // Solo guardar teléfono si es diferente y válido
-      const cleanPhone = formData.telefono === '+56 9' ? '' : formData.telefono;
-      if (cleanPhone !== userData?.telefono) {
-        updateData.telefono = cleanPhone;
+      // Usar FormData para enviar imagen si existe
+      const updateData = new FormData();
+      updateData.append('nombre', formData.nombre);
+      updateData.append('apellido', formData.apellido);
+      updateData.append('telefono', formData.telefono === '+56 9' ? '' : formData.telefono);
+      if (formData.imagen) {
+        updateData.append('avatar', formData.imagen);
       }
 
-      if (Object.keys(updateData).length === 0) {
+      // Verificar si hay cambios
+      if (
+        !formData.imagen &&
+        formData.nombre === userData?.nombre &&
+        formData.apellido === userData?.apellido &&
+        (formData.telefono === userData?.telefono || (formData.telefono === '+56 9' && !userData?.telefono))
+      ) {
         setSuccess('No se detectaron cambios para guardar');
         return;
       }
 
       await authService.updateProfile(updateData);
-      
+
       setSuccess('Perfil actualizado correctamente');
-      
+
       setTimeout(() => {
         router.push('/admin/perfil');
       }, 1500);
-      
+
     } catch (err: any) {
       console.error('Error guardando cambios:', err);
       setError(err.message || 'Error al guardar los cambios');
@@ -224,9 +255,9 @@ export default function EditarPerfilAdministrador() {
               
               <div className="avatar-section-edit">
                 <div className="avatar-wrapper-edit">
-                  {userData?.avatar_url ? (
+                  {imagePreview || userData?.avatar_url ? (
                     <img 
-                      src={userData.avatar_url} 
+                      src={imagePreview || userData.avatar_url} 
                       alt="Avatar" 
                       className="avatar-img-edit"
                     />
@@ -241,14 +272,26 @@ export default function EditarPerfilAdministrador() {
                 <h2 className="sidebar-user-name">{userName}</h2>
                 <span className="sidebar-user-role">Administrador</span>
                 
-                <button className="change-photo-btn-modern">
+                <label htmlFor="image-upload" className="change-photo-btn-modern" style={{ cursor: "pointer" }}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                     <circle cx="8.5" cy="8.5" r="1.5"/>
                     <polyline points="21 15 16 10 5 21"/>
                   </svg>
                   Cambiar Foto
-                </button>
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    style={{ display: "none" }}
+                  />
+                </label>
+                {imagePreview && (
+                  <div className="image-preview-info">
+                    <span>Imagen lista para guardar</span>
+                  </div>
+                )}
               </div>
 
               <div className="info-card-edit">
@@ -274,7 +317,6 @@ export default function EditarPerfilAdministrador() {
               </button>
             </div>
           </aside>
-
           {/* PANEL PRINCIPAL - FORMULARIO */}
           <main className="edit-main-content">
             <div className="edit-header">
