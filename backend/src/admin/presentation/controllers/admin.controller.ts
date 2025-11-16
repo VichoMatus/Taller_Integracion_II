@@ -32,10 +32,38 @@ export class AdminController {
 
   // === HELPER PARA OBTENER OWNER ID ===
   private getOwnerId(req: Request): number {
-    // Obtener del JWT o header de prueba
-    const ownerId = (req as any)?.user?.id || Number(req.headers["x-user-id"]);
-    if (!ownerId) throw new Error("Owner ID no encontrado en el token");
-    return ownerId;
+    // 🔥 PRIMERO: Intentar obtener del JWT decodificado
+    const user = (req as any)?.user;
+    
+    // Log para debugging
+    console.log('🔍 [AdminController] Obteniendo owner ID:', {
+      hasUser: !!user,
+      userId: user?.id || user?.id_usuario || user?.sub,
+      role: user?.role || user?.rol,
+      allUserData: user
+    });
+    
+    // 🔥 VERIFICAR que el usuario sea admin u owner
+    const userRole = user?.role || user?.rol;
+    if (userRole !== 'admin' && userRole !== 'owner' && userRole !== 'super_admin') {
+      console.error('❌ [AdminController] Usuario sin permisos de admin/owner:', {
+        role: userRole,
+        userId: user?.id || user?.sub
+      });
+      throw new Error('Acceso denegado: Se requiere rol de administrador o propietario');
+    }
+    
+    // 🔥 EXTRAER ID del usuario (que es el owner_id para admins)
+    // El token puede tener: id, id_usuario, sub (subject)
+    const ownerId = user?.id || user?.id_usuario || user?.sub || Number(req.headers["x-user-id"]);
+    
+    if (!ownerId) {
+      console.error('❌ [AdminController] No se pudo extraer owner ID del token:', user);
+      throw new Error("Owner ID no encontrado en el token");
+    }
+    
+    console.log('✅ [AdminController] Owner ID obtenido:', ownerId);
+    return Number(ownerId);
   }
 
   // === PANEL OWNER ===
