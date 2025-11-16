@@ -34,6 +34,7 @@ interface UseAdminReturn {
   state: UseAdminState;
   loadDashboard: () => Promise<void>;
   loadMisRecursos: () => Promise<void>;
+  loadMisReservas: () => Promise<void>;
   createComplejo: (data: CreateComplejoInput) => Promise<boolean>;
   updateComplejo: (id: number, data: UpdateComplejoInput) => Promise<boolean>;
   deleteComplejo: (id: number) => Promise<boolean>;
@@ -64,6 +65,14 @@ export const useAdmin = (): UseAdminReturn => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       const dashboardData = await adminService.getDashboardData();
+      // Complementar con listado completo de canchas (para contar y mostrar)
+      try {
+        const allCanchas = await adminService.getMisCanchas();
+        dashboardData.canchas = allCanchas || dashboardData.canchas || [];
+      } catch (err) {
+        // No bloquear la carga del dashboard si getMisCanchas falla
+        console.warn('No se pudo obtener listado completo de canchas para el dashboard', err);
+      }
       
       setState(prev => ({
         ...prev,
@@ -103,6 +112,28 @@ export const useAdmin = (): UseAdminReturn => {
         ...prev, 
         error: error.message, 
         isLoading: false 
+      }));
+    }
+  };
+
+  const loadMisReservas = async () => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      const reservas = await adminService.getMisReservas();
+
+      setState(prev => ({
+        ...prev,
+        data: {
+          ...prev.data,
+          reservas: reservas || []
+        },
+        isLoading: false
+      }));
+    } catch (error: any) {
+      setState(prev => ({
+        ...prev,
+        error: error.message,
+        isLoading: false
       }));
     }
   };
@@ -261,6 +292,7 @@ export const useAdmin = (): UseAdminReturn => {
     state,
     loadDashboard,
     loadMisRecursos,
+    loadMisReservas,
     createComplejo,
     updateComplejo,
     deleteComplejo,
@@ -282,7 +314,9 @@ export const useAdminDashboard = () => {
     complejos: admin.state.data.complejos,
     canchas: admin.state.data.canchas,
     estadisticas: admin.state.data.estadisticas,
+    reservas: admin.state.data.reservas,
     loadDashboard: admin.loadDashboard,
+    loadMisReservas: admin.loadMisReservas,
     clearMessages: admin.clearMessages,
   };
 };

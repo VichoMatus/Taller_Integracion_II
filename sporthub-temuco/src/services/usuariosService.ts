@@ -108,11 +108,40 @@ class UsuariosService {
     }
   }
 
+  // Búsqueda de usuarios por texto para Admin (no requiere super_admin en el frontend)
+  // Útil para autocompletar emails/nombres desde páginas Admin.
+  async buscar(q: string, size = 8): Promise<Usuario[]> {
+    try {
+      const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+      const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+      const { data } = await apiBackend.get<Usuario[]>('/usuarios', { params: { q, size }, headers });
+      return data;
+    } catch (error) {
+      console.error('Error en usuariosService.buscar:', error);
+      handleApiError(error);
+      return [];
+    }
+  }
+
   // Obtener usuario por ID
   async obtener(id: string | number): Promise<Usuario> {
     return this.handleRequest(
       apiBackend.get<Usuario>(`/usuarios/${id}`)
     );
+  }
+
+  // Obtener usuario por ID sin exigir rol super_admin en frontend
+  // Útil cuando la vista es admin y queremos consultar un usuario por su ID
+  async obtenerPublico(id: string | number): Promise<Usuario> {
+    try {
+      const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+      const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+      const { data } = await apiBackend.get<Usuario>(`/usuarios/${id}`, { headers });
+      return data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
   }
 
   // Crear usuario

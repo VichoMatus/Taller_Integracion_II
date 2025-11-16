@@ -1,124 +1,124 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import BarChart from '@/components/charts/BarChart';
 import StatsCard from '@/components/charts/StatsCard';
-import '../dashboard.css'; // Importar CSS compartido
+import '../dashboard.css';
+import { useEstadisticas } from '@/hooks/useEstadisticas';
+import { adminService } from '@/services/adminService';
 
 export default function EstadisticasPage() {
-  // Datos para el gráfico de barras - Reservas por cancha
-  const reservasPorCancha = [
-    { label: 'Central', value: 40 },
-    { label: 'Norte', value: 30 },
-    { label: 'Sur', value: 20 },
-    { label: 'Este', value: 35 },
-    { label: 'Oeste', value: 15 }
-  ];
+  const [complejoId, setComplejoId] = useState<number | null>(null);
 
-  // Datos para el gráfico de barras - Reservas por día
-  const reservasPorDia = [
-    { label: 'Lun', value: 15 },
-    { label: 'Mar', value: 25 },
-    { label: 'Mié', value: 12 },
-    { label: 'Jue', value: 30 },
-    { label: 'Vie', value: 20 },
-    { label: 'Sáb', value: 35 },
-    { label: 'Dom', value: 18 }
-  ];
+  const {
+    estadisticas,
+    loadingEstadisticas,
+    errorEstadisticas,
+    reservasPorDia,
+    loadingReservasDia,
+    errorReservasDia,
+    reservasPorCancha,
+    loadingReservasCancha,
+    errorReservasCancha,
+    diasAnalisis,
+    cambiarPeriodo,
+    cargarTodo,
+    isLoading,
+    hasError
+  } = useEstadisticas(complejoId);
+
+  useEffect(() => {
+    const loadComplejo = async () => {
+      try {
+        const userData = localStorage.getItem('userData');
+        if (userData) {
+          const user = JSON.parse(userData);
+          const complejo = user.complejo_id || user.id_complejo || user.id_establecimiento;
+          if (complejo) {
+            setComplejoId(complejo);
+            return;
+          }
+        }
+
+        const misComplejos = await adminService.getMisComplejos();
+        if (misComplejos && Array.isArray(misComplejos) && misComplejos.length > 0) {
+          setComplejoId(misComplejos[0].id_complejo || misComplejos[0].id);
+        }
+      } catch (err) {
+        console.warn('No se pudo obtener complejo del admin', err);
+      }
+    };
+
+    loadComplejo();
+  }, []);
+
+  // Transformar datos para los charts
+  const reservasPorCanchaData = (reservasPorCancha?.canchas || []).filter(Boolean).map((c: any) => ({ label: c?.cancha_nombre || 'Sin nombre', value: Number(c?.total_reservas ?? 0) }));
+  const reservasPorDiaData = (reservasPorDia?.dias || []).filter(Boolean).map((d: any) => ({ label: d?.dia_nombre || 'Sin nombre', value: Number(d?.total_reservas ?? 0) }));
 
   return (
     <div className="admin-dashboard-container">
-      {/* Header con animación de entrada */}
       <div className="estadisticas-header">
-        <h1 className="text-2xl font-bold text-gray-900">Panel de Estadísticas Generales</h1>
-        <button className="export-button">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          Exportar informe
-        </button>
+        <h1 className="text-2xl font-bold text-gray-900">Panel de Estadísticas</h1>
+        <div>
+          <button className="export-button" onClick={() => cargarTodo()} disabled={isLoading}>Recargar</button>
+        </div>
       </div>
 
-      {/* Tarjetas de estadísticas principales */}
+      {isLoading && (
+        <div style={{ padding: '1rem' }}>Cargando estadísticas...</div>
+      )}
+
+      {hasError && (
+        <div className="info-banner info-red">
+          <div className="info-content">
+            <h3 className="info-title">No se pudieron cargar estadísticas</h3>
+              <p className="info-text">{errorEstadisticas || errorReservasDia || errorReservasCancha || 'Error desconocido'}</p>
+              {(errorReservasDia || errorReservasCancha) && (
+                <p className="info-text" style={{ marginTop: '0.5rem', fontSize: '0.9rem' }}>
+                  Si el mensaje indica datos incompletos, puede deberse a un fallo temporal del servicio de estadísticas; inténtalo nuevamente o contacta al equipo de backend para verificar el endpoint.
+                </p>
+              )}
+            <div style={{ marginTop: '0.5rem' }}>
+              <button onClick={() => cargarTodo()} className="btn-guardar">Reintentar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="stats-grid">
-        <StatsCard
-          title="Ocupación Mensual"
-          value="95%"
-          icon={<span className="text-3xl opacity-80">�</span>}
-          color="blue"
-          className="stats-card-override"
-        />
-        
-        <StatsCard
-          title="Reservas canceladas"
-          value="25"
-          icon={<span className="text-3xl opacity-80">❌</span>}
-          color="red"
-          className="stats-card-override"
-        />
-        
-        <StatsCard
-          title="Total usuarios"
-          value="25"
-          icon={<span className="text-3xl opacity-80">👥</span>}
-          color="purple"
-          className="stats-card-override"
-        />
-        
-        <StatsCard
-          title="Total canchas"
-          value="25"
-          icon={<span className="text-3xl opacity-80">🏟️</span>}
-          color="green"
-          className="stats-card-override"
-        />
+        <StatsCard title="Ocupación" value={estadisticas ? `${estadisticas.ocupacion_promedio?.toFixed(1)}%` : '—'} color="blue" />
+        <StatsCard title="Reservas mes" value={estadisticas ? String(estadisticas.reservas_mes || '-') : '-'} color="green" />
+        <StatsCard title="Ingresos mes" value={estadisticas ? `$${(estadisticas.ingresos_mes || 0).toLocaleString()}` : '-'} color="purple" />
+        <StatsCard title="Canchas" value={estadisticas ? String(estadisticas.total_canchas || '-') : '-'} color="green" />
       </div>
 
-      {/* Gráficos */}
       <div className="charts-grid">
-        {/* Gráfico de barras - Reservas por cancha */}
         <div className="chart-container">
           <div className="chart-background">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Reservas por cancha (Último mes)</h3>
-            <BarChart 
-              data={reservasPorCancha}
-              primaryColor="#9fb5b8"
-              animate={true}
-              showValues={true}
-              maxValue={40}
-              className="px-2"
-            />
+            <h3 className="text-lg font-semibold">Reservas por cancha</h3>
+            <BarChart data={reservasPorCanchaData.length ? reservasPorCanchaData : [{ label: 'Sin datos', value: 0 }]} primaryColor="#9fb5b8" />
           </div>
         </div>
-        
-        {/* Gráfico de barras - Reservas por día */}
+
         <div className="chart-container">
           <div className="chart-background">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Reservas por día</h3>
-            <BarChart 
-              data={reservasPorDia}
-              primaryColor="#14b8a6"
-              animate={true}
-              showValues={true}
-              maxValue={40}
-              className="px-2"
-            />
+            <h3 className="text-lg font-semibold">Reservas por día</h3>
+            <BarChart data={reservasPorDiaData.length ? reservasPorDiaData : [{ label: 'Sin datos', value: 0 }]} primaryColor="#14b8a6" />
           </div>
         </div>
       </div>
 
-      {/* Top Canchas más activas */}
       <div className="top-canchas-container">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Canchas más activas</h3>
+        <h3 className="text-lg font-semibold mb-4">Top canchas</h3>
         <div className="top-canchas-grid">
-          <div className="space-y-2">
-            <div className="cancha-item">1.- Cancha Norte</div>
-            <div className="cancha-item">2.- Cancha Pataping bong bing</div>
-          </div>
-          <div className="space-y-2">
-            <div className="cancha-item">3.- Hola soy un texto de prueba...</div>
-            <div className="cancha-item">4.- Hola soy un texto de prueba...</div>
-          </div>
+          {reservasPorCancha?.canchas?.length ? (
+            reservasPorCancha.canchas.slice(0, 4).map((c: any, i: number) => (
+              <div className="cancha-item" key={`${c.cancha_id ?? i}`}>{i + 1}.- {c.cancha_nombre} ({c.total_reservas})</div>
+            ))
+          ) : (
+            <div>No hay datos de canchas</div>
+          )}
         </div>
       </div>
     </div>

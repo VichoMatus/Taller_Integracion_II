@@ -39,7 +39,9 @@ export const useEstadisticas = (complejoId: number | null) => {
 
     try {
       const data = await adminService.getEstadisticasComplejo(complejoId);
-      setEstadisticas(data.data);
+      // El backend puede devolver la estructura en data o en response.data
+      const payload = data?.data ?? data;
+      setEstadisticas(payload);
     } catch (error: any) {
       setErrorEstadisticas(error.message);
       console.error('Error al cargar estadísticas:', error);
@@ -59,7 +61,10 @@ export const useEstadisticas = (complejoId: number | null) => {
 
     try {
       const data = await adminService.getReservasPorDiaSemana(complejoId, dias);
-      setReservasPorDia(data.data);
+      const payload = data?.data ?? data ?? {};
+      // Normalize shape
+      const diasArray = Array.isArray(payload?.dias) ? payload.dias.filter(Boolean) : [];
+      setReservasPorDia({ ...payload, dias: diasArray });
     } catch (error: any) {
       setErrorReservasDia(error.message);
       console.error('Error al cargar reservas por día:', error);
@@ -79,7 +84,9 @@ export const useEstadisticas = (complejoId: number | null) => {
 
     try {
       const data = await adminService.getReservasPorCancha(complejoId, dias);
-      setReservasPorCancha(data.data);
+      const payload = data?.data ?? data ?? {};
+      const canchasArray = Array.isArray(payload?.canchas) ? payload.canchas.filter(Boolean) : [];
+      setReservasPorCancha({ ...payload, canchas: canchasArray });
     } catch (error: any) {
       setErrorReservasCancha(error.message);
       console.error('Error al cargar reservas por cancha:', error);

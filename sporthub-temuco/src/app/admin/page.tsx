@@ -3,6 +3,10 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import StatsCard from '@/components/charts/StatsCard';
+import BarChart from '@/components/charts/BarChart';
+import { useEffect, useState } from 'react';
+import { useEstadisticas } from '@/hooks/useEstadisticas';
+import { useAdmin } from '@/hooks/useAdmin';
 import './dashboard.css';
 
 export default function AdminDashboard() {
@@ -28,6 +32,28 @@ export default function AdminDashboard() {
     router.push(`/admin/reservas/${reservaId}`);
   };
 
+  const { state, loadDashboard, loadMisReservas } = useAdmin();
+  const [selectedComplejo, setSelectedComplejo] = useState<number | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      await loadDashboard();
+      // Cargar reservas también para la vista rápida del dashboard
+      await loadMisReservas();
+    })();
+  }, []);
+
+  // Cuando se actualizan los complejos del state, auto-seleccionar el primer complejo para charts
+  useEffect(() => {
+    if (!selectedComplejo && state.data.complejos && state.data.complejos.length > 0) {
+      setSelectedComplejo(state.data.complejos[0].id);
+    }
+  }, [state.data.complejos]);
+
+  const { reservasPorCancha } = useEstadisticas(selectedComplejo);
+
+  const { estadisticas } = state.data;
+
   return (
     <div className="admin-dashboard-container">
       {/* Grid de estadísticas principales */}
@@ -35,7 +61,7 @@ export default function AdminDashboard() {
         {/* Tarjeta Canchas */}
         <StatsCard
           title="Canchas"
-          value="25"
+          value={String(state.data.canchas?.length || 0)}
           icon={<span className="text-3xl opacity-80">🏠</span>}
           color="blue"
           className="stats-card-override"
@@ -44,7 +70,7 @@ export default function AdminDashboard() {
         {/* Tarjeta Reservas */}
         <StatsCard
           title="Reservas"
-          value="180"
+          value={String(state.data.reservas?.length ?? state.data?.estadisticas?.reservas_mes ?? '-')}
           icon={<span className="text-3xl opacity-80">📅</span>}
           color="green"
           className="stats-card-override"
@@ -53,7 +79,7 @@ export default function AdminDashboard() {
         {/* Tarjeta Estadísticas */}
         <StatsCard
           title="Estadísticas"
-          value="Ver estadísticas"
+          value={estadisticas ? `${estadisticas.ocupacion_promedio?.toFixed?.(1) ?? '-'}%` : 'Ver estadísticas'}
           icon={<span className="text-3xl opacity-80">📈</span>}
           subtitle="Click para ver estadísticas"
           color="purple"
@@ -71,6 +97,21 @@ export default function AdminDashboard() {
           onClick={() => window.location.href = '/admin/resenas'}
           className="stats-card-override"
         />
+      </div>
+
+      {/* Quick Chart de Reservas por Cancha (primer complejo) */}
+        <div style={{ marginTop: '1rem' }}>
+        <h3 className="text-lg font-semibold">Reservas por cancha (rápido)</h3>
+        <div style={{ marginTop: '0.75rem' }} className="chart-background">
+          {(reservasPorCancha?.canchas || []).length > 0 ? (
+            <BarChart
+              data={(reservasPorCancha?.canchas || []).map((c: any) => ({ label: c.cancha_nombre || 'Sin nombre', value: Number(c.total_reservas || 0) }))}
+              primaryColor="#9fb5b8"
+            />
+          ) : (
+            <div className="text-gray-500">No hay datos para mostrar en Reservas por cancha.</div>
+          )}
+        </div>
       </div>
 
       {/* Grid de secciones de gestión lado a lado */}
@@ -91,26 +132,22 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Cancha Central</td>
-                <td><span className="status-badge status-active">Activo</span></td>
-                <td>
-                  <div className="action-buttons">
-                    <button className="action-btn edit" onClick={() => handleEditarCancha('cancha-central')}>✏️</button>
-                    <button className="action-btn delete">🗑️</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Cancha Norte</td>
-                <td><span className="status-badge status-inactive">Inactivo</span></td>
-                <td>
-                  <div className="action-buttons">
-                    <button className="action-btn edit" onClick={() => handleEditarCancha('cancha-norte')}>✏️</button>
-                    <button className="action-btn delete">🗑️</button>
-                  </div>
-                </td>
-              </tr>
+              {state.data.canchas && state.data.canchas.length > 0 ? state.data.canchas.slice(0, 5).map((c, i) => (
+                <tr key={c.id ?? `cancha-${i}-${c.nombre}` }>
+                  <td>{c.nombre}</td>
+                  <td><span className={`status-badge ${c.activa ? 'status-active' : 'status-inactive'}`}>{c.activa ? 'Activo' : 'Inactivo'}</span></td>
+                  <td>
+                    <div className="action-buttons">
+                      <button className="action-btn edit" onClick={() => handleEditarCancha(String(c.id))}>✏️</button>
+                      <button className="action-btn delete">🗑️</button>
+                    </div>
+                  </td>
+                </tr>
+                )) : (
+                <tr key="no-canchas">
+                  <td colSpan={3} className="text-gray-500">No hay canchas registradas</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -132,49 +169,29 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>Juan Pérez</td>
-                <td>Cancha Central</td>
-                <td><span className="status-badge status-active">Activo</span></td>
-                <td>
-                  <div className="action-buttons">
-                    <button className="action-btn edit" onClick={() => handleEditarReserva('reserva-001')}>✏️</button>
-                    <button className="action-btn delete">🗑️</button>
-                  </div>
-                </td>
-              </tr>
-              <tr>
-                <td>Ana Castro</td>
-                <td>Cancha Norte</td>
-                <td><span className="status-badge status-inactive">Inactivo</span></td>
-                <td>
-                  <div className="action-buttons">
-                    <button className="action-btn edit" onClick={() => handleEditarReserva('reserva-002')}>✏️</button>
-                    <button className="action-btn delete">🗑️</button>
-                  </div>
-                </td>
-              </tr>
+              {state.data.reservas && state.data.reservas.length > 0 ? state.data.reservas.slice(0, 5).map((r, i) => (
+                <tr key={r.id ?? `reserva-${i}-${r.usuario_id}` }>
+                  <td>{r.usuario_nombre || `Usuario #${r.usuario_id}`}</td>
+                  <td>{r.cancha_nombre || `Cancha #${r.cancha_id}`}</td>
+                  <td><span className={`status-badge ${r.estado === 'confirmada' ? 'status-active' : r.estado === 'pendiente' ? 'status-por-revisar' : 'status-inactive'}`}>{r.estado}</span></td>
+                  <td>
+                    <div className="action-buttons">
+                      <button className="action-btn edit" onClick={() => handleEditarReserva(String(r.id))}>✏️</button>
+                      <button className="action-btn delete">🗑️</button>
+                    </div>
+                  </td>
+                </tr>
+                )) : (
+                <tr key="no-reservas">
+                  <td colSpan={4} className="text-gray-500">No hay reservas recientes</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Sección Reseñas Recientes */}
-      <div className="reviews-section">
-        <h3>Reseñas Recientes</h3>
-        <div className="review-item">
-          <div className="review-content">
-            Cancha Central: &quot;Instalaciones Limpias&quot; - 5 Estrellas
-          </div>
-          <div className="review-time">Hace 1 hora</div>
-        </div>
-        <div className="review-item">
-          <div className="review-content">
-            Cancha Central: &quot;Instalaciones Limpias&quot; - 5 Estrellas
-          </div>
-          <div className="review-time">Hace 1 hora</div>
-        </div>
-      </div>
+      {/* Reseñas recientes: eliminadas porque no hay endpoint estable */}
     </div>
   );
 }
