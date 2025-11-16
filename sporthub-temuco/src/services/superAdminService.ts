@@ -589,6 +589,13 @@ class SuperAdminService {
     }
   }
 
+  async obtenerLogsActividad(): Promise<any[]> {
+    const headers = this.getAuthHeaders();
+    const { data } = await apiBackend.get('/super_admin/system/logs', { headers });
+    // Ajusta según la estructura real de tu backend
+    return data.logs || [];
+  }
+
   /**
    * Cambiar rol de usuario (método unificado)
    * @param id - ID del usuario
