@@ -107,7 +107,9 @@ router.get("/", async (req, res) => {
     };
     
     const { data } = await http.get('/canchas', { params });
-    // End route
+    
+    // 🔥 RETORNAR RESPUESTA
+    return res.json({ ok: true, data });
   } catch (error: any) {
     res.status(error.response?.status || 500).json({ 
       ok: false, 

@@ -7,7 +7,7 @@ import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import StatsCard from '../../../components/charts/StatsCard';
 import { useAuthStatus } from '@/hooks/useAuthStatus';
-import { useComplejosCanchas } from '@/hooks/useComplejosCanchas'; // 🔥 NUEVO HOOK
+import { useCanchasSport } from '@/hooks/useCanchasSport'; // 🔥 HOOK OPTIMIZADO PARA DEPORTES
 import styles from './page.module.css';
 
 // 🔥 DATOS PARA LAS ESTADÍSTICAS DE FÚTBOL
@@ -54,13 +54,14 @@ export default function FutbolPage() {
   // 🔥 Hook de autenticación
   const { buttonProps } = useAuthStatus();
 
-  // 🔥 USAR HOOK DE CANCHAS CON COMPLEJOS
+  // 🔥 USAR NUEVO HOOK OPTIMIZADO PARA DEPORTES
   const {
     canchas,
     loading: loadingCanchas,
     error: errorCanchas
-  } = useComplejosCanchas({
-    deportes: ['futbol', 'futsal', 'futbolito'],
+  } = useCanchasSport({
+    deporte: 'futbol',
+    deportesRelacionados: ['futsal', 'futbolito'],
     fallbackComplejos: {
       1: {
         nombre: "Complejo Deportivo Norte",
@@ -76,8 +77,6 @@ export default function FutbolPage() {
       }
     }
   });
-
-  // 🔥 HOOK YA SE ENCARGA DE CARGAR LAS CANCHAS CON DATOS DE COMPLEJOS
 
   useEffect(() => {
     setIsClient(true);
@@ -146,18 +145,18 @@ export default function FutbolPage() {
   const updatedStats = [
     {
       ...footballStats[0],
-      value: canchas.filter(c => c.nextAvailable !== "No disponible").length.toString()
+      value: canchas.filter((c: any) => c.nextAvailable !== "No disponible").length.toString()
     },
     {
       ...footballStats[1],
       value: canchas.length > 0 ? 
-        `$${Math.min(...canchas.map(c => parseInt(c.price || '0')))}-${Math.max(...canchas.map(c => parseInt(c.price || '0')))}` : 
+        `$${Math.min(...canchas.map((c: any) => parseInt(c.price || '0')))}-${Math.max(...canchas.map((c: any) => parseInt(c.price || '0')))}` : 
         "$20-40"
     },
     {
       ...footballStats[2],
       value: canchas.length > 0 ? 
-        `${(canchas.reduce((acc, c) => acc + c.rating, 0) / canchas.length).toFixed(1)}⭐` : 
+        `${(canchas.reduce((acc: number, c: any) => acc + c.rating, 0) / canchas.length).toFixed(1)}⭐` : 
         "4.5⭐"
     },
     footballStats[3] // Mantener jugadores por defecto
@@ -290,7 +289,7 @@ export default function FutbolPage() {
                   transform: `translateX(-${currentSlide * (320 + 20)}px)`,
                 }}
               >
-                {topRatedCourts.map((court, index) => (
+                {topRatedCourts.map((court: any, index: number) => (
                   <CourtCard 
                     key={court.id || index} 
                     {...court} 
