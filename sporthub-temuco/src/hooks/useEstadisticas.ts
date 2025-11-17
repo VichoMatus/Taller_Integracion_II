@@ -39,9 +39,9 @@ export const useEstadisticas = (complejoId: number | null) => {
 
     try {
       const data = await adminService.getEstadisticasComplejo(complejoId);
-      // El backend puede devolver la estructura en data o en response.data
-      const payload = data?.data ?? data;
-      setEstadisticas(payload);
+      // El interceptor ya desenvuelve { ok: true, data: {...} }
+      // adminService.getEstadisticasComplejo retorna response.data que ya es el payload
+      setEstadisticas(data);
     } catch (error: any) {
       setErrorEstadisticas(error.message);
       console.error('Error al cargar estadísticas:', error);
@@ -61,13 +61,23 @@ export const useEstadisticas = (complejoId: number | null) => {
 
     try {
       const data = await adminService.getReservasPorDiaSemana(complejoId, dias);
-      const payload = data?.data ?? data ?? {};
-      // Normalize shape
-      const diasArray = Array.isArray(payload?.dias) ? payload.dias.filter(Boolean) : [];
-      setReservasPorDia({ ...payload, dias: diasArray });
+      // adminService ya retorna el payload procesado y validado
+      // data ya tiene la estructura { dias: [...], complejo_id, ... }
+      setReservasPorDia(data);
     } catch (error: any) {
       setErrorReservasDia(error.message);
       console.error('Error al cargar reservas por día:', error);
+      // Establecer estado vacío en caso de error
+      setReservasPorDia({
+        dias: [],
+        complejo_id: complejoId,
+        complejo_nombre: 'Complejo',
+        total_reservas: 0,
+        fecha_desde: '',
+        fecha_hasta: '',
+        dia_mas_popular: '',
+        dia_menos_popular: ''
+      });
     } finally {
       setLoadingReservasDia(false);
     }
@@ -84,12 +94,24 @@ export const useEstadisticas = (complejoId: number | null) => {
 
     try {
       const data = await adminService.getReservasPorCancha(complejoId, dias);
-      const payload = data?.data ?? data ?? {};
-      const canchasArray = Array.isArray(payload?.canchas) ? payload.canchas.filter(Boolean) : [];
-      setReservasPorCancha({ ...payload, canchas: canchasArray });
+      // adminService ya retorna el payload procesado y validado
+      // data ya tiene la estructura { canchas: [...], complejo_id, ... }
+      setReservasPorCancha(data);
     } catch (error: any) {
       setErrorReservasCancha(error.message);
       console.error('Error al cargar reservas por cancha:', error);
+      // Establecer estado vacío en caso de error
+      setReservasPorCancha({
+        canchas: [],
+        complejo_id: complejoId,
+        complejo_nombre: 'Complejo',
+        total_reservas: 0,
+        fecha_desde: '',
+        fecha_hasta: '',
+        cancha_mas_popular: '',
+        cancha_menos_popular: '',
+        ingresos_totales: 0
+      });
     } finally {
       setLoadingReservasCancha(false);
     }

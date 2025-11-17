@@ -71,21 +71,36 @@ export const adminService = {
       const response = await apiBackend.get(`/admin/complejos/${complejoId}/estadisticas/reservas-semana`, {
         params: { dias }
       });
-      // Normalizar payload: el backend puede devolver { ok:true, data: { dias: [...] } } o directamente { dias: [...] }
-      const payload = response.data?.data ?? response.data ?? {};
-      const diasArray = Array.isArray(payload?.dias) ? payload.dias : [];
-      return { ...payload, dias: diasArray };
+      // El interceptor ya desenvuelve { ok: true, data: {...} } → response.data ya es el payload directo
+      const payload = response.data ?? {};
+      
+      // Validar que el array de días existe y es válido
+      if (!payload.dias || !Array.isArray(payload.dias)) {
+        console.warn('⚠️ [adminService] getReservasPorDiaSemana: payload.dias no es un array válido', payload);
+        return {
+          ...payload,
+          dias: [],
+          complejo_id: complejoId,
+          complejo_nombre: payload.complejo_nombre || 'Complejo',
+          total_reservas: 0
+        };
+      }
+      
+      return payload;
     } catch (error: any) {
-      // Si el backend falla con un error JS interno, convertirlo a mensaje legible
-      const raw = error?.response?.data?.message || error?.message || String(error);
-      const friendly = raw && typeof raw === 'string' && raw.includes('total_reservas')
-        ? 'Fallo al procesar estadísticas (datos incompletos del servidor). Reintenta más tarde.'
-        : raw;
-
-      console.warn('⚠️ [adminService] getReservasPorDiaSemana error normalizado:', { raw, friendly });
-
+      console.error('❌ [adminService] getReservasPorDiaSemana error:', error);
+      
       // Entregar fallback vacío para que el frontend pueda continuar renderizando
-      return { dias: [] };
+      return { 
+        dias: [],
+        complejo_id: complejoId,
+        complejo_nombre: 'Complejo',
+        total_reservas: 0,
+        fecha_desde: '',
+        fecha_hasta: '',
+        dia_mas_popular: '',
+        dia_menos_popular: ''
+      };
     }
   },
 
@@ -97,18 +112,38 @@ export const adminService = {
       const response = await apiBackend.get(`/admin/complejos/${complejoId}/estadisticas/reservas-cancha`, {
         params: { dias }
       });
-      const payload = response.data?.data ?? response.data ?? {};
-      const canchasArray = Array.isArray(payload?.canchas) ? payload.canchas : [];
-      return { ...payload, canchas: canchasArray };
+      // El interceptor ya desenvuelve { ok: true, data: {...} } → response.data ya es el payload directo
+      const payload = response.data ?? {};
+      
+      // Validar que el array de canchas existe y es válido
+      if (!payload.canchas || !Array.isArray(payload.canchas)) {
+        console.warn('⚠️ [adminService] getReservasPorCancha: payload.canchas no es un array válido', payload);
+        return {
+          ...payload,
+          canchas: [],
+          complejo_id: complejoId,
+          complejo_nombre: payload.complejo_nombre || 'Complejo',
+          total_reservas: 0,
+          ingresos_totales: 0
+        };
+      }
+      
+      return payload;
     } catch (error: any) {
-      const raw = error?.response?.data?.message || error?.message || String(error);
-      const friendly = raw && typeof raw === 'string' && raw.includes('total_reservas')
-        ? 'Fallo al procesar estadísticas (datos incompletos del servidor). Reintenta más tarde.'
-        : raw;
-
-      console.warn('⚠️ [adminService] getReservasPorCancha error normalizado:', { raw, friendly });
-
-      return { canchas: [] };
+      console.error('❌ [adminService] getReservasPorCancha error:', error);
+      
+      // Entregar fallback vacío para que el frontend pueda continuar renderizando
+      return { 
+        canchas: [],
+        complejo_id: complejoId,
+        complejo_nombre: 'Complejo',
+        total_reservas: 0,
+        fecha_desde: '',
+        fecha_hasta: '',
+        cancha_mas_popular: '',
+        cancha_menos_popular: '',
+        ingresos_totales: 0
+      };
     }
   },
 

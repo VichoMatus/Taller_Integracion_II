@@ -83,10 +83,18 @@ export class AdminApiRepository implements AdminRepository {
       const complejo = await this.getComplejo(ownerId, complejoId);
       
       // Obtener todas las canchas del complejo
-      const { data: canchasData } = await this.http.get(`/canchas`, { 
-        params: { complejo_id: complejoId } 
-      });
-      const canchas = (canchasData.items || canchasData || []) as Cancha[];
+      let canchas: Cancha[] = [];
+      try {
+        const { data: canchasData } = await this.http.get(`/canchas`, { 
+          params: { complejo_id: complejoId } 
+        });
+        canchas = Array.isArray(canchasData?.items) ? canchasData.items : 
+                  Array.isArray(canchasData) ? canchasData : 
+                  [];
+      } catch (err) {
+        console.warn(`⚠️ [AdminApiRepository] No se pudieron obtener canchas para complejo ${complejoId}:`, err);
+        canchas = [];
+      }
       
       // Calcular fecha hace un mes
       const fechaHasta = new Date();
@@ -94,14 +102,22 @@ export class AdminApiRepository implements AdminRepository {
       fechaDesde.setDate(fechaDesde.getDate() - 30);
       
       // Obtener reservas del último mes para este complejo
-      const { data: reservasData } = await this.http.get(`/reservas`, { 
-        params: { 
-          complejo_id: complejoId,
-          fecha_desde: fechaDesde.toISOString().split('T')[0],
-          fecha_hasta: fechaHasta.toISOString().split('T')[0]
-        } 
-      });
-      const reservas = (reservasData.items || reservasData || []) as ReservaOwner[];
+      let reservas: ReservaOwner[] = [];
+      try {
+        const { data: reservasData } = await this.http.get(`/reservas`, { 
+          params: { 
+            complejo_id: complejoId,
+            fecha_desde: fechaDesde.toISOString().split('T')[0],
+            fecha_hasta: fechaHasta.toISOString().split('T')[0]
+          } 
+        });
+        reservas = Array.isArray(reservasData?.items) ? reservasData.items : 
+                   Array.isArray(reservasData) ? reservasData : 
+                   [];
+      } catch (err) {
+        console.warn(`⚠️ [AdminApiRepository] No se pudieron obtener reservas para complejo ${complejoId}:`, err);
+        reservas = [];
+      }
       
       // Contar canchas activas e inactivas
       const canchasActivas = canchas.filter(c => c.activa !== false && c.estado !== 'inactiva').length;
@@ -157,14 +173,24 @@ export class AdminApiRepository implements AdminRepository {
       fechaDesde.setDate(fechaDesde.getDate() - diasAtras);
       
       // Obtener reservas del período para este complejo
-      const { data: reservasData } = await this.http.get(`/reservas`, { 
-        params: { 
-          complejo_id: complejoId,
-          fecha_desde: fechaDesde.toISOString().split('T')[0],
-          fecha_hasta: fechaHasta.toISOString().split('T')[0]
-        } 
-      });
-      const reservas = (reservasData.items || reservasData || []) as ReservaOwner[];
+      let reservas: ReservaOwner[] = [];
+      try {
+        const { data: reservasData } = await this.http.get(`/reservas`, { 
+          params: { 
+            complejo_id: complejoId,
+            fecha_desde: fechaDesde.toISOString().split('T')[0],
+            fecha_hasta: fechaHasta.toISOString().split('T')[0]
+          } 
+        });
+        // Asegurar que reservas es siempre un array válido
+        reservas = Array.isArray(reservasData?.items) ? reservasData.items : 
+                   Array.isArray(reservasData) ? reservasData : 
+                   [];
+      } catch (err) {
+        console.warn(`⚠️ [AdminApiRepository] No se pudieron obtener reservas para complejo ${complejoId}:`, err);
+        // Continuar con array vacío si falla la consulta
+        reservas = [];
+      }
       
       // Nombres de los días en español
       const nombresDias = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -185,23 +211,38 @@ export class AdminApiRepository implements AdminRepository {
       
       // Agrupar reservas por día de la semana
       reservas.forEach(reserva => {
-        const fechaReserva = new Date(reserva.fecha);
-        const diaSemana = fechaReserva.getDay(); // 0=Domingo, 1=Lunes, etc.
+        // Validar que la reserva tiene los campos necesarios
+        if (!reserva || !reserva.fecha) {
+          console.warn('⚠️ [AdminApiRepository] Reserva inválida encontrada:', reserva);
+          return;
+        }
         
-        const datoDia = datosPorDia.get(diaSemana)!;
-        datoDia.total_reservas++;
-        
-        switch (reserva.estado) {
-          case 'confirmada':
-            datoDia.reservas_confirmadas++;
-            datoDia.ingresos += reserva.precio_total || 0;
-            break;
-          case 'pendiente':
-            datoDia.reservas_pendientes++;
-            break;
-          case 'cancelada':
-            datoDia.reservas_canceladas++;
-            break;
+        try {
+          const fechaReserva = new Date(reserva.fecha);
+          const diaSemana = fechaReserva.getDay(); // 0=Domingo, 1=Lunes, etc.
+          
+          const datoDia = datosPorDia.get(diaSemana);
+          if (!datoDia) {
+            console.warn(`⚠️ [AdminApiRepository] Día ${diaSemana} no encontrado en el mapa`);
+            return;
+          }
+          
+          datoDia.total_reservas++;
+          
+          switch (reserva.estado) {
+            case 'confirmada':
+              datoDia.reservas_confirmadas++;
+              datoDia.ingresos += reserva.precio_total || 0;
+              break;
+            case 'pendiente':
+              datoDia.reservas_pendientes++;
+              break;
+            case 'cancelada':
+              datoDia.reservas_canceladas++;
+              break;
+          }
+        } catch (err) {
+          console.warn('⚠️ [AdminApiRepository] Error procesando reserva:', reserva, err);
         }
       });
       
@@ -256,10 +297,18 @@ export class AdminApiRepository implements AdminRepository {
       const complejo = await this.getComplejo(ownerId, complejoId);
       
       // Obtener todas las canchas del complejo
-      const { data: canchasData } = await this.http.get(`/canchas`, { 
-        params: { complejo_id: complejoId } 
-      });
-      const canchas = (canchasData.items || canchasData || []) as Cancha[];
+      let canchas: Cancha[] = [];
+      try {
+        const { data: canchasData } = await this.http.get(`/canchas`, { 
+          params: { complejo_id: complejoId } 
+        });
+        canchas = Array.isArray(canchasData?.items) ? canchasData.items : 
+                  Array.isArray(canchasData) ? canchasData : 
+                  [];
+      } catch (err) {
+        console.warn(`⚠️ [AdminApiRepository] No se pudieron obtener canchas para complejo ${complejoId}:`, err);
+        canchas = [];
+      }
       
       // Calcular rango de fechas
       const fechaHasta = new Date();
@@ -267,22 +316,36 @@ export class AdminApiRepository implements AdminRepository {
       fechaDesde.setDate(fechaDesde.getDate() - diasAtras);
       
       // Obtener reservas del período para este complejo
-      const { data: reservasData } = await this.http.get(`/reservas`, { 
-        params: { 
-          complejo_id: complejoId,
-          fecha_desde: fechaDesde.toISOString().split('T')[0],
-          fecha_hasta: fechaHasta.toISOString().split('T')[0]
-        } 
-      });
-      const reservas = (reservasData.items || reservasData || []) as ReservaOwner[];
+      let reservas: ReservaOwner[] = [];
+      try {
+        const { data: reservasData } = await this.http.get(`/reservas`, { 
+          params: { 
+            complejo_id: complejoId,
+            fecha_desde: fechaDesde.toISOString().split('T')[0],
+            fecha_hasta: fechaHasta.toISOString().split('T')[0]
+          } 
+        });
+        reservas = Array.isArray(reservasData?.items) ? reservasData.items : 
+                   Array.isArray(reservasData) ? reservasData : 
+                   [];
+      } catch (err) {
+        console.warn(`⚠️ [AdminApiRepository] No se pudieron obtener reservas para complejo ${complejoId}:`, err);
+        reservas = [];
+      }
       
       // Inicializar contadores para cada cancha
       const datosPorCancha: Map<number, ReservasCancha> = new Map();
       
       canchas.forEach(cancha => {
+        // Validar que la cancha tiene los campos necesarios
+        if (!cancha || typeof cancha.id !== 'number') {
+          console.warn('⚠️ [AdminApiRepository] Cancha inválida encontrada:', cancha);
+          return;
+        }
+        
         datosPorCancha.set(cancha.id, {
           cancha_id: cancha.id,
-          cancha_nombre: cancha.nombre,
+          cancha_nombre: cancha.nombre || `Cancha ${cancha.id}`,
           tipo_cancha: cancha.tipo || 'N/A',
           total_reservas: 0,
           reservas_confirmadas: 0,
@@ -295,6 +358,12 @@ export class AdminApiRepository implements AdminRepository {
       
       // Agrupar reservas por cancha
       reservas.forEach(reserva => {
+        // Validar que la reserva tiene los campos necesarios
+        if (!reserva || typeof reserva.cancha_id !== 'number') {
+          console.warn('⚠️ [AdminApiRepository] Reserva inválida encontrada:', reserva);
+          return;
+        }
+        
         const datoCancha = datosPorCancha.get(reserva.cancha_id);
         
         if (datoCancha) {
@@ -312,6 +381,8 @@ export class AdminApiRepository implements AdminRepository {
               datoCancha.reservas_canceladas++;
               break;
           }
+        } else {
+          console.warn(`⚠️ [AdminApiRepository] No se encontró información de la cancha ${reserva.cancha_id}`);
         }
       });
       

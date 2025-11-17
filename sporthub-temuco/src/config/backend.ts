@@ -116,8 +116,13 @@ apiBackend.interceptors.request.use(
 // Interceptor para manejar respuestas del BFF
 apiBackend.interceptors.response.use(
   (response) => {
-    // Para el endpoint de reservas, dejar pasar la respuesta sin procesar
-    if (response.config.url?.includes('/reservas') || response.config.url?.includes('/password')) {
+    // Excepciones: endpoints que NO deben ser desenvueltos (retornan datos directamente)
+    // Solo aplica a endpoints específicos de reservas CRUD, no a estadísticas
+    const url = response.config.url || '';
+    const isReservasCRUD = url === '/reservas' || url.match(/^\/reservas\/\d+$/);
+    const isPasswordEndpoint = url.includes('/password');
+    
+    if (isReservasCRUD || isPasswordEndpoint) {
       return response;
     }
     
