@@ -47,22 +47,29 @@ export default function EstadisticasPage() {
   useEffect(() => {
     const loadComplejo = async () => {
       try {
+        // Intentar obtener el complejo del usuario desde localStorage
         const userData = localStorage.getItem('userData');
         if (userData) {
           const user = JSON.parse(userData);
           const complejo = user.complejo_id || user.id_complejo || user.id_establecimiento;
           if (complejo) {
+            console.log('✅ [Estadisticas] Complejo obtenido desde userData:', complejo);
             setComplejoId(complejo);
             return;
           }
         }
 
+        // Si no hay complejo en localStorage, obtener el primer complejo del admin
+        console.log('⚠️ [Estadisticas] No hay complejo en userData, obteniendo lista de complejos...');
         const misComplejos = await adminService.getMisComplejos();
         if (misComplejos && Array.isArray(misComplejos) && misComplejos.length > 0) {
+          console.log('✅ [Estadisticas] Primer complejo obtenido:', misComplejos[0].id);
           setComplejoId(misComplejos[0].id);
+        } else {
+          console.warn('⚠️ [Estadisticas] No hay complejos disponibles para este admin');
         }
       } catch (err) {
-        console.warn('No se pudo obtener complejo del admin', err);
+        console.error('❌ [Estadisticas] Error al obtener complejo del admin:', err);
       }
     };
 
@@ -87,10 +94,31 @@ export default function EstadisticasPage() {
     return () => window.removeEventListener('resize', measure);
   }, []);
 
-  const filteredCanchas = (reservasPorCancha?.canchas || []).filter((c: any) => Number(c?.total_reservas ?? 0) > 0);
+  // Filtrar canchas con reservas y preparar datos para gráfico
+  const filteredCanchas = (reservasPorCancha?.canchas || [])
+    .filter((c: any) => c && typeof c === 'object' && Number(c?.total_reservas ?? 0) > 0);
+  
   const visibleCanchas = filteredCanchas.slice(0, maxCanchas);
-  const reservasPorCanchaData = visibleCanchas.map((c: any) => ({ label: c?.cancha_nombre || 'Sin nombre', value: Number(c?.total_reservas ?? 0) }));
-  const reservasPorDiaData = (reservasPorDia?.dias || []).filter(Boolean).map((d: any) => ({ label: d?.dia_nombre || 'Sin nombre', value: Number(d?.total_reservas ?? 0) }));
+  
+  const reservasPorCanchaData = visibleCanchas.length > 0 
+    ? visibleCanchas.map((c: any) => ({ 
+        label: c?.cancha_nombre || 'Sin nombre', 
+        value: Number(c?.total_reservas ?? 0) 
+      }))
+    : [{ label: 'Sin datos', value: 0 }];
+  
+  // Preparar datos de reservas por día
+  const reservasPorDiaData = (reservasPorDia?.dias || [])
+    .filter(d => d && typeof d === 'object')
+    .map((d: any) => ({ 
+      label: d?.dia_nombre || 'Sin nombre', 
+      value: Number(d?.total_reservas ?? 0) 
+    }));
+  
+  // Si no hay datos, mostrar mensaje
+  const reservasPorDiaDataFinal = reservasPorDiaData.length > 0 
+    ? reservasPorDiaData 
+    : [{ label: 'Sin datos', value: 0 }];
 
   return (
     <div className="admin-dashboard-container">
@@ -127,19 +155,45 @@ export default function EstadisticasPage() {
         <div className="info-banner info-yellow">
           <div className="info-content">
             <h3 className="info-title">Estadísticas no disponibles</h3>
-            <p className="info-text">A la espera del endpoint de estadísticas o datos del complejo. Si esto persiste, por favor verifica la conexión con el BFF/FASTAPI.</p>
+            <p className="info-text">
+              {complejoId 
+                ? 'A la espera de datos del complejo. Si esto persiste, verifica la conexión con el BFF/FASTAPI.' 
+                : 'No se ha podido determinar el complejo. Asegúrate de tener al menos un complejo registrado.'}
+            </p>
             <div style={{ marginTop: '0.5rem' }}>
-              <button onClick={() => cargarTodo()} className="btn-guardar">Reintentar</button>
+              <button onClick={() => cargarTodo()} className="btn-guardar" disabled={!complejoId}>
+                {complejoId ? 'Reintentar' : 'Sin complejo'}
+              </button>
             </div>
           </div>
         </div>
       )}
 
       <div className="stats-grid">
-        <StatsCard title="Ocupación" value={estadisticas ? `${estadisticas.ocupacion_promedio?.toFixed(1)}%` : '—'} color="blue" icon={<span className="text-3xl opacity-80">📊</span>} />
-        <StatsCard title="Reservas mes" value={estadisticas ? String(estadisticas.reservas_ultimo_mes || '-') : '-'} color="green" icon={<span className="text-3xl opacity-80">📅</span>} />
-        <StatsCard title="Ingresos mes" value={estadisticas ? `$${(estadisticas.ingresos_ultimo_mes || 0).toLocaleString()}` : '-'} color="purple" icon={<span className="text-3xl opacity-80">💰</span>} />
-        <StatsCard title="Canchas" value={canchasCount !== null ? String(canchasCount) : (estadisticas ? String(estadisticas.total_canchas || '-') : '-')} color="green" icon={<span className="text-3xl opacity-80">🏟️</span>} />
+        <StatsCard 
+          title="Ocupación" 
+          value={estadisticas ? `${estadisticas.ocupacion_promedio?.toFixed(1)}%` : '—'} 
+          color="blue" 
+          icon={<span className="text-3xl opacity-80">📊</span>} 
+        />
+        <StatsCard 
+          title="Reservas mes" 
+          value={estadisticas ? String(estadisticas.reservas_confirmadas_ultimo_mes || 0) : '0'} 
+          color="green" 
+          icon={<span className="text-3xl opacity-80">📅</span>} 
+        />
+        <StatsCard 
+          title="Ingresos mes" 
+          value={estadisticas ? `$${(estadisticas.ingresos_ultimo_mes || 0).toLocaleString()}` : '$0'} 
+          color="purple" 
+          icon={<span className="text-3xl opacity-80">💰</span>} 
+        />
+        <StatsCard 
+          title="Canchas" 
+          value={canchasCount !== null ? String(canchasCount) : (estadisticas ? String(estadisticas.total_canchas || 0) : '0')} 
+          color="green" 
+          icon={<span className="text-3xl opacity-80">🏟️</span>} 
+        />
       </div>
 
       {canchasCount === 100 && (
@@ -155,28 +209,43 @@ export default function EstadisticasPage() {
         <div className="chart-container">
           <div className="chart-background">
             <h3 className="text-lg font-semibold">Reservas por cancha</h3>
-            <BarChart data={reservasPorCanchaData.length ? reservasPorCanchaData : [{ label: 'Sin datos', value: 0 }]} primaryColor="#9fb5b8" />
+            <BarChart 
+              data={reservasPorCanchaData} 
+              primaryColor="#9fb5b8" 
+              loading={loadingReservasCancha}
+              emptyMessage="No hay datos de reservas por cancha"
+            />
           </div>
         </div>
 
         <div className="chart-container">
           <div className="chart-background">
-            <h3 className="text-lg font-semibold">Reservas por día</h3>
-            <BarChart data={reservasPorDiaData.length ? reservasPorDiaData : [{ label: 'Sin datos', value: 0 }]} primaryColor="#14b8a6" />
+            <h3 className="text-lg font-semibold">Reservas por día de la semana</h3>
+            <BarChart 
+              data={reservasPorDiaDataFinal} 
+              primaryColor="#14b8a6"
+              loading={loadingReservasDia}
+              emptyMessage="No hay datos de reservas por día"
+            />
           </div>
         </div>
       </div>
 
       <div className="top-canchas-container">
-        <h3 className="text-lg font-semibold mb-4">Top canchas</h3>
+        <h3 className="text-lg font-semibold mb-4">Top Canchas con Más Reservas</h3>
         <div className="top-canchas-grid">
-          {filteredCanchas.length ? (
+          {filteredCanchas.length > 0 ? (
             // Mostrar TOP 4 solamente en la lista
             filteredCanchas.slice(0, 4).map((c: any, i: number) => (
-              <div className="cancha-item" key={`${c.cancha_id ?? i}`}>{i + 1}.- {c.cancha_nombre} ({c.total_reservas})</div>
+              <div className="cancha-item" key={`${c.cancha_id ?? i}`}>
+                <span className="font-semibold">{i + 1}.</span> {c.cancha_nombre || 'Sin nombre'} 
+                <span className="text-gray-600"> ({c.total_reservas || 0} reservas)</span>
+              </div>
             ))
           ) : (
-            <div>No hay datos de canchas</div>
+            <div className="text-gray-500">
+              {loadingReservasCancha ? 'Cargando...' : 'No hay datos de canchas con reservas'}
+            </div>
           )}
         </div>
       </div>
