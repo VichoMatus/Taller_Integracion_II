@@ -46,7 +46,24 @@ const ReviewModal: React.FC<ReviewModalProps> = ({
       setComment('');
       setHoverRating(0);
     } catch (err: any) {
-      setError(err.message || 'Error al enviar la reseña');
+      // Extraer mensaje de error correctamente
+      let errorMessage = err?.response?.data?.message || err?.message || 'Error al enviar la reseña';
+      
+      // Convertir a string si es un objeto
+      if (typeof errorMessage !== 'string') {
+        errorMessage = JSON.stringify(errorMessage);
+      }
+      
+      // Mostrar mensajes amigables según el tipo de error
+      if (errorMessage.includes('reserva confirmada') || errorMessage.includes('reseñar si tienes')) {
+        setError('Para dejar una reseña, primero debes tener una reserva confirmada en esta cancha.');
+      } else if (errorMessage.includes('duplicate key') || errorMessage.includes('already exists')) {
+        setError('Ya has dejado una reseña en esta cancha. Solo puedes dejar una reseña por cancha.');
+      } else if (errorMessage.includes('UniqueViolation')) {
+        setError('Ya has dejado una reseña en esta cancha. Solo puedes dejar una reseña por cancha.');
+      } else {
+        setError(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }

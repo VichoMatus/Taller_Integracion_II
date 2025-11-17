@@ -290,10 +290,16 @@ function FutbolCanchaSeleccionadaContent() {
       alert('¡Reseña publicada exitosamente!');
     } catch (error: any) {
       console.error('❌ Error enviando reseña:', error);
-      // Extraer mensaje de error correctamente
-      const errorMessage = error?.response?.data?.message || error?.message || 'Error al enviar la reseña';
-      alert(`Error: ${errorMessage}`);
-      throw new Error(errorMessage); // Lanzar Error con mensaje string
+      // Extraer mensaje de error correctamente - asegurar que sea string
+      let errorMessage = error?.response?.data?.message || error?.message || 'Error al enviar la reseña';
+      
+      // Convertir a string si es un objeto
+      if (typeof errorMessage !== 'string') {
+        errorMessage = JSON.stringify(errorMessage);
+      }
+      
+      // Lanzar el error para que el ReviewModal lo maneje
+      throw new Error(errorMessage);
     }
   };
 
