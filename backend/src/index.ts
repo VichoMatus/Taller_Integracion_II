@@ -65,6 +65,10 @@ const allowedOrigins = [
   // Frontend Develop 
   'https://frontend-develop-yqgrkr-0246e7-168-232-167-73.traefik.me',
   
+  // Google OAuth domains
+  'https://accounts.google.com',
+  'https://www.google.com',
+  
   // Variables de entorno dinámicas
   process.env.FRONTEND_URL,
   process.env.FRONTEND_MAIN_URL,
@@ -107,17 +111,25 @@ app.use(cors({
       return callback(null, true);
     }
     
+    // Permitir dominios de Google
+    if (origin.includes('google.com') || origin.includes('googleapis.com')) {
+      console.log('✅ CORS: Permitiendo dominio Google:', origin);
+      return callback(null, true);
+    }
+    
     console.log('❌ CORS: Origin NO permitido:', origin);
     console.log('📋 Origins permitidos explícitos:', allowedOrigins);
-    console.log('📋 Patrones permitidos: localhost:*, *.traefik.me, *168.232.167.73*');
+    console.log('📋 Patrones permitidos: localhost:*, *.traefik.me, *168.232.167.73*, *.google.com');
     
     const corsError = new Error(`CORS policy: Origin ${origin} is not allowed`);
     return callback(corsError);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-  optionsSuccessStatus: 200
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Length', 'X-Request-Id'],
+  optionsSuccessStatus: 200,
+  preflightContinue: false
 }));
 
 // Parse JSON bodies

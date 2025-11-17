@@ -1,5 +1,9 @@
 import type { NextConfig } from "next";
 
+// Next.js automáticamente carga .env, .env.local, etc. desde la raíz del proyecto
+// No necesitamos configuración adicional, solo asegurarnos de que las variables
+// tengan el prefijo NEXT_PUBLIC_ para estar disponibles en el cliente
+
 const nextConfig: NextConfig = {
   /* config options here */
   allowedDevOrigins: [
