@@ -201,7 +201,7 @@ export default function SuperAdminDashboard() {
         />
         
         <StatsCard
-          title="Reservas Hoy"
+          title="Reservas totales"
           emoji="📅"
           value={stats.reservasHoy}
           icon={
@@ -213,7 +213,7 @@ export default function SuperAdminDashboard() {
           loading={isLoading}
           empty={stats.reservasHoy === 0}
           emptyMessage="Por implementar"
-          ariaLabel="Reservas de hoy"
+          ariaLabel="Reservas totales"
         />
       </div>
 
