@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuthStatus } from '@/hooks/useAuthStatus'
 import { deserializeReservationData } from '@/utils/reservationDataHandler'
 import type { ReservationData } from '@/utils/reservationDataHandler'
+import reservaServiceUsuario from '@/services/reservaServiceUsuario' // 🆕 Servicio exclusivo para usuarios
+import type { CreateReservaInputNew } from '@/types/reserva'
 import styles from './page.module.css'
 import Sidebar from '../../../components/layout/Sidebar'
 import Alert from '../../../components/Alert'
@@ -19,6 +21,11 @@ export default function ReservaCancha() {
   
   // 🔥 ESTADO PARA LA ALERTA
   const [showAlert, setShowAlert] = useState(false)
+  
+  // 🔥 ESTADOS PARA CREAR RESERVA
+  const [creatingReserva, setCreatingReserva] = useState(false)
+  const [reservaError, setReservaError] = useState<string | null>(null)
+  const [reservaSuccess, setReservaSuccess] = useState(false)
   
   // 🔥 ESTADOS DEL CALENDARIO DINÁMICO
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -244,15 +251,100 @@ export default function ReservaCancha() {
     return `${day} ${months[selectedDate.getMonth()]} ${selectedDate.getFullYear()}`
   }
 
+  // 🔥 FUNCIÓN PARA CONFIRMAR RESERVA
+  const handleConfirmarReserva = async () => {
+    // Validaciones
+    if (!reservationInfo?.canchaId) {
+      setReservaError('No se ha seleccionado una cancha')
+      return
+    }
+
+    if (!selectedDate) {
+      setReservaError('Debes seleccionar una fecha')
+      return
+    }
+
+    if (!selectedTime) {
+      setReservaError('Debes seleccionar un horario')
+      return
+    }
+
+    // Calcular hora de fin (asumiendo 1 hora de duración)
+    const [horaInicio, minInicio] = selectedTime.split(':').map(Number)
+    let horaFin = horaInicio + 1
+    let minFin = minInicio
+    
+    // Manejar caso de medianoche (00:00 + 1 hora = 01:00)
+    if (horaFin >= 24) {
+      horaFin = horaFin - 24
+    }
+    
+    const horaFinStr = `${String(horaFin).padStart(2, '0')}:${String(minFin).padStart(2, '0')}`
+
+    // Formatear fecha a YYYY-MM-DD
+    const year = selectedDate.getFullYear()
+    const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
+    const day = String(selectedDate.getDate()).padStart(2, '0')
+    const fechaStr = `${year}-${month}-${day}`
+
+    try {
+      setCreatingReserva(true)
+      setReservaError(null)
+
+      // Construir objeto de reserva para la API V1
+      // El backend espera: id_cancha, fecha, inicio, fin, notas
+      const reservaData = {
+        id_cancha: reservationInfo.canchaId,
+        fecha: fechaStr,
+        inicio: selectedTime,
+        fin: horaFinStr,
+        notas: formData.notas || undefined
+      }
+
+      console.log('📤 Enviando reserva:', reservaData)
+
+      // 🆕 Llamar al servicio de usuarios (nueva implementación separada)
+      const reservaCreada = await reservaServiceUsuario.createReserva(reservaData)
+
+      console.log('✅ Reserva creada exitosamente:', reservaCreada)
+      
+      setReservaSuccess(true)
+      
+      // Redirigir a historial de reservas después de 2 segundos
+      setTimeout(() => {
+        router.push('/usuario/historial-reservas')
+      }, 2000)
+
+    } catch (error: any) {
+      console.error('❌ Error al crear reserva:', error)
+      setReservaError(
+        error?.response?.data?.message || 
+        error?.message || 
+        'No se pudo crear la reserva. Intenta nuevamente.'
+      )
+    } finally {
+      setCreatingReserva(false)
+    }
+  }
+
+  // 🕐 HORARIOS PREESTABLECIDOS - 9:00 AM a 12:00 AM (medianoche)
   const timeSlots = [
-    { time: '08:00', status: 'Libre' },
     { time: '09:00', status: 'Libre' },
-    { time: '10:00', status: 'Ocupado' },
+    { time: '10:00', status: 'Libre' },
     { time: '11:00', status: 'Libre' },
     { time: '12:00', status: 'Libre' },
-    { time: '13:00', status: 'Ocupado' },
+    { time: '13:00', status: 'Libre' },
     { time: '14:00', status: 'Libre' },
-    { time: '15:00', status: 'Libre' }
+    { time: '15:00', status: 'Libre' },
+    { time: '16:00', status: 'Libre' },
+    { time: '17:00', status: 'Libre' },
+    { time: '18:00', status: 'Libre' },
+    { time: '19:00', status: 'Libre' },
+    { time: '20:00', status: 'Libre' },
+    { time: '21:00', status: 'Libre' },
+    { time: '22:00', status: 'Libre' },
+    { time: '23:00', status: 'Libre' },
+    { time: '00:00', status: 'Libre' }
   ]
 
   return (
@@ -528,17 +620,86 @@ export default function ReservaCancha() {
               </div>
 
               <div className={styles.actionButtons}>
-                <button className={styles.cancelButton}>
+                <button 
+                  className={styles.cancelButton}
+                  onClick={handleGoBack}
+                  disabled={creatingReserva}
+                >
                   ✕ Cancelar
                 </button>
-                <button className={styles.confirmButton}>
-                  ✓ Confirmar reserva
+                <button 
+                  className={styles.confirmButton}
+                  onClick={handleConfirmarReserva}
+                  disabled={creatingReserva || !selectedDate || !selectedTime}
+                >
+                  {creatingReserva ? (
+                    <>
+                      <span style={{
+                        display: 'inline-block',
+                        width: '16px',
+                        height: '16px',
+                        border: '2px solid #fff',
+                        borderTop: '2px solid transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 0.8s linear infinite',
+                        marginRight: '8px'
+                      }} />
+                      Procesando...
+                    </>
+                  ) : (
+                    '✓ Confirmar reserva'
+                  )}
                 </button>
               </div>
+
+              {/* Mensajes de error/éxito */}
+              {reservaError && (
+                <div style={{
+                  marginTop: '16px',
+                  padding: '16px',
+                  backgroundColor: '#fee2e2',
+                  borderLeft: '4px solid #ef4444',
+                  borderRadius: '8px'
+                }}>
+                  <p style={{ 
+                    margin: 0, 
+                    color: '#991b1b', 
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}>
+                    ❌ {reservaError}
+                  </p>
+                </div>
+              )}
+
+              {reservaSuccess && (
+                <div style={{
+                  marginTop: '16px',
+                  padding: '16px',
+                  backgroundColor: '#d1fae5',
+                  borderLeft: '4px solid #10b981',
+                  borderRadius: '8px'
+                }}>
+                  <p style={{ 
+                    margin: 0, 
+                    color: '#065f46', 
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}>
+                    ✅ ¡Reserva creada exitosamente! Redirigiendo...
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }

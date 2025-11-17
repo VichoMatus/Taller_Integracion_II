@@ -70,13 +70,14 @@ export const reservaService = {
   },
 
   /**
-   * Crear nueva reserva (soporta ambos formatos: nuevo y legacy)
+   * Crear nueva reserva (soporta ambos formatos: nuevo y legacy) - VERSIÓN LEGACY
    * ✅ Backend: POST /reservas
    * ✅ Requiere: autenticación (usuario/admin/super_admin)
+   * ⚠️ USADO POR ADMIN - NO MODIFICAR
    */
   async createReserva(input: CreateReservaInput | CreateReservaInputNew): Promise<Reserva> {
     try {
-      console.log('🔍 [createReserva] Creando reserva:', input);
+      console.log('🔍 [createReserva] Creando reserva en /reservas (LEGACY):', input);
       const { data } = await apiBackend.post('/reservas', input);
       console.log('📦 [createReserva] Respuesta completa:', data);
       console.log('✅ [createReserva] Reserva creada:', data.data);
@@ -178,17 +179,18 @@ export const reservaService = {
   },
 
   // ==========================================
-  // ENDPOINTS DE USUARIO AUTENTICADO
+  // ENDPOINTS DE USUARIO AUTENTICADO (LEGACY - usado por admin)
   // ==========================================
 
   /**
-   * Obtener mis reservas (usuario autenticado)
+   * Obtener mis reservas (usuario autenticado) - VERSIÓN LEGACY
    * ✅ Backend: GET /reservas/mias
    * ✅ Requiere: autenticación (cualquier usuario)
+   * ⚠️ USADO POR ADMIN - NO MODIFICAR
    */
   async getMisReservas(): Promise<Reserva[]> {
     try {
-      console.log('🔍 [getMisReservas] Obteniendo mis reservas');
+      console.log('🔍 [getMisReservas] Obteniendo mis reservas desde /reservas/mias (LEGACY)');
       const { data } = await apiBackend.get('/reservas/mias');
       console.log('✅ [getMisReservas] Reservas obtenidas:', Array.isArray(data) ? data.length : 'formato inesperado');
       return Array.isArray(data) ? data : (data.items || data.data || []);
@@ -198,7 +200,6 @@ export const reservaService = {
       return [];
     }
   },
-
 
   // ==========================================
   // ENDPOINTS ADMIN (requieren rol admin o super_admin)

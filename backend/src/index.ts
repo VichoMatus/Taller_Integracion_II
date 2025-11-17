@@ -28,6 +28,7 @@ import favoritosRoutes from './favoritos/routes/favoritosRoute';
 import adminRoutes from './admin/presentation/routes/admin.routes';
 import bloqueoRoutes from './bloqueos/presentation/routes/bloqueos.routes';
 import reservasRoutes from './reservas/presentation/routes/reservas.routes';
+import reservasRoutesNew from './reservas/reservas.routes.new';
 import disponibilidadRoutes from './disponibilidad/presentation/routes/disponibilidad.routes';
 import pricingRoutes from './pricing/presentation/routes/pricing.routes';
 import pagosRoutes from './pagos/presentation/routes/pagos.routes';
@@ -177,7 +178,16 @@ app.use('/api/pricing', pricingRoutes);
 // Rutas de pagos
 app.use('/api/pagos', pagosRoutes);
 
-// Rutas de reservas
+// ============================================
+// Rutas de reservas (NUEVA IMPLEMENTACIÓN LIMPIA)
+// ============================================
+console.log('🆕 Montando rutas de reservas (NUEVA IMPLEMENTACIÓN)...');
+app.use('/api/v1/reservas', reservasRoutesNew);
+
+// ============================================
+// Rutas de reservas LEGACY (para admin)
+// ============================================
+console.log('📦 Montando rutas de reservas LEGACY (para admin)...');
 app.use('/api/reservas', reservasRoutes);
 
 // Rutas de reseñas

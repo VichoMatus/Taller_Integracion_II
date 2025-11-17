@@ -6,17 +6,17 @@ import { Button } from '../componentes/compUser';
 import UserLayout from '../UsuarioLayout';
 import authService from '@/services/authService';
 import type { Reserva } from '@/types/reserva';
-import { useMisReservas } from '@/hooks/useReservas';
+import { useMisReservasUsuario } from '@/hooks/useReservasUsuario'; // 🆕 Hook exclusivo para usuarios
 
 export default function ReservaPage() {
-  // 🎯 Usando el hook personalizado para gestionar reservas
+  // 🎯 Usando el hook NUEVO exclusivo para usuarios normales
   const { 
     reservas, 
     loading: isLoading, 
     error, 
     refetch: cargarReservas,
     cancelarReserva: cancelarReservaHook 
-  } = useMisReservas();
+  } = useMisReservasUsuario(); // 🆕 Hook separado que usa /v1/reservas/mias
   
   const [reservaActiva, setReservaActiva] = useState<Reserva | null>(null);
   const [userName, setUserName] = useState("Usuario");
@@ -68,13 +68,9 @@ export default function ReservaPage() {
     }
 
     try {
-      const success = await cancelarReservaHook(id);
-      if (success) {
-        alert("Reserva cancelada con éxito");
-        setShowModal(false);
-      } else {
-        alert("Error al cancelar la reserva. Intente nuevamente.");
-      }
+      await cancelarReservaHook(id);
+      alert("Reserva cancelada con éxito");
+      setShowModal(false);
     } catch (err: any) {
       console.error("Error al cancelar reserva:", err);
       alert(err?.message || "Error al cancelar la reserva. Intente nuevamente.");
@@ -208,7 +204,7 @@ export default function ReservaPage() {
   const historialReservas = filtrarReservas(getHistorialReservas());
 
   return (
-    <UserLayout userName={userName} notificationCount={2}>
+    <UserLayout userName={userName}>
       <div className="reservas-container">
         {/* 🔥 HEADER RENOVADO */}
         <div className="reservas-header">
