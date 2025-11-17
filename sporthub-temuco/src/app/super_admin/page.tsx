@@ -48,46 +48,49 @@ export default function SuperAdminDashboard() {
       let usuariosData: Usuario[] = [];
       let adminsData: Usuario[] = [];
       
-      // Usar SOLO el endpoint de métricas del backend BFF (sin fallback)
+      // Estrategia híbrida: Calcular manualmente Usuarios y Canchas, usar backend para Admins y Reservas
       try {
         console.log('📊 [Dashboard] Solicitando métricas desde endpoint optimizado...');
         const metricas = await superAdminService.obtenerMetricasGenerales();
         
-        console.log('📊 [Dashboard] ===== RESPUESTA COMPLETA DEL BACKEND =====');
-        console.log('📊 [Dashboard] Estructura completa:', JSON.stringify(metricas, null, 2));
-        console.log('📊 [Dashboard] Métricas extraídas:', {
-          usuarios_totales: metricas.usuarios_totales,
-          canchas_registradas: metricas.canchas_registradas,
-          cantidad_administradores: metricas.cantidad_administradores,
-          reservas_hoy: metricas.reservas_hoy
+        // Cargar TODOS los datos para cálculo manual
+        console.log('📊 [Dashboard] Cargando listas completas para cálculo manual...');
+        usuariosData = await superAdminService.listarUsuarios({ page_size: 100 });
+        adminsData = await superAdminService.listarAdministradores({ page_size: 100 });
+        
+        // Obtener TODAS las canchas (sin límite de paginación)
+        const todasLasCanchasResponse = await canchaService.getCanchasAdmin({ 
+          page_size: 100,
+          incluir_inactivas: true
+        }) as any;
+        const todasLasCanchas = Array.isArray(todasLasCanchasResponse.items) 
+          ? todasLasCanchasResponse.items 
+          : [];
+        
+        // ✅ CALCULAR MANUALMENTE: Usuarios Totales y Canchas Totales
+        const usuariosTotalesCalculados = usuariosData.length + adminsData.length;
+        const canchasTotalesCalculadas = todasLasCanchas.length;
+        
+        console.log('📊 [Dashboard] Cálculos manuales:', {
+          usuarios: usuariosData.length,
+          administradores: adminsData.length,
+          usuariosTotales: usuariosTotalesCalculados,
+          canchasTotales: canchasTotalesCalculadas
         });
-        console.log('📊 [Dashboard] ==========================================');
         
-        // Cargar datos para las tablas (siempre necesarios)
-        usuariosData = await superAdminService.listarUsuarios();
-        adminsData = await superAdminService.listarAdministradores();
-        
-        // Usar DIRECTAMENTE los datos del backend BFF (sin validaciones ni fallbacks)
+        // ✅ Estadísticas finales (3 manuales + 1 del backend)
         newStats = {
-          totalUsuarios: metricas.usuarios_totales || 0,
-          totalCanchas: metricas.canchas_registradas || 0,
-          totalAdministradores: metricas.cantidad_administradores || 0,
-          reservasHoy: metricas.reservas_hoy || 0
+          totalUsuarios: usuariosTotalesCalculados,  // ✅ Manual
+          totalCanchas: canchasTotalesCalculadas,    // ✅ Manual
+          totalAdministradores: adminsData.length,   // ✅ Manual
+          reservasHoy: metricas.reservas_hoy || 0    // ✅ Backend (único que sigue usando el endpoint)
         };
         
-        console.log('✅ [Dashboard] Métricas asignadas al estado:', newStats);
-        
-        // Si hay 0s, mostrar advertencia para debugging
-        if (newStats.totalUsuarios === 0 || newStats.totalCanchas === 0) {
-          console.warn('⚠️ [Dashboard] El backend BFF está devolviendo 0s. Revisar:');
-          console.warn('   1. Logs del backend BFF (backend/src/superAdmin/services/superAdminService.ts)');
-          console.warn('   2. FastAPI está devolviendo datos');
-          console.warn('   3. Network tab: respuesta de /api/super_admin/estadisticas/completas');
-        }
+        console.log('✅ [Dashboard] Métricas finales (híbrido):', newStats);
         
       } catch (endpointError: any) {
         console.error('❌ [Dashboard] Error al obtener métricas del backend:', endpointError);
-        throw endpointError; // Propagar error para que se muestre en la UI
+        throw endpointError;
       }
       
       // Actualizar estados

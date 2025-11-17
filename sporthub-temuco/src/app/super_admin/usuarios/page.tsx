@@ -92,7 +92,7 @@ export default function UsuariosPage() {
       // Obtener usuarios
       console.log('🔄 Iniciando petición de usuarios...');
       try {
-        const usuariosReales = await superAdminService.listarUsuarios();
+        const usuariosReales = await superAdminService.listarUsuarios({ page_size: 100 });
         console.log('✅ Usuarios obtenidos del servicio:', usuariosReales);
         console.log('📊 Tipo de usuarios obtenidos:', typeof usuariosReales, Array.isArray(usuariosReales));
         console.log('📊 Cantidad de usuarios:', usuariosReales?.length || 0);
