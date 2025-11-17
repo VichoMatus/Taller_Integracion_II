@@ -388,12 +388,47 @@ class SuperAdminService {
     );
   }
 
-  // Obtener complejos
-  async obtenerComplejos(params?: any): Promise<any> {
+  // Listar complejos (alias para obtenerComplejos con mejor nombre)
+  async listarComplejos(params?: any): Promise<any[]> {
+    console.log('🏢 [superAdminService] Listando complejos con params:', params);
     const headers = this.getAuthHeaders();
-    return this.handleRequest(
-      apiBackend.get<any>('/super_admin/complejos', { params, headers })
-    );
+    
+    try {
+      const response = await apiBackend.get<any>('/super_admin/complejos', { params, headers });
+      
+      console.log('✅ [superAdminService] Complejos obtenidos:', response.data);
+      
+      // Manejar diferentes formatos de respuesta
+      let complejos = [];
+      
+      // Formato ApiResponse { ok: true, data: [...] }
+      if (response.data && response.data.ok && Array.isArray(response.data.data)) {
+        complejos = response.data.data;
+      }
+      // Array directo
+      else if (Array.isArray(response.data)) {
+        complejos = response.data;
+      }
+      // Formato paginado { items: [...] }
+      else if (response.data && Array.isArray(response.data.items)) {
+        complejos = response.data.items;
+      }
+      // Formato { complejos: [...] }
+      else if (response.data && Array.isArray(response.data.complejos)) {
+        complejos = response.data.complejos;
+      }
+      
+      console.log(`✅ [superAdminService] ${complejos.length} complejos procesados`);
+      return complejos;
+    } catch (error: any) {
+      console.error('❌ [superAdminService] Error al listar complejos:', error);
+      throw error;
+    }
+  }
+
+  // Obtener complejos (método legacy)
+  async obtenerComplejos(params?: any): Promise<any> {
+    return this.listarComplejos(params);
   }
 
   // Obtener complejo por ID
@@ -437,9 +472,7 @@ class SuperAdminService {
     
     try {
       const response = await apiBackend.get<any>('/super_admin/estadisticas/completas', { headers });
-      
-      console.log('✅ Estadísticas completas obtenidas:', response.data);
-      
+      console.log('✅ [superAdminService] Estadísticas completas obtenidas');
       // Manejar formato de respuesta { ok: true, data: {...} }
       if (response.data && response.data.ok) {
         return response.data.data;

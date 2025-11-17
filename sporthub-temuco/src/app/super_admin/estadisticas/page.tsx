@@ -4,18 +4,33 @@ import { useEffect, useState } from 'react';
 import BarChart from '@/components/charts/BarChart';
 import StatsCard from '@/components/charts/StatsCard';
 import { useEstadisticasSuperAdmin } from '@/hooks/useEstadisticasSuperAdmin';
+import { superAdminService } from '@/services/superAdminService';
 import styles from './estadisticas.module.css';
 
 export default function EstadisticasPage() {
   const { estadisticas, isLoading, error, cargarEstadisticas } = useEstadisticasSuperAdmin();
   const [mounted, setMounted] = useState(false);
+  const [complejos, setComplejos] = useState<any[]>([]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Cargar complejos para poder mapear los nombres
   useEffect(() => {
+    const cargarComplejos = async () => {
+      try {
+        console.log('🏢 [Estadísticas] Cargando complejos...');
+        const complejosData = await superAdminService.listarComplejos({ page_size: 100 });
+        console.log('✅ [Estadísticas] Complejos cargados:', complejosData);
+        setComplejos(complejosData);
+      } catch (err) {
+        console.error('❌ [Estadísticas] Error al cargar complejos:', err);
+      }
+    };
+
     if (mounted) {
+      cargarComplejos();
       cargarEstadisticas();
     }
   }, [mounted, cargarEstadisticas]);
@@ -90,12 +105,32 @@ export default function EstadisticasPage() {
     return resultado;
   })();
 
-  const canchasPopulares = estadisticas?.top_canchas?.map(item => ({
-    nombre: item.cancha_nombre,
-    complejo: item.complejo_nombre,
-    reservas: item.cantidad_reservas,
-    ocupacion: item.ocupacion_porcentaje
-  })) || [];
+  const canchasPopulares = estadisticas?.top_canchas?.map((item, index) => {
+    // Buscar el complejo correspondiente por ID
+    const complejoId = item.complejo_id || item.id_complejo || item.id_establecimiento;
+    const complejo = complejos.find(c => 
+      c.id === complejoId || 
+      c.id_complejo === complejoId || 
+      c.id_establecimiento === complejoId
+    );
+    
+    const nombreComplejo = complejo?.nombre || complejo?.nombre_complejo || item.complejo_nombre;
+    
+    console.log(`🏟️ [Estadísticas] Cancha ${index}:`, {
+      cancha_nombre: item.cancha_nombre,
+      complejo_id: complejoId,
+      complejo_encontrado: !!complejo,
+      nombre_complejo: nombreComplejo,
+      todoItem: item
+    });
+    
+    return {
+      nombre: item.cancha_nombre || 'Sin nombre',
+      complejo: nombreComplejo || 'N/A',
+      reservas: item.cantidad_reservas || 0,
+      ocupacion: item.ocupacion_porcentaje || 0
+    };
+  }) || [];
 
   const horariosPopulares = estadisticas?.top_horarios?.map(item => ({
     horario: `${item.dia_semana} ${item.hora_inicio}`,
