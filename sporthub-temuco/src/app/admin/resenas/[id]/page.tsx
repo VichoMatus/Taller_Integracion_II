@@ -100,7 +100,7 @@ export default function ViewResenaPage() {
       {/* Header */}
       <div className="estadisticas-header">
         <h1 className="text-2xl font-bold text-gray-900">
-          Detalle de Reseña #{resena.id}
+          Detalle de Reseña #{(resena as any).id ?? resena.id_resena}
         </h1>
         
         <div className="admin-controls">
@@ -144,18 +144,18 @@ export default function ViewResenaPage() {
         <div className="detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
           <div className="detail-item">
             <label className="detail-label">ID de Reseña</label>
-            <p className="detail-value">#{resena.id}</p>
+            <p className="detail-value">#{(resena as any).id ?? resena.id_resena}</p>
           </div>
 
           <div className="detail-item">
             <label className="detail-label">Usuario</label>
-            <p className="detail-value">Usuario #{resena.usuarioId}</p>
+            <p className="detail-value">Usuario #{(resena as any).usuarioId ?? resena.id_usuario}</p>
           </div>
 
           <div className="detail-item">
             <label className="detail-label">Destino</label>
             <p className="detail-value">
-              {resena.canchaId ? (
+              {(resena as any).canchaId || resena.id_cancha ? (
                 <span style={{ 
                   backgroundColor: '#dbeafe', 
                   padding: '0.25rem 0.75rem', 
@@ -163,9 +163,9 @@ export default function ViewResenaPage() {
                   fontWeight: 'bold',
                   color: '#1e40af'
                 }}>
-                  ⚽ Cancha #{resena.canchaId}
+                  ⚽ Cancha #{(resena as any).canchaId ?? resena.id_cancha}
                 </span>
-              ) : resena.complejoId ? (
+              ) : ((resena as any).complejoId ?? resena.id_complejo) ? (
                 <span style={{ 
                   backgroundColor: '#fee2e2', 
                   padding: '0.25rem 0.75rem', 
@@ -173,7 +173,7 @@ export default function ViewResenaPage() {
                   fontWeight: 'bold',
                   color: '#991b1b'
                 }}>
-                  📍 Complejo #{resena.complejoId}
+                  📍 Complejo #{(resena as any).complejoId ?? resena.id_complejo}
                 </span>
               ) : (
                 'N/A'
@@ -183,13 +183,13 @@ export default function ViewResenaPage() {
 
           <div className="detail-item">
             <label className="detail-label">Fecha de Creación</label>
-            <p className="detail-value">{formatFecha(resena.fechaCreacion)}</p>
+            <p className="detail-value">{formatFecha((resena as any).fechaCreacion ?? resena.created_at)}</p>
           </div>
 
-          {resena.fechaActualizacion && (
+          {((resena as any).fechaActualizacion ?? resena.updated_at) && (
             <div className="detail-item">
               <label className="detail-label">Última Actualización</label>
-              <p className="detail-value">{formatFecha(resena.fechaActualizacion)}</p>
+              <p className="detail-value">{formatFecha((resena as any).fechaActualizacion ?? resena.updated_at)}</p>
             </div>
           )}
         </div>

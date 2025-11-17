@@ -74,7 +74,9 @@ export default function ReservasPage() {
       
       // 3. Llamar al servicio de reservas con el filtro de complejo
       console.log('🔍 [loadReservas] Llamando a getAdminReservas() con filtros:', { complejoId });
-      const response: any = await reservaService.getAdminReservas(complejoId ? { complejoId } : undefined);
+      // Pedimos una page_size mayor para panel admin (min 100) — el backend soporta paginación
+      const filtros: any = complejoId ? { complejoId, page_size: 100 } : { page_size: 100 };
+      const response: any = await reservaService.getAdminReservas(filtros);
       
       console.log("📥 [loadReservas] Respuesta completa del servidor:", response);
       console.log("📥 [loadReservas] Tipo de response:", typeof response);
@@ -439,7 +441,7 @@ export default function ReservasPage() {
                 .slice((currentPage - 1) * itemsPerPage, (currentPage - 1) * itemsPerPage + itemsPerPage)
                 .map((reserva, index) => (
                 <tr key={reserva.id || `reserva-${index}`}>
-                  <td>
+                  <td data-label="Usuario">
                     <div className="admin-cell-title">
                       {reserva.usuario ? 
                         `${reserva.usuario.nombre || ''} ${reserva.usuario.apellido || ''}`.trim() || reserva.usuario.email 
@@ -450,7 +452,7 @@ export default function ReservasPage() {
                       <div className="admin-cell-subtitle">{reserva.usuario.email}</div>
                     )}
                   </td>
-                  <td>
+                  <td data-label="Cancha">
                     <div className="admin-cell-subtitle">
                       {reserva.cancha?.nombre || `Cancha ${reserva.canchaId}`}
                     </div>
@@ -460,24 +462,24 @@ export default function ReservasPage() {
                       </div>
                     )}
                   </td>
-                  <td>
+                  <td data-label="Estado">
                     {getStatusBadge(reserva.estado)}
                   </td>
-                  <td>
+                  <td data-label="Fecha/Hora">
                     <div className="admin-cell-text">{formatFecha(reserva.fechaInicio)}</div>
                     <div className="admin-cell-text" style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>
                       hasta {formatFecha(reserva.fechaFin)}
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Precio">
                     <div className="admin-cell-text">${reserva.precioTotal.toLocaleString()}</div>
                   </td>
-                  <td>
+                  <td data-label="Pagado">
                     <span className={`status-badge ${reserva.pagado ? 'status-activo' : 'status-por-revisar'}`}>
                       {reserva.pagado ? 'Pagado' : 'Pendiente'}
                     </span>
                   </td>
-                  <td>
+                  <td data-label="Acciones">
                     <div className="admin-actions-container">
                       {/* Botón Editar */}
                       <button 

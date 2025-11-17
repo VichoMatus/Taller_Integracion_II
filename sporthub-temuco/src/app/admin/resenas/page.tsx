@@ -216,9 +216,9 @@ export default function ResenasPage() {
       console.log('✅ [loadResenasCanchas] Total reseñas combinadas:', todasLasResenas.length);
       
       // Ordenar todas las reseñas combinadas
-      const resenasOrdenadas = [...todasLasResenas].sort((a, b) => {
+      const resenasOrdenadas = [...todasLasResenas].sort((a: any, b: any) => {
         if (orderBy === 'recientes') {
-          return new Date(b.fechaCreacion).getTime() - new Date(a.fechaCreacion).getTime();
+          return new Date((b as any).fechaCreacion ?? b.created_at).getTime() - new Date((a as any).fechaCreacion ?? a.created_at).getTime();
         } else if (orderBy === 'mejor') {
           return b.calificacion - a.calificacion;
         } else {
@@ -273,7 +273,7 @@ export default function ResenasPage() {
       const filters: ResenaListQuery = {
         id_complejo: complejoId, // ✅ REQUERIDO: La API necesita filtro por id_cancha O id_complejo
         page: currentPage,
-        size: itemsPerPage,
+        page_size: itemsPerPage,
         ...(selectedCalificacion && { 
           calificacion_min: selectedCalificacion, 
           calificacion_max: selectedCalificacion 
@@ -291,21 +291,23 @@ export default function ResenasPage() {
           id_resena: 1,
           id_usuario: 1,
           id_cancha: 1,
-          id_reserva: 1,
+          // id_reserva removed from mock to match Resena type
           calificacion: 5,
+          esta_activa: true,
           comentario: 'Excelente cancha, muy bien mantenida y con buen cesped.',
-          fecha_creacion: new Date().toISOString(),
-          fecha_actualizacion: new Date().toISOString()
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         },
         {
           id_resena: 2,
           id_usuario: 2,
           id_cancha: 1,
-          id_reserva: 2,
+          // id_reserva removed from mock to match Resena type
           calificacion: 4,
+          esta_activa: true,
           comentario: 'Muy buena experiencia, solo faltaba un poco mas de iluminacion.',
-          fecha_creacion: new Date(Date.now() - 86400000).toISOString(),
-          fecha_actualizacion: new Date(Date.now() - 86400000).toISOString()
+          created_at: new Date(Date.now() - 86400000).toISOString(),
+          updated_at: new Date(Date.now() - 86400000).toISOString()
         }
       ]);
     } finally {
@@ -319,11 +321,18 @@ export default function ResenasPage() {
 
   // Filtrar reseñas por término de búsqueda y calificación
   const filteredResenas = resenas.filter(resena => {
-    const matchesSearch = !searchTerm || 
-      resena.comentario?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      resena.usuarioId.toString().includes(searchTerm) ||
-      (resena.canchaId && resena.canchaId.toString().includes(searchTerm)) ||
-      (resena.complejoId && resena.complejoId.toString().includes(searchTerm));
+    let matchesSearch = false;
+    if (!searchTerm) {
+      matchesSearch = true;
+    } else {
+      const r: any = resena;
+      matchesSearch = !!(
+        r.comentario?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (r.usuarioId ?? r.id_usuario)?.toString().includes(searchTerm) ||
+        ((r.canchaId ?? r.id_cancha) && (r.canchaId ?? r.id_cancha).toString().includes(searchTerm)) ||
+        ((r.complejoId ?? r.id_complejo) && (r.complejoId ?? r.id_complejo).toString().includes(searchTerm))
+      );
+    }
     
     const matchesCalificacion = !selectedCalificacion || 
       resena.calificacion === selectedCalificacion;
@@ -350,7 +359,7 @@ export default function ResenasPage() {
   const deleteResena = async (resenaId: number | string) => {
     if (window.confirm('¿Estas seguro de que deseas eliminar esta resena?')) {
       try {
-        await resenaService.eliminarResena(resenaId);
+        await resenaService.eliminarResena(Number(resenaId));
         showToast('success', 'Reseña eliminada exitosamente');
         loadResenas(); // Recargar la lista
       } catch (err: any) {
@@ -552,11 +561,13 @@ export default function ResenasPage() {
                   </td>
                 </tr>
               ) : (
-                paginatedResenas.map((resena) => (
-                  <tr key={resena.id}>
-                    <td>#{resena.id}</td>
-                    <td>Usuario #{resena.usuarioId}</td>
-                    <td>
+                paginatedResenas.map((resena) => {
+                  const r: any = resena;
+                  return (
+                  <tr key={r.id ?? r.id_resena}>
+                    <td data-label="ID">#{r.id ?? r.id_resena}</td>
+                    <td data-label="Usuario">Usuario #{(resena as any).usuarioId ?? resena.id_usuario}</td>
+                    <td data-label="Ubicación">
                       {tipoVista === 'canchas' ? (
                         <span style={{ 
                           backgroundColor: '#dbeafe', 
@@ -565,41 +576,41 @@ export default function ResenasPage() {
                           fontWeight: 'bold',
                           color: '#1e40af'
                         }}>
-                          ⚽ Cancha #{resena.canchaId || 'N/A'}
+                          ⚽ Cancha #{(r.canchaId ?? r.id_cancha) || 'N/A'}
                         </span>
                       ) : (
                         <span style={{ color: '#6b7280' }}>
-                          📍 Complejo #{resena.complejoId || 'N/A'}
+                          📍 Complejo #{(r.complejoId ?? r.id_complejo) || 'N/A'}
                         </span>
                       )}
                     </td>
-                    <td>
+                    <td data-label="Calificación">
                       <div className="calificacion-cell">
                         <span className="calificacion-emoji">
-                          {getCalificacionEmoji(resena.calificacion)}
+                          {getCalificacionEmoji(r.calificacion)}
                         </span>
                         <span className="calificacion-numero">
-                          {resena.calificacion}/5
+                          {r.calificacion}/5
                         </span>
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Comentario">
                       <div className="comentario-cell">
                         {resena.comentario ? (
-                          resena.comentario.length > 50 
-                            ? `${resena.comentario.substring(0, 50)}...`
-                            : resena.comentario
+                          r.comentario?.length > 50 
+                            ? `${r.comentario.substring(0, 50)}...`
+                            : r.comentario
                         ) : 'Sin comentario'}
                       </div>
                     </td>
-                    <td>{formatFecha(resena.fechaCreacion)}</td>
-                    <td>
+                    <td data-label="Fecha">{formatFecha(r.fechaCreacion ?? r.created_at)}</td>
+                    <td data-label="Acciones">
                       <div className="admin-actions-container">
                         {/* Botón Ver */}
                         <button 
                           className="btn-action btn-ver" 
                           title="Ver detalles"
-                          onClick={() => router.push(`/admin/resenas/${resena.id}`)}
+                          onClick={() => router.push(`/admin/resenas/${r.id ?? r.id_resena}`)}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -611,7 +622,7 @@ export default function ResenasPage() {
                         <button 
                           className="btn-action btn-eliminar" 
                           title="Eliminar"
-                          onClick={() => deleteResena(resena.id)}
+                          onClick={() => deleteResena(Number(r.id ?? r.id_resena))}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -620,7 +631,8 @@ export default function ResenasPage() {
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>

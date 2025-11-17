@@ -102,7 +102,15 @@ export class AuthService {
         console.log('🏢 [AuthService.normalizeUserDataAsync] Obteniendo complejo_id para admin:', userData.id_usuario);
         
         // Hacer request al endpoint de complejos para obtener el complejo del admin
-        const complejoResponse = await this.apiClient.get(`/api/complejos/admin/${userData.id_usuario}`);
+        // Intentar endpoint admin si existe; si no, fallback a /complejos/duenio/ (compatibilidad FastAPI)
+        let complejoResponse;
+        try {
+          complejoResponse = await this.apiClient.get(`/api/complejos/admin/${userData.id_usuario}`);
+        } catch (errAdmin) {
+          // Fallback a endpoint /complejos/duenio/:id
+          console.warn('⚠️ [AuthService] Fallback: /api/complejos/admin no disponible, intentando /complejos/duenio', userData.id_usuario);
+          complejoResponse = await this.apiClient.get(`/complejos/duenio/${userData.id_usuario}`);
+        }
         
         if (complejoResponse.data?.ok && complejoResponse.data?.data?.length > 0) {
           complejo_id = complejoResponse.data.data[0].id_complejo;

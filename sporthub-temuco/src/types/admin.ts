@@ -55,6 +55,11 @@ export interface ReservaOwner {
   usuario_email?: string;
   cancha_nombre?: string;
   complejo_nombre?: string;
+  // FastAPI 'FORMATO NUEVO' compatibility (camelCase)
+  usuarioId?: number;
+  canchaId?: number;
+  usuarioNombre?: string;
+  canchaNombre?: string;
 }
 
 export interface EstadisticasOwner {

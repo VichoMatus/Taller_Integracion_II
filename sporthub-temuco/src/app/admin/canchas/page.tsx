@@ -24,6 +24,7 @@ export default function CanchasPage() {
   const [refreshKey, setRefreshKey] = useState(0); // Para forzar recargas
   const [showInactive, setShowInactive] = useState(true); // 🔥 NUEVO: Toggle para mostrar/ocultar inactivas
   const [itemsPerPage, setItemsPerPage] = useState(4);
+  const [pageSize, setPageSize] = useState<number>(100); // Mostrar al menos 100 por defecto
 
   // 🔥 Cargar canchas reales de la API usando endpoint de ADMIN
   const loadCourts = async () => {
@@ -38,6 +39,7 @@ export default function CanchasPage() {
         incluir_inactivas: showInactive, // 🔥 Controlado por el toggle del usuario
         sort_by: 'nombre',
         order: 'asc'
+      , page_size: pageSize
       });
       
       console.log('✅ [loadCourts] Respuesta del servidor:', result);
@@ -106,7 +108,9 @@ export default function CanchasPage() {
 
   useEffect(() => {
     loadCourts();
-  }, [refreshKey, showInactive]); // 🔥 Recargar cuando cambie el toggle de inactivas
+  }, [refreshKey, showInactive, pageSize]); // 🔥 Recargar cuando cambie el toggle de inactivas o pageSize
+  
+  // pageSize control exists to request a larger page size (default 100).
 
   useEffect(() => {
     const calculateItemsPerPage = () => {
@@ -264,6 +268,8 @@ export default function CanchasPage() {
             {showInactive ? 'Mostrar todas' : 'Solo activas'}
           </button>
 
+          {/* Quitar botón 'Mostrar más' — errores con page_size altos */}
+
           <button className="export-button">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -323,21 +329,21 @@ export default function CanchasPage() {
             <tbody>
               {paginatedCourts.map((court) => (
                 <tr key={court.id}>
-                  <td>
+                  <td data-label="Nombre">
                     <div className="admin-cell-title">{court.name}</div>
                   </td>
-                  <td>
+                  <td data-label="Ubicación">
                     <div className="admin-cell-text">{court.location}</div>
                   </td>
-                  <td>
+                  <td data-label="Estado">
                     <span className={`status-badge px-2 py-1 text-xs rounded-full ${getStatusBadge(court.status)}`}>
                       {court.status}
                     </span>
                   </td>
-                  <td>
+                  <td data-label="Tipo">
                     <div className="admin-cell-text capitalize">{court.type}</div>
                   </td>
-                  <td>
+                  <td data-label="Acciones">
                     <div className="admin-actions-container">
                       {/* Botón Editar */}
                       <button 

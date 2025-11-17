@@ -53,7 +53,15 @@ export default function EditReservaPage() {
       
     } catch (err: any) {
       console.error('Error al cargar la reserva:', err);
-      setError(err?.message || 'No se pudo cargar la reserva. Verifique que la reserva existe y tiene permisos para acceder.');
+      // Extraer mensaje de error de forma robusta
+      let errorMessage = 'No se pudo cargar la reserva. Verifique que la reserva existe y tiene permisos para acceder.';
+      if (err?.message) {
+        if (typeof err.message === 'string') errorMessage = err.message;
+        else errorMessage = JSON.stringify(err.message);
+      } else if (err?.response?.data) {
+        try { errorMessage = typeof err.response.data === 'string' ? err.response.data : JSON.stringify(err.response.data); } catch { errorMessage = String(err.response?.data); }
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

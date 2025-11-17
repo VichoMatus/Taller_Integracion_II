@@ -12,6 +12,8 @@ import {
   MisRecursosResponse,
   AdminStatusResponse
 } from '../types/admin';
+import { canchaService } from './canchaService';
+import { reservaService } from './reservaService';
 
 /**
  * Servicio para operaciones del módulo Admin/Owner
@@ -217,10 +219,11 @@ export const adminService = {
   /**
    * Obtener canchas del owner
    */
-  async getMisCanchas(): Promise<Cancha[]> {
+  async getMisCanchas(pageSize: number = 100): Promise<Cancha[]> {
     try {
-      const response = await apiBackend.get('/admin/canchas');
-      return response.data;
+      // Pedimos explícitamente un page_size mayor para dashboards y paneles.
+      const response = await canchaService.getCanchasAdmin({ page_size: pageSize });
+      return response.items || [];
     } catch (error: any) {
       throw new Error('Error al obtener canchas: ' + (error.response?.data?.message || error.message));
     }
@@ -280,10 +283,49 @@ export const adminService = {
   /**
    * Obtener reservas del owner con filtros opcionales
    */
-  async getMisReservas(filtros?: FiltrosReservasInput): Promise<ReservaOwner[]> {
+  async getMisReservas(filtros?: FiltrosReservasInput, pageSize: number = 100): Promise<ReservaOwner[]> {
     try {
-      const response = await apiBackend.get('/admin/reservas', { params: filtros });
-      return response.data;
+      // Usar el endpoint /reservas (admin) que devuelve shape rico (puede contener usuario/cancha
+      // anidados o camelCase) — esto permite reutilizar la misma forma que la página de 'Gestion de reservas'
+      const reservas = await reservaService.getAdminReservas({ ...(filtros || {}), page_size: pageSize } as any);
+
+      // Convertir cada Reserva (formato del endpoint /reservas) a ReservaOwner (shape usado en dashboard)
+      const reservasOwner = (reservas || []).map((r: any) => {
+        // Extraer fecha y hora del campo fechaInicio si está presente
+        let fecha = r.fecha || '';
+        let hora_inicio = r.hora_inicio || '';
+        let hora_fin = r.hora_fin || '';
+        if (r.fechaInicio) {
+          try {
+            const iso = r.fechaInicio.replace('Z', '').replace(/\.\d{3}/, '');
+            fecha = iso.split('T')[0];
+            hora_inicio = (iso.split('T')[1] || '').slice(0,5);
+          } catch {}
+        }
+        if (r.fechaFin && !hora_fin) {
+          try {
+            const isoFin = r.fechaFin.replace('Z', '').replace(/\.\d{3}/, '');
+            hora_fin = (isoFin.split('T')[1] || '').slice(0,5);
+          } catch {}
+        }
+
+        return {
+          id: r.id,
+          usuario_id: r.usuarioId || r.usuario_id || r.usuario?.id,
+          cancha_id: r.canchaId || r.cancha_id || r.cancha?.id,
+          fecha,
+          hora_inicio,
+          hora_fin,
+          estado: r.estado,
+          precio_total: r.precioTotal ?? r.precio_total ?? 0,
+          usuario_nombre: r.usuario?.nombre || r.usuarioNombre || r.usuario_nombre,
+          usuario_email: r.usuario?.email || r.usuario_email,
+          cancha_nombre: r.cancha?.nombre || r.canchaNombre || r.cancha_nombre,
+          complejo_nombre: r.complejo?.nombre || r.complejoNombre || r.complejo_nombre,
+        } as any;
+      });
+
+      return reservasOwner;
     } catch (error: any) {
       throw new Error('Error al obtener reservas: ' + (error.response?.data?.message || error.message));
     }

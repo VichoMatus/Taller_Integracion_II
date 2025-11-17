@@ -143,6 +143,29 @@
   margin-bottom: 24px;
   animation: slideInParallax 1s ease-out 0.3s both;
 }
+/* Force equal heights for columns by making grid rows share the same height */
+.management-sections-grid {
+  grid-auto-rows: 1fr; /* each grid row will be stretched to same height */
+}
+
+/* Make each management section stretch vertically and allow the inner table to scroll
+   so both panels are visually balanced and we can measure visible rows for mini-panels. */
+.management-sections-grid {
+  align-items: stretch;
+}
+
+.management-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 220px; /* ensures room for at least several rows */
+}
+
+.management-section .management-table {
+  flex: 1 1 auto;
+  height: 100%; /* stretch to panel height */
+  max-height: none; /* allow table to consume available space (equal height with sibling) */
+  overflow-y: visible; /* avoid scroll in mini panels, show all content in equal-height block */
+}
 
 @keyframes slideInParallax {
   from {
@@ -615,6 +638,7 @@
   
   .management-section {
     padding: 16px;
+    min-height: auto; /* allow stacking on small screens */
   }
   
   .section-header {
@@ -656,6 +680,8 @@
   
   .management-sections-grid {
     gap: 12px;
+    grid-template-columns: 1fr; /* stack sections vertically on phones */
+    grid-auto-rows: auto; /* allow panels to auto size */
   }
   
   .management-table {
@@ -671,6 +697,20 @@
     width: 24px;
     height: 24px;
     font-size: 11px;
+  }
+
+  /* Reduce StatsCard density for phone screens */
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .stats-card-override {
+    padding: 12px 10px !important;
+  }
+
+  .stats-card-override .text-2xl {
+    font-size: 18px !important;
   }
 }
 
@@ -4276,4 +4316,72 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* RESPONSIVE TABLES - stacked on small screens */
+@media (max-width: 720px) {
+  /* Hide the table header and make each row a block (card-like) */
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table tbody tr {
+    display: block;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    padding: 10px;
+    background: var(--white);
+    box-shadow: var(--card-shadow);
+    border: 1px solid #e6edf3;
+  }
+
+  .admin-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    border-bottom: none;
+  }
+
+  .admin-table td:last-child { padding-bottom: 0; }
+
+  .admin-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-gray);
+    margin-right: 10px;
+    white-space: nowrap;
+    opacity: 0.95;
+  }
+
+  /* Action buttons full width at bottom of the card */
+  .admin-actions-container { width: 100%; display: flex; justify-content: flex-end; gap: 6px; }
+}
+
+/* Medium mobile improvements: hide less important columns when very small */
+@media (max-width: 520px) {
+  .admin-table td[data-label="Precio"],
+  .admin-table td[data-label="Pagado"],
+  .admin-table td[data-label="Estado"] {
+    display: none; /* hide non-essential detail columns on very small screens */
+  }
+}
+
+/* Mobile break: stack stats cards on phones (<= 720px) */
+@media (max-width: 720px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .management-sections-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Make the subtitle look clickable inside overridden card */
+  .stats-card-override.clickable .cardSubtitle {
+    cursor: pointer;
+    color: var(--blue-link) !important;
+    text-decoration: underline;
+  }
 }
