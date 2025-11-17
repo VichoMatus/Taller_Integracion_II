@@ -1131,3 +1131,89 @@
     font-size: 1.5rem;
   }
 }
+
+/* Estilos para datos de demostración */
+.demo-data-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.demo-badge {
+  display: block;
+  color: white;
+  font-weight: 600;
+  font-size: 0.9em;
+  margin-bottom: 4px;
+}
+
+.demo-info {
+  display: block;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.8em;
+}
+
+.demo-data-footer {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: 16px;
+  border-left: 4px solid #667eea;
+  font-size: 0.85em;
+  color: #555;
+}
+
+.demo-data-footer p {
+  margin: 0;
+}
+
+.actividad-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+/* Mejoras visuales para los logs */
+.actividad-logs-item {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.actividad-logs-item:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transform: translateY(-1px);
+}
+
+.actividad-logs-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  gap: 16px;
+}
+
+.actividad-logs-action {
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+}
+
+.actividad-logs-date {
+  color: #666;
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+.actividad-logs-details {
+  color: #777;
+  font-size: 0.9em;
+  line-height: 1.4;
+}

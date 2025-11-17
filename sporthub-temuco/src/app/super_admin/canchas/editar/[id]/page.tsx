@@ -22,6 +22,7 @@ export default function EditarCanchaPage() {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [imagenPreview, setImagenPreview] = useState<string>('');
 
   // Estado del formulario
@@ -154,17 +155,21 @@ export default function EditarCanchaPage() {
         capacidad: formData.capacidad,
         descripcion: formData.descripcion.trim() || undefined,
         activa: formData.activa,
-        imagenUrl: formData.imagenUrl || undefined
+        imagenUrl: formData.imagenUrl || undefined,
+        iluminacion: formData.iluminacion,
+        largo: formData.largo,
+        ancho: formData.ancho
       });
 
       console.log('✅ Cancha actualizada exitosamente:', canchaActualizada);
       
       setSuccess('Cancha actualizada exitosamente');
+      setShowSuccessModal(true);
       
-      // Redirigir después de 2 segundos
+      // Redirigir después de 3 segundos
       setTimeout(() => {
         router.push('/super_admin/canchas');
-      }, 2000);
+      }, 3000);
 
     } catch (err: any) {
       console.error('❌ Error al actualizar cancha:', err);
@@ -220,15 +225,77 @@ export default function EditarCanchaPage() {
         </div>
       </div>
 
-      {/* Mensajes de error/éxito */}
-      {error && (
+      {/* Mensaje de error (banner) */}
+      {error && !showSuccessModal && (
         <div className="error-container">
           <p><strong>Error:</strong> {error}</p>
         </div>
       )}
-      {success && (
-        <div className="success-container">
-          <p><strong>Éxito:</strong> {success}</p>
+
+      {/* Modal de Éxito */}
+      {showSuccessModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '400px',
+            width: '90%',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                backgroundColor: '#dcfce7',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1rem'
+              }}>
+                <svg style={{ width: '32px', height: '32px', color: '#16a34a' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '0.5rem' }}>
+                ¡Cancha Actualizada!
+              </h3>
+              <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
+                Los cambios se han guardado exitosamente.
+              </p>
+              <button
+                onClick={() => router.push('/super_admin/canchas')}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#3b82f6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
+              >
+                Volver a Canchas
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
