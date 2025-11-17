@@ -49,7 +49,7 @@ export default function EstadisticasPage() {
       try {
         // Primero, recargar userData desde el backend para asegurar que tenemos complejo_id actualizado
         try {
-          const response = await fetch('http://localhost:3001/api/auth/me', {
+          const response = await fetch('http://localhost:4000/api/auth/me', {
             headers: {
               'Authorization': `Bearer ${localStorage.getItem('token')}`
             }

@@ -101,17 +101,15 @@ export class AuthService {
       try {
         console.log('🏢 [AuthService.normalizeUserDataAsync] Obteniendo complejo_id para admin:', userData.id_usuario);
         
-        // Usar el endpoint correcto que filtra complejos por duenio_id
-        const complejoResponse = await this.apiClient.get(`/complejos`, {
-          params: { duenio_id: userData.id_usuario }
-        });
+        // Usar el endpoint correcto de FastAPI: /api/v1/complejos/duenio/{duenio_id}
+        const complejoResponse = await this.apiClient.get(`/complejos/duenio/${userData.id_usuario}`);
         
-        // FastAPI devuelve { items: [...] } o un array directo
-        const complejos = complejoResponse.data?.items || complejoResponse.data;
+        // FastAPI devuelve un array de complejos
+        const complejos = complejoResponse.data;
         
         if (Array.isArray(complejos) && complejos.length > 0) {
           // Tomar el primer complejo del admin
-          complejo_id = complejos[0].id || complejos[0].id_complejo;
+          complejo_id = complejos[0].id_complejo || complejos[0].id;
           console.log('✅ [AuthService.normalizeUserDataAsync] complejo_id obtenido:', complejo_id);
         } else {
           console.log('⚠️ [AuthService.normalizeUserDataAsync] No se encontró complejo para admin:', userData.id_usuario);

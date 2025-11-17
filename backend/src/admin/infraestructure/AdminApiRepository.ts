@@ -46,11 +46,10 @@ export class AdminApiRepository implements AdminRepository {
    */
   async getMisComplejos(ownerId: number): Promise<Complejo[]> {
     try {
-      // Usar endpoint existente /complejos con filtro de dueño
-      const { data } = await this.http.get(`/complejos`, { 
-        params: { duenio_id: ownerId } 
-      });
-      return data.items || data || [];
+      // Usar endpoint correcto de FastAPI: /api/v1/complejos/duenio/{duenio_id}
+      const { data } = await this.http.get(`/complejos/duenio/${ownerId}`);
+      // FastAPI devuelve directamente un array de complejos
+      return Array.isArray(data) ? data : [];
     } catch (e) { throw httpError(e); }
   }
 
@@ -59,12 +58,10 @@ export class AdminApiRepository implements AdminRepository {
    */
   async getMisCanchas(ownerId: number): Promise<Cancha[]> {
     try {
-      // Usar endpoint existente /canchas con filtro de dueño
-      // Pedir page_size grande para evitar paginación por defecto (20)
-      // FastAPI may limit page_size (<= 100). Use 100 to avoid validation errors.
-      const { data } = await this.http.get(`/canchas`, { 
-        params: { duenio_id: ownerId, page_size: 100 } 
-      });
+      // Usar endpoint correcto de FastAPI: /api/v1/canchas/admin
+      // Este endpoint devuelve las canchas del admin autenticado
+      const { data } = await this.http.get(`/canchas/admin`);
+      // FastAPI devuelve { items: [...], total, page, page_size }
       return data.items || data || [];
     } catch (e) { throw httpError(e); }
   }
@@ -74,9 +71,10 @@ export class AdminApiRepository implements AdminRepository {
    */
   async getMisReservas(ownerId: number, params: { fecha_desde?: string; fecha_hasta?: string; estado?: string } = {}): Promise<ReservaOwner[]> {
     try {
-      // Usar endpoint existente /reservas con filtro de dueño
+      // Usar endpoint correcto de FastAPI: /api/v1/reservas (lista de reservas para admin/superadmin)
+      // El endpoint automáticamente filtra por el usuario autenticado si es admin
       const { data } = await this.http.get(`/reservas`, { 
-        params: { duenio_id: ownerId, ...params } 
+        params: params 
       });
       return data.items || data || [];
     } catch (e) { throw httpError(e); }
