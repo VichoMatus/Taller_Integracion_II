@@ -37,6 +37,7 @@ import uploadsRoutes from './uploads/presentation/routes/uploads.routes';
 import canchasRoutes from './canchas/routes/canchas.routes';
 import complejosRoutes from './complejos/presentation/routes/complejos.routes';
 import canchaImagesRoutes from './canchas/presentation/routes/canchaImages.routes';
+import denunciasRoutes from './denuncias/routes/denunciasRoutes';
 
 /**
  * CONFIGURACIÓN E IMPORTACIONES
@@ -255,6 +256,9 @@ app.use('/api/notificaciones', notificacionesRoutes);
 
 // Rutas de favoritos
 app.use('/api/favoritos', favoritosRoutes);
+
+// Rutas de denuncias
+app.use('/api/denuncias', denunciasRoutes);
 
 // Ruta de información general
 app.get('/api', (req, res) => {

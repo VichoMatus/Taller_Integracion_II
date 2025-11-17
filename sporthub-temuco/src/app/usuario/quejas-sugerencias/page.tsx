@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from '../../../components/layout/Sidebar';
 import SearchBar from '../../../components/SearchBar';
 import { useAuthStatus } from '@/hooks/useAuthStatus';
+import { denunciasService } from '@/services/denunciasServices';
+import { Denuncia, TipoObjeto } from '@/types/denuncias';
 import styles from './page.module.css';
 
 // 💬 TIPOS DE MENSAJE
@@ -42,6 +44,27 @@ export default function QuejasSugerenciasPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [misDenuncias, setMisDenuncias] = useState<Denuncia[]>([]);
+  const [loadingDenuncias, setLoadingDenuncias] = useState(false);
+
+  // 💬 CARGAR DENUNCIAS DEL USUARIO
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadMisDenuncias();
+    }
+  }, [isAuthenticated]);
+
+  const loadMisDenuncias = async () => {
+    try {
+      setLoadingDenuncias(true);
+      const data = await denunciasService.listarMias();
+      setMisDenuncias(data);
+    } catch (error) {
+      console.error('Error cargando denuncias:', error);
+    } finally {
+      setLoadingDenuncias(false);
+    }
+  };
 
   // 💬 HANDLERS
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -77,9 +100,18 @@ export default function QuejasSugerenciasPage() {
 
     setIsSubmitting(true);
     
-    // 💬 SIMULAR ENVÍO (por ahora solo visual)
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // Mapear datos del usuario al schema del backend
+      // Para quejas/sugerencias generales, usamos tipo_objeto="usuario" y el id del usuario actual
+      const userId = user?.id_usuario || 1; // Fallback temporal
+      
+      await denunciasService.crear({
+        tipo_objeto: 'usuario' as TipoObjeto, // Las quejas generales se asocian al usuario
+        id_objeto: userId,
+        titulo: `[${formData.tipo}] ${formData.asunto}`,
+        descripcion: `Categoría: ${formData.categoria}\n\n${formData.mensaje}`
+      });
+
       setShowSuccess(true);
       
       // Reset form
@@ -92,11 +124,19 @@ export default function QuejasSugerenciasPage() {
         urgencia: 'media'
       });
       
+      // Recargar lista de denuncias
+      await loadMisDenuncias();
+      
       // Ocultar mensaje de éxito después de 5 segundos
       setTimeout(() => {
         setShowSuccess(false);
       }, 5000);
-    }, 2000);
+    } catch (error: any) {
+      console.error('Error al enviar denuncia:', error);
+      alert(error.message || 'Hubo un error al enviar tu mensaje. Por favor intenta nuevamente.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleUserButtonClick = () => {
