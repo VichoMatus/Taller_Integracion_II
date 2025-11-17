@@ -157,12 +157,27 @@ export const adminService = {
    * Obtener complejos del owner
    */
   async getMisComplejos(): Promise<Complejo[]> {
-    try {
-      const response = await apiBackend.get('/admin/complejos');
-      return response.data;
-    } catch (error: any) {
-      throw new Error('Error al obtener complejos: ' + (error.response?.data?.message || error.message));
+    // Implementar reintentos con backoff para evitar timeouts intermitentes del BFF
+    const maxAttempts = 3;
+    const baseDelayMs = 1000;
+    let lastError: any = null;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const response = await apiBackend.get('/admin/complejos', { timeout: 30000 });
+        return response.data;
+      } catch (error: any) {
+        lastError = error;
+        // Si es la última iteración, lanzar el error; si no, esperar y reintentar
+        if (attempt === maxAttempts) break;
+        const waitMs = baseDelayMs * Math.pow(2, attempt - 1);
+        console.warn(`⚠️ [adminService] getMisComplejos: intento ${attempt} falló, reintentando en ${waitMs}ms`, error?.message || error);
+        await new Promise(res => setTimeout(res, waitMs));
+      }
     }
+
+    // Lanzar error con mensaje más amigable
+    throw new Error('Error al obtener complejos: ' + (lastError?.response?.data?.message || lastError?.message || 'timeout'));
   },
 
   /**
@@ -222,7 +237,7 @@ export const adminService = {
   async getMisCanchas(pageSize: number = 100): Promise<Cancha[]> {
     try {
       // Pedimos explícitamente un page_size mayor para dashboards y paneles.
-      const response = await canchaService.getCanchasAdmin({ page_size: pageSize });
+      const response = await canchaService.getCanchasAdmin({ page_size: Math.min(pageSize, 100) });
       return response.items || [];
     } catch (error: any) {
       throw new Error('Error al obtener canchas: ' + (error.response?.data?.message || error.message));

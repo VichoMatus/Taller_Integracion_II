@@ -27,6 +27,23 @@ export default function EstadisticasPage() {
     hasError
   } = useEstadisticas(complejoId);
 
+  // Count canchas using the same admin endpoint to match the behavior of Admin Dashboard
+  const [canchasCount, setCanchasCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    const loadCanchasCount = async () => {
+      try {
+        const canchas = await adminService.getMisCanchas(100);
+        setCanchasCount(Array.isArray(canchas) ? canchas.length : 0);
+      } catch (err) {
+        console.warn('⚠️ [Estadisticas] No se pudo cargar conteo de canchas admin:', err);
+        setCanchasCount(null);
+      }
+    };
+
+    loadCanchasCount();
+  }, []);
+
   useEffect(() => {
     const loadComplejo = async () => {
       try {
@@ -42,7 +59,7 @@ export default function EstadisticasPage() {
 
         const misComplejos = await adminService.getMisComplejos();
         if (misComplejos && Array.isArray(misComplejos) && misComplejos.length > 0) {
-          setComplejoId(misComplejos[0].id_complejo || misComplejos[0].id);
+          setComplejoId(misComplejos[0].id);
         }
       } catch (err) {
         console.warn('No se pudo obtener complejo del admin', err);
@@ -53,7 +70,26 @@ export default function EstadisticasPage() {
   }, []);
 
   // Transformar datos para los charts
-  const reservasPorCanchaData = (reservasPorCancha?.canchas || []).filter(Boolean).map((c: any) => ({ label: c?.cancha_nombre || 'Sin nombre', value: Number(c?.total_reservas ?? 0) }));
+  // Filtrar solo canchas con al menos 1 reserva y limitar según tamaño de pantalla
+  const [maxCanchas, setMaxCanchas] = useState<number>(10);
+
+  useEffect(() => {
+    const measure = () => {
+      const w = window.innerWidth;
+      if (w <= 480) setMaxCanchas(3);
+      else if (w <= 768) setMaxCanchas(4);
+      else if (w <= 1024) setMaxCanchas(6);
+      else setMaxCanchas(10);
+    };
+
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
+
+  const filteredCanchas = (reservasPorCancha?.canchas || []).filter((c: any) => Number(c?.total_reservas ?? 0) > 0);
+  const visibleCanchas = filteredCanchas.slice(0, maxCanchas);
+  const reservasPorCanchaData = visibleCanchas.map((c: any) => ({ label: c?.cancha_nombre || 'Sin nombre', value: Number(c?.total_reservas ?? 0) }));
   const reservasPorDiaData = (reservasPorDia?.dias || []).filter(Boolean).map((d: any) => ({ label: d?.dia_nombre || 'Sin nombre', value: Number(d?.total_reservas ?? 0) }));
 
   return (
@@ -86,12 +122,34 @@ export default function EstadisticasPage() {
         </div>
       )}
 
+      {/* Si no está cargando y no hay estadísticas, avisar al usuario */}
+      {!isLoading && !estadisticas && !hasError && (
+        <div className="info-banner info-yellow">
+          <div className="info-content">
+            <h3 className="info-title">Estadísticas no disponibles</h3>
+            <p className="info-text">A la espera del endpoint de estadísticas o datos del complejo. Si esto persiste, por favor verifica la conexión con el BFF/FASTAPI.</p>
+            <div style={{ marginTop: '0.5rem' }}>
+              <button onClick={() => cargarTodo()} className="btn-guardar">Reintentar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="stats-grid">
-        <StatsCard title="Ocupación" value={estadisticas ? `${estadisticas.ocupacion_promedio?.toFixed(1)}%` : '—'} color="blue" />
-        <StatsCard title="Reservas mes" value={estadisticas ? String(estadisticas.reservas_mes || '-') : '-'} color="green" />
-        <StatsCard title="Ingresos mes" value={estadisticas ? `$${(estadisticas.ingresos_mes || 0).toLocaleString()}` : '-'} color="purple" />
-        <StatsCard title="Canchas" value={estadisticas ? String(estadisticas.total_canchas || '-') : '-'} color="green" />
+        <StatsCard title="Ocupación" value={estadisticas ? `${estadisticas.ocupacion_promedio?.toFixed(1)}%` : '—'} color="blue" icon={<span className="text-3xl opacity-80">📊</span>} />
+        <StatsCard title="Reservas mes" value={estadisticas ? String(estadisticas.reservas_ultimo_mes || '-') : '-'} color="green" icon={<span className="text-3xl opacity-80">📅</span>} />
+        <StatsCard title="Ingresos mes" value={estadisticas ? `$${(estadisticas.ingresos_ultimo_mes || 0).toLocaleString()}` : '-'} color="purple" icon={<span className="text-3xl opacity-80">💰</span>} />
+        <StatsCard title="Canchas" value={canchasCount !== null ? String(canchasCount) : (estadisticas ? String(estadisticas.total_canchas || '-') : '-')} color="green" icon={<span className="text-3xl opacity-80">🏟️</span>} />
       </div>
+
+      {canchasCount === 100 && (
+        <div className="info-banner info-yellow">
+          <div className="info-content">
+            <h3 className="info-title">Nota: listado truncado</h3>
+            <p className="info-text">Se están mostrando hasta 100 canchas por petición. Si esperabas ver más, revisa el endpoint o ajusta page_size en la API.</p>
+          </div>
+        </div>
+      )}
 
       <div className="charts-grid">
         <div className="chart-container">
@@ -112,8 +170,9 @@ export default function EstadisticasPage() {
       <div className="top-canchas-container">
         <h3 className="text-lg font-semibold mb-4">Top canchas</h3>
         <div className="top-canchas-grid">
-          {reservasPorCancha?.canchas?.length ? (
-            reservasPorCancha.canchas.slice(0, 4).map((c: any, i: number) => (
+          {filteredCanchas.length ? (
+            // Mostrar TOP 4 solamente en la lista
+            filteredCanchas.slice(0, 4).map((c: any, i: number) => (
               <div className="cancha-item" key={`${c.cancha_id ?? i}`}>{i + 1}.- {c.cancha_nombre} ({c.total_reservas})</div>
             ))
           ) : (

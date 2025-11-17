@@ -68,7 +68,7 @@ export const useAdmin = (): UseAdminReturn => {
       // Complementar con listado completo de canchas (para contar y mostrar)
       try {
         // Obtener canchas con page_size grande para dashboard y conteos precisos
-        const allCanchas = await adminService.getMisCanchas(1000);
+        const allCanchas = await adminService.getMisCanchas(100);
         dashboardData.canchas = allCanchas || dashboardData.canchas || [];
       } catch (err) {
         // No bloquear la carga del dashboard si getMisCanchas falla
@@ -138,7 +138,7 @@ export const useAdmin = (): UseAdminReturn => {
           const cancha = state.data.canchas.find((c: any) => c.id === r.cancha_id || c.id === (r as any).canchaId);
           if (cancha) r.cancha_nombre = cancha.nombre || cancha.name || cancha.nombre_corto;
         }
-        // El enriquecimiento de nombres de canchas se realiza en el bloque inferior (con adminService.getMisCanchas(1000))
+        // El enriquecimiento de nombres de canchas se realiza en el bloque inferior (con adminService.getMisCanchas(100))
         // Si la API devuelve objeto anidado de cancha (como en /reservas), usar su nombre
         if (!r.cancha_nombre && (r as any).cancha) {
           const c = (r as any).cancha;
@@ -210,7 +210,7 @@ export const useAdmin = (): UseAdminReturn => {
           // Asegurarse de tener la lista completa de canchas en estado
           let allCanchas = state.data.canchas || [];
           if (!allCanchas || allCanchas.length === 0) {
-            allCanchas = await adminService.getMisCanchas(1000);
+            allCanchas = await adminService.getMisCanchas(100);
           }
           enriched.forEach((r: any) => {
             if (!r.cancha_nombre) {

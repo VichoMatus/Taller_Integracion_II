@@ -13,6 +13,32 @@ import { Paginated, normalizePage } from "../../app/common/pagination";
 export class AdminApiRepository implements AdminRepository {
   constructor(private http: AxiosInstance) {}
 
+  // Small helpers to normalize data coming from FastAPI (snake_case) or other sources (camelCase)
+  private normalizeReserva(raw: any): ReservaOwner {
+    if (!raw || typeof raw !== 'object') return raw as ReservaOwner;
+    const fecha = raw.fecha || raw.fecha_reserva || raw.fechaReserva || raw.fechaInicio || raw.fecha_inicio || '';
+    const precio_total = typeof raw.precio_total !== 'undefined' ? raw.precio_total : (typeof raw.precioTotal !== 'undefined' ? raw.precioTotal : 0);
+    const cancha_id = raw.cancha_id ?? raw.canchaId ?? raw.cancha?.id ?? raw.id_cancha ?? undefined;
+    const usuario_id = raw.usuario_id ?? raw.usuarioId ?? raw.usuario?.id ?? undefined;
+
+    return {
+      ...raw,
+      fecha,
+      precio_total: precio_total ?? 0,
+      cancha_id,
+      usuario_id,
+    } as ReservaOwner;
+  }
+
+  private normalizeCancha(raw: any): Cancha {
+    if (!raw || typeof raw !== 'object') return raw as Cancha;
+    const id = raw.id ?? raw.id_cancha ?? raw.canchaId ?? raw.pk ?? undefined;
+    return {
+      ...raw,
+      id
+    } as Cancha;
+  }
+
   // =============== PANEL DEL OWNER ===============
 
   /**
@@ -34,8 +60,10 @@ export class AdminApiRepository implements AdminRepository {
   async getMisCanchas(ownerId: number): Promise<Cancha[]> {
     try {
       // Usar endpoint existente /canchas con filtro de dueño
+      // Pedir page_size grande para evitar paginación por defecto (20)
+      // FastAPI may limit page_size (<= 100). Use 100 to avoid validation errors.
       const { data } = await this.http.get(`/canchas`, { 
-        params: { duenio_id: ownerId } 
+        params: { duenio_id: ownerId, page_size: 100 } 
       });
       return data.items || data || [];
     } catch (e) { throw httpError(e); }
@@ -63,13 +91,46 @@ export class AdminApiRepository implements AdminRepository {
       const reservas = await this.getMisReservas(ownerId);
       const complejos = await this.getMisComplejos(ownerId);
       const canchas = await this.getMisCanchas(ownerId);
-      
+      // Calcular ingresos totales (todas las reservas confirmadas)
+      const ingresosTotales = reservas
+        .filter(r => r && r.estado === 'confirmada')
+        .reduce((sum, r) => sum + Number(r.precio_total || 0), 0);
+
+      // Reservas del último mes
+      const fechaHasta = new Date();
+      const fechaDesde = new Date();
+      fechaDesde.setDate(fechaDesde.getDate() - 30);
+
+      const reservasUltimoMes = reservas.filter(raw => {
+        const rnorm = this.normalizeReserva(raw);
+        const fecha = rnorm.fecha;
+        if (!fecha) return false;
+        const d = new Date(fecha);
+        if (isNaN(d.getTime())) return false;
+        return d >= fechaDesde && d <= fechaHasta;
+      });
+
+      const reservasMesConfirmadas = reservasUltimoMes.filter(r => r.estado === 'confirmada').length;
+      const ingresosMes = reservasUltimoMes
+        .filter(r => r.estado === 'confirmada')
+        .reduce((sum, r) => sum + Number((this.normalizeReserva(r).precio_total) || 0), 0);
+
+      // Calcular ocupación promedio en el último mes (usamos canchas activas)
+      const canchasActivas = canchas.filter(c => c.activa !== false && c.estado !== 'inactiva').length;
+      const totalPosiblesReservas = canchasActivas * 30 * 8; // 8 slots promedio por día
+      const reservasConfirmadasUltimoMes = reservasUltimoMes.filter(r => r.estado === 'confirmada').length;
+      const ocupacionPromedio = totalPosiblesReservas > 0
+        ? Math.round((reservasConfirmadasUltimoMes / totalPosiblesReservas) * 100 * 100) / 100
+        : 0;
+
       return {
-        ingresos_totales: reservas.reduce((sum, r) => sum + (r.precio_total || 0), 0),
-        ocupacion_promedio: reservas.length > 0 ? 75 : 0, // Placeholder
-        reservas_mes: reservas.filter(r => r.estado === 'confirmada').length,
-        canchas_activas: canchas.length
-      };
+        ingresos_totales: ingresosTotales,
+        ocupacion_promedio: ocupacionPromedio,
+        reservas_mes: reservasMesConfirmadas,
+        ingresos_mes: ingresosMes,
+        canchas_activas: canchasActivas,
+        total_canchas: canchas.length
+      } as EstadisticasOwner;
     } catch (e) { throw httpError(e); }
   }
 
@@ -210,10 +271,12 @@ export class AdminApiRepository implements AdminRepository {
       }
       
       // Agrupar reservas por día de la semana
-      reservas.forEach(reserva => {
+      let invalidReservaCount = 0;
+      reservas.forEach(raw => {
+        const reserva = this.normalizeReserva(raw);
         // Validar que la reserva tiene los campos necesarios
         if (!reserva || !reserva.fecha) {
-          console.warn('⚠️ [AdminApiRepository] Reserva inválida encontrada:', reserva);
+          invalidReservaCount++;
           return;
         }
         
@@ -232,7 +295,7 @@ export class AdminApiRepository implements AdminRepository {
           switch (reserva.estado) {
             case 'confirmada':
               datoDia.reservas_confirmadas++;
-              datoDia.ingresos += reserva.precio_total || 0;
+              datoDia.ingresos += Number(reserva.precio_total || 0);
               break;
             case 'pendiente':
               datoDia.reservas_pendientes++;
@@ -245,6 +308,10 @@ export class AdminApiRepository implements AdminRepository {
           console.warn('⚠️ [AdminApiRepository] Error procesando reserva:', reserva, err);
         }
       });
+
+      if (invalidReservaCount > 0) {
+        console.warn(`⚠️ [AdminApiRepository] ${invalidReservaCount} reservas inválidas ignoradas al calcular reservas por día`);
+      }
       
       // Convertir Map a Array ordenado (Lunes a Domingo para mejor visualización)
       const diasOrdenados: ReservasDia[] = [
@@ -336,10 +403,11 @@ export class AdminApiRepository implements AdminRepository {
       // Inicializar contadores para cada cancha
       const datosPorCancha: Map<number, ReservasCancha> = new Map();
       
-      canchas.forEach(cancha => {
+      const normalizedCanchas = canchas.map(c => this.normalizeCancha(c));
+      normalizedCanchas.forEach(cancha => {
         // Validar que la cancha tiene los campos necesarios
         if (!cancha || typeof cancha.id !== 'number') {
-          console.warn('⚠️ [AdminApiRepository] Cancha inválida encontrada:', cancha);
+          // Registrar en contador y continuar
           return;
         }
         
@@ -357,10 +425,12 @@ export class AdminApiRepository implements AdminRepository {
       });
       
       // Agrupar reservas por cancha
-      reservas.forEach(reserva => {
+      let invalidReservaCountCancha = 0;
+      reservas.forEach(raw => {
+        const reserva = this.normalizeReserva(raw);
         // Validar que la reserva tiene los campos necesarios
         if (!reserva || typeof reserva.cancha_id !== 'number') {
-          console.warn('⚠️ [AdminApiRepository] Reserva inválida encontrada:', reserva);
+          invalidReservaCountCancha++;
           return;
         }
         
@@ -382,9 +452,12 @@ export class AdminApiRepository implements AdminRepository {
               break;
           }
         } else {
-          console.warn(`⚠️ [AdminApiRepository] No se encontró información de la cancha ${reserva.cancha_id}`);
+          // Si la cancha no fue encontrada, no loguear por cada uno - para evitar spam
         }
       });
+      if (invalidReservaCountCancha > 0) {
+        console.warn(`⚠️ [AdminApiRepository] ${invalidReservaCountCancha} reservas inválidas (sin cancha numérica) ignoradas al calcular reservas por cancha`);
+      }
       
       // Calcular ocupación para cada cancha
       const totalPosiblesReservasPorCancha = diasAtras * 8; // 8 slots por día

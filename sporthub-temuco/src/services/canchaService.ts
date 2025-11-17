@@ -392,7 +392,8 @@ export const canchaService = {
         sort_by: filters?.sort_by || 'nombre',
         order: filters?.order || 'asc',
         page: filters?.page || 1,
-        page_size: filters?.page_size || 100,
+          // FastAPI imposes a maximum page_size (100). Clamp to that value to avoid BFF errors.
+          page_size: Math.min(filters?.page_size || 100, 100),
         // ✅ CORRECTO: Incluir inactivas por defecto para panel admin
         // El admin debe ver TODAS sus canchas (activas e inactivas/archivadas)
         incluir_inactivas: filters?.incluir_inactivas !== false, // true por defecto

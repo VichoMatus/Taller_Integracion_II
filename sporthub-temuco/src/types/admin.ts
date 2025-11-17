@@ -66,6 +66,8 @@ export interface EstadisticasOwner {
   ingresos_totales: number;
   ocupacion_promedio: number;
   reservas_mes: number;
+  ingresos_mes?: number;
+  total_canchas?: number;
   canchas_activas: number;
 }
 
