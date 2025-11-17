@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
+import { buildHttpClient } from '../../infra/http/client';
 import { DisponibilidadRepository } from '../../domain/disponibilidad/repository';
 import { Horario, DisponibilidadSlot, DisponibilidadConsulta } from '../../domain/disponibilidad/entities';
 
@@ -6,13 +7,9 @@ export class HttpDisponibilidadRepository implements DisponibilidadRepository {
   private apiClient;
 
   constructor(baseURL: string = process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me') {
-    this.apiClient = axios.create({
-      baseURL,
-      timeout: 10000,
-      headers: {
-        'Content-Type': 'application/json',
-      }
-    });
+    this.apiClient = buildHttpClient(baseURL, () => undefined);
+    // buildHttpClient ensures /api/v1 is appended and token management consistent
+    // The repo can call relative endpoints like /complejos/:id/horarios safely.
   }
 
   async getHorarios(idComplejo: number): Promise<Horario[]> {
