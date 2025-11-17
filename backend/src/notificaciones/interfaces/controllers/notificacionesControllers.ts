@@ -2,20 +2,45 @@
 import { Request, Response } from "express";
 import {
   NotificacionCreateRequest,
-  NotificacionUpdateRequest,
+  NotificacionEmailRequest,
   NotificacionListQuery,
+  Notificacion,
 } from "../../types/notificacionesTypes";
 import { NotificacionService } from "../../services/notificacionesService";
+import { UserPublic } from "../../../auth/types/authTypes";
+
+interface AuthenticatedRequest extends Request {
+  user?: UserPublic;
+}
 
 export class NotificacionController {
   private service = new NotificacionService();
 
-  // POST /notificaciones
+  // GET /notificaciones - Listar notificaciones del usuario autenticado
+  listar = async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.user?.id_usuario) {
+        return res.status(401).json({ error: "Usuario no autenticado" });
+      }
+
+      const { solo_no_leidas } = req.query;
+      const query: NotificacionListQuery = {
+        solo_no_leidas: solo_no_leidas === 'true'
+      };
+      
+      const notificaciones = await this.service.listarParaUsuario(req.user.id_usuario, query);
+      res.json(notificaciones);
+    } catch (err: any) {
+      res.status(err?.response?.status || 500).json({ error: err?.message || "Error al listar notificaciones" });
+    }
+  };
+
+  // POST /notificaciones - Crear notificación in-app (backend/admin)
   crear = async (req: Request, res: Response) => {
     try {
       const body = req.body as NotificacionCreateRequest;
-      if (!body?.id_usuario || !body?.titulo || !body?.mensaje) {
-        return res.status(400).json({ error: "id_usuario, titulo y mensaje son requeridos" });
+      if (!body?.id_destinatario || !body?.titulo || !body?.cuerpo) {
+        return res.status(400).json({ error: "id_destinatario, titulo y cuerpo son requeridos" });
       }
       const created = await this.service.crear(body);
       res.status(201).json(created);
@@ -24,93 +49,61 @@ export class NotificacionController {
     }
   };
 
-  // GET /notificaciones
-  listar = async (req: Request, res: Response) => {
+  // POST /notificaciones/:id/leer - Marcar una notificación como leída
+  marcarLeida = async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const query: NotificacionListQuery = {
-        id_usuario: req.query.id_usuario as string,
-        estado: req.query.estado as any,
-        tipo: req.query.tipo as string,
-        page: req.query.page ? Number(req.query.page) : undefined,
-        size: req.query.size ? Number(req.query.size) : undefined,
-      };
-      const list = await this.service.listar(query);
-      res.json(list);
-    } catch (err: any) {
-      res.status(err?.response?.status || 500).json({ error: err?.message || "Error al listar notificaciones" });
-    }
-  };
+      if (!req.user?.id_usuario) {
+        return res.status(401).json({ error: "Usuario no autenticado" });
+      }
 
-  // GET /notificaciones/:id
-  obtener = async (req: Request, res: Response) => {
-    try {
       const { id } = req.params;
-      const entity = await this.service.obtener(id);
-      res.json(entity);
-    } catch (err: any) {
-      res.status(err?.response?.status || 500).json({ error: err?.message || "Error al obtener notificación" });
-    }
-  };
+      const idNotificacion = parseInt(id);
+      
+      if (isNaN(idNotificacion)) {
+        return res.status(400).json({ error: "ID de notificación inválido" });
+      }
 
-  // PUT /notificaciones/:id
-  actualizar = async (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
-      const body = req.body as NotificacionUpdateRequest;
-      const updated = await this.service.actualizar(id, body);
-      res.json(updated);
-    } catch (err: any) {
-      res.status(err?.response?.status || 500).json({ error: err?.message || "Error al actualizar notificación" });
-    }
-  };
+      const notificacion = await this.service.marcarLeida(idNotificacion, req.user.id_usuario);
+      
+      if (!notificacion) {
+        return res.status(404).json({ error: "Notificación no encontrada" });
+      }
 
-  // DELETE /notificaciones/:id
-  eliminar = async (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
-      await this.service.eliminar(id);
-      res.status(204).send();
-    } catch (err: any) {
-      res.status(err?.response?.status || 500).json({ error: err?.message || "Error al eliminar notificación" });
-    }
-  };
-
-  // PATCH /notificaciones/:id/leer
-  marcarLeida = async (req: Request, res: Response) => {
-    try {
-      const { id } = req.params;
-      const updated = await this.service.marcarLeida(id);
-      res.json(updated);
+      res.json(notificacion);
     } catch (err: any) {
       res.status(err?.response?.status || 500).json({ error: err?.message || "Error al marcar como leída" });
     }
   };
 
-  // PATCH /notificaciones/leer-todas
-  marcarTodasLeidas = async (req: Request, res: Response) => {
+  // POST /notificaciones/leer-todas - Marcar todas las notificaciones como leídas
+  marcarTodasLeidas = async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const { id_usuario } = req.body || {};
-      if (!id_usuario) {
-        return res.status(400).json({ error: "id_usuario es requerido" });
+      if (!req.user?.id_usuario) {
+        return res.status(401).json({ error: "Usuario no autenticado" });
       }
-      const result = await this.service.marcarTodasLeidas(id_usuario);
-      res.json(result);
+
+      const count = await this.service.marcarTodasLeidas(req.user.id_usuario);
+      res.json({ message: `Se marcaron ${count} notificaciones como leídas.` });
     } catch (err: any) {
       res.status(err?.response?.status || 500).json({ error: err?.message || "Error al marcar todas como leídas" });
     }
   };
 
-  // GET /notificaciones/no-leidas?id_usuario=...
-  contarNoLeidas = async (req: Request, res: Response) => {
+  // POST /notificaciones/email - Crear notificación y enviar correo
+  crearYEnviarEmail = async (req: Request, res: Response) => {
     try {
-      const id_usuario = req.query.id_usuario as string;
-      if (!id_usuario) {
-        return res.status(400).json({ error: "id_usuario es requerido" });
+      const body = req.body as NotificacionEmailRequest;
+      if (!body?.id_destinatario || !body?.titulo || !body?.cuerpo) {
+        return res.status(400).json({ error: "id_destinatario, titulo y cuerpo son requeridos" });
       }
-      const count = await this.service.contarNoLeidas(id_usuario);
-      res.json(count);
+
+      const notificacion = await this.service.crearYEnviarEmail(body);
+      res.status(201).json(notificacion);
     } catch (err: any) {
-      res.status(err?.response?.status || 500).json({ error: err?.message || "Error al contar no leídas" });
+      if (err.message?.includes("correo registrado")) {
+        return res.status(400).json({ error: err.message });
+      }
+      res.status(err?.response?.status || 500).json({ error: err?.message || "Error al crear notificación y enviar email" });
     }
   };
 }
