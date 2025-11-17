@@ -231,8 +231,8 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => {
     {
       name: 'Mis Reservas',
       icon: '📅',
-      href: '/usuario/Reservas',
-      active: pathname === '/usuario/Reservas'
+      href: '/usuario/historial-reservas',
+      active: pathname === '/usuario/historial-reservas'
     },
     {
       name: 'Historial de Pagos',

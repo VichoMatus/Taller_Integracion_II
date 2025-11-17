@@ -24,7 +24,7 @@ export default function ReservaPage() {
   
   // 🔥 NUEVOS ESTADOS PARA LA PÁGINA RENOVADA
   const [activeTab, setActiveTab] = useState<'actuales' | 'historial' | 'estadisticas'>('actuales');
-  const [filtroEstado, setFiltroEstado] = useState<'todas' | 'confirmadas' | 'pendientes' | 'canceladas'>('todas');
+  const [filtroEstado, setFiltroEstado] = useState<'todas' | 'confirmada' | 'pendiente' | 'cancelada' | 'completada'>('todas');
   const [searchTerm, setSearchTerm] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [selectedReserva, setSelectedReserva] = useState<Reserva | null>(null);
@@ -62,12 +62,14 @@ export default function ReservaPage() {
     }
   }, [error]);
 
+  // 🔥 FUNCIÓN PARA CANCELAR RESERVA
   const handleCancelarReserva = async (id: number) => {
     if (!window.confirm("¿Estás seguro que deseas cancelar esta reserva?")) {
       return;
     }
 
     try {
+      // Usar el hook de cancelación que ya funciona correctamente
       await cancelarReservaHook(id);
       alert("Reserva cancelada con éxito");
       setShowModal(false);
@@ -77,10 +79,34 @@ export default function ReservaPage() {
     }
   };
 
+  // 🎨 FUNCIÓN PARA DETERMINAR SI UNA RESERVA YA PASÓ (SOLO VISUAL)
+  const reservaYaPaso = (reserva: Reserva): boolean => {
+    const ahora = new Date();
+    const fechaFin = new Date(reserva.fechaFin);
+    return fechaFin < ahora;
+  };
+
+  // 🎨 FUNCIÓN PARA OBTENER ESTADO VISUAL (puede ser diferente al estado real)
+  const getEstadoVisual = (reserva: Reserva): string => {
+    const estadoReal = reserva.estado.toLowerCase();
+    
+    // Si está cancelada, mostrar como cancelada
+    if (estadoReal.includes('cancel')) return reserva.estado;
+    
+    // Si ya pasó la fecha y estaba pendiente o confirmada, mostrar como "completada" (solo visual)
+    if (reservaYaPaso(reserva) && (estadoReal.includes('pendiente') || estadoReal.includes('confirm'))) {
+      return 'completada';
+    }
+    
+    // Sino, mostrar el estado real
+    return reserva.estado;
+  };
+
   // 🔥 FUNCIONES AUXILIARES MEJORADAS
   const getEstadoColor = (estado: string) => {
     const estadoLower = (estado || '').toLowerCase();
     if (estadoLower.includes('confirm')) return 'confirmada';
+    if (estadoLower.includes('completada')) return 'completada'; // 🔥 Nuevo estado
     if (estadoLower.includes('pendiente')) return 'pendiente';
     if (estadoLower.includes('cancel')) return 'cancelada';
     return 'confirmada';
@@ -89,6 +115,7 @@ export default function ReservaPage() {
   const getEstadoIcon = (estado: string) => {
     const estadoLower = (estado || '').toLowerCase();
     if (estadoLower.includes('confirm')) return '✅';
+    if (estadoLower.includes('completada')) return '🏁'; // 🔥 Icono para completada
     if (estadoLower.includes('pendiente')) return '⏳';
     if (estadoLower.includes('cancel')) return '❌';
     return '✅';
@@ -136,16 +163,20 @@ export default function ReservaPage() {
   const getReservasActuales = () => {
     const ahora = new Date();
     return reservas.filter(reserva => {
-      const fechaReserva = new Date(reserva.fechaInicio);
-      return fechaReserva >= ahora && !reserva.estado.toLowerCase().includes('cancel');
+      const fechaFin = new Date(reserva.fechaFin);
+      const estado = reserva.estado.toLowerCase();
+      // Mostrar si la reserva aún no ha terminado y no está cancelada ni completada
+      return fechaFin >= ahora && !estado.includes('cancel') && !estado.includes('completada');
     });
   };
 
   const getHistorialReservas = () => {
     const ahora = new Date();
     return reservas.filter(reserva => {
-      const fechaReserva = new Date(reserva.fechaInicio);
-      return fechaReserva < ahora || reserva.estado.toLowerCase().includes('cancel');
+      const fechaFin = new Date(reserva.fechaFin);
+      const estado = reserva.estado.toLowerCase();
+      // Mostrar si la reserva ya terminó, está cancelada o completada
+      return fechaFin < ahora || estado.includes('cancel') || estado.includes('completada');
     });
   };
 
@@ -157,11 +188,13 @@ export default function ReservaPage() {
       filtered = filtered.filter(reserva => {
         const estado = reserva.estado.toLowerCase();
         switch (filtroEstado) {
-          case 'confirmadas':
+          case 'confirmada':
             return estado.includes('confirm');
-          case 'pendientes':
+          case 'completada':
+            return estado.includes('completada');
+          case 'pendiente':
             return estado.includes('pendiente');
-          case 'canceladas':
+          case 'cancelada':
             return estado.includes('cancel');
           default:
             return true;
@@ -184,6 +217,7 @@ export default function ReservaPage() {
   const getEstadisticas = () => {
     const total = reservas.length;
     const confirmadas = reservas.filter(r => r.estado.toLowerCase().includes('confirm')).length;
+    const completadas = reservas.filter(r => r.estado.toLowerCase().includes('completada')).length; // 🔥 Nueva estadística
     const pendientes = reservas.filter(r => r.estado.toLowerCase().includes('pendiente')).length;
     const canceladas = reservas.filter(r => r.estado.toLowerCase().includes('cancel')).length;
     const montoTotal = reservas.reduce((sum, r) => sum + r.precioTotal, 0);
@@ -192,6 +226,7 @@ export default function ReservaPage() {
     return {
       total,
       confirmadas,
+      completadas, // 🔥 Agregar al return
       pendientes,
       canceladas,
       montoTotal,
@@ -239,6 +274,13 @@ export default function ReservaPage() {
               <div className="stat-content">
                 <span className="stat-number">{stats.confirmadas}</span>
                 <span className="stat-label">Confirmadas</span>
+              </div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-icon">🏁</div>
+              <div className="stat-content">
+                <span className="stat-number">{stats.completadas}</span>
+                <span className="stat-label">Completadas</span>
               </div>
             </div>
             <div className="stat-card">
@@ -306,9 +348,10 @@ export default function ReservaPage() {
                   className="filter-select"
                 >
                   <option value="todas">🔍 Todos los estados</option>
-                  <option value="confirmadas">✅ Confirmadas</option>
-                  <option value="pendientes">⏳ Pendientes</option>
-                  <option value="canceladas">❌ Canceladas</option>
+                  <option value="confirmada">✅ Confirmadas</option>
+                  <option value="completada">🏁 Completadas</option>
+                  <option value="pendiente">⏳ Pendientes</option>
+                  <option value="cancelada">❌ Canceladas</option>
                 </select>
               </div>
             </div>
@@ -408,45 +451,56 @@ export default function ReservaPage() {
                       <p>Tus reservas pasadas aparecerán aquí</p>
                     </div>
                   ) : (
-                    <div className="history-list">
-                      {historialReservas.map((reserva) => (
-                        <div
-                          key={reserva.id}
-                          className="history-item"
-                          onClick={() => {
-                            setSelectedReserva(reserva);
-                            setShowModal(true);
-                          }}
-                        >
-                          <div className="history-date">
-                            <div className="date-circle">
-                              <span className="date-day">{new Date(reserva.fechaInicio).getDate()}</span>
-                              <span className="date-month">
-                                {new Date(reserva.fechaInicio).toLocaleDateString('es-CL', { month: 'short' })}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="history-content">
-                            <div className="history-header">
-                              <h4>Reserva #{reserva.id}</h4>
-                              <span className={`status-badge ${getEstadoColor(reserva.estado)}`}>
-                                {getEstadoIcon(reserva.estado)} {reserva.estado}
-                              </span>
+                    <div className="reservas-grid">
+                      {historialReservas.map((reserva) => {
+                        const estadoVisual = getEstadoVisual(reserva); // 🎨 Obtener estado visual
+                        
+                        return (
+                          <div
+                            key={reserva.id}
+                            className="reserva-card modern"
+                            onClick={() => {
+                              setSelectedReserva(reserva);
+                              setShowModal(true);
+                            }}
+                          >
+                            <div className="card-header">
+                              <div className="card-status">
+                                <span className={`status-badge ${getEstadoColor(estadoVisual)}`}>
+                                  {getEstadoIcon(estadoVisual)} {estadoVisual}
+                                </span>
+                              </div>
+                              <div className="card-id">#{reserva.id}</div>
                             </div>
 
-                            <div className="history-details">
-                              <span>🏟️ Cancha {reserva.canchaId}</span>
-                              <span>⏰ {formatTime(reserva.fechaInicio)} - {formatTime(reserva.fechaFin)}</span>
-                              <span className="price">💰 {formatPrice(reserva.precioTotal)}</span>
+                            <div className="card-content">
+                              <div className="card-date">
+                                <span className="date-day">{formatDate(reserva.fechaInicio)}</span>
+                                <span className="date-time">
+                                  {formatTime(reserva.fechaInicio)} - {formatTime(reserva.fechaFin)}
+                                </span>
+                              </div>
+
+                              <div className="card-details">
+                                <div className="detail-row">
+                                  <span className="detail-icon">🏟️</span>
+                                  <span>Cancha {reserva.canchaId}</span>
+                                </div>
+                                <div className="detail-row">
+                                  <span className="detail-icon">💰</span>
+                                  <span className="price">{formatPrice(reserva.precioTotal)}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="card-footer">
+                              <Button className="card-action-btn">
+                                👁️ Ver Detalles
+                              </Button>
                             </div>
                           </div>
-
-                          <div className="history-action">
-                            <Button className="view-btn">👁️</Button>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -468,6 +522,10 @@ export default function ReservaPage() {
                         <div className="stat-item">
                           <span className="stat-label">Reservas confirmadas:</span>
                           <span className="stat-value success">{stats.confirmadas}</span>
+                        </div>
+                        <div className="stat-item">
+                          <span className="stat-label">Reservas completadas:</span>
+                          <span className="stat-value success">{stats.completadas}</span>
                         </div>
                         <div className="stat-item">
                           <span className="stat-label">Reservas pendientes:</span>
@@ -547,8 +605,8 @@ export default function ReservaPage() {
 
               <div className="modal-body">
                 <div className="modal-status">
-                  <span className={`status-badge large ${getEstadoColor(selectedReserva.estado)}`}>
-                    {getEstadoIcon(selectedReserva.estado)} {selectedReserva.estado}
+                  <span className={`status-badge large ${getEstadoColor(getEstadoVisual(selectedReserva))}`}>
+                    {getEstadoIcon(getEstadoVisual(selectedReserva))} {getEstadoVisual(selectedReserva)}
                   </span>
                 </div>
 

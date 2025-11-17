@@ -216,6 +216,12 @@
   color: #065f46;
 }
 
+.estado-completado {
+  background: #eff6ff; /* Azul muy claro */
+  color: #1e40af;      /* Azul oscuro */
+  border: 1px solid #bfdbfe; /* Borde azul claro */
+}
+
 .estado-creado {
   background: var(--warning-light);
   color: #92400e;
