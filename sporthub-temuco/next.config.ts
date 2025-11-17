@@ -31,6 +31,25 @@ const nextConfig: NextConfig = {
   
   // ESLint y TypeScript habilitados para verificar errores
   
+  // Headers para deshabilitar COOP y permitir Google OAuth
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'unsafe-none',
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'unsafe-none',
+          },
+        ],
+      },
+    ];
+  },
+  
   // Asegurar que las variables de entorno se expongan correctamente
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
