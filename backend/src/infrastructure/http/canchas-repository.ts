@@ -1,5 +1,4 @@
 import axios, { AxiosResponse } from 'axios';
-import { buildHttpClient } from '../../infra/http/client';
 import { CanchaRepository } from '../../domain/canchas/repository';
 import { Cancha, CanchasList, CanchaQueryParams } from '../../domain/canchas/entities';
 
@@ -7,7 +6,13 @@ export class HttpCanchaRepository implements CanchaRepository {
   private apiClient;
 
   constructor(baseURL: string = process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me') {
-    this.apiClient = buildHttpClient(baseURL, () => undefined);
+    this.apiClient = axios.create({
+      baseURL,
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
   }
 
   async findAll(params: CanchaQueryParams): Promise<CanchasList> {

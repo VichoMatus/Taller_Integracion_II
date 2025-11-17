@@ -4,7 +4,6 @@ import { Complejo } from "../../domain/complejo/Complejo";
 import { Cancha } from "../../domain/cancha/Cancha";
 import { ReservaOwner, EstadisticasOwner, EstadisticasComplejo, ReservasPorDiaSemana, ReservasDia, ReservasPorCancha, ReservasCancha } from "../../domain/admin/Owner";
 import { httpError } from "../../infra/http/errors";
-import { API_CONFIG, API_ENDPOINTS } from "../../config/config";
 import { Paginated, normalizePage } from "../../app/common/pagination";
 
 /**
@@ -47,31 +46,10 @@ export class AdminApiRepository implements AdminRepository {
    */
   async getMisComplejos(ownerId: number): Promise<Complejo[]> {
     try {
-  // Usar endpoint correcto de FastAPI: /api/v1/complejos/duenio/{duenio_id}
-  // Construimos URL absoluta para evitar diferencias entre clients (axios baseURL)
-      const url = `${API_CONFIG.baseURL}${API_ENDPOINTS.complejos.base}/duenio/${ownerId}`;
-      console.log(`🔍 [AdminApiRepository.getMisComplejos] llamando a URL: ${url} (base client: ${this.http.defaults?.baseURL})`);
-      try {
-        const { data } = await this.http.get(url);
-        // FastAPI devuelve directamente un array de complejos
-        if (Array.isArray(data) && data.length > 0) return data;
-        // Si no hay resultados, intentar fallback a query param
-      } catch (err) {
-        const status = (err as any)?.response?.status || (err as any)?.message || String(err);
-        console.warn(`⚠️ [AdminApiRepository.getMisComplejos] primer intento falló para ${url}:`, status);
-      }
-
-      // Fallback: algunos endpoints usan query param `duenio_id` en /complejos
-      const fallbackUrl = `${API_CONFIG.baseURL}${API_ENDPOINTS.complejos.base}`;
-      console.log(`🔁 [AdminApiRepository.getMisComplejos] intentando fallback a query param en: ${fallbackUrl}?duenio_id=${ownerId}`);
-      try {
-        const { data: fallbackData } = await this.http.get(fallbackUrl, { params: { duenio_id: ownerId } });
-        return Array.isArray(fallbackData) ? fallbackData : (fallbackData.items || fallbackData || []);
-      } catch (err) {
-        const status = (err as any)?.response?.status || (err as any)?.message || String(err);
-        console.warn(`❌ [AdminApiRepository.getMisComplejos] fallback también falló:`, status);
-        return [];
-      }
+      // Usar endpoint correcto de FastAPI: /api/v1/complejos/duenio/{duenio_id}
+      const { data } = await this.http.get(`/complejos/duenio/${ownerId}`);
+      // FastAPI devuelve directamente un array de complejos
+      return Array.isArray(data) ? data : [];
     } catch (e) { throw httpError(e); }
   }
 
@@ -82,29 +60,9 @@ export class AdminApiRepository implements AdminRepository {
     try {
       // Usar endpoint correcto de FastAPI: /api/v1/canchas/admin
       // Este endpoint devuelve las canchas del admin autenticado
-      const url = `${API_CONFIG.baseURL}${API_ENDPOINTS.canchas.base}/admin`;
-      console.log(`🔍 [AdminApiRepository.getMisCanchas] llamando a URL: ${url}`);
-      try {
-        const { data } = await this.http.get(url);
-        return data.items || data || [];
-      } catch (err) {
-        const status = (err as any)?.response?.status || (err as any)?.message || String(err);
-        console.warn(`⚠️ [AdminApiRepository.getMisCanchas] first attempt failed for ${url}:`, status);
-      }
-
-      // Fallback: query param based endpoint
-      const fallbackUrl = `${API_CONFIG.baseURL}${API_ENDPOINTS.canchas.base}`;
-      console.log(`🔁 [AdminApiRepository.getMisCanchas] intentando fallback a query param en: ${fallbackUrl}?duenio_id=${ownerId}`);
-      try {
-        const { data: fallbackData } = await this.http.get(fallbackUrl, { params: { duenio_id: ownerId } });
-        return fallbackData.items || fallbackData || [];
-      } catch (err) {
-        const status = (err as any)?.response?.status || (err as any)?.message || String(err);
-        console.warn(`❌ [AdminApiRepository.getMisCanchas] fallback también falló:`, status);
-        return [];
-      }
-  // Si llegamos aquí, ya intentamos fallback y no tenemos resultados
-  return [];
+      const { data } = await this.http.get(`/canchas/admin`);
+      // FastAPI devuelve { items: [...], total, page, page_size }
+      return data.items || data || [];
     } catch (e) { throw httpError(e); }
   }
 
@@ -115,8 +73,7 @@ export class AdminApiRepository implements AdminRepository {
     try {
       // Usar endpoint correcto de FastAPI: /api/v1/reservas (lista de reservas para admin/superadmin)
       // El endpoint automáticamente filtra por el usuario autenticado si es admin
-      const url = `${API_CONFIG.baseURL}${API_ENDPOINTS.reservas.base}`;
-      const { data } = await this.http.get(url, { 
+      const { data } = await this.http.get(`/reservas`, { 
         params: params 
       });
       return data.items || data || [];
@@ -194,8 +151,7 @@ export class AdminApiRepository implements AdminRepository {
       // Obtener todas las canchas del complejo
       let canchas: Cancha[] = [];
       try {
-        const canchasUrl = `${API_CONFIG.baseURL}${API_ENDPOINTS.canchas.base}`;
-        const { data: canchasData } = await this.http.get(canchasUrl, { 
+        const { data: canchasData } = await this.http.get(`/canchas`, { 
           params: { complejo_id: complejoId } 
         });
         canchas = Array.isArray(canchasData?.items) ? canchasData.items : 
@@ -214,8 +170,7 @@ export class AdminApiRepository implements AdminRepository {
       // Obtener reservas del último mes para este complejo
       let reservas: ReservaOwner[] = [];
       try {
-        const reservasUrl = `${API_CONFIG.baseURL}${API_ENDPOINTS.reservas.base}`;
-        const { data: reservasData } = await this.http.get(reservasUrl, { 
+        const { data: reservasData } = await this.http.get(`/reservas`, { 
           params: { 
             complejo_id: complejoId,
             fecha_desde: fechaDesde.toISOString().split('T')[0],
@@ -286,8 +241,7 @@ export class AdminApiRepository implements AdminRepository {
       // Obtener reservas del período para este complejo
       let reservas: ReservaOwner[] = [];
       try {
-        const reservasUrl = `${API_CONFIG.baseURL}${API_ENDPOINTS.reservas.base}`;
-        const { data: reservasData } = await this.http.get(reservasUrl, { 
+        const { data: reservasData } = await this.http.get(`/reservas`, { 
           params: { 
             complejo_id: complejoId,
             fecha_desde: fechaDesde.toISOString().split('T')[0],
@@ -417,8 +371,7 @@ export class AdminApiRepository implements AdminRepository {
       // Obtener todas las canchas del complejo
       let canchas: Cancha[] = [];
       try {
-        const canchasUrl = `${API_CONFIG.baseURL}${API_ENDPOINTS.canchas.base}`;
-        const { data: canchasData } = await this.http.get(canchasUrl, { 
+        const { data: canchasData } = await this.http.get(`/canchas`, { 
           params: { complejo_id: complejoId } 
         });
         canchas = Array.isArray(canchasData?.items) ? canchasData.items : 
@@ -437,8 +390,7 @@ export class AdminApiRepository implements AdminRepository {
       // Obtener reservas del período para este complejo
       let reservas: ReservaOwner[] = [];
       try {
-        const reservasUrl = `${API_CONFIG.baseURL}${API_ENDPOINTS.reservas.base}`;
-        const { data: reservasData } = await this.http.get(reservasUrl, { 
+        const { data: reservasData } = await this.http.get(`/reservas`, { 
           params: { 
             complejo_id: complejoId,
             fecha_desde: fechaDesde.toISOString().split('T')[0],
@@ -561,8 +513,7 @@ export class AdminApiRepository implements AdminRepository {
    */
   async createComplejo(ownerId: number, complejo: Omit<Complejo, 'id'>): Promise<Complejo> {
     try {
-  const url = `${API_CONFIG.baseURL}${API_ENDPOINTS.complejos.base}`;
-  const { data } = await this.http.post(url, {
+      const { data } = await this.http.post(`/complejos`, {
         ...complejo,
         duenio_id: ownerId
       });
@@ -575,8 +526,7 @@ export class AdminApiRepository implements AdminRepository {
    */
   async getComplejo(ownerId: number, complejoId: number): Promise<Complejo> {
     try {
-  const url = `${API_CONFIG.baseURL}${API_ENDPOINTS.complejos.byId(complejoId)}`;
-  const { data } = await this.http.get(url);
+      const { data } = await this.http.get(`/complejos/${complejoId}`);
       return data;
     } catch (e) { throw httpError(e); }
   }
@@ -586,8 +536,7 @@ export class AdminApiRepository implements AdminRepository {
    */
   async updateComplejo(ownerId: number, complejoId: number, updates: Partial<Complejo>): Promise<Complejo> {
     try {
-  const url = `${API_CONFIG.baseURL}${API_ENDPOINTS.complejos.byId(complejoId)}`;
-  const { data } = await this.http.put(url, updates);
+      const { data } = await this.http.put(`/complejos/${complejoId}`, updates);
       return data;
     } catch (e) { throw httpError(e); }
   }
@@ -597,8 +546,7 @@ export class AdminApiRepository implements AdminRepository {
    */
   async deleteComplejo(ownerId: number, complejoId: number): Promise<void> {
     try {
-  const url = `${API_CONFIG.baseURL}${API_ENDPOINTS.complejos.byId(complejoId)}`;
-  await this.http.delete(url);
+      await this.http.delete(`/complejos/${complejoId}`);
     } catch (e) { throw httpError(e); }
   }
 
@@ -609,8 +557,7 @@ export class AdminApiRepository implements AdminRepository {
    */
   async createCancha(ownerId: number, cancha: Omit<Cancha, 'id'>): Promise<Cancha> {
     try {
-  const url = `${API_CONFIG.baseURL}${API_ENDPOINTS.canchas.base}`;
-  const { data } = await this.http.post(url, {
+      const { data } = await this.http.post(`/canchas`, {
         ...cancha,
         duenio_id: ownerId
       });
@@ -623,8 +570,7 @@ export class AdminApiRepository implements AdminRepository {
    */
   async getCancha(ownerId: number, canchaId: number): Promise<Cancha> {
     try {
-  const url = `${API_CONFIG.baseURL}${API_ENDPOINTS.canchas.byId(canchaId)}`;
-  const { data } = await this.http.get(url);
+      const { data } = await this.http.get(`/canchas/${canchaId}`);
       return data;
     } catch (e) { throw httpError(e); }
   }
@@ -634,8 +580,7 @@ export class AdminApiRepository implements AdminRepository {
    */
   async updateCancha(ownerId: number, canchaId: number, updates: Partial<Cancha>): Promise<Cancha> {
     try {
-  const url = `${API_CONFIG.baseURL}${API_ENDPOINTS.canchas.byId(canchaId)}`;
-  const { data } = await this.http.put(url, updates);
+      const { data } = await this.http.put(`/canchas/${canchaId}`, updates);
       return data;
     } catch (e) { throw httpError(e); }
   }
@@ -645,8 +590,7 @@ export class AdminApiRepository implements AdminRepository {
    */
   async deleteCancha(ownerId: number, canchaId: number): Promise<void> {
     try {
-  const url = `${API_CONFIG.baseURL}${API_ENDPOINTS.canchas.byId(canchaId)}`;
-  await this.http.delete(url);
+      await this.http.delete(`/canchas/${canchaId}`);
     } catch (e) { throw httpError(e); }
   }
 }

@@ -101,27 +101,8 @@ export class AuthService {
       try {
         console.log('🏢 [AuthService.normalizeUserDataAsync] Obteniendo complejo_id para admin:', userData.id_usuario);
         
-  // Usar el endpoint correcto de FastAPI: /api/v1/complejos/duenio/{duenio_id}
-  const endpoint = `${API_ENDPOINTS.complejos.base}/duenio/${userData.id_usuario}`;
-  console.log('🔄 [AuthService.normalizeUserDataAsync] Llamando a endpoint:', endpoint);
-  let complejoResponse;
-  try {
-    complejoResponse = await this.apiClient.get(endpoint);
-  } catch (err) {
-    const status = (err as any)?.response?.status || (err as any)?.message || String(err);
-    console.warn('[AuthService.normalizeUserDataAsync] primer intento falló:', status);
-    // Fallback: intentar con query param `/complejos?duenio_id=...`
-    try {
-      const fallbackEndpoint = `${API_ENDPOINTS.complejos.base}`;
-      console.log('[AuthService.normalizeUserDataAsync] Intentando fallback a:', fallbackEndpoint);
-      const responseFallback = await this.apiClient.get(fallbackEndpoint, { params: { duenio_id: userData.id_usuario } });
-      complejoResponse = responseFallback;
-    } catch (err2) {
-      const status2 = (err2 as any)?.response?.status || (err2 as any)?.message || String(err2);
-      console.warn('[AuthService.normalizeUserDataAsync] fallback también falló:', status2);
-      throw err2; // Re-throw to be handled by outer catch
-    }
-  }
+        // Usar el endpoint correcto de FastAPI: /api/v1/complejos/duenio/{duenio_id}
+        const complejoResponse = await this.apiClient.get(`/complejos/duenio/${userData.id_usuario}`);
         
         // FastAPI devuelve un array de complejos
         const complejos = complejoResponse.data;

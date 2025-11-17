@@ -1,5 +1,4 @@
 import axios, { AxiosResponse } from 'axios';
-import { buildHttpClient } from '../../infra/http/client';
 import { ComplejoRepository } from '../../domain/complejos/repository';
 import { Complejo, ComplejosList, ComplejoQueryParams } from '../../domain/complejos/entities';
 
@@ -7,7 +6,13 @@ export class HttpComplejoRepository implements ComplejoRepository {
   private apiClient;
 
   constructor(baseURL: string = process.env.API_BASE_URL || 'http://api-h1d7oi-6fc869-168-232-167-73.traefik.me') {
-    this.apiClient = buildHttpClient(baseURL, () => undefined);
+    this.apiClient = axios.create({
+      baseURL,
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
   }
 
   async findAll(params: ComplejoQueryParams): Promise<ComplejosList> {
