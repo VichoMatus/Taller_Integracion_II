@@ -95,25 +95,21 @@ export class AuthService {
     });
 
     // ✅ OBTENER complejo_id para usuarios admin
-    let complejo_id = userData.complejo_id;
+    let complejo_id = userData.complejo_id || userData.id_complejo || userData.id_establecimiento;
     
     if (normalizedRole === 'admin' && !complejo_id) {
       try {
         console.log('🏢 [AuthService.normalizeUserDataAsync] Obteniendo complejo_id para admin:', userData.id_usuario);
         
-        // Hacer request al endpoint de complejos para obtener el complejo del admin
-        // Intentar endpoint admin si existe; si no, fallback a /complejos/duenio/ (compatibilidad FastAPI)
-        let complejoResponse;
-        try {
-          complejoResponse = await this.apiClient.get(`/api/complejos/admin/${userData.id_usuario}`);
-        } catch (errAdmin) {
-          // Fallback a endpoint /complejos/duenio/:id
-          console.warn('⚠️ [AuthService] Fallback: /api/complejos/admin no disponible, intentando /complejos/duenio', userData.id_usuario);
-          complejoResponse = await this.apiClient.get(`/complejos/duenio/${userData.id_usuario}`);
-        }
+        // Usar el endpoint correcto de FastAPI: /api/v1/complejos/duenio/{duenio_id}
+        const complejoResponse = await this.apiClient.get(`/complejos/duenio/${userData.id_usuario}`);
         
-        if (complejoResponse.data?.ok && complejoResponse.data?.data?.length > 0) {
-          complejo_id = complejoResponse.data.data[0].id_complejo;
+        // FastAPI devuelve un array de complejos
+        const complejos = complejoResponse.data;
+        
+        if (Array.isArray(complejos) && complejos.length > 0) {
+          // Tomar el primer complejo del admin
+          complejo_id = complejos[0].id_complejo || complejos[0].id;
           console.log('✅ [AuthService.normalizeUserDataAsync] complejo_id obtenido:', complejo_id);
         } else {
           console.log('⚠️ [AuthService.normalizeUserDataAsync] No se encontró complejo para admin:', userData.id_usuario);

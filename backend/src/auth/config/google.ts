@@ -1,7 +1,9 @@
-import dotenv from 'dotenv';
 
-// Intenta cargar .env local (no sobreescribe variables ya definidas por Docker/Dokploy)
-dotenv.config();
+import dotenv from 'dotenv';
+import path from 'path';
+
+// Siempre cargar el .env de la raíz del proyecto
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
 
 // Soporta tanto GOOGLE_CLIENT_ID (backend) como NEXT_PUBLIC_GOOGLE_CLIENT_ID (si alguien la define por costumbre del frontend)
 const clientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '';

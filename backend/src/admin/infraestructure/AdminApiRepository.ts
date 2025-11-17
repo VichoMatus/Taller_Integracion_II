@@ -46,11 +46,10 @@ export class AdminApiRepository implements AdminRepository {
    */
   async getMisComplejos(ownerId: number): Promise<Complejo[]> {
     try {
-      // Usar endpoint existente /complejos con filtro de dueño
-      const { data } = await this.http.get(`/complejos`, { 
-        params: { duenio_id: ownerId } 
-      });
-      return data.items || data || [];
+      // Usar endpoint correcto de FastAPI: /api/v1/complejos/duenio/{duenio_id}
+      const { data } = await this.http.get(`/complejos/duenio/${ownerId}`);
+      // FastAPI devuelve directamente un array de complejos
+      return Array.isArray(data) ? data : [];
     } catch (e) { throw httpError(e); }
   }
 
@@ -59,12 +58,10 @@ export class AdminApiRepository implements AdminRepository {
    */
   async getMisCanchas(ownerId: number): Promise<Cancha[]> {
     try {
-      // Usar endpoint existente /canchas con filtro de dueño
-      // Pedir page_size grande para evitar paginación por defecto (20)
-      // FastAPI may limit page_size (<= 100). Use 100 to avoid validation errors.
-      const { data } = await this.http.get(`/canchas`, { 
-        params: { duenio_id: ownerId, page_size: 100 } 
-      });
+      // Usar endpoint correcto de FastAPI: /api/v1/canchas/admin
+      // Este endpoint devuelve las canchas del admin autenticado
+      const { data } = await this.http.get(`/canchas/admin`);
+      // FastAPI devuelve { items: [...], total, page, page_size }
       return data.items || data || [];
     } catch (e) { throw httpError(e); }
   }
@@ -74,9 +71,10 @@ export class AdminApiRepository implements AdminRepository {
    */
   async getMisReservas(ownerId: number, params: { fecha_desde?: string; fecha_hasta?: string; estado?: string } = {}): Promise<ReservaOwner[]> {
     try {
-      // Usar endpoint existente /reservas con filtro de dueño
+      // Usar endpoint correcto de FastAPI: /api/v1/reservas (lista de reservas para admin/superadmin)
+      // El endpoint automáticamente filtra por el usuario autenticado si es admin
       const { data } = await this.http.get(`/reservas`, { 
-        params: { duenio_id: ownerId, ...params } 
+        params: params 
       });
       return data.items || data || [];
     } catch (e) { throw httpError(e); }
@@ -91,36 +89,43 @@ export class AdminApiRepository implements AdminRepository {
       const reservas = await this.getMisReservas(ownerId);
       const complejos = await this.getMisComplejos(ownerId);
       const canchas = await this.getMisCanchas(ownerId);
+      
       // Calcular ingresos totales (todas las reservas confirmadas)
       const ingresosTotales = reservas
         .filter(r => r && r.estado === 'confirmada')
         .reduce((sum, r) => sum + Number(r.precio_total || 0), 0);
 
-      // Reservas del último mes
-      const fechaHasta = new Date();
-      const fechaDesde = new Date();
-      fechaDesde.setDate(fechaDesde.getDate() - 30);
+      // Calcular fechas para el mes actual (no últimos 30 días)
+      const ahora = new Date();
+      const primerDiaMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1);
+      const ultimoDiaMes = new Date(ahora.getFullYear(), ahora.getMonth() + 1, 0, 23, 59, 59);
 
-      const reservasUltimoMes = reservas.filter(raw => {
+      // Filtrar reservas del mes actual
+      const reservasMesActual = reservas.filter(raw => {
         const rnorm = this.normalizeReserva(raw);
         const fecha = rnorm.fecha;
         if (!fecha) return false;
         const d = new Date(fecha);
         if (isNaN(d.getTime())) return false;
-        return d >= fechaDesde && d <= fechaHasta;
+        return d >= primerDiaMes && d <= ultimoDiaMes;
       });
 
-      const reservasMesConfirmadas = reservasUltimoMes.filter(r => r.estado === 'confirmada').length;
-      const ingresosMes = reservasUltimoMes
+      const reservasMesConfirmadas = reservasMesActual.filter(r => r.estado === 'confirmada').length;
+      const ingresosMes = reservasMesActual
         .filter(r => r.estado === 'confirmada')
         .reduce((sum, r) => sum + Number((this.normalizeReserva(r).precio_total) || 0), 0);
 
-      // Calcular ocupación promedio en el último mes (usamos canchas activas)
+      // Calcular ocupación promedio del mes actual (usamos canchas activas)
       const canchasActivas = canchas.filter(c => c.activa !== false && c.estado !== 'inactiva').length;
-      const totalPosiblesReservas = canchasActivas * 30 * 8; // 8 slots promedio por día
-      const reservasConfirmadasUltimoMes = reservasUltimoMes.filter(r => r.estado === 'confirmada').length;
+      
+      // Calcular días transcurridos del mes hasta hoy
+      const diasDelMes = ahora.getDate(); // Día actual del mes (1-31)
+      
+      // Suponiendo 8 slots promedio por día por cancha
+      const totalPosiblesReservas = canchasActivas * diasDelMes * 8;
+      const reservasConfirmadasMesActual = reservasMesActual.filter(r => r.estado === 'confirmada').length;
       const ocupacionPromedio = totalPosiblesReservas > 0
-        ? Math.round((reservasConfirmadasUltimoMes / totalPosiblesReservas) * 100 * 100) / 100
+        ? Math.round((reservasConfirmadasMesActual / totalPosiblesReservas) * 100 * 100) / 100
         : 0;
 
       return {
