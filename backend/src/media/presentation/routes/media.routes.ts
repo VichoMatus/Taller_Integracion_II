@@ -11,6 +11,8 @@ import { Router } from "express";
 import { buildHttpClient } from "../../../infra/http/client";
 import { MediaApiRepository } from "../../infrastructure/MediaApiRepository";
 import { MediaController } from "../controllers/media.controller";
+import perfilImageRoutes from './perfilImage.routes';
+import perfilImageGetRoutes from './perfilImageGet.routes';
 
 const router = Router();
 
@@ -20,7 +22,6 @@ const ctrl = (req: any) => {
   const repo = new MediaApiRepository(http);
   return new MediaController(repo);
 };
-
 
 // Subir imagen
 router.post("/media", (req, res) => ctrl(req).upload(req, res));
@@ -34,5 +35,9 @@ router.delete("/media/:id_media", (req, res) => ctrl(req).delete(req, res));
 router.put("/media/:id_media", (req, res) => ctrl(req).replace(req, res));
 // Reordenar imágenes
 router.post("/media/reorder", (req, res) => ctrl(req).reorder(req, res));
+
+// Rutas para subir y pedir imagen de perfil de usuario/admin
+router.use('/perfil-image', perfilImageRoutes);
+router.use('/perfil-image', perfilImageGetRoutes);
 
 export default router;
