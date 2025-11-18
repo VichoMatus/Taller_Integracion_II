@@ -157,7 +157,7 @@ export default function MapaPage() {
       console.log('🔑 Usando API Key:', apiKey.substring(0, 20) + '...');
       
       const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker`;
       script.async = true;
       script.defer = true;
       
