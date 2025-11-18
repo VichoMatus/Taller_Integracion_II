@@ -30,6 +30,9 @@ import { Router } from 'express';
 import { SuperAdminController } from '../interfaces/controllers/superAdminController';
 import { authMiddleware } from '../../auth/middlewares/authMiddleware';
 import { requireSuperAdmin } from '../guards/superAdminGuards';
+import cambioRolRoutes from '../../cambioRol/routes/cambioRolRoutes';
+import profileImageRoutes from './profileImageRoutes';
+import profileImageGetRoutes from './profileImageGetRoutes';
 
 // Crear router de Express y instancia del controlador
 const router = Router();
@@ -88,6 +91,13 @@ router.get('/system/statistics', authMiddleware, requireSuperAdmin, controller.g
 router.get('/system/logs', authMiddleware, requireSuperAdmin, controller.getSystemLogs);
 
 /**
+ * RUTAS DE ESTADÍSTICAS COMPLETAS
+ * ===============================
+ */
+// GET /api/super_admin/estadisticas/completas - Estadísticas completas del sistema
+router.get('/estadisticas/completas', authMiddleware, requireSuperAdmin, controller.getEstadisticasCompletas);
+
+/**
  * RUTAS DE UTILIDADES Y DASHBOARD
  * ===============================
  */
@@ -96,5 +106,18 @@ router.get('/dashboard', authMiddleware, requireSuperAdmin, controller.getDashbo
 
 // GET /api/super_admin/search?q=term - Búsqueda global en el sistema
 router.get('/search', authMiddleware, requireSuperAdmin, controller.globalSearch);
+
+/**
+ * RUTAS DE CAMBIO DE ROL
+ * ======================
+ * POST /api/super_admin/usuarios/:id_usuario/rol - Promover usuario a rol superior
+ * POST /api/super_admin/usuarios/:id_usuario/rol/demote - Degradar usuario a rol inferior
+ * 
+ * Solo accesible para super_admin.
+ */
+router.use('/usuarios', authMiddleware, requireSuperAdmin, cambioRolRoutes);
+
+// Rutas para pedir imagen de perfil de superadmin
+router.use('/profile-image', profileImageGetRoutes);
 
 export default router;

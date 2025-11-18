@@ -6,6 +6,8 @@ import {
   UsuarioCreateRequest,
   UsuarioUpdateRequest,
   UsuarioListQuery,
+  UsuarioContactoPublico,
+  UsuarioRol,
 } from "../types/usuarios";
 
 class UsuariosService {
@@ -58,8 +60,9 @@ class UsuariosService {
       const response = await request;
       return response.data;
     } catch (error: any) {
-      // Si es error de autorización, limpiar token y redirigir
-      if (error?.response?.status === 401 || error?.response?.status === 403) {
+      // Solo cerrar sesión en 401 (token inválido/expirado)
+      // 403 significa "autenticado pero sin permisos" - no cerrar sesión
+      if (error?.response?.status === 401) {
         tokenUtils.clearTokenAndRedirect();
       }
       handleApiError(error);
@@ -80,7 +83,7 @@ class UsuariosService {
     console.log('🔑 Token encontrado:', token.substring(0, 20) + '...');
     
     if (params?.rol) {
-      params.rol = params.rol.toLowerCase();
+      params.rol = params.rol.toLowerCase() as UsuarioRol;
     }
 
     // Crear headers
@@ -108,11 +111,40 @@ class UsuariosService {
     }
   }
 
+  // Búsqueda de usuarios por texto para Admin (no requiere super_admin en el frontend)
+  // Útil para autocompletar emails/nombres desde páginas Admin.
+  async buscar(q: string, size = 8): Promise<Usuario[]> {
+    try {
+      const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+      const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+      const { data } = await apiBackend.get<Usuario[]>('/usuarios', { params: { q, size }, headers });
+      return data;
+    } catch (error) {
+      console.error('Error en usuariosService.buscar:', error);
+      handleApiError(error);
+      return [];
+    }
+  }
+
   // Obtener usuario por ID
   async obtener(id: string | number): Promise<Usuario> {
     return this.handleRequest(
       apiBackend.get<Usuario>(`/usuarios/${id}`)
     );
+  }
+
+  // Obtener usuario por ID sin exigir rol super_admin en frontend
+  // Útil cuando la vista es admin y queremos consultar un usuario por su ID
+  async obtenerPublico(id: string | number): Promise<Usuario> {
+    try {
+      const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+      const headers: Record<string, string> = token ? { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+      const { data } = await apiBackend.get<Usuario>(`/usuarios/${id}`, { headers });
+      return data;
+    } catch (error) {
+      handleApiError(error);
+      throw error;
+    }
   }
 
   // Crear usuario
@@ -124,9 +156,9 @@ class UsuariosService {
 
   // Crear administrador
   async createAdministrador(payload: UsuarioCreateRequest): Promise<Usuario> {
-    const adminPayload = {
+    const adminPayload: UsuarioCreateRequest = {
       ...payload,
-      rol: 'admin'
+      rol: 'admin' as UsuarioRol
     };
     return this.crear(adminPayload);
   }
@@ -162,6 +194,33 @@ class UsuariosService {
     return this.handleRequest(
       apiBackend.patch<Usuario>(`/usuarios/${id}/verificar`)
     );
+  }
+
+  // Obtener información pública de contacto (no requiere super_admin)
+  async obtenerContacto(id: string | number): Promise<UsuarioContactoPublico> {
+    try {
+      const token = localStorage.getItem('access_token') || localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('No hay token disponible');
+      }
+
+      const response = await apiBackend.get<UsuarioContactoPublico>(`/usuarios/${id}/contacto`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      return response.data;
+    } catch (error: any) {
+      // Solo cerrar sesión en 401, no en 403
+      if (error?.response?.status === 401) {
+        tokenUtils.clearTokenAndRedirect();
+      }
+      console.error('Error al obtener contacto del usuario:', error);
+      throw error;
+    }
   }
 }
 

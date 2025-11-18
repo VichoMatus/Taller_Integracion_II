@@ -32,7 +32,7 @@ if (missingEnvVars.length > 0) {
 export const API_CONFIG = {
   baseURL: process.env.API_BASE_URL!,  // Ya validamos que existe arriba
   apiKey: process.env.API_KEY || '',
-  timeout: parseInt(process.env.API_TIMEOUT || '10000'),
+  timeout: parseInt(process.env.API_TIMEOUT || '30000'), // 30 segundos para FastAPI lento
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
@@ -70,6 +70,23 @@ export const API_ENDPOINTS = {
     base: '/api/v1/complejos',
     byId: (id: number) => `/api/v1/complejos/${id}`,
     canchas: (id: number) => `/api/v1/complejos/${id}/canchas`
+  },
+  
+  // Endpoints de canchas
+  canchas: {
+    base: '/api/v1/canchas',
+    byId: (id: number) => `/api/v1/canchas/${id}`
+  },
+  
+  // Endpoints de reservas
+  reservas: {
+    base: '/api/v1/reservas',
+    byId: (id: number) => `/api/v1/reservas/${id}`
+  },
+  
+  // Endpoints de reseñas
+  resenas: {
+    base: '/api/v1/resenas'
   },
   
   // Endpoints específicos de SuperAdmin

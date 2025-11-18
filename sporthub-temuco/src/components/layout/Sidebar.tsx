@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { authService } from '@/services/authService';
+import { useAuthStatus } from '@/hooks/useAuthStatus'; // 🔥 NUEVO IMPORT
 
 import './Sidebar.css'; 
 import indexStyles from './StylesSportsSideBar/IndexSideBar.module.css';
@@ -12,18 +13,14 @@ import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
 import padelStyles from './StylesSportsSideBar/PadelSideBar.module.css';
 import crossfitentrenamientofuncionalStyles from './StylesSportsSideBar/CrossfitEntrenamientoFuncionalSideBar.module.css';
 import escaladaStyles from './StylesSportsSideBar/EscaladaSideBar.module.css';
-// import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
 import atletismoStyles from './StylesSportsSideBar/AtletismoSideBar.module.css';
 import ciclismoStyles from './StylesSportsSideBar/CiclismoSideBar.module.css';
 import kartingStyles from './StylesSportsSideBar/KartingSideBar.module.css';
-// skateStyles removed: skate uses indexStyles now
-// import futbolStyles from './StylesSportsSideBar/FutbolSideBar.module.css';
 import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
 import voleiStyles from './StylesSportsSideBar/VoleibolSideBar.module.css';
 import natacionStyles from './StylesSportsSideBar/NatacionSideBar.module.css';
 import patinajeStyles from './StylesSportsSideBar/PatinajeSideBar.module.css';
 import enduroStyles from './StylesSportsSideBar/EnduroSideBar.module.css';
-// import tenisStyles from './StylesSportsSideBar/TenisSideBar.module.css';
 import futbolamericanoStyles from './StylesSportsSideBar/FutbolAmericanoSideBar.module.css';
 import rugbyStyles from './StylesSportsSideBar/RugbySideBar.module.css';
 import mountainbikeStyles from './StylesSportsSideBar/MountainBikeSideBar.module.css';
@@ -33,11 +30,14 @@ interface SidebarProps {
   sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | 'crossfitentrenamientofuncional' | 'natacion' | 'patinaje'| 'enduro' | 'rugby' | 'futbol-americano' | 'mountain-bike' | 'escalada' | 'atletismo' | 'skate' | 'ciclismo' | 'karting';
 }
 
-const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado a undefined por defecto
+const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => {
   const pathname = usePathname();
   const router = useRouter();
+  
+  // 🔥 USAR EL HOOK DE AUTENTICACIÓN
+  const { isAuthenticated, isLoading, user } = useAuthStatus();
 
-  // 🔥 FUNCIÓN DE LOGOUT
+  // 🔥 FUNCIÓN DE LOGOUT MEJORADA
   const handleLogout = async () => {
     try {
       console.log('🚪 Iniciando proceso de logout...');
@@ -110,8 +110,6 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
         return natacionStyles;
       case 'patinaje':
         return patinajeStyles;
-        // return tenisStyles;
-        return basquetbolStyles; // temporal
       case 'enduro':
         return enduroStyles;
       case 'futbol-americano':
@@ -120,7 +118,6 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
         return rugbyStyles;
       case 'mountain-bike':
         return mountainbikeStyles;
-
       case 'escalada':
         return escaladaStyles;
       default:
@@ -208,7 +205,8 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
     }
   ];
 
-  const usuarioMenuItems = [
+  // 🔥 MENÚS DINÁMICOS SEGÚN AUTENTICACIÓN
+  const usuarioMenuItemsDeslogueado = [
     {
       name: 'Deportes',
       icon: '🏟️',
@@ -216,13 +214,28 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
       active: pathname === '/sports' || pathname === '/sports/' || pathname === '/'
     },
     {
-      name: 'Reservas',
-      icon: '📅',
-      href: '/usuario/reservas',
-      active: pathname === '/reservas'
+      name: 'Mapa',
+      icon: '🗺️',
+      href: '/mapa',
+      active: pathname === '/mapa'
+    }
+  ];
+
+  const usuarioMenuItemsLogueado = [
+    {
+      name: 'Deportes',
+      icon: '🏟️',
+      href: '/sports',
+      active: pathname === '/sports' || pathname === '/sports/' || pathname === '/'
     },
     {
-      name: 'Pagos',
+      name: 'Mis Reservas',
+      icon: '📅',
+      href: '/usuario/historial-reservas',
+      active: pathname === '/usuario/historial-reservas'
+    },
+    {
+      name: 'Historial de Pagos',
       icon: '💳',
       href: '/usuario/pagos',
       active: pathname === '/usuario/pagos'
@@ -234,26 +247,33 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
       active: pathname === '/mapa'
     },
     {
-      name: 'Favoritos',
-      icon: '⭐',
-      href: '/sports/favoritos',
-      active: pathname === '/sports/favoritos'
-    },
-    {
       name: 'Perfil',
       icon: '👤',
       href: '/usuario/perfil',
       active: pathname === '/usuario/perfil'
     },
     {
-      name: 'Mensajería',
+      name: 'Quejas y Sugerencias',
       icon: '💬',
-      href: '/sports/mensajeria',
-      active: pathname && pathname.startsWith('/sports/mensajeria')
+      href: '/usuario/quejas-sugerencias',
+      active: pathname && pathname.startsWith('/usuario/quejas-sugerencias')
     }
   ];
 
-  const menuItems = userRole === 'super_admin' ? superAdminMenuItems : userRole === 'admin' ? adminMenuItems : usuarioMenuItems;
+  // 🔥 LÓGICA PARA DETERMINAR QUÉ MENÚ MOSTRAR
+  const getMenuItems = () => {
+    if (userRole === 'super_admin') return superAdminMenuItems;
+    if (userRole === 'admin') return adminMenuItems;
+    
+    // Para usuarios normales, depende del estado de autenticación
+    if (userRole === 'usuario') {
+      return isAuthenticated ? usuarioMenuItemsLogueado : usuarioMenuItemsDeslogueado;
+    }
+    
+    return usuarioMenuItemsDeslogueado; // Fallback
+  };
+
+  const menuItems = getMenuItems();
   const userTitle = userRole === 'super_admin' ? 'Superadministrador' : userRole === 'admin' ? 'Administrador' : 'Usuario';
 
   // 🔥 FUNCIÓN PARA DETERMINAR EL HREF DEL HEADER
@@ -270,6 +290,20 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
     }
   };
 
+  // 🔥 MOSTRAR LOADING SI ESTÁ CARGANDO (solo para usuarios)
+  if (userRole === 'usuario' && isLoading) {
+    return (
+      <div className={styles ? styles.sidebarContainer : 'sidebar-container'}>
+        <div className={styles ? styles.sidebarHeader : 'sidebar-header'}>
+          <div className={styles ? styles.loadingContainer : 'loading-container'}>
+            <div className={styles ? styles.loadingSpinner : 'loading-spinner'}>⏳</div>
+            <p>Cargando...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles ? styles.sidebarContainer : 'sidebar-container'}>
       {/* Header - 🔥 AHORA ES CLICKEABLE */}
@@ -281,7 +315,12 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
             </div>
             <div>
               <h1 className={styles ? styles.sidebarTitle : 'sidebar-title'}>SportHub</h1>
-              <p className={styles ? styles.sidebarSubtitle : 'sidebar-subtitle'}>{userTitle}</p>
+              <p className={styles ? styles.sidebarSubtitle : 'sidebar-subtitle'}>
+                {userRole === 'usuario' && isAuthenticated && user 
+                  ? `${user.nombre || user.email}` 
+                  : userTitle
+                }
+              </p>
             </div>
           </div>
           {userRole === 'usuario' && sport && styles && <div className={styles.sportIcon}></div>}
@@ -311,16 +350,19 @@ const Sidebar = ({ userRole, sport = undefined }: SidebarProps) => { // Cambiado
         </ul>
       </nav>
 
-      {/* Logout Button - 🔥 AHORA CON FUNCIONALIDAD */}
-      <div className={styles ? styles.sidebarLogout : 'sidebar-logout'}>
-        <button 
-          className={styles ? styles.sidebarLogoutButton : 'sidebar-logout-button'}
-          onClick={handleLogout}
-        >
-          <span className={styles ? styles.sidebarLogoutIcon : 'sidebar-logout-icon'}>🚪</span>
-          <span>Cerrar Sesión</span>
-        </button>
-      </div>
+      {/* 🔥 LOGOUT BUTTON - SOLO SI ESTÁ AUTENTICADO */}
+      {isAuthenticated && (
+        <div className={styles ? styles.sidebarLogout : 'sidebar-logout'}>
+          <button 
+            className={styles ? styles.sidebarLogoutButton : 'sidebar-logout-button'}
+            onClick={handleLogout}
+          >
+            <span className={styles ? styles.sidebarLogoutIcon : 'sidebar-logout-icon'}>🚪</span>
+            <span>Cerrar Sesión</span>
+          </button>
+        </div>
+      )}
+
     </div>
   );
 };

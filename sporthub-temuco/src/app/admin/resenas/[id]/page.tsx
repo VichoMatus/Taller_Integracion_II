@@ -1,103 +1,72 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { resenaService } from '@/services/resenaService';
-import { Resena, ResenaUpdateRequest } from '@/types/resena';
+import { Resena } from '@/types/resena';
 import '../../dashboard.css';
 
-export default function EditResenaPage() {
-  const params = useParams();
+export default function ViewResenaPage() {
   const router = useRouter();
+  const params = useParams();
   const resenaId = params.id as string;
   
-  // Estados del componente
-  const [resena, setResena] = useState<Resena | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [resena, setResena] = useState<Resena | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
-  // Estados del formulario
-  const [formData, setFormData] = useState({
-    calificacion: 5,
-    comentario: ''
-  });
 
-  // Cargar datos de la reseña
   useEffect(() => {
-    const loadResena = async () => {
+    const cargarResena = async () => {
       try {
         setLoading(true);
-        setError(null);
+        console.log('🔍 Cargando reseña ID:', resenaId);
         
-        const data = await resenaService.obtenerResena(resenaId);
+        const data = await resenaService.obtenerResena(parseInt(resenaId));
+        console.log('✅ Reseña cargada:', data);
+        
         setResena(data);
-        setFormData({
-          calificacion: data.calificacion,
-          comentario: data.comentario || ''
-        });
       } catch (err: any) {
-        console.warn('Backend no disponible, usando datos mock:', err);
-        setError('Conectando con datos de desarrollo (backend no disponible)');
-        // Datos mock para development
-        const mockResena: Resena = {
-          id_resena: parseInt(resenaId),
-          id_usuario: 1,
-          id_cancha: 1,
-          id_reserva: 1,
-          calificacion: 4,
-          comentario: 'Muy buena cancha, recomendada para jugar fútbol.',
-          fecha_creacion: new Date().toISOString(),
-          fecha_actualizacion: new Date().toISOString()
-        };
-        setResena(mockResena);
-        setFormData({
-          calificacion: mockResena.calificacion,
-          comentario: mockResena.comentario || ''
-        });
+        console.error('❌ Error al cargar reseña:', err);
+
+        let mensajeError = 'Error al cargar la reseña';
+
+        const message = typeof err?.message === 'string' ? err.message : (err?.response?.data?.detail ? JSON.stringify(err.response.data.detail) : undefined);
+
+        if (err?.response?.status === 422 || (message && message.includes('less than or equal to 100'))) {
+          mensajeError = '⚠️ El backend rechazó la solicitud: el parámetro page_size excede el límite. Esto puede provocar que no se pueda buscar reseñas individuales.';
+        } else if (message && message.includes('missing FROM-clause')) {
+          mensajeError = '⚠️ El endpoint de FastAPI para obtener reseñas individuales no está completamente implementado. Por ahora, solo puedes ver reseñas desde la lista principal.';
+        } else if (err?.response?.status === 404 || (message && message.includes('no encontrada'))) {
+          mensajeError = `La reseña con ID ${resenaId} no fue encontrada.`;
+        } else if (message) {
+          mensajeError = message;
+        }
+
+        setError(mensajeError);
       } finally {
         setLoading(false);
       }
     };
 
-    loadResena();
+    if (resenaId) {
+      cargarResena();
+    }
   }, [resenaId]);
 
-  // Manejar cambios en el formulario
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'calificacion' ? parseInt(value) : value
-    }));
-  };
-
-  // Función para obtener el emoji de calificación
   const getCalificacionEmoji = (calificacion: number) => {
     const emojis = ['😡', '😞', '😐', '😊', '🤩'];
     return emojis[calificacion - 1] || '❓';
   };
 
-  // Guardar cambios
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!formData.comentario.trim()) {
-      alert('El comentario es obligatorio');
-      return;
-    }
-
-    try {
-      setSaving(true);
-      await resenaService.actualizarResena(resenaId, formData);
-      alert('Reseña actualizada exitosamente');
-      router.push('/admin/resenas');
-    } catch (err: any) {
-      console.warn('No se pudo actualizar (backend no disponible):', err);
-      alert('No se puede actualizar en modo desarrollo (backend no disponible)');
-    } finally {
-      setSaving(false);
-    }
+  const formatFecha = (fechaISO: string) => {
+    const fecha = new Date(fechaISO);
+    return fecha.toLocaleDateString('es-CL', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (loading) {
@@ -130,145 +99,153 @@ export default function EditResenaPage() {
     <div className="admin-dashboard-container">
       {/* Header */}
       <div className="estadisticas-header">
-        <h1 className="text-2xl font-bold text-gray-900">Editar Reseña #{resena.id_resena}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">
+          Detalle de Reseña #{(resena as any).id ?? resena.id_resena}
+        </h1>
         
         <div className="admin-controls">
           <button 
-            className="btn-volver"
-            onClick={() => router.push('/admin/resenas')}
+            onClick={() => router.back()} 
+            className="export-button"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
             </svg>
-            Volver a la lista
+            Volver
           </button>
         </div>
       </div>
 
-      {/* Mensaje Informativo */}
-      {error && (
-        <div className="info-container">
-          <div className="info-icon">ℹ️</div>
-          <p>{error}</p>
+      {/* Contenedor Principal */}
+      <div className="admin-table-container">
+        {/* Calificación Grande */}
+        <div style={{
+          textAlign: 'center',
+          padding: '2rem',
+          backgroundColor: '#f9fafb',
+          borderRadius: '8px',
+          marginBottom: '2rem'
+        }}>
+          <div style={{ fontSize: '5rem', marginBottom: '1rem' }}>
+            {getCalificacionEmoji(resena.calificacion)}
+          </div>
+          <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#1f2937' }}>
+            {resena.calificacion} / 5
+          </div>
+          <div style={{ color: '#6b7280', marginTop: '0.5rem' }}>
+            {resena.calificacion === 5 ? '¡Excelente!' :
+             resena.calificacion === 4 ? 'Muy bueno' :
+             resena.calificacion === 3 ? 'Bueno' :
+             resena.calificacion === 2 ? 'Regular' : 'Malo'}
+          </div>
         </div>
-      )}
 
-      {/* Formulario */}
-      <div className="admin-form-container">
-        <form onSubmit={handleSubmit} className="admin-form">
-          {/* Información de la reseña */}
-          <div className="form-section">
-            <h3 className="form-section-title">Información de la Reseña</h3>
-            
-            <div className="form-grid">
-              <div className="form-group">
-                <label>ID de Reseña</label>
-                <input type="text" value={`#${resena.id_resena}`} disabled className="form-input-disabled" />
-              </div>
-              
-              <div className="form-group">
-                <label>Usuario</label>
-                <input type="text" value={`Usuario ${resena.id_usuario}`} disabled className="form-input-disabled" />
-              </div>
-              
-              <div className="form-group">
-                <label>Cancha</label>
-                <input type="text" value={`Cancha ${resena.id_cancha}`} disabled className="form-input-disabled" />
-              </div>
-              
-              <div className="form-group">
-                <label>Fecha de Creación</label>
-                <input 
-                  type="text" 
-                  value={new Date(resena.fecha_creacion).toLocaleDateString('es-CL')} 
-                  disabled 
-                  className="form-input-disabled" 
-                />
-              </div>
-            </div>
+        {/* Información Detallada */}
+        <div className="detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
+          <div className="detail-item">
+            <label className="detail-label">ID de Reseña</label>
+            <p className="detail-value">#{(resena as any).id ?? resena.id_resena}</p>
           </div>
 
-          {/* Datos editables */}
-          <div className="form-section">
-            <h3 className="form-section-title">Datos de la Reseña</h3>
-            
-            <div className="form-grid">
-              <div className="form-group">
-                <label htmlFor="calificacion">
-                  Calificación *
-                  <span className="calificacion-preview">
-                    {getCalificacionEmoji(formData.calificacion)} ({formData.calificacion}/5)
-                  </span>
-                </label>
-                <select
-                  id="calificacion"
-                  name="calificacion"
-                  value={formData.calificacion}
-                  onChange={handleInputChange}
-                  required
-                  className="form-select"
-                >
-                  <option value={1}>😡 1 - Muy malo</option>
-                  <option value={2}>😞 2 - Malo</option>
-                  <option value={3}>😐 3 - Regular</option>
-                  <option value={4}>😊 4 - Bueno</option>
-                  <option value={5}>🤩 5 - Excelente</option>
-                </select>
-              </div>
-            </div>
-            
-            <div className="form-group">
-              <label htmlFor="comentario">
-                Comentario *
-                <span className="character-count">
-                  {formData.comentario.length}/500 caracteres
+          <div className="detail-item">
+            <label className="detail-label">Usuario</label>
+            <p className="detail-value">Usuario #{(resena as any).usuarioId ?? resena.id_usuario}</p>
+          </div>
+
+          <div className="detail-item">
+            <label className="detail-label">Destino</label>
+            <p className="detail-value">
+              {(resena as any).canchaId || resena.id_cancha ? (
+                <span style={{ 
+                  backgroundColor: '#dbeafe', 
+                  padding: '0.25rem 0.75rem', 
+                  borderRadius: '4px',
+                  fontWeight: 'bold',
+                  color: '#1e40af'
+                }}>
+                  ⚽ Cancha #{(resena as any).canchaId ?? resena.id_cancha}
                 </span>
-              </label>
-              <textarea
-                id="comentario"
-                name="comentario"
-                value={formData.comentario}
-                onChange={handleInputChange}
-                placeholder="Escribe aquí tu opinión sobre la cancha..."
-                required
-                maxLength={500}
-                rows={4}
-                className="form-textarea"
-              />
-            </div>
+              ) : ((resena as any).complejoId ?? resena.id_complejo) ? (
+                <span style={{ 
+                  backgroundColor: '#fee2e2', 
+                  padding: '0.25rem 0.75rem', 
+                  borderRadius: '4px',
+                  fontWeight: 'bold',
+                  color: '#991b1b'
+                }}>
+                  📍 Complejo #{(resena as any).complejoId ?? resena.id_complejo}
+                </span>
+              ) : (
+                'N/A'
+              )}
+            </p>
           </div>
 
-          {/* Botones de acción */}
-          <div className="form-actions">
-            <button
-              type="button"
-              onClick={() => router.push('/admin/resenas')}
-              className="btn-cancelar"
-              disabled={saving}
-            >
-              Cancelar
-            </button>
-            
-            <button
-              type="submit"
-              disabled={saving || !formData.comentario.trim()}
-              className="btn-guardar"
-            >
-              {saving ? (
-                <>
-                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Guardando...
-                </>
-              ) : (
-                'Actualizar Reseña'
-              )}
-            </button>
+          <div className="detail-item">
+            <label className="detail-label">Fecha de Creación</label>
+            <p className="detail-value">{formatFecha((resena as any).fechaCreacion ?? resena.created_at)}</p>
           </div>
-        </form>
+
+          {((resena as any).fechaActualizacion ?? resena.updated_at) && (
+            <div className="detail-item">
+              <label className="detail-label">Última Actualización</label>
+              <p className="detail-value">{formatFecha((resena as any).fechaActualizacion ?? resena.updated_at)}</p>
+            </div>
+          )}
+        </div>
+
+        {/* Comentario */}
+        <div style={{
+          backgroundColor: '#ffffff',
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+          padding: '1.5rem',
+          marginTop: '2rem'
+        }}>
+          <h3 style={{ 
+            fontSize: '1.125rem', 
+            fontWeight: 'bold', 
+            marginBottom: '1rem',
+            color: '#1f2937'
+          }}>
+            Comentario
+          </h3>
+          <p style={{
+            fontSize: '1rem',
+            lineHeight: '1.75',
+            color: '#374151',
+            whiteSpace: 'pre-wrap'
+          }}>
+            {resena.comentario || 'Sin comentario'}
+          </p>
+        </div>
       </div>
+
+      <style jsx>{`
+        .detail-item {
+          padding: 1rem;
+          background-color: white;
+          border: 1px solid #e5e7eb;
+          border-radius: 8px;
+        }
+        
+        .detail-label {
+          display: block;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #6b7280;
+          margin-bottom: 0.5rem;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        
+        .detail-value {
+          font-size: 1.125rem;
+          color: #1f2937;
+          margin: 0;
+          font-weight: 500;
+        }
+      `}</style>
     </div>
   );
 }

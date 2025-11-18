@@ -5,11 +5,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar'; 
 import SearchBar from '@/components/SearchBar'; 
 import LocationMap from '@/components/LocationMap'; 
+import ReviewModal from '@/components/ReviewModal';
+import ReviewsList from '@/components/ReviewsList';
 import styles from './page.module.css';
 
 import { useAuthStatus } from '@/hooks/useAuthStatus';
 import { canchaService } from '../../../../../services/canchaService';
 import { complejosService } from '../../../../../services/complejosService';
+import { resenaService } from '@/services/resenaService';
+import type { Resena } from '@/types/resena';
 
 // 🚴‍♂️ DATOS ESTÁTICOS PARA CAMPOS NO DISPONIBLES EN LA API
 const staticContactData = {
@@ -48,6 +52,12 @@ function CiclismoPistaSeleccionadaContent() {
   const [activeTab, setActiveTab] = useState(0);
   const [pista, setPista] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // 🆕 ESTADOS PARA RESEÑAS
+  const [reviews, setReviews] = useState<Resena[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
 
   // 🚴‍♂️ OBTENER ID DE LA PISTA DESDE URL
   const pistaId = searchParams?.get('id') || searchParams?.get('pista');
@@ -170,6 +180,9 @@ function CiclismoPistaSeleccionadaContent() {
 
         setPista(mappedPista);
         
+        // 🆕 CARGAR RESEÑAS DESPUÉS DE CARGAR LA PISTA
+        await loadReviews(parseInt(pistaId));
+        
       } catch (error: any) {
         console.error('❌ Error cargando pista:', error);
         setError(`Error cargando pista: ${error.message}`);
@@ -205,6 +218,64 @@ function CiclismoPistaSeleccionadaContent() {
 
     loadPistaData();
   }, [pistaId]);
+  
+  // 🆕 FUNCIÓN PARA CARGAR RESEÑAS
+  const loadReviews = async (canchaId: number) => {
+    try {
+      setReviewsLoading(true);
+      setReviewError(null);
+      console.log('🔍 Cargando reseñas para pista ID:', canchaId);
+      
+      const resenasData = await resenaService.obtenerResenasPorCancha(canchaId);
+      console.log('✅ Reseñas cargadas:', resenasData);
+      setReviews(resenasData);
+    } catch (error: any) {
+      console.error('❌ Error cargando reseñas:', error);
+      setReviewError(`Error cargando reseñas: ${error.message}`);
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+  
+  // 🆕 FUNCIÓN PARA ENVIAR NUEVA RESEÑA
+  const handleSubmitReview = async (rating: number, comment: string) => {
+    if (!isAuthenticated) {
+      alert('Debes iniciar sesión para escribir una reseña');
+      router.push('/login');
+      return;
+    }
+    
+    if (!pistaId) {
+      alert('Error: No se puede identificar la pista');
+      return;
+    }
+    
+    try {
+      console.log('📝 Enviando reseña:', { rating, comment, pistaId: parseInt(pistaId) });
+      
+      await resenaService.crearResena({
+        id_cancha: parseInt(pistaId),
+        calificacion: rating,
+        comentario: comment.trim() || undefined
+      });
+      
+      console.log('✅ Reseña enviada exitosamente');
+      
+      await loadReviews(parseInt(pistaId));
+      setShowReviewModal(false);
+      alert('¡Reseña publicada exitosamente!');
+    } catch (error: any) {
+      console.error('❌ Error enviando reseña:', error);
+      let errorMessage = error?.response?.data?.message || error?.message || 'Error al enviar la reseña';
+      
+      if (typeof errorMessage !== 'string') {
+        errorMessage = JSON.stringify(errorMessage);
+      }
+      
+      throw new Error(errorMessage);
+    }
+  };
 
   // 🚴‍♂️ RESTO DE FUNCIONES ADAPTADAS
   const handleUserButtonClick = () => {
@@ -272,7 +343,12 @@ function CiclismoPistaSeleccionadaContent() {
   };
 
   const handleWriteReview = () => {
-    alert(`Función de escribir reseña de ciclismo próximamente...`);
+    if (!isAuthenticated) {
+      alert('Debes iniciar sesión para escribir una reseña');
+      router.push('/login');
+      return;
+    }
+    setShowReviewModal(true);
   };
 
   // 🚴‍♂️ LOADING Y ERROR
@@ -512,38 +588,26 @@ function CiclismoPistaSeleccionadaContent() {
 
         {/* Reviews Section */}
         <div className={styles.reviewsSection}>
-          <div className={styles.reviewsHeader}>
-            <div className={styles.reviewsTitle}>
-              <span className={styles.reviewsIcon}>⭐</span>
-              <span>{pista.rating.toFixed(1)} • {pista.reviews} reseñas de ciclismo</span>
+          <ReviewsList
+            reviews={reviews}
+            isLoading={reviewsLoading}
+            onWriteReview={handleWriteReview}
+            showWriteButton={true}
+          />
+          {reviewError && (
+            <div style={{ color: 'red', textAlign: 'center', marginTop: '1rem' }}>
+              ⚠️ {reviewError}
             </div>
-            <button className={styles.writeReviewButton} onClick={handleWriteReview}>
-              ✏️ Escribir reseña
-            </button>
-          </div>
-
-          <div className={styles.reviewsList}>
-            {pista.reviewsList.map((review: any, index: number) => (
-                <div key={index} className={styles.reviewCard}>
-                  <div className={styles.reviewHeader}>
-                    <div className={styles.reviewUser}>
-                      <div className={styles.userAvatar}>
-                        {review.name.charAt(0)}
-                      </div>
-                      <div className={styles.userInfo}>
-                        <span className={styles.userName}>{review.name}</span>
-                        <div className={styles.reviewStars}>
-                          {renderStars(review.rating)}
-                        </div>
-                      </div>
-                    </div>
-                    <span className={styles.reviewDate}>{review.date}</span>
-                  </div>
-                  <p className={styles.reviewComment}>{review.comment}</p>
-                </div>
-              ))}
-          </div>
+          )}
         </div>
+
+        {/* Review Modal */}
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          onSubmit={handleSubmitReview}
+          canchaName={pista?.name || 'Pista de Ciclismo'}
+        />
 
         {/* Help Button */}
         <div className={styles.helpSection}>

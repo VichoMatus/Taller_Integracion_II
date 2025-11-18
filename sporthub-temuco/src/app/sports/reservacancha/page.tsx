@@ -1,23 +1,171 @@
 'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useAuthStatus } from '@/hooks/useAuthStatus'
+import { deserializeReservationData } from '@/utils/reservationDataHandler'
+import type { ReservationData } from '@/utils/reservationDataHandler'
+import reservaServiceUsuario from '@/services/reservaServiceUsuario' // 🆕 Servicio exclusivo para usuarios
+import type { CreateReservaInputNew } from '@/types/reserva'
 import styles from './page.module.css'
 import Sidebar from '../../../components/layout/Sidebar'
+import Alert from '../../../components/Alert'
 import atletismoCommon from '../atletismo/atletismo.module.css'
 
 export default function ReservaCancha() {
   const router = useRouter()
-  const [selectedDate, setSelectedDate] = useState(8)
+  const searchParams = useSearchParams()
+  const { isAuthenticated, isLoading, user } = useAuthStatus()
+  
+  // 🔥 ESTADO PARA DATOS DE LA CANCHA/COMPLEJO
+  const [reservationInfo, setReservationInfo] = useState<ReservationData | null>(null)
+  
+  // 🔥 ESTADO PARA LA ALERTA
+  const [showAlert, setShowAlert] = useState(false)
+  
+  // 🔥 ESTADOS PARA CREAR RESERVA
+  const [creatingReserva, setCreatingReserva] = useState(false)
+  const [reservaError, setReservaError] = useState<string | null>(null)
+  const [reservaSuccess, setReservaSuccess] = useState(false)
+  
+  // 🔥 ESTADOS DEL CALENDARIO DINÁMICO
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date())
+  
   const [selectedTime, setSelectedTime] = useState('10:00')
-  const [currentMonth, setCurrentMonth] = useState('Junio 2025')
   const [selectedPayment, setSelectedPayment] = useState('tarjeta')
   const [formData, setFormData] = useState({
-    nombre: 'Juan Perez',
-    telefono: '+56 9 6969 6969',
-    email: 'juanperez@gmail.com',
+    nombre: '',
+    telefono: '',
+    email: '',
     jugadores: 10,
     notas: ''
   })
+
+  // 🔥 VERIFICAR AUTENTICACIÓN Y CARGAR DATOS DE RESERVA
+  useEffect(() => {
+    // Si está cargando, esperar
+    if (isLoading) {
+      return
+    }
+
+    // Si no está autenticado, mostrar alerta y redirigir
+    if (!isAuthenticated) {
+      setShowAlert(true)
+      setTimeout(() => {
+        router.push('/login')
+      }, 3000) // Redirigir después de 3 segundos
+      return
+    }
+
+    // 🔥 CARGAR DATOS DE LA RESERVA DESDE URL
+    const reservationData = searchParams.get('data')
+    if (reservationData) {
+      try {
+        const decoded = deserializeReservationData(reservationData)
+        if (decoded) {
+          console.log('✅ Datos de reserva recibidos:', decoded)
+          setReservationInfo(decoded)
+        }
+      } catch (error) {
+        console.error('❌ Error deserializando datos de reserva:', error)
+      }
+    }
+
+    // 🔥 PRELLENAR FORMULARIO CON DATOS DEL USUARIO
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        nombre: user.nombre ? `${user.nombre} ${user.apellido || ''}`.trim() : prev.nombre,
+        email: user.email || prev.email,
+        telefono: user.telefono || prev.telefono
+      }))
+    }
+  }, [isAuthenticated, isLoading, user, router, searchParams])
+
+  // 🔥 MOSTRAR LOADING MIENTRAS VERIFICA AUTENTICACIÓN
+  if (isLoading) {
+    return (
+      <div className={styles.container}>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh',
+          gap: '20px'
+        }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #4CAF50',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <p style={{
+            fontSize: '18px',
+            fontWeight: '500',
+            color: '#333',
+            margin: 0
+          }}>
+            Verificando sesión...
+          </p>
+        </div>
+        <style jsx>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    )
+  }
+
+  // 🔥 MOSTRAR ALERTA SI NO ESTÁ AUTENTICADO (antes de redirigir)
+  if (!isAuthenticated) {
+    return (
+      <div className={styles.container}>
+        {showAlert && (
+          <Alert 
+            type="warning" 
+            message="⚠️ Debes iniciar sesión para hacer una reserva. Serás redirigido..." 
+            onClose={() => setShowAlert(false)}
+          />
+        )}
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column',
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '100vh',
+          gap: '20px'
+        }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #ff6b35',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <p style={{
+            fontSize: '18px',
+            fontWeight: '500',
+            color: '#333',
+            margin: 0
+          }}>
+            Redirigiendo a inicio de sesión...
+          </p>
+        </div>
+        <style jsx>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    )
+  }
 
   const handleGoBack = () => {
     router.back()
@@ -26,23 +174,177 @@ export default function ReservaCancha() {
   const handleUserProfile = () => {
     router.push('/usuario/perfil/')
   }
+
+  // 🔥 FUNCIONES PARA EL CALENDARIO DINÁMICO
+  const getMonthName = (date: Date) => {
+    const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+    return `${months[date.getMonth()]} ${date.getFullYear()}`
+  }
+
+  const getDaysInMonth = (date: Date) => {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    return new Date(year, month + 1, 0).getDate()
+  }
+
+  const getFirstDayOfMonth = (date: Date) => {
+    const year = date.getFullYear()
+    const month = date.getMonth()
+    const firstDay = new Date(year, month, 1).getDay()
+    // Convertir domingo (0) a 7 para que la semana empiece en lunes
+    return firstDay === 0 ? 6 : firstDay - 1
+  }
+
+  const generateCalendarDays = () => {
+    const daysInMonth = getDaysInMonth(currentDate)
+    const firstDay = getFirstDayOfMonth(currentDate)
+    const days: (number | null)[] = []
+    
+    // Agregar días vacíos al inicio
+    for (let i = 0; i < firstDay; i++) {
+      days.push(null)
+    }
+    
+    // Agregar días del mes
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(day)
+    }
+    
+    return days
+  }
+
+  const isDatePast = (day: number | null) => {
+    if (day === null) return true
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const checkDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+    return checkDate < today
+  }
+
+  const isDateSelected = (day: number | null) => {
+    if (day === null || !selectedDate) return false
+    return selectedDate.getDate() === day &&
+           selectedDate.getMonth() === currentDate.getMonth() &&
+           selectedDate.getFullYear() === currentDate.getFullYear()
+  }
+
+  const handleDateSelect = (day: number | null) => {
+    if (day === null || isDatePast(day)) return
+    const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day)
+    setSelectedDate(newDate)
+  }
+
+  const handlePreviousMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
+  }
+
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
+  }
+
+  const formatSelectedDate = () => {
+    if (!selectedDate) return 'No seleccionada'
+    const day = String(selectedDate.getDate()).padStart(2, '0')
+    const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+    return `${day} ${months[selectedDate.getMonth()]} ${selectedDate.getFullYear()}`
+  }
+
+  // 🔥 FUNCIÓN PARA CONFIRMAR RESERVA
+  const handleConfirmarReserva = async () => {
+    // Validaciones
+    if (!reservationInfo?.canchaId) {
+      setReservaError('No se ha seleccionado una cancha')
+      return
+    }
+
+    if (!selectedDate) {
+      setReservaError('Debes seleccionar una fecha')
+      return
+    }
+
+    if (!selectedTime) {
+      setReservaError('Debes seleccionar un horario')
+      return
+    }
+
+    // Calcular hora de fin (asumiendo 1 hora de duración)
+    const [horaInicio, minInicio] = selectedTime.split(':').map(Number)
+    let horaFin = horaInicio + 1
+    let minFin = minInicio
+    
+    // Manejar caso de medianoche (00:00 + 1 hora = 01:00)
+    if (horaFin >= 24) {
+      horaFin = horaFin - 24
+    }
+    
+    const horaFinStr = `${String(horaFin).padStart(2, '0')}:${String(minFin).padStart(2, '0')}`
+
+    // Formatear fecha a YYYY-MM-DD
+    const year = selectedDate.getFullYear()
+    const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
+    const day = String(selectedDate.getDate()).padStart(2, '0')
+    const fechaStr = `${year}-${month}-${day}`
+
+    try {
+      setCreatingReserva(true)
+      setReservaError(null)
+
+      // Construir objeto de reserva para la API V1
+      // El backend espera: id_cancha, fecha, inicio, fin, notas
+      const reservaData = {
+        id_cancha: reservationInfo.canchaId,
+        fecha: fechaStr,
+        inicio: selectedTime,
+        fin: horaFinStr,
+        notas: formData.notas || undefined
+      }
+
+      console.log('📤 Enviando reserva:', reservaData)
+
+      // 🆕 Llamar al servicio de usuarios (nueva implementación separada)
+      const reservaCreada = await reservaServiceUsuario.createReserva(reservaData)
+
+      console.log('✅ Reserva creada exitosamente:', reservaCreada)
+      
+      setReservaSuccess(true)
+      
+      // Redirigir a historial de reservas después de 2 segundos
+      setTimeout(() => {
+        router.push('/usuario/historial-reservas')
+      }, 2000)
+
+    } catch (error: any) {
+      console.error('❌ Error al crear reserva:', error)
+      setReservaError(
+        error?.response?.data?.message || 
+        error?.message || 
+        'No se pudo crear la reserva. Intenta nuevamente.'
+      )
+    } finally {
+      setCreatingReserva(false)
+    }
+  }
+
+  // 🕐 HORARIOS PREESTABLECIDOS - 9:00 AM a 12:00 AM (medianoche)
   const timeSlots = [
-    { time: '08:00', status: 'Libre' },
     { time: '09:00', status: 'Libre' },
-    { time: '10:00', status: 'Ocupado' },
+    { time: '10:00', status: 'Libre' },
     { time: '11:00', status: 'Libre' },
     { time: '12:00', status: 'Libre' },
-    { time: '13:00', status: 'Ocupado' },
+    { time: '13:00', status: 'Libre' },
     { time: '14:00', status: 'Libre' },
-    { time: '15:00', status: 'Libre' }
-  ]
-
-  const calendar = [
-    [26, 27, 28, 29, 30, 1, 2],
-    [3, 4, 5, 6, 7, 8, 9],
-    [10, 11, 12, 13, 14, 15, 16],
-    [17, 18, 19, 20, 21, 22, 23],
-    [24, 25, 26, 27, 28, 29, 30]
+    { time: '15:00', status: 'Libre' },
+    { time: '16:00', status: 'Libre' },
+    { time: '17:00', status: 'Libre' },
+    { time: '18:00', status: 'Libre' },
+    { time: '19:00', status: 'Libre' },
+    { time: '20:00', status: 'Libre' },
+    { time: '21:00', status: 'Libre' },
+    { time: '22:00', status: 'Libre' },
+    { time: '23:00', status: 'Libre' },
+    { time: '00:00', status: 'Libre' }
   ]
 
   return (
@@ -55,13 +357,17 @@ export default function ReservaCancha() {
         <div className={styles.header}>
           <div className={styles.headerLeft}>
             <div className={styles.headerIcon}>📆</div>
-            <h1 className={styles.headerTitle}>Cancha Basquetbol • Club Centro, Av. Principal 123</h1>
+            <h1 className={styles.headerTitle}>
+              {reservationInfo 
+                ? `${reservationInfo.canchaNombre} • ${reservationInfo.complejoNombre}, ${reservationInfo.complejoDireccion}`
+                : 'Reserva de Cancha'}
+            </h1>
           </div>
           <div className={styles.headerRight}>
             <button className={styles.userButton}
             onClick={handleUserProfile}>
               <span>👤</span>
-              <span>Usuario</span>
+              <span>{user?.nombre || 'Usuario'}</span>
             </button>
           </div>
         </div>
@@ -76,13 +382,19 @@ export default function ReservaCancha() {
                 {/* Calendar */}
                 <div>
                   <div className={styles.calendarHeader}>
-                    <button className={styles.calendarNav}>
+                    <button 
+                      className={styles.calendarNav}
+                      onClick={handlePreviousMonth}
+                    >
                       <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                       </svg>
                     </button>
-                    <h3 className={styles.monthTitle}>{currentMonth}</h3>
-                    <button className={styles.calendarNav}>
+                    <h3 className={styles.monthTitle}>{getMonthName(currentDate)}</h3>
+                    <button 
+                      className={styles.calendarNav}
+                      onClick={handleNextMonth}
+                    >
                       <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
@@ -96,16 +408,17 @@ export default function ReservaCancha() {
                   </div>
                   
                   <div className={styles.calendarDays}>
-                    {calendar.flat().map((date, index) => (
+                    {generateCalendarDays().map((day, index) => (
                       <button
                         key={index}
-                        onClick={() => setSelectedDate(date)}
+                        onClick={() => handleDateSelect(day)}
+                        disabled={day === null || isDatePast(day)}
                         className={`${styles.dayButton} ${
-                          date === selectedDate ? styles.selected : 
-                          date < 1 || date > 30 ? styles.inactive : ''
+                          isDateSelected(day) ? styles.selected : 
+                          day === null || isDatePast(day) ? styles.inactive : ''
                         }`}
                       >
-                        {date}
+                        {day || ''}
                       </button>
                     ))}
                   </div>
@@ -226,6 +539,7 @@ export default function ReservaCancha() {
                     value={formData.notas}
                     onChange={(e) => setFormData({...formData, notas: e.target.value})}
                     className={styles.textarea}
+                    placeholder="Ej: Necesitamos balones, preferimos cancha techada, etc."
                   />
                 </div>
               </div>
@@ -244,23 +558,37 @@ export default function ReservaCancha() {
               <div className={styles.courtImage}>
                 <div>
                   <div className={styles.courtImageContent}>⚽</div>
-                  <div className={styles.courtName}>basquetbol - club centro</div>
-                  <div className={styles.courtAddress}>Av. Principal 123</div>
+                  <div className={styles.courtName}>
+                    {reservationInfo?.canchaNombre || 'Cancha'} - {reservationInfo?.complejoNombre || 'Complejo'}
+                  </div>
+                  <div className={styles.courtAddress}>
+                    {reservationInfo?.complejoDireccion || 'Dirección no disponible'}
+                  </div>
                 </div>
               </div>
               
               <div className={styles.reservationDetails}>
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Cancha</span>
-                  <span className={styles.detailValue}>Basquetbol • Club Centro</span>
+                  <span className={styles.detailValue}>
+                    {reservationInfo?.canchaNombre || 'Cancha'} • {reservationInfo?.complejoNombre || 'Complejo'}
+                  </span>
                 </div>
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Fecha:</span>
-                  <span className={styles.detailValue}>08 Junio 2025</span>
+                  <span className={styles.detailValue}>
+                    {formatSelectedDate()}
+                  </span>
                 </div>
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Horario:</span>
-                  <span className={styles.detailValue}>10:00 - 11:00</span>
+                  <span className={styles.detailValue}>
+                    {selectedTime} - {(() => {
+                      const [hours, minutes] = selectedTime.split(':').map(Number);
+                      const endHour = (hours + 1).toString().padStart(2, '0');
+                      return `${endHour}:${minutes.toString().padStart(2, '0')}`;
+                    })()}
+                  </span>
                 </div>
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Duración:</span>
@@ -268,35 +596,110 @@ export default function ReservaCancha() {
                 </div>
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Jugadores:</span>
-                  <span className={styles.detailValue}>10</span>
+                  <span className={styles.detailValue}>{formData.jugadores}</span>
                 </div>
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Precio | h:</span>
-                  <span className={styles.detailValue}>$30</span>
+                  <span className={styles.detailValue}>
+                    ${reservationInfo?.precioPorHora?.toLocaleString('es-CL') || '25.000'}
+                  </span>
                 </div>
                 <hr className={styles.divider} />
                 <div className={styles.detailRow}>
                   <span className={styles.detailLabel}>Subtotal:</span>
-                  <span className={styles.detailValue}>$0</span>
+                  <span className={styles.detailValue}>
+                    ${reservationInfo?.precioPorHora?.toLocaleString('es-CL') || '25.000'}
+                  </span>
                 </div>
                 <div className={`${styles.detailRow} ${styles.totalRow}`}>
                   <span className={styles.detailLabel}>Total estimado:</span>
-                  <span className={styles.detailValue}>$0</span>
+                  <span className={styles.detailValue}>
+                    ${reservationInfo?.precioPorHora?.toLocaleString('es-CL') || '25.000'}
+                  </span>
                 </div>
               </div>
 
               <div className={styles.actionButtons}>
-                <button className={styles.cancelButton}>
+                <button 
+                  className={styles.cancelButton}
+                  onClick={handleGoBack}
+                  disabled={creatingReserva}
+                >
                   ✕ Cancelar
                 </button>
-                <button className={styles.confirmButton}>
-                  ✓ Confirmar reserva
+                <button 
+                  className={styles.confirmButton}
+                  onClick={handleConfirmarReserva}
+                  disabled={creatingReserva || !selectedDate || !selectedTime}
+                >
+                  {creatingReserva ? (
+                    <>
+                      <span style={{
+                        display: 'inline-block',
+                        width: '16px',
+                        height: '16px',
+                        border: '2px solid #fff',
+                        borderTop: '2px solid transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 0.8s linear infinite',
+                        marginRight: '8px'
+                      }} />
+                      Procesando...
+                    </>
+                  ) : (
+                    '✓ Confirmar reserva'
+                  )}
                 </button>
               </div>
+
+              {/* Mensajes de error/éxito */}
+              {reservaError && (
+                <div style={{
+                  marginTop: '16px',
+                  padding: '16px',
+                  backgroundColor: '#fee2e2',
+                  borderLeft: '4px solid #ef4444',
+                  borderRadius: '8px'
+                }}>
+                  <p style={{ 
+                    margin: 0, 
+                    color: '#991b1b', 
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}>
+                    ❌ {reservaError}
+                  </p>
+                </div>
+              )}
+
+              {reservaSuccess && (
+                <div style={{
+                  marginTop: '16px',
+                  padding: '16px',
+                  backgroundColor: '#d1fae5',
+                  borderLeft: '4px solid #10b981',
+                  borderRadius: '8px'
+                }}>
+                  <p style={{ 
+                    margin: 0, 
+                    color: '#065f46', 
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}>
+                    ✅ ¡Reserva creada exitosamente! Redirigiendo...
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }

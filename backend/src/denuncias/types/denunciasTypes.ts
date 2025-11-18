@@ -1,50 +1,33 @@
 // src/denuncias/type/denunciasTypes.ts
 
-export type DenunciaEstado = "ABIERTA" | "EN_REVISION" | "RESUELTA" | "RECHAZADA";
+// Tipos que coinciden con el schema SIMPLIFICADO actual de taller4
+export type EstadoDenuncia = "abierta" | "en_revision" | "resuelta" | "rechazada";
+export type TipoObjeto = "resena" | "usuario" | "complejo" | "cancha";
 
 export interface Denuncia {
-  id_denuncia: number | string;
-  id_usuario_reporta: number | string;
-  id_usuario_denunciado?: number | string | null;
-  id_reserva?: number | string | null;
-  id_cancha?: number | string | null;
-  categoria?: string | null;          // p.ej.: "CONDUCTA", "PAGO", "INSTALACION"
-  asunto: string;
-  descripcion: string;
-  evidencia_urls?: string[] | null;   // enlaces a imágenes/archivos si el backend los guarda
-  estado: DenunciaEstado;
-  fecha_creacion: string;             // ISO
-  fecha_actualizacion: string;        // ISO
+  id_denuncia: number;
+  id_reportante: number;
+  tipo_objeto: TipoObjeto;
+  id_objeto: number;
+  titulo: string;
+  descripcion?: string | null;
+  estado: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface DenunciaCreate {
-  id_usuario_reporta: number | string;
-  asunto: string;
-  descripcion: string;
-  id_usuario_denunciado?: number | string | null;
-  id_reserva?: number | string | null;
-  id_cancha?: number | string | null;
-  categoria?: string | null;
-  evidencia_urls?: string[] | null;
+  tipo_objeto: TipoObjeto;
+  id_objeto: number;
+  titulo: string;
+  descripcion?: string | null;
 }
 
 export interface DenunciaUpdate {
-  asunto?: string;
-  descripcion?: string;
-  categoria?: string | null;
-  evidencia_urls?: string[] | null;
-  estado?: DenunciaEstado;
+  estado: EstadoDenuncia;
 }
 
 export interface DenunciaListQuery {
-  id_usuario_reporta?: number | string;
-  id_usuario_denunciado?: number | string;
-  id_reserva?: number | string;
-  id_cancha?: number | string;
-  estado?: DenunciaEstado;
-  categoria?: string;
-  desde?: string; // ISO date/datetime
-  hasta?: string; // ISO date/datetime
-  page?: number;
-  size?: number;
+  estado?: EstadoDenuncia;
+  tipo_objeto?: TipoObjeto;
 }

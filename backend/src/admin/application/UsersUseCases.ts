@@ -1,7 +1,7 @@
 import { AdminRepository } from "../domain/AdminRepository";
 import { Complejo } from "../../domain/complejo/Complejo";
 import { Cancha } from "../../domain/cancha/Cancha";
-import { ReservaOwner, EstadisticasOwner } from "../../domain/admin/Owner";
+import { ReservaOwner, EstadisticasOwner, EstadisticasComplejo, ReservasPorDiaSemana, ReservasPorCancha } from "../../domain/admin/Owner";
 import { CreateComplejoIn, UpdateComplejoIn, CreateCanchaIn, UpdateCanchaIn, FiltrosReservasIn, MisRecursosOut, mapCreateComplejoToEntity, mapCreateCanchaToEntity } from "./dtos";
 
 // === CASOS DE USO PANEL OWNER ===
@@ -24,7 +24,8 @@ export class GetMisRecursos {
       complejos,
       canchas,
       total_reservas: reservas.length,
-      ingresos_mes: estadisticas.ingresos_totales
+      // Ingresos del mes (si existen en las estadísticas del repo), fallback a ingresos_totales
+      ingresos_mes: estadisticas.ingresos_mes ?? estadisticas.ingresos_totales
     };
   }
 }
@@ -70,6 +71,42 @@ export class GetMisEstadisticas {
   
   execute(ownerId: number): Promise<EstadisticasOwner> {
     return this.repo.getMisEstadisticas(ownerId);
+  }
+}
+
+/**
+ * Caso de uso para obtener estadísticas detalladas de un complejo específico.
+ * Incluye métricas de canchas activas, reservas del último mes, ingresos, etc.
+ */
+export class GetEstadisticasComplejo {
+  constructor(private repo: AdminRepository) {}
+  
+  execute(ownerId: number, complejoId: number): Promise<EstadisticasComplejo> {
+    return this.repo.getEstadisticasComplejo(ownerId, complejoId);
+  }
+}
+
+/**
+ * Caso de uso para obtener reservas agrupadas por día de la semana.
+ * Útil para generar gráficos de barras mostrando patrones de reservas semanales.
+ */
+export class GetReservasPorDiaSemana {
+  constructor(private repo: AdminRepository) {}
+  
+  execute(ownerId: number, complejoId: number, diasAtras?: number): Promise<ReservasPorDiaSemana> {
+    return this.repo.getReservasPorDiaSemana(ownerId, complejoId, diasAtras);
+  }
+}
+
+/**
+ * Caso de uso para obtener reservas agrupadas por cancha.
+ * Útil para generar gráficos de barras comparando el rendimiento de cada cancha del complejo.
+ */
+export class GetReservasPorCancha {
+  constructor(private repo: AdminRepository) {}
+  
+  execute(ownerId: number, complejoId: number, diasAtras?: number): Promise<ReservasPorCancha> {
+    return this.repo.getReservasPorCancha(ownerId, complejoId, diasAtras);
   }
 }
 

@@ -29,6 +29,12 @@ import { authMiddleware } from "../../../auth/middlewares/authMiddleware";
 const router = Router();
 
 /**
+ * Subrouter para endpoints administrativos de reservas.
+ * Organiza endpoints bajo el prefijo /admin
+ */
+const adminRouter = Router();
+
+/**
  * Factory function para crear controlador con dependencias inyectadas.
  * Configura cliente HTTP y repositorio para cada request.
  */
@@ -54,10 +60,11 @@ const ctrl = (req: any) => {
 };
 
 // === Endpoint de Prueba de Conectividad ===
-/** GET /reservas/status - Verifica estado y conectividad del módulo reservas */
+/** GET /reservas/status - Verifica estado y conectividad del módulo reservas (PÚBLICO) */
 router.get("/status", async (req, res) => {
   try {
-    const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
+    // Endpoint público de diagnóstico - no requiere autenticación
+    const http = buildHttpClient(ENV.FASTAPI_URL, () => "");
     
     let response;
     let endpoint_tested = "";
@@ -66,18 +73,20 @@ router.get("/status", async (req, res) => {
     
     const endpointsToTest = [
       '/api/v1/reservas',
-      '/api/v1/reservas/verificar-disponibilidad',
+      '/api/v1/reservas/mias',
+      '/api/v1/reservas/cotizar',
       '/api/v1/healthz'
     ];
     
     for (const endpoint of endpointsToTest) {
       try {
         let testResponse;
-        if (endpoint.includes('verificar-disponibilidad')) {
+        if (endpoint.includes('cotizar')) {
           testResponse = await http.post(endpoint, {
-            cancha_id: 1,
-            fecha_inicio: "2024-12-20T10:00:00Z",
-            fecha_fin: "2024-12-20T12:00:00Z"
+            id_cancha: 1,
+            fecha: "2025-10-25",
+            inicio: "19:00",
+            fin: "20:00"
           }, { validateStatus: () => true });
         } else {
           testResponse = await http.get(endpoint, { validateStatus: () => true });
@@ -101,19 +110,56 @@ router.get("/status", async (req, res) => {
     res.json({
       ok: success,
       module: "reservas",
-      message: success ? "Módulo reservas funcionando correctamente" : "Algunos endpoints con errores",
+      message: success ? "Módulo reservas funcionando correctamente - ACTUALIZADO con nuevos endpoints" : "Algunos endpoints con errores",
+      version: "2.0 - Sincronizado con Taller4",
       fastapi_url: ENV.FASTAPI_URL,
       endpoint_tested,
       status: response?.status || 0,
       endpoints_found,
       available_endpoints: [
-        "GET /api/v1/reservas",
-        "POST /api/v1/reservas",
-        "POST /api/v1/reservas/verificar-disponibilidad",
-        "GET /api/v1/reservas/usuario/{usuario_id}",
-        "PATCH /api/v1/reservas/{id}",
-        "DELETE /api/v1/reservas/{id}"
+        // NOTA: TODOS los endpoints requieren autenticación (Bearer Token)
+        // Endpoints normales (usuario/admin/superadmin)
+        "GET /reservas/mias - Mis reservas (REQUIERE AUTH: usuario/admin/superadmin)",
+        "GET /reservas - Listado de reservas (REQUIERE AUTH: admin/superadmin)",
+        "GET /reservas/{id} - Detalle de reserva (REQUIERE AUTH: usuario/admin/superadmin)",
+        "POST /reservas/cotizar - Cotizar reserva (REQUIERE AUTH: usuario/admin/superadmin)",
+        "POST /reservas - Crear reserva (REQUIERE AUTH: usuario/admin/superadmin)",
+        "PATCH /reservas/{id} - Reprogramar/editar reserva (REQUIERE AUTH: usuario/admin/superadmin)", 
+        "POST /reservas/{id}/confirmar - Confirmar reserva (REQUIERE AUTH: admin/superadmin)",
+        "POST /reservas/{id}/cancelar - Cancelar reserva (REQUIERE AUTH: usuario/admin/superadmin)",
+        // Endpoints administrativos (panel)
+        "GET /reservas/admin/cancha/{id} - Reservas por cancha (REQUIERE AUTH: admin/superadmin)",
+        "GET /reservas/admin/usuario/{id} - Reservas por usuario (REQUIERE AUTH: admin/superadmin)",
+        "POST /reservas/admin/crear - Crear reserva como admin (REQUIERE AUTH: admin/superadmin)",
+        "POST /reservas/admin/{id}/cancelar - Cancelar como admin (REQUIERE AUTH: admin/superadmin)"
       ],
+      supported_formats: {
+        new_format: {
+          example: {
+            id_cancha: 1,
+            fecha: "2025-10-25",
+            inicio: "19:00",
+            fin: "20:30",
+            notas: "Partido amistoso"
+          },
+          description: "Formato actualizado (Taller4) - fecha + hora separadas"
+        },
+        legacy_format: {
+          example: {
+            canchaId: 1,
+            fechaInicio: "2025-10-25T19:00:00Z",
+            fechaFin: "2025-10-25T20:30:00Z",
+            notas: "Partido amistoso"
+          },
+          description: "Formato legacy - timestamps completos (compatible)"
+        }
+      },
+      authentication_pattern: {
+        status_endpoint: "PÚBLICO - Sin autenticación requerida",
+        all_other_endpoints: "PRIVADOS - Requieren Bearer Token válido",
+        middleware_chain: "authMiddleware → requireRole (donde aplique) → getBearerFromReq",
+        taller4_compliance: "✅ 100% sincronizado con patrones de autenticación Taller4"
+      },
       timestamp: new Date().toISOString()
     });
     
@@ -129,54 +175,55 @@ router.get("/status", async (req, res) => {
   }
 });
 
-// === Endpoints Públicos ===
+// =========================
+// Endpoints Administrativos (Panel) - /admin
+// =========================
 
-/** POST /reservas/verificar-disponibilidad - Verificar disponibilidad de cancha (público) */
-router.post("/verificar-disponibilidad", (req, res) => ctrl(req).verificarDisponibilidad(req, res));
+/** GET /reservas/admin/cancha/:canchaId - Reservas por cancha (panel admin) */
+adminRouter.get("/cancha/:canchaId", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getByCancha(req, res));
 
-// === Endpoints de Usuario Autenticado ===
-// Requieren autenticación pero permiten a usuarios gestionar sus propias reservas
-
-/** GET /reservas/usuario/:usuarioId - Obtiene reservas de un usuario */
-router.get("/usuario/:usuarioId", (req, res) => ctrl(req).getByUsuario(req, res));
-
-/** POST /reservas - Crea nueva reserva */
-router.post("/", (req, res) => ctrl(req).create(req, res));
-
-/** GET /reservas/:id - Obtiene reserva específica */
-router.get("/:id", (req, res) => ctrl(req).get(req, res));
-
-/** PATCH /reservas/:id - Actualiza reserva */
-router.patch("/:id", (req, res) => ctrl(req).update(req, res));
-
-/** POST /reservas/:id/confirmar-pago - Confirma pago de reserva */
-router.post("/:id/confirmar-pago", (req, res) => ctrl(req).confirmarPago(req, res));
-
-/** POST /reservas/:id/cancelar - Cancela reserva */
-router.post("/:id/cancelar", (req, res) => ctrl(req).cancelar(req, res));
-
-// === Endpoints para Admin/Dueño ===
-// Permiten gestión avanzada de reservas
+/** GET /reservas/admin/usuario/:usuarioId - Reservas por usuario (panel admin) */
+adminRouter.get("/usuario/:usuarioId", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getByUsuarioAdmin(req, res));
 
 /** POST /reservas/admin/crear - Crear reserva como administrador (para cualquier usuario) */
-router.post("/admin/crear", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).createAdmin(req, res));
+adminRouter.post("/crear", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).createAdmin(req, res));
 
 /** POST /reservas/admin/:id/cancelar - Cancelar reserva como administrador (forzar cancelación) */
-router.post("/admin/:id/cancelar", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).cancelarAdmin(req, res));
+adminRouter.post("/:id/cancelar", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).cancelarAdmin(req, res));
 
-/** GET /reservas/admin/cancha/:canchaId - Obtener reservas de una cancha específica (administrador) */
-router.get("/admin/cancha/:canchaId", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getByCancha(req, res));
+// =========================
+// Endpoints Normales (Usuario/Admin/SuperAdmin)
+// =========================
 
-/** GET /reservas/admin/usuario/:usuarioId - Obtener reservas de un usuario específico (administrador) */
-router.get("/admin/usuario/:usuarioId", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).getByUsuarioAdmin(req, res));
+/** GET /reservas/mias - Mis reservas (usuario autenticado) */
+router.get("/mias", authMiddleware, (req, res) => ctrl(req).getByUsuario(req, res));
 
-// === Endpoints Administrativos ===
-// Requieren rol admin o super_admin
-
-/** GET /reservas - Lista todas las reservas con filtros */
+/** GET /reservas - Listado de reservas (admin/superadmin) */
 router.get("/", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).list(req, res));
 
-/** DELETE /reservas/:id - Elimina reserva */
-router.delete("/:id", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).delete(req, res));
+/** GET /reservas/:id - Detalle de reserva */
+router.get("/:id", authMiddleware, (req, res) => ctrl(req).get(req, res));
+
+/** POST /reservas/cotizar - Cotizar reserva (precio) */
+router.post("/cotizar", authMiddleware, (req, res) => ctrl(req).cotizar(req, res));
+
+/** POST /reservas - Crear reserva */
+router.post("/", authMiddleware, (req, res) => ctrl(req).create(req, res));
+
+/** PATCH /reservas/:id - Reprogramar/editar reserva */
+router.patch("/:id", (req, res, next) => {
+  console.log(`🔍 [PATCH /reservas/:id] Petición recibida para ID: ${req.params.id}`);
+  console.log(`🔍 [PATCH /reservas/:id] Body:`, JSON.stringify(req.body, null, 2));
+  next();
+}, authMiddleware, (req, res) => ctrl(req).update(req, res));
+
+/** POST /reservas/:id/confirmar - Confirmar reserva (admin/superadmin) */
+router.post("/:id/confirmar", authMiddleware, requireRole("admin", "super_admin"), (req, res) => ctrl(req).confirmarPago(req, res));
+
+/** POST /reservas/:id/cancelar - Cancelar reserva */
+router.post("/:id/cancelar", authMiddleware, (req, res) => ctrl(req).cancelar(req, res));
+
+// Montar el subrouter admin
+router.use("/admin", adminRouter);
 
 export default router;

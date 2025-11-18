@@ -20,6 +20,9 @@ export interface Cancha {
   descripcion?: string;
   capacidad?: number;
   imagenUrl?: string;
+  iluminacion?: boolean;
+  largo?: number; // en metros
+  ancho?: number; // en metros
   fechaCreacion?: string; // ISO string
   fechaActualizacion?: string; // ISO string
   // Campo calculado para UI
@@ -27,36 +30,78 @@ export interface Cancha {
 }
 
 export interface CanchaFilters {
+  // Filtros básicos
   page?: number;
   pageSize?: number;
+  page_size?: number; // Alias para backend
   q?: string;
-  tipo?: TipoCancha;
-  estado?: EstadoCancha;
-  establecimientoId?: number;
-  techada?: boolean;
-  precioMax?: number;
+  id_complejo?: number; // Nuevo nombre (establecimientoId)
+  establecimientoId?: number; // Legacy support
+  
+  // Filtros deportivos
+  tipo?: TipoCancha; // Legacy
+  deporte?: string; // Nuevo formato Taller4
+  cubierta?: boolean; // Nuevo formato Taller4
+  techada?: boolean; // Legacy support
+  iluminacion?: boolean; // Nuevo
+  
+  // Filtros económicos
+  max_precio?: number; // Nuevo formato Taller4
+  precioMax?: number; // Legacy support
   capacidadMin?: number;
+  
+  // Filtros geográficos (NUEVO en Taller4)
+  lat?: number;
+  lon?: number;
+  max_km?: number;
+  
+  // Ordenamiento (NUEVO en Taller4)
+  sort_by?: 'distancia' | 'precio' | 'rating' | 'nombre' | 'recientes';
+  order?: 'asc' | 'desc';
+  
+  // Estado
+  estado?: EstadoCancha;
+}
+
+// Filtros específicos para panel admin (NUEVO)
+export interface CanchaAdminFilters {
+  id_complejo?: number;
+  q?: string;
+  incluir_inactivas?: boolean;
+  sort_by?: 'nombre' | 'precio' | 'rating' | 'recientes';
+  order?: 'asc' | 'desc';
+  page?: number;
+  page_size?: number;
 }
 
 export interface CreateCanchaInput {
   nombre: string;
   tipo: TipoCancha;
-  id_deporte?: number; // ID numérico del deporte (requerido por API)
   precioPorHora: number;
   descripcion?: string;
   capacidad: number;
   techada: boolean;
+  activa?: boolean; // Estado inicial de la cancha (default: true)
   establecimientoId: number;
   imagenUrl?: string;
+  iluminacion?: boolean;
+  largo?: number; // en metros
+  ancho?: number; // en metros
 }
 
 // SOLO campos que FastAPI acepta en UPDATE (CanchaUpdateIn)
 export interface UpdateCanchaInput {
   nombre?: string;
   tipo?: TipoCancha;
-  id_deporte?: number; // ID numérico del deporte
   techada?: boolean;
   activa?: boolean;
+  precioPorHora?: number;
+  capacidad?: number;
+  descripcion?: string;
+  imagenUrl?: string;
+  iluminacion?: boolean;
+  largo?: number; // en metros
+  ancho?: number; // en metros
 }
 
 // Tipos para gestión de fotos de canchas
@@ -76,7 +121,7 @@ export interface AddFotoInput {
   descripcion?: string;
 }
 
-// Respuesta del backend (basado en los datos reales)
+// Respuesta del backend Taller4 (formato actualizado)
 export interface CanchaBackendResponse {
   id_cancha: number;
   id_complejo: number;
@@ -85,8 +130,31 @@ export interface CanchaBackendResponse {
   cubierta: boolean;
   activo: boolean;
   precio_desde: number;
-  rating_promedio: number;
-  total_reviews: number;
-  disponible_hoy: boolean;
+  rating_promedio?: number;
+  total_resenas?: number; // Actualizado: era total_reviews
+  distancia_km?: number; // NUEVO: cálculo de distancia
+  descripcion?: string;
+  capacidad?: number;
+  iluminacion?: boolean; // NUEVO
   foto_principal?: string;
+  fecha_creacion?: string;
+  fecha_actualizacion?: string;
+}
+
+// Respuesta paginada del backend (NUEVO)
+export interface CanchaListResponse {
+  items: Cancha[];
+  total?: number;
+  page?: number;
+  page_size?: number;
+}
+
+// Input para búsqueda geográfica (NUEVO)
+export interface CanchaGeoBusqueda {
+  lat: number;
+  lon: number;
+  radio_km?: number;
+  deporte?: string;
+  cubierta?: boolean;
+  max_precio?: number;
 }

@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { canchaService } from '@/services/canchaService';
 import { Cancha, UpdateCanchaInput, TipoCancha, EstadoCancha } from '@/types/cancha';
 import '../../dashboard.css';
+import { useAdminToast } from '@/components/admin/AdminToast';
 
 export default function EditCourtPage() {
   const router = useRouter();
@@ -16,6 +17,8 @@ export default function EditCourtPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { show } = useAdminToast();
 
   // Estados del formulario - SOLO campos que acepta FastAPI UPDATE
   const [formData, setFormData] = useState<UpdateCanchaInput>({
@@ -71,18 +74,23 @@ export default function EditCourtPage() {
       setError(null);
       
       console.log('💾 Guardando cambios de cancha:', formData);
-      await canchaService.updateCancha(parseInt(courtId), formData);
-      console.log('✅ Cancha actualizada exitosamente');
+      
+      // ✅ ACTUALIZADO: Usar método del servicio que usa el endpoint correcto PATCH /api/canchas/:id
+      const updatedCancha = await canchaService.updateCancha(parseInt(courtId), formData);
+      
+      console.log('✅ Cancha actualizada exitosamente:', updatedCancha);
       
       // Mostrar mensaje de éxito y redirigir
-      alert('Cancha actualizada exitosamente. La lista se recargará.');
+      show('success', 'Cancha actualizada exitosamente. La lista se recargará.');
       
       // Redirigir con un parámetro para forzar recarga
       router.push('/admin/canchas?refresh=true');
       router.refresh(); // Forzar recarga de la página
     } catch (err: any) {
       console.error('❌ Error guardando cancha:', err);
-      setError(err.message || 'Error al guardar los cambios');
+      const errorMessage = err.message || 'Error al guardar los cambios';
+      setError(errorMessage);
+      show('error', `Error: ${errorMessage}`);
     } finally {
       setSaving(false);
     }

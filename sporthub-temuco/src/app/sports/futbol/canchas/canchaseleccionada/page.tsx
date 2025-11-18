@@ -1,40 +1,59 @@
 'use client';
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar'; 
 import SearchBar from '@/components/SearchBar'; 
-import LocationMap from '@/components/LocationMap'; 
+import ReviewModal from '@/components/ReviewModal';
+import ReviewsList from '@/components/ReviewsList';
 import styles from './page.module.css';
+import { prepareFutbolReservationData, serializeReservationData } from '@/utils/reservationDataHandler';
 
 import { useAuthStatus } from '@/hooks/useAuthStatus';
 import { canchaService } from '../../../../../services/canchaService';
 import { complejosService } from '../../../../../services/complejosService';
+import { resenaService } from '@/services/resenaService';
+import type { Resena } from '@/types/resena';
 
 // ⚽ DATOS ESTÁTICOS PARA CAMPOS NO DISPONIBLES EN LA API
 const staticContactData = {
   phone: "(45) 555-1234",
-  instagram: "@clubcentrofutbol",
-  reviewsList: [
-    {
-      name: "Carlos M.",
-      rating: 5,
-      date: "hace 3 días",
-      comment: "Excelente césped sintético y los arcos están en perfecto estado. Gran experiencia."
-    },
-    {
-      name: "Ana G.",
-      rating: 4,
-      date: "hace 1 semana", 
-      comment: "Muy buena cancha, vestuarios limpios y personal amable. Volveremos con el equipo."
-    },
-    {
-      name: "Roberto L.",
-      rating: 5,
-      date: "hace 2 semanas",
-      comment: "La iluminación es perfecta para partidos nocturnos. Césped en excelente condición."
-    }
-  ]
+  instagram: "@clubcentrofutbol"
+};
+
+// ⚽ FUNCIÓN PARA PREPARAR DATOS DE RESERVA
+const prepareReservationData = (cancha: any, complejoData: any) => {
+  return {
+    // 🔥 DATOS DE LA CANCHA
+    canchaId: cancha.id,
+    canchaNombre: cancha.name,
+    canchaType: cancha.tipo || 'futbol',
+    sport: 'futbol',
+    
+    // 🔥 DATOS DEL COMPLEJO
+    establecimientoId: cancha.establecimientoId,
+    complejoNombre: complejoData?.nombre || cancha.complejoNombre,
+    direccion: complejoData?.direccion || cancha.location,
+    
+    // 🔥 DATOS DE PRECIO Y DISPONIBILIDAD
+    precioPorHora: cancha.priceFrom,
+    horarios: complejoData?.horarioAtencion || cancha.schedule,
+    activa: cancha.activa,
+    techada: cancha.techada,
+    
+    // 🔥 DATOS ADICIONALES
+    capacidad: cancha.capacity,
+    rating: cancha.rating,
+    amenities: cancha.amenities,
+    images: cancha.images,
+    
+    // 🔥 COORDENADAS PARA MAPA
+    coordinates: cancha.coordinates,
+    
+    // 🔥 CONTACTO
+    phone: cancha.phone,
+    instagram: cancha.instagram
+  };
 };
 
 // ⚽ COMPONENTE PRINCIPAL CON SUSPENSE
@@ -43,11 +62,23 @@ function FutbolCanchaSeleccionadaContent() {
   const searchParams = useSearchParams();
   const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   
+  // 🗺️ REFS PARA EL MAPA
+  const mapInstanceRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+  
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [dataLoading, setDataLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [cancha, setCancha] = useState<any>(null);
+  const [complejoData, setComplejoData] = useState<any>(null); // 🔥 NUEVO: ESTADO PARA COMPLEJO
   const [error, setError] = useState<string | null>(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  
+  // 🆕 ESTADOS PARA RESEÑAS
+  const [reviews, setReviews] = useState<Resena[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
 
   // ⚽ OBTENER ID DE LA CANCHA DESDE URL
   const canchaId = searchParams?.get('id') || searchParams?.get('cancha');
@@ -71,27 +102,30 @@ function FutbolCanchaSeleccionadaContent() {
         console.log('✅ Cancha cargada:', canchaData);
 
         // ⚽ NUEVO: OBTENER DATOS DEL COMPLEJO
-        let complejoData = null;
+        let complejoInfo = null;
         let locationInfo = "Av. Alemania 1234, Temuco, Chile"; // Fallback estático
         let coordinates = { lat: -38.7359, lng: -72.5904 }; // Fallback estático
 
         if (canchaData.establecimientoId) {
           try {
             console.log('🔍 Cargando complejo ID:', canchaData.establecimientoId);
-            complejoData = await complejosService.getComplejoById(canchaData.establecimientoId);
-            console.log('✅ Complejo cargado:', complejoData);
+            complejoInfo = await complejosService.getComplejoById(canchaData.establecimientoId);
+            console.log('✅ Complejo cargado:', complejoInfo);
+            
+            // 🔥 GUARDAR DATOS DEL COMPLEJO EN EL ESTADO
+            setComplejoData(complejoInfo);
             
             // ⚽ USAR DIRECCIÓN REAL DEL COMPLEJO
-            if (complejoData.direccion) {
-              locationInfo = complejoData.direccion;
+            if (complejoInfo.direccion) {
+              locationInfo = complejoInfo.direccion;
               console.log('📍 Dirección obtenida del complejo:', locationInfo);
             }
             
             // ⚽ USAR COORDENADAS DEL COMPLEJO SI ESTÁN DISPONIBLES
-            if (complejoData.latitud && complejoData.longitud) {
+            if (complejoInfo.latitud && complejoInfo.longitud) {
               coordinates = {
-                lat: parseFloat(complejoData.latitud),
-                lng: parseFloat(complejoData.longitud)
+                lat: parseFloat(complejoInfo.latitud),
+                lng: parseFloat(complejoInfo.longitud)
               };
               console.log('🗺️ Coordenadas obtenidas del complejo:', coordinates);
             }
@@ -112,10 +146,10 @@ function FutbolCanchaSeleccionadaContent() {
           coordinates: coordinates,
           
           // ⚽ DESCRIPCIÓN SIMPLE CON DATOS REALES
-          description: `${canchaData.nombre} - Cancha de ${canchaData.tipo}${complejoData ? ` en ${complejoData.nombre}` : ''}`,
+          description: `${canchaData.nombre} - Cancha de ${canchaData.tipo}${complejoInfo ? ` en ${complejoInfo.nombre}` : ''}`,
           
           // ⚽ HORARIOS - USAR DEL COMPLEJO SI ESTÁ DISPONIBLE
-          schedule: complejoData?.horarioAtencion || "Lunes a Domingo • 08:00 a 23:00",
+          schedule: complejoInfo?.horarioAtencion || "Lunes a Domingo • 08:00 a 23:00",
           
           // ⚽ CAPACIDAD ESPECÍFICA PARA FÚTBOL
           capacity: (() => {
@@ -157,7 +191,6 @@ function FutbolCanchaSeleccionadaContent() {
           // ⚽ CONTACTO ESTÁTICO (hasta implementar en complejo)
           phone: staticContactData.phone,
           instagram: staticContactData.instagram,
-          reviewsList: staticContactData.reviewsList,
 
           // ⚽ INFORMACIÓN ADICIONAL REAL
           establecimientoId: canchaData.establecimientoId,
@@ -166,10 +199,13 @@ function FutbolCanchaSeleccionadaContent() {
           activa: canchaData.activa,
           
           // ⚽ INFORMACIÓN DEL COMPLEJO
-          complejoNombre: complejoData?.nombre || `Complejo ${canchaData.establecimientoId}`
+          complejoNombre: complejoInfo?.nombre || `Complejo ${canchaData.establecimientoId}`
         };
 
         setCancha(mappedCancha);
+        
+        // 🆕 CARGAR RESEÑAS DESPUÉS DE CARGAR LA CANCHA
+        loadReviews(parseInt(canchaId));
         
       } catch (error: any) {
         console.error('❌ Error cargando cancha:', error);
@@ -195,7 +231,6 @@ function FutbolCanchaSeleccionadaContent() {
             "/sports/futbol/canchas/Cancha3.png"
           ],
           amenities: ["Datos offline", "Césped Natural", "Arcos Profesionales", "Iluminación LED"],
-          reviewsList: staticContactData.reviewsList,
           activa: true,
           complejoNombre: "Complejo Deportivo"
         });
@@ -206,6 +241,164 @@ function FutbolCanchaSeleccionadaContent() {
 
     loadCanchaData();
   }, [canchaId]);
+  
+  // 🆕 FUNCIÓN PARA CARGAR RESEÑAS
+  const loadReviews = async (canchaId: number) => {
+    try {
+      setReviewsLoading(true);
+      setReviewError(null);
+      console.log('🔍 Cargando reseñas para cancha ID:', canchaId);
+      
+      const resenasData = await resenaService.obtenerResenasPorCancha(canchaId);
+      console.log('✅ Reseñas cargadas:', resenasData);
+      setReviews(resenasData);
+    } catch (error: any) {
+      console.error('❌ Error cargando reseñas:', error);
+      setReviewError(`Error cargando reseñas: ${error.message}`);
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+  
+  // 🆕 FUNCIÓN PARA ENVIAR NUEVA RESEÑA
+  const handleSubmitReview = async (rating: number, comment: string) => {
+    if (!isAuthenticated) {
+      alert('Debes iniciar sesión para escribir una reseña');
+      router.push('/login');
+      return;
+    }
+    
+    if (!canchaId) {
+      alert('Error: No se puede identificar la cancha');
+      return;
+    }
+    
+    try {
+      console.log('📝 Enviando reseña:', { rating, comment, canchaId: parseInt(canchaId) });
+      
+      await resenaService.crearResena({
+        id_cancha: parseInt(canchaId),
+        calificacion: rating,
+        comentario: comment.trim() || undefined // Enviar undefined si está vacío
+      });
+      
+      console.log('✅ Reseña enviada exitosamente');
+      
+      await loadReviews(parseInt(canchaId));
+      setShowReviewModal(false);
+      alert('¡Reseña publicada exitosamente!');
+    } catch (error: any) {
+      console.error('❌ Error enviando reseña:', error);
+      // Extraer mensaje de error correctamente - asegurar que sea string
+      let errorMessage = error?.response?.data?.message || error?.message || 'Error al enviar la reseña';
+      
+      // Convertir a string si es un objeto
+      if (typeof errorMessage !== 'string') {
+        errorMessage = JSON.stringify(errorMessage);
+      }
+      
+      // Lanzar el error para que el ReviewModal lo maneje
+      throw new Error(errorMessage);
+    }
+  };
+
+  // 🗺️ EFECTO: Cargar Google Maps cuando la cancha está disponible
+  useEffect(() => {
+    if (!cancha || !cancha.coordinates || isMapLoaded) return;
+
+    const initMap = () => {
+      const mapElement = document.getElementById('futbol-map');
+      if (!mapElement || !mapInstanceRef.current || typeof window === 'undefined' || !(window as any).google) {
+        // Si google no está cargado, reintentamos después
+        if (!(window as any).google) {
+          setTimeout(() => initMap(), 500);
+          return;
+        }
+      }
+
+      if (mapElement && !mapInstanceRef.current && (window as any).google) {
+        const { google } = window as any;
+        
+        console.log('🗺️ [FutbolCancha] Inicializando mapa de Google Maps');
+        
+        mapInstanceRef.current = new google.maps.Map(mapElement, {
+          center: cancha.coordinates,
+          zoom: 15,
+          styles: [
+            {
+              featureType: 'poi',
+              elementType: 'labels',
+              stylers: [{ visibility: 'on' }]
+            }
+          ]
+        });
+        
+        // 🔴 CREAR MARCADOR PARA LA CANCHA
+        markerRef.current = new google.maps.Marker({
+          position: cancha.coordinates,
+          map: mapInstanceRef.current,
+          title: cancha.name,
+          animation: google.maps.Animation.DROP,
+        });
+
+        // 📋 CREAR INFOWINDOW
+        const infoContent = `
+          <div style="padding: 12px; max-width: 250px;">
+            <h4 style="margin: 0 0 8px 0; color: #333; font-size: 16px;">⚽ ${cancha.name}</h4>
+            <p style="margin: 4px 0; color: #666; font-size: 14px;">📍 ${cancha.location}</p>
+            <p style="margin: 4px 0; color: #666; font-size: 14px;">🏟️ ${cancha.capacity}</p>
+            <p style="margin: 4px 0; color: #666; font-size: 14px;">💰 Desde $${cancha.priceFrom}/h</p>
+            <p style="margin: 4px 0; color: #666; font-size: 14px;">⭐ ${cancha.rating}/5 (${cancha.reviews} reseñas)</p>
+          </div>
+        `;
+
+        const infoWindow = new google.maps.InfoWindow({
+          content: infoContent,
+        });
+
+        markerRef.current.addListener('click', () => {
+          infoWindow.open(mapInstanceRef.current, markerRef.current);
+        });
+
+        // Abrir InfoWindow automáticamente
+        infoWindow.open(mapInstanceRef.current, markerRef.current);
+        
+        setIsMapLoaded(true);
+        console.log('✅ [FutbolCancha] Mapa inicializado correctamente');
+      }
+    };
+
+    // Si ya hay una instancia de google cargada
+    if (typeof window !== 'undefined' && (window as any).google && (window as any).google.maps) {
+      initMap();
+      return;
+    }
+
+    // Insertar el script de Google Maps si no existe
+    const existingScript = document.querySelector('script[src*="maps.googleapis.com"]');
+    if (!existingScript) {
+      console.log('📦 [FutbolCancha] Cargando script de Google Maps...');
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyBMIE36wrh9juIn2RXAGVoBwnc-hhFfwd4';
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+      script.onload = () => {
+        console.log('✅ [FutbolCancha] Script de Google Maps cargado');
+        initMap();
+      };
+    } else {
+      existingScript.addEventListener('load', initMap);
+    }
+
+    return () => {
+      if (markerRef.current) {
+        markerRef.current.setMap(null);
+      }
+    };
+  }, [cancha, isMapLoaded]);
 
   // ⚽ RESTO DE FUNCIONES SIN CAMBIOS
   const handleUserButtonClick = () => {
@@ -255,8 +448,28 @@ function FutbolCanchaSeleccionadaContent() {
     }).format(price);
   };
 
+  // 🔥 FUNCIÓN MEJORADA PARA MANEJAR RESERVA CON DATOS REALES
   const handleReserve = () => {
-    router.push(`/sports/reservacancha?canchaId=${cancha.id}`);
+    if (!cancha || !cancha.activa) {
+      alert('⚠️ Esta cancha no está disponible para reserva');
+      return;
+    }
+
+    // 🔥 PREPARAR DATOS USANDO EL UTILITY (incluir datos de contacto estáticos)
+    const reservationData = prepareFutbolReservationData(
+      cancha,
+      complejoData,
+      staticContactData
+    );
+    
+    // 🔥 SERIALIZAR DATOS PARA URL (base64)
+    const serialized = serializeReservationData(reservationData);
+
+    console.log('🔥 Datos de reserva preparados:', reservationData);
+    console.log('🔥 Datos serializados:', serialized);
+
+    // 🔥 NAVEGAR A LA PÁGINA DE RESERVA CON TODOS LOS DATOS
+    router.push(`/sports/reservacancha?data=${serialized}`);
   };
 
   const handleCall = () => {
@@ -277,7 +490,12 @@ function FutbolCanchaSeleccionadaContent() {
   };
 
   const handleWriteReview = () => {
-    alert(`Función de escribir reseña próximamente...`);
+    if (!isAuthenticated) {
+      alert('Debes iniciar sesión para escribir una reseña');
+      router.push('/login');
+      return;
+    }
+    setShowReviewModal(true);
   };
 
   // ⚽ LOADING Y ERROR - SIN CAMBIOS
@@ -424,14 +642,15 @@ function FutbolCanchaSeleccionadaContent() {
           {/* Location Section */}
           <div className={styles.locationSection}>
             <h3 className={styles.sectionTitle}>Ubicación</h3>
-            <div className={styles.mapContainer}>
-              <LocationMap 
-                latitude={cancha.coordinates.lat} 
-                longitude={cancha.coordinates.lng}
-                address={cancha.location}
-                zoom={15}
-                height="250px"
-                sport="futbol"
+            <div className={styles.mapContainer} style={{ position: 'relative' }}>
+              <div 
+                id="futbol-map"
+                style={{ 
+                  width: '100%', 
+                  height: '400px',
+                  borderRadius: '8px',
+                  overflow: 'hidden'
+                }} 
               />
               <div className={styles.locationInfo}>
                 <p className={styles.locationAddress}>{cancha.location}</p>
@@ -509,38 +728,26 @@ function FutbolCanchaSeleccionadaContent() {
 
         {/* Reviews Section */}
         <div className={styles.reviewsSection}>
-          <div className={styles.reviewsHeader}>
-            <div className={styles.reviewsTitle}>
-              <span className={styles.reviewsIcon}>⭐</span>
-              <span>{cancha.rating.toFixed(1)} • {cancha.reviews} reseñas</span>
+          <ReviewsList
+            reviews={reviews}
+            isLoading={reviewsLoading}
+            onWriteReview={handleWriteReview}
+            showWriteButton={true}
+          />
+          {reviewError && (
+            <div style={{ color: 'red', textAlign: 'center', marginTop: '1rem' }}>
+              ⚠️ {reviewError}
             </div>
-            <button className={styles.writeReviewButton} onClick={handleWriteReview}>
-              ✏️ Escribir reseña
-            </button>
-          </div>
-
-          <div className={styles.reviewsList}>
-            {cancha.reviewsList.map((review: any, index: number) => (
-                <div key={index} className={styles.reviewCard}>
-                  <div className={styles.reviewHeader}>
-                    <div className={styles.reviewUser}>
-                      <div className={styles.userAvatar}>
-                        {review.name.charAt(0)}
-                      </div>
-                      <div className={styles.userInfo}>
-                        <span className={styles.userName}>{review.name}</span>
-                        <div className={styles.reviewStars}>
-                          {renderStars(review.rating)}
-                        </div>
-                      </div>
-                    </div>
-                    <span className={styles.reviewDate}>{review.date}</span>
-                  </div>
-                  <p className={styles.reviewComment}>{review.comment}</p>
-                </div>
-              ))}
-          </div>
+          )}
         </div>
+
+        {/* Review Modal */}
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          onSubmit={handleSubmitReview}
+          canchaName={cancha?.name || 'Cancha de Fútbol'}
+        />
 
         {/* Help Button */}
         <div className={styles.helpSection}>

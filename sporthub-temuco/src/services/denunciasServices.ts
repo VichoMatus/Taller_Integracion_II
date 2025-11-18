@@ -4,47 +4,68 @@ import { handleApiError } from "../services/ApiError";
 import { Denuncia, DenunciaCreate, DenunciaUpdate, DenunciaListQuery } from "@/types/denuncias";
 
 export const denunciasService = {
-  async listar(params?: DenunciaListQuery): Promise<Denuncia[]> {
+  /**
+   * Listar mis denuncias (usuario autenticado)
+   */
+  async listarMias(): Promise<Denuncia[]> {
     try {
-      const { data } = await api.get<Denuncia[]>("/denuncias", { params });
+      const { data } = await api.get<Denuncia[]>("/denuncias/mias");
       return data;
-    } catch (e) { handleApiError(e); }
+    } catch (e) {
+      handleApiError(e);
+      throw e;
+    }
   },
-  async obtener(id: string | number): Promise<Denuncia> {
-    try {
-      const { data } = await api.get<Denuncia>(`/denuncias/${id}`);
-      return data;
-    } catch (e) { handleApiError(e); }
-  },
+
+  /**
+   * Crear nueva denuncia
+   */
   async crear(payload: DenunciaCreate): Promise<Denuncia> {
     try {
       const { data } = await api.post<Denuncia>("/denuncias", payload);
       return data;
-    } catch (e) { handleApiError(e); }
-  },
-  async actualizar(id: string | number, payload: DenunciaUpdate): Promise<Denuncia> {
-    try {
-      const { data } = await api.put<Denuncia>(`/denuncias/${id}`, payload);
-      return data;
-    } catch (e) { handleApiError(e); }
-  },
-  async eliminar(id: string | number): Promise<void> {
-    try {
-      await api.delete(`/denuncias/${id}`);
-    } catch (e) { handleApiError(e); }
+    } catch (e) {
+      handleApiError(e);
+      throw e;
+    }
   },
 
-  // Acciones específicas
-  async cambiarEstado(id: string | number, estado: Denuncia["estado"]): Promise<Denuncia> {
+  /**
+   * Listar todas las denuncias (solo admin)
+   */
+  async listarAdmin(params?: DenunciaListQuery): Promise<Denuncia[]> {
     try {
-      const { data } = await api.patch<Denuncia>(`/denuncias/${id}/estado`, { estado });
+      const { data } = await api.get<Denuncia[]>("/denuncias/admin", { params });
       return data;
-    } catch (e) { handleApiError(e); }
+    } catch (e) {
+      handleApiError(e);
+      throw e;
+    }
   },
-  async asignar(id: string | number, asignado_a: string | number | null): Promise<Denuncia> {
+
+  /**
+   * Ver detalle de una denuncia (solo admin)
+   */
+  async obtenerAdmin(id: number): Promise<Denuncia> {
     try {
-      const { data } = await api.patch<Denuncia>(`/denuncias/${id}/asignar`, { asignado_a });
+      const { data } = await api.get<Denuncia>(`/denuncias/admin/${id}`);
       return data;
-    } catch (e) { handleApiError(e); }
+    } catch (e) {
+      handleApiError(e);
+      throw e;
+    }
+  },
+
+  /**
+   * Actualizar estado de una denuncia (solo admin)
+   */
+  async actualizarAdmin(id: number, payload: DenunciaUpdate): Promise<Denuncia> {
+    try {
+      const { data } = await api.patch<Denuncia>(`/denuncias/admin/${id}`, payload);
+      return data;
+    } catch (e) {
+      handleApiError(e);
+      throw e;
+    }
   },
 };

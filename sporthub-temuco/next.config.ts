@@ -1,5 +1,9 @@
 import type { NextConfig } from "next";
 
+// Next.js automáticamente carga .env, .env.local, etc. desde la raíz del proyecto
+// No necesitamos configuración adicional, solo asegurarnos de que las variables
+// tengan el prefijo NEXT_PUBLIC_ para estar disponibles en el cliente
+
 const nextConfig: NextConfig = {
   /* config options here */
   allowedDevOrigins: [
@@ -30,6 +34,25 @@ const nextConfig: NextConfig = {
   },
   
   // ESLint y TypeScript habilitados para verificar errores
+  
+  // Headers para deshabilitar COOP y permitir Google OAuth
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cross-Origin-Opener-Policy',
+            value: 'unsafe-none',
+          },
+          {
+            key: 'Cross-Origin-Embedder-Policy',
+            value: 'unsafe-none',
+          },
+        ],
+      },
+    ];
+  },
   
   // Asegurar que las variables de entorno se expongan correctamente
   env: {
