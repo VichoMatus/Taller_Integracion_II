@@ -11,11 +11,18 @@ import '../Login.css';
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false);
     const router = useRouter();
 
+    useEffect(() => {
+        document.body.classList.add('no-scroll');
+        return () => {
+            document.body.classList.remove('no-scroll');
+        };
+    }, []);
     // Inicializar Google Sign-In cuando el script se carga
     useEffect(() => {
         if (googleScriptLoaded && typeof window !== 'undefined') {
@@ -142,7 +149,7 @@ export default function LoginPage() {
                 }}
             />
             
-            <div style={{ minHeight: '100vh', position: 'relative' }}>
+            <div style={{ minHeight: '100vh', height: '100vh', overflow: 'hidden', position: 'relative' }}>
                 <header style={{ backgroundColor: '#4F46E5', color: 'white', padding: '1rem', textAlign: 'center' }}>
                     <h1 className="header-logo">SportHub</h1>
                 </header>
@@ -178,15 +185,54 @@ export default function LoginPage() {
                                 />
                                 
                                 <label htmlFor="password">Contraseña</label>
-                                <div className="password-container">
-                                    <input 
-                                        type="password" 
-                                        id="password" 
+                                <div style={{ display: 'flex', width: '100%', alignItems: 'stretch' }}>
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        id="password"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         disabled={isLoading}
                                         required
+                                        style={{
+                                            width: '70%',
+                                            flex: '0 0 70%',
+                                            borderTopRightRadius: '0',
+                                            borderBottomRightRadius: '0',
+                                            margin: '0',
+                                            borderRight: 'none',
+                                        }}
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        disabled={isLoading}
+                                        style={{
+                                            width: '30%',
+                                            flex: '0 0 30%',
+                                            background: '#4F46E5',
+                                            color: 'white',
+                                            border: 'none',
+                                            borderTopRightRadius: '5px',
+                                            borderBottomRightRadius: '5px',
+                                            borderTopLeftRadius: '0',
+                                            borderBottomLeftRadius: '0',
+                                            cursor: 'pointer',
+                                            fontSize: '14px',
+                                            fontWeight: '500',
+                                            padding: '0',
+                                            margin: '0',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            opacity: isLoading ? 0.5 : 1,
+                                            boxShadow: 'none',
+                                            outline: 'none',
+                                        }}
+                                        onMouseEnter={e => (e.currentTarget.style.background = '#4338ca')}
+                                        onMouseLeave={e => (e.currentTarget.style.background = '#4F46E5')}
+                                    >
+                                        {showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                    </button>
                                 </div>
                                 <div className="forgot-password" style={{ textAlign: 'center', marginTop: '15px' }}>
                                     <Link href="/login/forgot-password" style={{ color: '#4F46E5', textDecoration: 'none', fontSize: '14px' }}>
