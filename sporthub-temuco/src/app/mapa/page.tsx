@@ -25,8 +25,8 @@ const complejosDeportivos: ComplejoDeportivo[] = [
   {
     id: 1,
     nombre: "Complejo Deportivo Norte",
-    direccion: "Av. Alemania 1234, Temuco",
-    coordenadas: { lat: -38.7300, lng: -72.5850 },
+    direccion: "Camino Las Mariposas 03395, Temuco",
+    coordenadas: { lat: -38.7014339, lng: -72.6386553 },
     deportes: ["Fútbol", "Básquetbol", "Tenis"],
     telefono: "(45) 555-1234",
     horario: "6:00 - 23:00",
@@ -47,8 +47,8 @@ const complejosDeportivos: ComplejoDeportivo[] = [
   {
     id: 3,
     nombre: "Polideportivo Sur",
-    direccion: "Calle Montt 890, Temuco",
-    coordenadas: { lat: -38.7500, lng: -72.6000 },
+    direccion: "Villa Olímpica casa Hernán",
+    coordenadas: { lat: -38.724403, lng: -72.6148387 },
     deportes: ["Atletismo", "Natación", "Escalada"],
     telefono: "(45) 555-9012",
     horario: "5:30 - 23:30",
