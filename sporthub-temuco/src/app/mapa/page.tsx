@@ -92,10 +92,34 @@ export default function MapaPage() {
   // 🗺️ EFECTO: Cargar Google Maps Script e inicializar el mapa
   useEffect(() => {
     const initMap = () => {
-      if (mapRef.current && !mapInstanceRef.current && typeof window !== 'undefined' && (window as any).google) {
-        const { google } = window as any;
-        
-        console.log('🗺️ [MapaPage] Inicializando mapa de Google Maps');
+      if (!mapRef.current) {
+        console.warn('⚠️ [MapaPage] mapRef.current no existe');
+        return;
+      }
+
+      if (mapInstanceRef.current) {
+        console.log('ℹ️ [MapaPage] El mapa ya está inicializado');
+        return;
+      }
+
+      if (typeof window === 'undefined') {
+        console.warn('⚠️ [MapaPage] window no disponible');
+        return;
+      }
+
+      if (!(window as any).google || !(window as any).google.maps) {
+        console.warn('⚠️ [MapaPage] Google Maps API no disponible aún');
+        setTimeout(() => initMap(), 500);
+        return;
+      }
+
+      const { google } = window as any;
+      
+      console.log('🗺️ [MapaPage] Inicializando mapa de Google Maps');
+      console.log('📍 Centro inicial:', mapCenter);
+      console.log('🔍 Zoom inicial:', zoom);
+
+      try {
         mapInstanceRef.current = new google.maps.Map(mapRef.current, {
           center: mapCenter,
           zoom: zoom,
@@ -108,16 +132,19 @@ export default function MapaPage() {
           ]
         });
         
-        setIsMapLoaded(true);
         console.log('✅ [MapaPage] Mapa inicializado correctamente');
+        setIsMapLoaded(true);
         
         // Dibujar marcadores iniciales
         drawMarkers();
+      } catch (error: any) {
+        console.error('❌ [MapaPage] Error inicializando mapa:', error);
       }
     };
 
     // Si ya hay una instancia de google cargada
     if (typeof window !== 'undefined' && (window as any).google && (window as any).google.maps) {
+      console.log('ℹ️ [MapaPage] Google Maps ya está cargado');
       initMap();
       return;
     }
@@ -127,17 +154,27 @@ export default function MapaPage() {
     if (!existingScript) {
       console.log('📦 [MapaPage] Cargando script de Google Maps...');
       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || 'AIzaSyBMIE36wrh9juIn2RXAGVoBwnc-hhFfwd4';
+      console.log('🔑 Usando API Key:', apiKey.substring(0, 20) + '...');
+      
       const script = document.createElement('script');
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
       script.async = true;
       script.defer = true;
-      document.body.appendChild(script);
+      
       script.onload = () => {
-        console.log('✅ [MapaPage] Script de Google Maps cargado');
+        console.log('✅ [MapaPage] Script de Google Maps cargado exitosamente');
         initMap();
       };
+      
+      script.onerror = () => {
+        console.error('❌ [MapaPage] Error cargando script de Google Maps');
+      };
+      
+      document.body.appendChild(script);
     } else {
+      console.log('ℹ️ [MapaPage] Script de Google Maps ya existe');
       existingScript.addEventListener('load', initMap);
+      initMap();
     }
 
     return () => {
@@ -157,11 +194,22 @@ export default function MapaPage() {
 
   // 🗺️ FUNCIÓN: Dibujar marcadores en el mapa
   const drawMarkers = () => {
-    if (!mapInstanceRef.current || !isMapLoaded) return;
+    if (!mapInstanceRef.current) {
+      console.warn('⚠️ [MapaPage] mapInstanceRef.current no existe');
+      return;
+    }
+
+    if (!isMapLoaded) {
+      console.warn('⚠️ [MapaPage] El mapa aún no está cargado');
+      return;
+    }
+
+    if (typeof window === 'undefined' || !(window as any).google) {
+      console.warn('⚠️ [MapaPage] Google Maps no disponible');
+      return;
+    }
 
     const map = mapInstanceRef.current;
-    if (!(window as any).google) return;
-
     const { google } = window as any;
 
     console.log(`🗺️ [MapaPage] Dibujando ${filteredComplejos.length} marcadores`);
@@ -171,53 +219,62 @@ export default function MapaPage() {
     markersRef.current = [];
 
     // Crear marcadores para cada complejo
-    filteredComplejos.forEach((complejo) => {
-      const marker = new google.maps.Marker({
-        position: complejo.coordenadas,
-        map: map,
-        title: complejo.nombre,
-        animation: google.maps.Animation.DROP,
-      });
+    filteredComplejos.forEach((complejo, idx) => {
+      console.log(`📌 Creando marcador ${idx + 1}: ${complejo.nombre}`);
+      console.log(`   Coordenadas: Lat=${complejo.coordenadas.lat}, Lng=${complejo.coordenadas.lng}`);
 
-      // Crear InfoWindow con información del complejo
-      const infoContent = `
-        <div style="padding: 12px; max-width: 250px;">
-          <h3 style="margin: 0 0 8px 0; color: #333; font-size: 16px;">${complejo.nombre}</h3>
-          <p style="margin: 4px 0; color: #666; font-size: 14px;">📍 ${complejo.direccion}</p>
-          <p style="margin: 4px 0; color: #666; font-size: 14px;">📞 ${complejo.telefono}</p>
-          <p style="margin: 4px 0; color: #666; font-size: 14px;">⏰ ${complejo.horario}</p>
-          <p style="margin: 4px 0; color: #666; font-size: 14px;">⭐ ${complejo.calificacion}/5</p>
-          <div style="margin-top: 8px;">
-            ${complejo.deportes.map(d => `<span style="display: inline-block; background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin: 2px;">${d}</span>`).join('')}
-          </div>
-        </div>
-      `;
-
-      const infoWindow = new google.maps.InfoWindow({
-        content: infoContent,
-      });
-
-      marker.addListener('click', () => {
-        // Cerrar otros InfoWindows
-        markersRef.current.forEach((m: any) => {
-          if (m.infoWindow) {
-            m.infoWindow.close();
-          }
+      try {
+        const marker = new google.maps.Marker({
+          position: complejo.coordenadas,
+          map: map,
+          title: complejo.nombre,
+          animation: google.maps.Animation.DROP,
         });
 
-        infoWindow.open(map, marker);
-        handleComplexClick(complejo);
-        map.panTo(complejo.coordenadas);
-        map.setZoom(16);
-      });
+        // Crear InfoWindow con información del complejo
+        const infoContent = `
+          <div style="padding: 12px; max-width: 250px;">
+            <h3 style="margin: 0 0 8px 0; color: #333; font-size: 16px;">${complejo.nombre}</h3>
+            <p style="margin: 4px 0; color: #666; font-size: 14px;">📍 ${complejo.direccion}</p>
+            <p style="margin: 4px 0; color: #666; font-size: 14px;">📞 ${complejo.telefono}</p>
+            <p style="margin: 4px 0; color: #666; font-size: 14px;">⏰ ${complejo.horario}</p>
+            <p style="margin: 4px 0; color: #666; font-size: 14px;">⭐ ${complejo.calificacion}/5</p>
+            <div style="margin-top: 8px;">
+              ${complejo.deportes.map(d => `<span style="display: inline-block; background: #e3f2fd; color: #1976d2; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin: 2px;">${d}</span>`).join('')}
+            </div>
+          </div>
+        `;
 
-      // Guardar referencia al InfoWindow en el marker
-      (marker as any).infoWindow = infoWindow;
+        const infoWindow = new google.maps.InfoWindow({
+          content: infoContent,
+        });
 
-      markersRef.current.push(marker);
+        marker.addListener('click', () => {
+          console.log('🔍 Click en marcador:', complejo.nombre);
+          // Cerrar otros InfoWindows
+          markersRef.current.forEach((m: any) => {
+            if (m.infoWindow) {
+              m.infoWindow.close();
+            }
+          });
+
+          infoWindow.open(map, marker);
+          handleComplexClick(complejo);
+          map.panTo(complejo.coordenadas);
+          map.setZoom(16);
+        });
+
+        // Guardar referencia al InfoWindow en el marker
+        (marker as any).infoWindow = infoWindow;
+
+        markersRef.current.push(marker);
+        console.log(`✅ Marcador ${idx + 1} creado exitosamente`);
+      } catch (error: any) {
+        console.error(`❌ Error creando marcador para ${complejo.nombre}:`, error);
+      }
     });
 
-    console.log(`✅ [MapaPage] ${markersRef.current.length} marcadores dibujados`);
+    console.log(`✅ [MapaPage] Total de ${markersRef.current.length} marcadores dibujados`);
   };
 
   // 🗺️ EFECTO: Redibujar marcadores cuando cambian los complejos filtrados
