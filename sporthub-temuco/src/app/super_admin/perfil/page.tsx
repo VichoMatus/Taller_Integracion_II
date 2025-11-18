@@ -6,6 +6,7 @@ import './perfilsuperadmin.css';
 import AdminLayout from '@/components/layout/AdminsLayout';
 import authService from '@/services/authService';
 import { useSesiones } from '@/hooks/useSuperAdminSesiones';
+import { superAdminService } from '@/services/superAdminService';
 
 // Interfaz para el usuario
 interface User {
@@ -18,6 +19,50 @@ interface User {
   rol: string;
   fecha_creacion?: string;
 }
+
+interface ActividadLog {
+  id?: number;
+  action?: string;
+  accion?: string;
+  timestamp?: string;
+  fecha?: string;
+  details?: string;
+  detalle?: string;
+}
+
+// Datos de demostración para cuando falle la API
+const DEMO_LOGS: ActividadLog[] = [
+  {
+    id: 1,
+    action: "Inicio de sesión exitoso",
+    timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 minutos atrás
+    details: "Sesión iniciada desde Chrome en Windows 11 (IP: 192.168.1.100)"
+  },
+  {
+    id: 2,
+    action: "Cierre de sesión",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 horas atrás
+    details: "Sesión cerrada automáticamente por inactividad"
+  },
+  {
+    id: 3,
+    action: "Inicio de sesión exitoso",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5).toISOString(), // 5 horas atrás
+    details: "Sesión iniciada desde Safari en iPhone (IP: 181.45.22.11)"
+  },
+  {
+    id: 4,
+    action: "Intento de acceso fallido",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), // 1 día atrás
+    details: "Contraseña incorrecta desde Firefox en macOS (IP: 201.159.33.45)"
+  },
+  {
+    id: 5,
+    action: "Inicio de sesión exitoso",
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(), // 26 horas atrás
+    details: "Sesión iniciada desde Chrome en Android (IP: 190.123.45.67)"
+  }
+];
 
 export default function PerfilSuperAdministrador() {
   const [activeTab, setActiveTab] = useState('personal');
@@ -38,7 +83,7 @@ export default function PerfilSuperAdministrador() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // 🔥 HOOK DE SESIONES
+  // HOOK DE SESIONES
   const { 
     sesiones, 
     resumen, 
@@ -48,6 +93,12 @@ export default function PerfilSuperAdministrador() {
     cerrarSesion,
     cerrarTodasLasSesiones
   } = useSesiones();
+
+  // ACTIVIDAD (LOGS)
+  const [logs, setLogs] = useState<ActividadLog[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+  const [errorLogs, setErrorLogs] = useState<string | null>(null);
+  const [usingDemoData, setUsingDemoData] = useState(false);
 
   // Cargar datos del usuario
   useEffect(() => {
@@ -71,6 +122,36 @@ export default function PerfilSuperAdministrador() {
     fetchUser();
   }, []);
 
+  // Cargar logs de actividad cuando se selecciona la pestaña
+  useEffect(() => {
+    if (activeTab === 'actividad') {
+      setLoadingLogs(true);
+      setErrorLogs(null);
+      setUsingDemoData(false);
+      
+      superAdminService.obtenerLogsActividad()
+        .then((data) => {
+          if (Array.isArray(data) && data.length > 0) {
+            setLogs(data);
+            setUsingDemoData(false);
+          } else {
+            // Si no hay datos reales, usar datos de demostración
+            setLogs(DEMO_LOGS);
+            setUsingDemoData(true);
+          }
+        })
+        .catch((error) => {
+          // En caso de error, usar datos de demostración pero no mostrar error al usuario
+          console.warn('⚠️ No se pudieron cargar los logs reales, usando datos de demostración:', error.message);
+          setLogs(DEMO_LOGS);
+          setUsingDemoData(true);
+        })
+        .finally(() => {
+          setLoadingLogs(false);
+        });
+    }
+  }, [activeTab]);
+
   const getInitial = (name: string) => {
     return name ? name.charAt(0).toUpperCase() : 'S';
   };
@@ -89,10 +170,8 @@ export default function PerfilSuperAdministrador() {
 
   const formatearDuracion = (minutos?: number) => {
     if (!minutos) return 'En curso';
-    
     const horas = Math.floor(minutos / 60);
     const mins = Math.round(minutos % 60);
-    
     if (horas > 0) {
       return `${horas}h ${mins}m`;
     }
@@ -129,14 +208,11 @@ export default function PerfilSuperAdministrador() {
         setError("La imagen no debe superar los 5MB");
         return;
       }
-
       if (!file.type.startsWith('image/')) {
         setError("El archivo debe ser una imagen");
         return;
       }
-
       setEditedData({ ...editedData, imagen: file });
-      
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -158,48 +234,33 @@ export default function PerfilSuperAdministrador() {
     setSuccess(null);
 
     try {
-      // Validaciones básicas
       if (!editedData.nombre.trim()) {
         setError("El nombre es obligatorio");
         setIsSaving(false);
         return;
       }
-
       if (!editedData.apellido.trim()) {
         setError("El apellido es obligatorio");
         setIsSaving(false);
         return;
       }
-
-      // Validar formato de teléfono si se proporciona
       if (editedData.telefono && !validatePhone(editedData.telefono)) {
         setError("El formato del teléfono no es válido. Ejemplo: +56912345678");
         setIsSaving(false);
         return;
       }
-
-      // Preparar payload para actualización
       const updatePayload: Partial<User> = {
         nombre: editedData.nombre.trim(),
         apellido: editedData.apellido.trim(),
       };
-
-      // Solo incluir teléfono si tiene valor
       if (editedData.telefono && editedData.telefono.trim()) {
         updatePayload.telefono = editedData.telefono.trim();
       }
-
-      // TODO: Manejar subida de imagen
       if (editedData.imagen) {
+        // Aquí deberías manejar la subida de imagen si tu backend lo permite
         console.log("Imagen seleccionada:", editedData.imagen.name);
       }
-
-      console.log("Actualizando perfil con:", updatePayload);
-
-      // Llamar al servicio para actualizar el perfil
       const updatedUser = await authService.updateProfile(updatePayload) as User;
-
-      // Actualizar el estado local con los datos actualizados
       setUser(updatedUser);
       setEditedData({
         nombre: updatedUser.nombre || '',
@@ -207,8 +268,6 @@ export default function PerfilSuperAdministrador() {
         telefono: updatedUser.telefono || '',
         imagen: null
       });
-
-      // Actualizar localStorage si existe userData
       const storedUserData = localStorage.getItem('userData');
       if (storedUserData) {
         const userData = JSON.parse(storedUserData);
@@ -219,16 +278,12 @@ export default function PerfilSuperAdministrador() {
         }
         localStorage.setItem('userData', JSON.stringify(userData));
       }
-
       setIsEditing(false);
       setSuccess("Perfil actualizado correctamente");
       setImagePreview(null);
-      
       setTimeout(() => setSuccess(null), 3000);
-
     } catch (err: any) {
       console.error("Error al actualizar perfil:", err);
-      
       if (err.response?.status === 401) {
         setError("Sesión expirada. Por favor, inicia sesión nuevamente.");
         setTimeout(() => {
@@ -495,7 +550,7 @@ export default function PerfilSuperAdministrador() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                 </svg>
-                Mis Conexiones
+                Actividad de Conexiones
               </button>
             </div>
 
@@ -613,207 +668,77 @@ export default function PerfilSuperAdministrador() {
                 </div>
               )}
 
-              {/* TAB: Actividad/Conexiones */}
+              {/* TAB: Actividad de Conexiones */}
               {activeTab === 'actividad' && (
                 <div className="perfil-section">
-                  <div className="stats-header">
-                    <h2 className="perfil-section-title">Mis Conexiones</h2>
-                    <button 
-                      className="btn-refresh"
-                      onClick={() => refetchSesiones()}
-                      disabled={loadingSesiones}
-                    >
-                      {loadingSesiones ? (
-                        <>
-                          <div className="spinner-small"></div>
-                          Actualizando...
-                        </>
-                      ) : (
-                        <>
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="23 4 23 10 17 10"/>
-                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
-                          </svg>
-                          Actualizar
-                        </>
-                      )}
-                    </button>
+                  <div className="actividad-header">
+                    <h2 className="perfil-section-title">Actividad de las Últimas Conexiones</h2>
+                    <div className="demo-data-badge">
+                      <span className="demo-badge">⚠️ Falta endpoint backend</span>
+                      <span className="demo-info">
+                        Para mostrar datos reales aquí, el backend debe implementar un endpoint como:<br />
+                        <code style={{background:'#f5f5f5',padding:'2px 6px',borderRadius:'4px',fontSize:'0.97em'}}>
+                          GET /api/v1/superadmin/logs
+                        </code>
+                      </span>
+                    </div>
+                    {usingDemoData && (
+                      <div className="demo-data-badge">
+                        <span className="demo-badge">📋 Datos de demostración</span>
+                        <span className="demo-info">Los datos reales se cargarán cuando el servicio esté disponible</span>
+                      </div>
+                    )}
                   </div>
-
-                  {loadingSesiones ? (
+                  
+                  {loadingLogs ? (
                     <div className="stats-loading">
                       <div className="spinner"></div>
-                      <p>Cargando sesiones...</p>
-                    </div>
-                  ) : errorSesiones ? (
-                    <div className="stats-error">
-                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="12"/>
-                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                      </svg>
-                      <p>Error al cargar las sesiones</p>
-                      <button className="btn-retry" onClick={() => refetchSesiones()}>
-                        Reintentar
-                      </button>
+                      <p>Cargando actividad...</p>
                     </div>
                   ) : (
-                    <>
-                      {/* Resumen de Sesiones */}
-                      {resumen && (
-                        <div className="sessions-summary">
-                          <div className="summary-card">
-                            <div className="summary-icon">📊</div>
-                            <div className="summary-content">
-                              <span className="summary-value">{resumen.total_sesiones}</span>
-                              <span className="summary-label">Sesiones Totales</span>
+                    <div className="actividad-logs-list">
+                      {logs.length === 0 ? (
+                        <div className="actividad-logs-empty">
+                          <div className="actividad-logs-icon">📄</div>
+                          <div>
+                            <strong>No hay actividad registrada.</strong>
+                            <div style={{ color: '#888', fontSize: '0.95em', marginTop: 4 }}>
+                              Cuando existan conexiones recientes, aparecerán aquí.
                             </div>
-                          </div>
-
-                          <div className="summary-card">
-                            <div className="summary-icon">🟢</div>
-                            <div className="summary-content">
-                              <span className="summary-value">{resumen.sesiones_activas}</span>
-                              <span className="summary-label">Sesiones Activas</span>
-                            </div>
-                          </div>
-
-                          <div className="summary-card">
-                            <div className="summary-icon">⏱️</div>
-                            <div className="summary-content">
-                              <span className="summary-value">
-                                {formatearDuracion(resumen.tiempo_promedio_minutos)}
-                              </span>
-                              <span className="summary-label">Tiempo Promedio</span>
-                            </div>
-                          </div>
-
-                          <div className="summary-card">
-                            <div className="summary-icon">🕐</div>
-                            <div className="summary-content">
-                              <span className="summary-value" style={{ fontSize: '0.9rem' }}>
-                                {resumen.ultima_conexion ? 
-                                  new Date(resumen.ultima_conexion).toLocaleDateString('es-CL', {
-                                    day: '2-digit',
-                                    month: 'short'
-                                  })
-                                  : '-'
-                                }
-                              </span>
-                              <span className="summary-label">Última Conexión</span>
+                            <div style={{ color: '#bbb', fontSize: '0.85em', marginTop: 2 }}>
+                              (0 registros)
                             </div>
                           </div>
                         </div>
-                      )}
-
-                      {/* Lista de Sesiones */}
-                      <div className="sessions-list">
-                        <div className="sessions-list-header">
-                          <h3>Historial de Conexiones</h3>
-                          {sesiones.some(s => s.estado === 'activa') && sesiones.length > 1 && (
-                            <button 
-                              className="btn-close-all"
-                              onClick={handleCerrarTodasLasSesiones}
-                            >
-                              Cerrar todas excepto esta
-                            </button>
+                      ) : (
+                        <>
+                          <ul className="actividad-logs-ul">
+                            {logs.map((log, idx) => (
+                              <li key={log.id || idx} className="actividad-logs-item">
+                                <div className="actividad-logs-row">
+                                  <span className="actividad-logs-action">
+                                    {log.action || log.accion || 'Conexión'}
+                                  </span>
+                                  <span className="actividad-logs-date">
+                                    {log.timestamp || log.fecha
+                                      ? formatearFechaCompleta(log.timestamp || log.fecha!)
+                                      : 'Sin fecha'}
+                                  </span>
+                                </div>
+                                <div className="actividad-logs-details">
+                                  {log.details || log.detalle || ''}
+                                </div>
+                              </li>
+                            ))}
+                          </ul>
+                          {usingDemoData && (
+                            <div className="demo-data-footer">
+                              <p>💡 <strong>Nota:</strong> Actualmente se muestran datos de demostración. Cuando el servicio de logs esté disponible, se cargarán los datos reales automáticamente.</p>
+                            </div>
                           )}
-                        </div>
-
-                        {sesiones.length === 0 ? (
-                          <div className="sessions-empty">
-                            <p>📋 No hay sesiones registradas</p>
-                          </div>
-                        ) : (
-                          <div className="sessions-table-container">
-                            <table className="sessions-table">
-                              <thead>
-                                <tr>
-                                  <th>#</th>
-                                  <th>Fecha y Hora de Inicio</th>
-                                  <th>Fecha y Hora de Cierre</th>
-                                  <th>Duración</th>
-                                  <th>Estado</th>
-                                  <th>Acciones</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {sesiones.map((sesion, index) => (
-                                  <tr 
-                                    key={sesion.id_sesion}
-                                    className={sesion.estado === 'activa' ? 'session-active' : ''}
-                                  >
-                                    <td className="session-number">{index + 1}</td>
-                                    <td className="session-date">
-                                      <div className="session-datetime">
-                                        <span className="session-date-main">
-                                          {new Date(sesion.fecha_inicio).toLocaleDateString('es-CL', {
-                                            day: '2-digit',
-                                            month: 'short',
-                                            year: 'numeric'
-                                          })}
-                                        </span>
-                                        <span className="session-time">
-                                          {new Date(sesion.fecha_inicio).toLocaleTimeString('es-CL', {
-                                            hour: '2-digit',
-                                            minute: '2-digit',
-                                            second: '2-digit'
-                                          })}
-                                        </span>
-                                      </div>
-                                    </td>
-                                    <td className="session-date">
-                                      {sesion.fecha_fin ? (
-                                        <div className="session-datetime">
-                                          <span className="session-date-main">
-                                            {new Date(sesion.fecha_fin).toLocaleDateString('es-CL', {
-                                              day: '2-digit',
-                                              month: 'short',
-                                              year: 'numeric'
-                                            })}
-                                          </span>
-                                          <span className="session-time">
-                                            {new Date(sesion.fecha_fin).toLocaleTimeString('es-CL', {
-                                              hour: '2-digit',
-                                              minute: '2-digit',
-                                              second: '2-digit'
-                                            })}
-                                          </span>
-                                        </div>
-                                      ) : (
-                                        <span className="session-ongoing">En curso</span>
-                                      )}
-                                    </td>
-                                    <td className="session-duration">
-                                      {formatearDuracion(sesion.duracion_minutos)}
-                                    </td>
-                                    <td>
-                                      <span className={`session-badge ${sesion.estado}`}>
-                                        {sesion.estado === 'activa' ? '🟢 Activa' : '⚫ Finalizada'}
-                                      </span>
-                                    </td>
-                                    <td className="session-actions">
-                                      {sesion.estado === 'activa' && (
-                                        <button
-                                          className="btn-close-session"
-                                          onClick={() => handleCerrarSesion(sesion.id_sesion)}
-                                          title="Cerrar sesión"
-                                        >
-                                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <line x1="18" y1="6" x2="6" y2="18"/>
-                                            <line x1="6" y1="6" x2="18" y2="18"/>
-                                          </svg>
-                                        </button>
-                                      )}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </div>
-                    </>
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
               )}

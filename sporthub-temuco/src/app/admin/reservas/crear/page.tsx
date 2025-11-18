@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useAdminToast } from '@/components/admin/AdminToast';
 import { useRouter } from 'next/navigation';
 import { reservaService } from '@/services/reservaService';
+import { usuariosService } from '@/services/usuariosService';
 import { canchaService } from '@/services/canchaService';
 import { CreateReservaInput, MetodoPago } from '@/types/reserva';
 import { Cancha } from '@/types/cancha';
@@ -16,11 +18,12 @@ export default function CreateReservaPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<number>(0);
-  
-  // 🔥 NUEVO: Estados para modales personalizados
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
+  const [usuarioBusqueda, setUsuarioBusqueda] = useState<string>('');
+  const [usuarioEncontrado, setUsuarioEncontrado] = useState<any | null>(null);
+  const [autocompleteResults, setAutocompleteResults] = useState<any[]>([]);
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+
+  const { show: showToast } = useAdminToast();
 
   // Estado del formulario
   const [formData, setFormData] = useState<CreateReservaInput>({
@@ -34,21 +37,6 @@ export default function CreateReservaPage() {
 
   // Calcular precio basado en horas y cancha seleccionada
   const [precioCalculado, setPrecioCalculado] = useState<number>(0);
-  
-  // 🔥 Funciones helper para mostrar modales personalizados
-  const showSuccess = (message: string) => {
-    setModalMessage(message);
-    setShowSuccessModal(true);
-    setTimeout(() => {
-      setShowSuccessModal(false);
-      router.push('/admin/reservas'); // Redirigir después de 2 segundos
-    }, 2000);
-  };
-
-  const showError = (message: string) => {
-    setModalMessage(message);
-    setShowErrorModal(true);
-  };
 
   // Obtener ID del usuario actual del token
   useEffect(() => {
@@ -140,6 +128,94 @@ export default function CreateReservaPage() {
     }));
   };
 
+  // Buscar usuario por ID (usar endpoint /usuarios/:id) — más fiable que /contacto
+  const handleBuscarUsuario = async () => {
+    setError(null);
+    setUsuarioEncontrado(null);
+
+    if (!usuarioBusqueda) {
+      setError('Ingresa un ID de usuario para buscar');
+      return;
+    }
+
+    try {
+      const id = Number(usuarioBusqueda);
+      if (!id) {
+        setError('El ID debe ser numérico');
+        return;
+      }
+
+      const usuario = await usuariosService.obtenerPublico(id);
+      setUsuarioEncontrado(usuario);
+      setFormData(prev => ({ ...prev, usuarioId: id }));
+    } catch (err: any) {
+      console.error('Error al buscar usuario:', err);
+      // Si GET /usuarios/:id devuelve 404, igual asignar el ID manualmente.
+      const status = err?.response?.status;
+      // Extraer mensaje legible
+      const errorData = err?.response?.data;
+      let friendly = 'Error desconocido';
+      if (errorData && typeof errorData === 'object') {
+        // BACKEND: {code:403, message: 'Permisos insuficientes - ...'}
+        if (errorData.message && typeof errorData.message === 'string') {
+          friendly = errorData.message;
+        } else {
+          // Convertir objeto a string más amigable
+          friendly = Object.entries(errorData).map(([k, v]) => `${k}: ${v}`).join(' — ');
+        }
+      } else {
+        friendly = err?.message || String(err);
+      }
+      // Si la API responde 403 (permiso insuficiente), no se puede obtener el público, pero igual podemos asignar el ID que el admin escribió.
+      if (status === 403) {
+        setFormData(prev => ({ ...prev, usuarioId: Number(usuarioBusqueda) }));
+        setUsuarioEncontrado(null);
+        setError(`No tienes permisos para ver datos de usuario. ${friendly}. Se asignará el ID ingresado.`);
+        return;
+      }
+      if (status === 404) {
+        const id = Number(usuarioBusqueda);
+        setFormData(prev => ({ ...prev, usuarioId: id }));
+        setUsuarioEncontrado(null);
+        setError('No se encontró información de contacto, se asignará el ID ingresado.');
+        return;
+      }
+      // Evitar pasar objetos al UI — convertir a string
+      setError(typeof friendly === 'string' ? friendly : JSON.stringify(friendly));
+    }
+  };
+
+  const handleMostrarUsuarios = async () => {
+    try {
+      setError(null);
+      const results = await usuariosService.buscar('', 20);
+      setAutocompleteResults(results || []);
+      setShowAutocomplete(results.length > 0);
+    } catch (err: any) {
+      console.error('Error al listar usuarios:', err);
+      const message = err?.response?.data?.message || err?.message || 'No se pudieron cargar usuarios';
+      setError(message);
+    }
+  };
+
+  const handleBuscarAutocomplete = async (q: string) => {
+    if (!q || q.length < 2) {
+      setAutocompleteResults([]);
+      setShowAutocomplete(false);
+      return;
+    }
+
+    try {
+      const results = await usuariosService.buscar(q, 6);
+      setAutocompleteResults(results || []);
+      setShowAutocomplete(results.length > 0);
+    } catch (err) {
+      console.error('Error en autocomplete usuarios:', err);
+      setAutocompleteResults([]);
+      setShowAutocomplete(false);
+    }
+  };
+
   // Validar formulario
   const validateForm = (): string | null => {
     console.log('🔍 [validateForm] Validando datos:', {
@@ -185,21 +261,35 @@ export default function CreateReservaPage() {
       setError(null);
       
       // Convertir fechas a formato requerido por backend
+      // ⚠️ IMPORTANTE: Usar formato local, NO convertir a UTC para evitar diferencias horarias
       const fechaInicioDate = new Date(formData.fechaInicio);
       const fechaFinDate = new Date(formData.fechaFin);
       
-      // Extraer fecha y horas en formato que espera el backend
-      const fecha_reserva = fechaInicioDate.toISOString().split('T')[0]; // YYYY-MM-DD
-      const hora_inicio = fechaInicioDate.toTimeString().slice(0, 5); // HH:MM
-      const hora_fin = fechaFinDate.toTimeString().slice(0, 5); // HH:MM
+      // Extraer fecha y horas en formato local (NO UTC) para evitar desfase de zona horaria
+      // toLocaleDateString('en-CA') genera YYYY-MM-DD sin conversión UTC
+      // toLocaleTimeString('en-GB') genera HH:MM en formato 24h sin conversión UTC
+      const fecha_reserva = fechaInicioDate.toLocaleDateString('en-CA'); // YYYY-MM-DD formato ISO
+      const hora_inicio = fechaInicioDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }); // HH:MM
+      const hora_fin = fechaFinDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }); // HH:MM
       
+      // Determinar id de usuario objetivo para la reserva
+      // Si hay un texto en el campo de búsqueda y el admin no usó "Buscar" explícitamente,
+      // respetamos ese valor (para mayor ergonomía). Si no es numérico, mostrar error.
+      let targetUserId = Number(formData.usuarioId);
+      if (usuarioBusqueda && Number(usuarioBusqueda)) {
+        const parsed = Number(usuarioBusqueda);
+        if (!isNaN(parsed) && parsed > 0) {
+          targetUserId = parsed;
+        }
+      }
+
       // Formato que espera el backend: { id_cancha, fecha_reserva, hora_inicio, hora_fin, id_usuario }
       const createData = {
         id_cancha: Number(formData.canchaId),
         fecha_reserva,
         hora_inicio,
         hora_fin,
-        id_usuario: Number(formData.usuarioId),
+        id_usuario: targetUserId || Number(formData.usuarioId) || currentUserId,
         notas: formData.notas || ''
       };
       
@@ -210,7 +300,8 @@ export default function CreateReservaPage() {
       await reservaService.createReservaAdmin(createData);
       
       // Mostrar mensaje de éxito y redirigir
-      showSuccess('Reserva creada exitosamente como administrador');
+      showToast('success', 'Reserva creada exitosamente como administrador');
+      router.push('/admin/reservas');
     } catch (err: any) {
       console.error('Error al crear la reserva:', err);
       const errorMessage = typeof err?.message === 'string' 
@@ -218,7 +309,8 @@ export default function CreateReservaPage() {
         : err?.response?.data?.message 
         || JSON.stringify(err?.message || err) 
         || 'No se pudo crear la reserva. Verifique los datos e intente nuevamente.';
-      showError(errorMessage);
+      showToast('error', errorMessage || 'No se pudo crear la reserva.');
+      setError(errorMessage);
     } finally {
       setSaving(false);
     }
@@ -284,21 +376,59 @@ export default function CreateReservaPage() {
             <div className="edit-form-grid">
               <div className="edit-form-group">
                 <label htmlFor="usuarioId" className="edit-form-label">Usuario: *</label>
-                <input
-                  type="text"
-                  id="usuarioDisplay"
-                  value={`Usuario actual (ID: ${currentUserId})`}
-                  className="edit-form-input"
-                  disabled
-                  style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
-                />
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    id="usuarioDisplay"
+                    value={usuarioEncontrado ? `${usuarioEncontrado.nombre || usuarioEncontrado.email || 'Usuario'} (ID: ${formData.usuarioId})` : `Usuario actual (ID: ${currentUserId})`}
+                    className="edit-form-input"
+                    disabled
+                    style={{ backgroundColor: '#f3f4f6', cursor: 'not-allowed' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '.5rem' }}>
+                  <input
+                    type="text"
+                    name="usuarioBusqueda"
+                    placeholder="Buscar por nombre, email o ID"
+                    value={usuarioBusqueda}
+                    onChange={(e) => { setUsuarioBusqueda(e.target.value); handleBuscarAutocomplete(e.target.value); }}
+                    className="edit-form-input"
+                    style={{ flex: 1 }}
+                  />
+
+                  <button type="button" onClick={handleBuscarUsuario} className="btn-guardar" title="Buscar usuario">
+                    Buscar
+                  </button>
+                  <button type="button" onClick={handleMostrarUsuarios} className="btn-secondary" title="Mostrar usuarios">
+                    Mostrar usuarios
+                  </button>
+
+                  <button type="button" onClick={() => { setUsuarioBusqueda(''); setUsuarioEncontrado(null); setFormData(prev => ({ ...prev, usuarioId: currentUserId })); }} className="btn-volver">
+                    Usar actual
+                  </button>
+                </div>
+
+                {showAutocomplete && autocompleteResults.length > 0 && (
+                  <div className="autocomplete-results admin-search-box">
+                    {autocompleteResults.map(u => (
+                      <div key={u.id} className="autocomplete-item" onClick={() => { setUsuarioBusqueda(String(u.id)); setUsuarioEncontrado(u); setFormData(prev => ({ ...prev, usuarioId: u.id })); setShowAutocomplete(false); }}>
+                        <div style={{ fontWeight: 700 }}>{u.nombre || u.email}</div>
+                        <div style={{ fontSize: '.85rem', color: 'var(--text-gray)' }}>ID: {u.id} — {u.email}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <input
                   type="hidden"
                   name="usuarioId"
                   value={formData.usuarioId}
                 />
+
                 <p className="text-sm text-gray-600 mt-1">
-                  ℹ️ La reserva se creará a nombre del usuario actual
+                  ℹ️ Puedes buscar un usuario por su ID. Si no se especifica, la reserva se creará a nombre del usuario actual.
                 </p>
               </div>
 
@@ -410,44 +540,6 @@ export default function CreateReservaPage() {
           </div>
         </form>
       </div>
-
-      {/* Modal de Éxito */}
-      {showSuccessModal && (
-        <div className="modal-overlay">
-          <div className="modal-content modal-success">
-            <div className="modal-icon-success">
-              <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h3 className="modal-title">¡Éxito!</h3>
-            <p className="modal-description">{modalMessage}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de Error */}
-      {showErrorModal && (
-        <div className="modal-overlay" onClick={() => setShowErrorModal(false)}>
-          <div className="modal-content modal-error" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-icon-error">
-              <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </div>
-            <h3 className="modal-title">Error</h3>
-            <p className="modal-description">{modalMessage}</p>
-            <div className="modal-footer">
-              <button 
-                className="btn-modal btn-modal-confirm" 
-                onClick={() => setShowErrorModal(false)}
-              >
-                Entendido
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

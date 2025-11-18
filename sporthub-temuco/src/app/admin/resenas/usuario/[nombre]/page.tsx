@@ -175,20 +175,20 @@ export default function UserReviewsPage() {
                 <tbody>
                   {paginatedReviews.map((review) => (
                     <tr key={review.id}>
-                      <td>
+                      <td data-label="Cancha">
                         <div className="admin-cell-text">{review.cancha}</div>
                       </td>
-                      <td>
+                      <td data-label="Comentario">
                         <div className="admin-cell-comment">
                           {review.comentario.length > 40 
                             ? `${review.comentario.substring(0, 40)}...` 
                             : review.comentario}
                         </div>
                       </td>
-                      <td>
+                      <td data-label="Fecha">
                         <div className="admin-cell-text">{review.fecha}</div>
                       </td>
-                      <td>
+                      <td data-label="Estado">
                         <span className={`status-badge ${
                           review.estado === 'Activo' ? 'status-activo' :
                           review.estado === 'Inactivo' ? 'status-inactivo' :
@@ -197,7 +197,7 @@ export default function UserReviewsPage() {
                           {review.estado}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Acciones">
                         <div className="admin-actions-container">
                           {/* Botón Ver/Leer - Abre página de detalle */}
                           <button 

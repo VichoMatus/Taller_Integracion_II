@@ -18,13 +18,17 @@ export default function CanchasPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [courts, setCourts] = useState<Court[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const itemsPerPage = 10;
+  const itemsPerPage = 15; // Aumentado de 10 a 15 para aprovechar más espacio
 
   const loadCourts = async () => {
     try {
       setIsLoading(true);
       
-      const canchasResponse = await canchaService.getCanchas();
+      // Usar endpoint de admin con page_size alto para obtener todas las canchas
+      const canchasResponse = await canchaService.getCanchasAdmin({ 
+        page_size: 100,  // Suficiente para todos los complejos
+        incluir_inactivas: true  // Ver también canchas inactivas
+      });
       
       // Extraer array de canchas
       let canchasFromApi: any[] = [];
@@ -118,7 +122,7 @@ export default function CanchasPage() {
   }
 
   return (
-    <div className="admin-dashboard-container">
+    <div className="admin-dashboard-container" style={{ minHeight: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column' }}>
       {/* Header Principal */}
       <div className="estadisticas-header">
         <h1 className="text-2xl font-bold text-gray-900">Panel de Gestión de Canchas</h1>
@@ -152,7 +156,7 @@ export default function CanchasPage() {
       </div>
 
       {/* Contenedor Principal de la Tabla */}
-      <div className="admin-table-container">
+      <div className="admin-table-container" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
         {/* Header de la Tabla */}
         <div className="admin-table-header">
           <h2 className="admin-table-title">Lista de Canchas ({filteredCourts.length})</h2>
@@ -182,7 +186,7 @@ export default function CanchasPage() {
         </div>
         
         {/* Tabla Principal */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" style={{ flex: 1 }}>
           <table className="admin-table">
             <thead>
               <tr>

@@ -3,7 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { resenaService } from '@/services/resenaService';
+import { complejosService } from '@/services/complejosService';
 import { Resena, ResenaListQuery } from '@/types/resena';
+import { useAdminToast } from '@/components/admin/AdminToast';
 import '../dashboard.css';
 
 export default function ResenasPage() {
@@ -18,55 +20,296 @@ export default function ResenasPage() {
   const [selectedCalificacion, setSelectedCalificacion] = useState<number | ''>('');
   const [orderBy, setOrderBy] = useState<"recientes" | "mejor" | "peor">("recientes");
   const [totalResenas, setTotalResenas] = useState(0);
-  const itemsPerPage = 10;
+  const [complejoId, setComplejoId] = useState<number | null>(null);
+  const [tipoVista, setTipoVista] = useState<'complejo' | 'canchas'>('complejo');
+  const [itemsPerPage, setItemsPerPage] = useState(10); // 🔥 Dinámico según resolución
 
-  // Cargar reseñas desde el backend
-  const loadResenas = async () => {
+  // 🔥 Calcular items por página según altura de viewport
+  useEffect(() => {
+    const calculateItemsPerPage = () => {
+      const height = window.innerHeight;
+      // Cada fila de tabla ocupa ~80px, header ~250px, tabs ~60px, filtros ~100px, footer ~100px
+      const availableHeight = height - 510;
+      const rowHeight = 80;
+      const calculatedItems = Math.floor(availableHeight / rowHeight);
+      // Mínimo 5, máximo 20
+      const finalItems = Math.max(5, Math.min(20, calculatedItems));
+      setItemsPerPage(finalItems);
+      console.log(`📐 Altura viewport: ${height}px → ${finalItems} reseñas por página`);
+    };
+
+    calculateItemsPerPage();
+    window.addEventListener('resize', calculateItemsPerPage);
+    return () => window.removeEventListener('resize', calculateItemsPerPage);
+  }, []);
+
+  // Obtener el ID del complejo del admin actual
+  useEffect(() => {
+    const obtenerComplejoId = async () => {
+      try {
+        const userData = localStorage.getItem('userData');
+        
+        if (!userData) {
+          console.error('❌ No hay datos de usuario en localStorage');
+          setError('No se pudo identificar el complejo del administrador. Por favor, inicia sesión nuevamente.');
+          setLoading(false);
+          return;
+        }
+        
+        const user = JSON.parse(userData);
+        console.log('👤 Usuario logueado:', user);
+        
+        // Primero intentar buscar complejo_id directamente en userData
+        let complejoIdEncontrado = user.complejo_id || user.id_complejo || user.id_establecimiento;
+        
+        if (complejoIdEncontrado) {
+          console.log('✅ Complejo ID encontrado en userData:', complejoIdEncontrado);
+          setComplejoId(complejoIdEncontrado);
+          return;
+        }
+        
+        // Si no está en userData, hacer llamada a la API
+        console.log('🔍 Complejo ID no encontrado en userData, consultando API...');
+        console.log('🔍 ID de usuario:', user.id_usuario || user.id);
+        
+        const userId = user.id_usuario || user.id;
+        
+        if (!userId) {
+          console.error('❌ No se encontró ID de usuario');
+          setError('No se pudo identificar el usuario. Por favor, inicia sesión nuevamente.');
+          setLoading(false);
+          return;
+        }
+        
+        // Llamar a la API para obtener complejos del admin
+        console.log(`📡 Llamando a getComplejosByAdmin(${userId})`);
+        const complejos = await complejosService.getComplejosByAdmin(userId);
+        
+        console.log('📦 Complejos obtenidos:', complejos);
+        
+        if (complejos && complejos.length > 0) {
+          // Tomar el primer complejo (un admin puede tener múltiples complejos)
+          const primerComplejo = complejos[0];
+          const complejoId = primerComplejo.id_complejo || primerComplejo.id;
+          
+          console.log('✅ Complejo ID obtenido de la API:', complejoId);
+          setComplejoId(complejoId);
+          
+          // Opcional: Actualizar localStorage para futuras cargas
+          try {
+            const updatedUser = { ...user, complejo_id: complejoId };
+            localStorage.setItem('userData', JSON.stringify(updatedUser));
+            console.log('💾 userData actualizado con complejo_id');
+          } catch (err) {
+            console.warn('⚠️ No se pudo actualizar localStorage:', err);
+          }
+        } else {
+          console.warn('⚠️ No se encontraron complejos para el usuario');
+          setError(`No se encontró ningún complejo asociado al usuario ${user.email || user.nombre}. Contacta al administrador.`);
+          setLoading(false);
+        }
+      } catch (err: any) {
+        console.error('❌ Error al obtener complejo del usuario:', err);
+        setError(`Error al identificar el complejo: ${err.message || 'Error desconocido'}. Por favor, recarga la página.`);
+        setLoading(false);
+      }
+    };
+    
+    obtenerComplejoId();
+  }, []);
+
+  // Cargar reseñas del complejo
+  const loadResenasComplejo = async () => {
+    if (!complejoId) return;
+
     try {
       setLoading(true);
       setError(null);
       
-      console.log('🔍 [loadResenas] Cargando reseñas...');
+      console.log('🏢 [loadResenasComplejo] Cargando reseñas del complejo:', complejoId);
       
       const filters: ResenaListQuery = {
+        id_complejo: complejoId,
         page: currentPage,
         page_size: itemsPerPage,
         order: orderBy
       };
       
       const data = await resenaService.listarResenas(filters);
-      console.log('✅ [loadResenas] Reseñas obtenidas:', data?.length || 0);
+      console.log('✅ [loadResenasComplejo] Reseñas obtenidas:', data?.length || 0);
       
       setResenas(data || []);
       setTotalResenas(data?.length || 0);
     } catch (err: any) {
-      console.error('❌ [loadResenas] Error al cargar reseñas:', err);
+      console.error('❌ [loadResenasComplejo] Error:', err);
+      setError(err?.message || 'Error al cargar reseñas del complejo');
+      setResenas([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const { show: showToast } = useAdminToast();
+
+  // Cargar reseñas de todas las canchas del complejo
+  const loadResenasCanchas = async () => {
+    if (!complejoId) return;
+
+    try {
+      setLoading(true);
+      setError(null);
       
-      // Extraer mensaje del error de forma segura
-      let errorMsg = 'Error al cargar reseñas';
+      console.log('🎾 [loadResenasCanchas] Obteniendo canchas del admin (complejo:', complejoId, ')');
       
-      // Intentar diferentes estructuras de error
-      if (typeof err === 'string') {
-        errorMsg = err;
-      } else if (err?.message && typeof err.message === 'string') {
-        errorMsg = err.message;
-      } else if (err?.response?.data?.message) {
-        errorMsg = err.response.data.message;
-      } else if (err?.response?.data?.error) {
-        errorMsg = err.response.data.error;
-      } else if (err?.details) {
-        errorMsg = err.details;
-      } else if (typeof err === 'object') {
-        // Si es un objeto, convertirlo a JSON string como último recurso
+      // Obtener las canchas del admin usando el endpoint /canchas/admin
+      // Este endpoint ya filtra automáticamente por el complejo del admin logueado
+      const canchas = await complejosService.getCanchasDeComplejo(complejoId);
+      
+      console.log('📋 [loadResenasCanchas] Canchas encontradas:', canchas?.length || 0);
+      console.log('📋 [loadResenasCanchas] Estructura de canchas:', canchas);
+      
+      // Validar que canchas sea un array
+      if (!canchas || !Array.isArray(canchas) || canchas.length === 0) {
+        console.log('⚠️ [loadResenasCanchas] No hay canchas en el complejo o respuesta inválida');
+        setResenas([]);
+        setTotalResenas(0);
+        setLoading(false);
+        return;
+      }
+      
+      // Obtener reseñas de cada cancha
+      const todasLasResenas: Resena[] = [];
+      
+      for (const cancha of canchas) {
+        console.log('🏟️ [loadResenasCanchas] Estructura de cancha individual:', JSON.stringify(cancha, null, 2));
+        
+        // FastAPI devuelve id_cancha, no id
+        const canchaId = cancha.id_cancha || cancha.id;
+        
+        if (!canchaId) {
+          console.warn('⚠️ [loadResenasCanchas] Cancha sin ID, saltando:', cancha);
+          continue;
+        }
+        
+        console.log(`🔍 [loadResenasCanchas] Cargando reseñas de cancha #${canchaId}`);
+        
         try {
-          errorMsg = JSON.stringify(err);
-        } catch {
-          errorMsg = 'Error desconocido al cargar reseñas';
+          const filters: ResenaListQuery = {
+            id_cancha: canchaId,
+            order: orderBy,
+            page: 1,
+            page_size: 100 // Obtener todas para luego paginar localmente
+          };
+          
+          const resenasCancha = await resenaService.listarResenas(filters);
+          console.log(`  ✅ Cancha #${canchaId}: ${resenasCancha?.length || 0} reseñas`);
+          
+          if (resenasCancha && resenasCancha.length > 0) {
+            todasLasResenas.push(...resenasCancha);
+          }
+        } catch (err) {
+          console.warn(`  ⚠️ Error al cargar reseñas de cancha #${canchaId}:`, err);
+          // Continuar con las demás canchas
         }
       }
       
-      setError(errorMsg);
+      console.log('✅ [loadResenasCanchas] Total reseñas combinadas:', todasLasResenas.length);
+      
+      // Ordenar todas las reseñas combinadas
+      const resenasOrdenadas = [...todasLasResenas].sort((a: any, b: any) => {
+        if (orderBy === 'recientes') {
+          return new Date((b as any).fechaCreacion ?? b.created_at).getTime() - new Date((a as any).fechaCreacion ?? a.created_at).getTime();
+        } else if (orderBy === 'mejor') {
+          return b.calificacion - a.calificacion;
+        } else {
+          return a.calificacion - b.calificacion;
+        }
+      });
+      
+      // Aplicar paginación local
+      const inicio = (currentPage - 1) * itemsPerPage;
+      const fin = inicio + itemsPerPage;
+      const resenasPaginadas = resenasOrdenadas.slice(inicio, fin);
+      
+      setResenas(resenasPaginadas);
+      setTotalResenas(resenasOrdenadas.length);
+    } catch (err: any) {
+      console.error('❌ [loadResenasCanchas] Error completo:', err);
+      console.error('❌ [loadResenasCanchas] Error.message:', err?.message);
+      console.error('❌ [loadResenasCanchas] Error.response:', err?.response);
+      console.error('❌ [loadResenasCanchas] Error.response.data:', err?.response?.data);
+      
+      const errorMsg = err?.response?.data?.message || err?.message || 'Error al cargar reseñas de las canchas';
+      setError(`Error en vista de canchas: ${errorMsg}`);
       setResenas([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cargar reseñas según el tipo de vista
+  const loadResenas = async () => {
+    if (tipoVista === 'complejo') {
+      await loadResenasComplejo();
+    } else {
+      await loadResenasCanchas();
+    }
+  };
+
+  // Efecto original actualizado
+  const loadResenasOriginal = async () => {
+    // No cargar si no tenemos el ID del complejo
+    if (!complejoId) {
+      console.log('⏳ [loadResenas] Esperando ID del complejo...');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('🔍 [loadResenas] Cargando reseñas del complejo:', complejoId);
+      
+      const filters: ResenaListQuery = {
+        id_complejo: complejoId, // ✅ REQUERIDO: La API necesita filtro por id_cancha O id_complejo
+        page: currentPage,
+        page_size: itemsPerPage,
+        ...(selectedCalificacion && { 
+          calificacion_min: selectedCalificacion, 
+          calificacion_max: selectedCalificacion 
+        })
+      };
+      
+      const data = await resenaService.listarResenas(filters);
+      setResenas(data);
+    } catch (err: any) {
+      console.warn('Backend no disponible, usando datos mock:', err);
+      setError('Conectando con datos de desarrollo (backend no disponible)');
+      // Usar datos mock en caso de error para development
+      setResenas([
+        {
+          id_resena: 1,
+          id_usuario: 1,
+          id_cancha: 1,
+          // id_reserva removed from mock to match Resena type
+          calificacion: 5,
+          esta_activa: true,
+          comentario: 'Excelente cancha, muy bien mantenida y con buen cesped.',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        },
+        {
+          id_resena: 2,
+          id_usuario: 2,
+          id_cancha: 1,
+          // id_reserva removed from mock to match Resena type
+          calificacion: 4,
+          esta_activa: true,
+          comentario: 'Muy buena experiencia, solo faltaba un poco mas de iluminacion.',
+          created_at: new Date(Date.now() - 86400000).toISOString(),
+          updated_at: new Date(Date.now() - 86400000).toISOString()
+        }
+      ]);
     } finally {
       setLoading(false);
     }
@@ -74,15 +317,22 @@ export default function ResenasPage() {
 
   useEffect(() => {
     loadResenas();
-  }, [currentPage, orderBy]);
+  }, [currentPage, orderBy, complejoId, tipoVista]);
 
   // Filtrar reseñas por término de búsqueda y calificación
   const filteredResenas = resenas.filter(resena => {
-    const matchesSearch = !searchTerm || 
-      resena.comentario?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      resena.usuarioId.toString().includes(searchTerm) ||
-      (resena.canchaId && resena.canchaId.toString().includes(searchTerm)) ||
-      (resena.complejoId && resena.complejoId.toString().includes(searchTerm));
+    let matchesSearch = false;
+    if (!searchTerm) {
+      matchesSearch = true;
+    } else {
+      const r: any = resena;
+      matchesSearch = !!(
+        r.comentario?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (r.usuarioId ?? r.id_usuario)?.toString().includes(searchTerm) ||
+        ((r.canchaId ?? r.id_cancha) && (r.canchaId ?? r.id_cancha).toString().includes(searchTerm)) ||
+        ((r.complejoId ?? r.id_complejo) && (r.complejoId ?? r.id_complejo).toString().includes(searchTerm))
+      );
+    }
     
     const matchesCalificacion = !selectedCalificacion || 
       resena.calificacion === selectedCalificacion;
@@ -90,33 +340,36 @@ export default function ResenasPage() {
     return matchesSearch && matchesCalificacion;
   });
 
-  // Función para navegar a editar reseña
-  const editResena = (resenaId: number) => {
+  // Paginación mejorada
+  const totalPages = Math.ceil(filteredResenas.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedResenas = filteredResenas.slice(startIndex, startIndex + itemsPerPage);
+
+  // Funcion para navegar a editar resena
+  const editResena = (resenaId: number | string) => {
     router.push(`/admin/resenas/${resenaId}`);
   };
 
-  // Función para navegar a crear reseña
+  // Funcion para navegar a crear resena
   const createResena = () => {
     router.push('/admin/resenas/crear');
   };
 
-  // Función para eliminar reseña
-  const deleteResena = async (resenaId: number) => {
-    if (!window.confirm('¿Estás seguro de que deseas eliminar esta reseña?')) {
-      return;
-    }
-    
-    try {
-      await resenaService.eliminarResena(resenaId);
-      alert('Reseña eliminada exitosamente');
-      loadResenas();
-    } catch (err: any) {
-      console.error('❌ Error al eliminar reseña:', err);
-      alert(err.message || 'Error al eliminar la reseña');
+  // Funcion para eliminar resena
+  const deleteResena = async (resenaId: number | string) => {
+    if (window.confirm('¿Estas seguro de que deseas eliminar esta resena?')) {
+      try {
+        await resenaService.eliminarResena(Number(resenaId));
+        showToast('success', 'Reseña eliminada exitosamente');
+        loadResenas(); // Recargar la lista
+      } catch (err: any) {
+        console.warn('No se pudo eliminar (backend no disponible):', err);
+        showToast('error', 'No se puede eliminar en modo desarrollo (backend no disponible)');
+      }
     }
   };
 
-  // Función para obtener emoji según calificación
+  // Funcion para obtener el emoji de calificacion
   const getCalificacionEmoji = (calificacion: number) => {
     const emojis = ['😡', '😞', '😐', '😊', '🤩'];
     return emojis[calificacion - 1] || '❓';
@@ -148,9 +401,20 @@ export default function ResenasPage() {
     <div className="admin-dashboard-container">
       {/* Header Principal */}
       <div className="estadisticas-header">
-        <h1 className="text-2xl font-bold text-gray-900">Panel de Gestion de Resenas</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Panel de Gestión de Reseñas</h1>
         
         <div className="admin-controls">
+          <button 
+            className="export-button"
+            onClick={() => loadResenas()}
+            title="Recargar reseñas"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Refrescar
+          </button>
+
           <button className="export-button">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -162,70 +426,74 @@ export default function ResenasPage() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
-            Crear Resena
+            Crear Reseña
           </button>
         </div>
       </div>
 
-      {/* Mensaje de Advertencia - Backend No Disponible */}
-      {resenas.length === 0 && !loading && (
-        <div style={{
-          backgroundColor: '#fffbeb',
-          border: '1px solid #fcd34d',
-          borderRadius: '8px',
-          padding: '1rem',
-          marginBottom: '1rem'
-        }}>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '1.5rem' }}>⚠️</span>
-            <div>
-              <h3 style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold', color: '#92400e' }}>
-                Backend de Reseñas No Disponible
-              </h3>
-              <p style={{ margin: '0 0 0.5rem 0', color: '#78350f' }}>
-                El backend de FastAPI tiene un error SQL que impide cargar las reseñas.
-              </p>
-              <details style={{ marginTop: '0.5rem' }}>
-                <summary style={{ cursor: 'pointer', fontWeight: 'bold', color: '#92400e' }}>
-                  Ver detalles técnicos
-                </summary>
-                <div style={{ marginTop: '0.5rem', padding: '0.5rem', backgroundColor: '#fff', borderRadius: '4px', fontSize: '0.85rem' }}>
-                  <p style={{ margin: '0 0 0.5rem 0' }}>
-                    <strong>Error:</strong> <code>missing FROM-clause entry for table "agg"</code>
-                  </p>
-                  <p style={{ margin: '0 0 0.5rem 0' }}>
-                    <strong>Archivo:</strong> <code>BACKEND_BUG_RESENAS_SQL.md</code>
-                  </p>
-                  <p style={{ margin: 0 }}>
-                    <strong>Workaround:</strong> El BFF devuelve array vacío temporalmente.
-                    Las funcionalidades de crear/editar reseñas funcionan correctamente.
-                  </p>
-                </div>
-              </details>
-            </div>
+      {/* Tabs de Navegación */}
+      <div className="filter-tabs" style={{ marginBottom: '1.5rem' }}>
+        <button
+          className={`filter-tab ${tipoVista === 'complejo' ? 'active' : ''}`}
+          onClick={() => {
+            setTipoVista('complejo');
+            setCurrentPage(1);
+            loadResenas();
+          }}
+        >
+          <span style={{ fontSize: '1.25rem', marginRight: '0.5rem' }}>📍</span>
+          Reseñas del Complejo
+        </button>
+        
+        <button
+          className={`filter-tab ${tipoVista === 'canchas' ? 'active' : ''}`}
+          onClick={() => {
+            setTipoVista('canchas');
+            setCurrentPage(1);
+            loadResenas();
+          }}
+        >
+          <span style={{ fontSize: '1.25rem', marginRight: '0.5rem' }}>⚽</span>
+          Reseñas de las Canchas
+        </button>
+      </div>
+
+      {/* Mensaje Informativo - Vista Actual */}
+      {complejoId && (
+        <div className={`info-banner ${tipoVista === 'complejo' ? 'info-blue' : 'info-green'}`}>
+          <div className="info-icon">
+            {tipoVista === 'complejo' ? '📍' : '⚽'}
+          </div>
+          <div className="info-content">
+            <h3 className="info-title">
+              {tipoVista === 'complejo' ? 'Reseñas del Complejo' : 'Reseñas de las Canchas'}
+            </h3>
+            <p className="info-text">
+              {tipoVista === 'complejo' ? (
+                <>
+                  Mostrando reseñas directas del complejo <strong>#{complejoId}</strong>.
+                  Estas son las valoraciones generales que los usuarios dejaron sobre tu complejo deportivo.
+                </>
+              ) : (
+                <>
+                  Mostrando reseñas de todas las canchas del complejo <strong>#{complejoId}</strong>.
+                  Estas son las valoraciones específicas que los usuarios dejaron sobre canchas individuales.
+                </>
+              )}
+            </p>
           </div>
         </div>
       )}
 
-      {/* Mensaje de Error Genérico */}
+      {/* Mensaje de Error */}
       {error && (
-        <div className="error-container" style={{
-          backgroundColor: '#fee',
-          border: '1px solid #fcc',
-          borderRadius: '8px',
-          padding: '1rem',
-          marginBottom: '1rem'
-        }}>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '1.5rem' }}>❌</span>
-            <div>
-              <h3 style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold', color: '#c00' }}>
-                Error al cargar reseñas
-              </h3>
-              <p style={{ margin: 0, color: '#600' }}>
-                {typeof error === 'string' ? error : JSON.stringify(error)}
-              </p>
-            </div>
+        <div className="info-banner info-red">
+          <div className="info-icon">❌</div>
+          <div className="info-content">
+            <h3 className="info-title">Error al cargar reseñas</h3>
+            <p className="info-text">
+              {typeof error === 'string' ? error : JSON.stringify(error)}
+            </p>
           </div>
         </div>
       )}
@@ -276,7 +544,7 @@ export default function ResenasPage() {
               <tr>
                 <th>ID</th>
                 <th>Usuario</th>
-                <th>Cancha</th>
+                <th>{tipoVista === 'canchas' ? '⚽ Cancha' : '📍 Ubicación'}</th>
                 <th>Calificacion</th>
                 <th>Comentario</th>
                 <th>Fecha</th>
@@ -284,7 +552,7 @@ export default function ResenasPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredResenas.length === 0 ? (
+              {paginatedResenas.length === 0 ? (
                 <tr>
                   <td colSpan={7} style={{ textAlign: 'center', padding: '2rem' }}>
                     {searchTerm || selectedCalificacion 
@@ -293,45 +561,60 @@ export default function ResenasPage() {
                   </td>
                 </tr>
               ) : (
-                filteredResenas.map((resena) => (
-                  <tr key={resena.id}>
-                    <td>#{resena.id}</td>
-                    <td>Usuario #{resena.usuarioId}</td>
-                    <td>
-                      {resena.canchaId ? `Cancha #${resena.canchaId}` : 
-                       resena.complejoId ? `Complejo #${resena.complejoId}` : 
-                       'N/A'}
+                paginatedResenas.map((resena) => {
+                  const r: any = resena;
+                  return (
+                  <tr key={r.id ?? r.id_resena}>
+                    <td data-label="ID">#{r.id ?? r.id_resena}</td>
+                    <td data-label="Usuario">Usuario #{(resena as any).usuarioId ?? resena.id_usuario}</td>
+                    <td data-label="Ubicación">
+                      {tipoVista === 'canchas' ? (
+                        <span style={{ 
+                          backgroundColor: '#dbeafe', 
+                          padding: '0.25rem 0.5rem', 
+                          borderRadius: '4px',
+                          fontWeight: 'bold',
+                          color: '#1e40af'
+                        }}>
+                          ⚽ Cancha #{(r.canchaId ?? r.id_cancha) || 'N/A'}
+                        </span>
+                      ) : (
+                        <span style={{ color: '#6b7280' }}>
+                          📍 Complejo #{(r.complejoId ?? r.id_complejo) || 'N/A'}
+                        </span>
+                      )}
                     </td>
-                    <td>
+                    <td data-label="Calificación">
                       <div className="calificacion-cell">
                         <span className="calificacion-emoji">
-                          {getCalificacionEmoji(resena.calificacion)}
+                          {getCalificacionEmoji(r.calificacion)}
                         </span>
                         <span className="calificacion-numero">
-                          {resena.calificacion}/5
+                          {r.calificacion}/5
                         </span>
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Comentario">
                       <div className="comentario-cell">
                         {resena.comentario ? (
-                          resena.comentario.length > 50 
-                            ? `${resena.comentario.substring(0, 50)}...`
-                            : resena.comentario
+                          r.comentario?.length > 50 
+                            ? `${r.comentario.substring(0, 50)}...`
+                            : r.comentario
                         ) : 'Sin comentario'}
                       </div>
                     </td>
-                    <td>{formatFecha(resena.fechaCreacion)}</td>
-                    <td>
+                    <td data-label="Fecha">{formatFecha(r.fechaCreacion ?? r.created_at)}</td>
+                    <td data-label="Acciones">
                       <div className="admin-actions-container">
-                        {/* Botón Editar */}
+                        {/* Botón Ver */}
                         <button 
-                          className="btn-action btn-editar" 
-                          title="Editar"
-                          onClick={() => editResena(resena.id)}
+                          className="btn-action btn-ver" 
+                          title="Ver detalles"
+                          onClick={() => router.push(`/admin/resenas/${r.id ?? r.id_resena}`)}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
                         </button>
                         
@@ -339,7 +622,7 @@ export default function ResenasPage() {
                         <button 
                           className="btn-action btn-eliminar" 
                           title="Eliminar"
-                          onClick={() => deleteResena(resena.id)}
+                          onClick={() => deleteResena(Number(r.id ?? r.id_resena))}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -348,21 +631,20 @@ export default function ResenasPage() {
                       </div>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
 
-        {/* Paginacion */}
-        <div className="admin-table-footer">
+        {/* Paginación */}
+        <div className="admin-pagination-container">
           <div className="admin-pagination-info">
-            <span>
-              Mostrando {Math.min(filteredResenas.length, itemsPerPage)} de {filteredResenas.length} resenas
-            </span>
+            Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, filteredResenas.length)} de {filteredResenas.length} reseñas
           </div>
           
-          <div className="admin-pagination">
+          <div className="admin-pagination-controls">
             <button 
               className="btn-pagination" 
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
@@ -371,14 +653,22 @@ export default function ResenasPage() {
               Anterior
             </button>
             
-            <span className="pagination-current">
-              Pagina {currentPage}
-            </span>
+            <div className="admin-pagination-numbers">
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  className={`btn-pagination ${currentPage === page ? 'active' : ''}`}
+                  onClick={() => setCurrentPage(page)}
+                >
+                  {page}
+                </button>
+              ))}
+            </div>
             
             <button 
               className="btn-pagination" 
-              onClick={() => setCurrentPage(prev => prev + 1)}
-              disabled={filteredResenas.length < itemsPerPage}
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
             >
               Siguiente
             </button>

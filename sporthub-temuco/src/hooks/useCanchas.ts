@@ -79,7 +79,7 @@ export const useCanchasAdmin = (initialFilters?: CanchaAdminFilters) => {
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
-    page_size: 20
+    page_size: 100
   });
 
   const fetchCanchasAdmin = useCallback(async (filters?: CanchaAdminFilters) => {
@@ -94,7 +94,7 @@ export const useCanchasAdmin = (initialFilters?: CanchaAdminFilters) => {
         setPagination({
           total: response.total,
           page: response.page || 1,
-          page_size: response.page_size || 20
+          page_size: response.page_size || 100
         });
       }
     } catch (err: any) {

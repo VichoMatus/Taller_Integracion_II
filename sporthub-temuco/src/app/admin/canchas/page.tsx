@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { canchaService } from '@/services/canchaService';
+import { useAdminToast } from '@/components/admin/AdminToast';
 import '../dashboard.css';
 
 interface Court {
@@ -15,33 +16,15 @@ interface Court {
 
 export default function CanchasPage() {
   const router = useRouter();
+  const { show } = useAdminToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [courts, setCourts] = useState<Court[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0); // Para forzar recargas
   const [showInactive, setShowInactive] = useState(true); // 🔥 NUEVO: Toggle para mostrar/ocultar inactivas
-  const [itemsPerPage, setItemsPerPage] = useState(4); // 🔥 Dinámico según resolución
-
-  // 🔥 Calcular items por página según altura de viewport
-  useEffect(() => {
-    const calculateItemsPerPage = () => {
-      const height = window.innerHeight;
-      // Cada fila de tabla ocupa ~80px, header ~200px, footer ~100px
-      // Espacio disponible para tabla: height - 300px
-      const availableHeight = height - 300;
-      const rowHeight = 80;
-      const calculatedItems = Math.floor(availableHeight / rowHeight);
-      // Mínimo 4, máximo 20
-      const finalItems = Math.max(4, Math.min(20, calculatedItems));
-      setItemsPerPage(finalItems);
-      console.log(`📐 Altura viewport: ${height}px → ${finalItems} canchas por página`);
-    };
-
-    calculateItemsPerPage();
-    window.addEventListener('resize', calculateItemsPerPage);
-    return () => window.removeEventListener('resize', calculateItemsPerPage);
-  }, []);
+  const [itemsPerPage, setItemsPerPage] = useState(4);
+  const [pageSize, setPageSize] = useState<number>(100); // Mostrar al menos 100 por defecto
 
   // 🔥 Cargar canchas reales de la API usando endpoint de ADMIN
   const loadCourts = async () => {
@@ -56,6 +39,7 @@ export default function CanchasPage() {
         incluir_inactivas: showInactive, // 🔥 Controlado por el toggle del usuario
         sort_by: 'nombre',
         order: 'asc'
+      , page_size: pageSize
       });
       
       console.log('✅ [loadCourts] Respuesta del servidor:', result);
@@ -116,7 +100,7 @@ export default function CanchasPage() {
       
       // NO usar datos mock - mostrar error real
       setCourts([]);
-      alert(`Error al cargar canchas: ${errorMsg}. Verifique que esté logueado como administrador.`);
+      show('error', `Error al cargar canchas: ${errorMsg}. Verifique que esté logueado como administrador.`);
     } finally {
       setIsLoading(false);
     }
@@ -124,7 +108,27 @@ export default function CanchasPage() {
 
   useEffect(() => {
     loadCourts();
-  }, [refreshKey, showInactive]); // 🔥 Recargar cuando cambie el toggle de inactivas
+  }, [refreshKey, showInactive, pageSize]); // 🔥 Recargar cuando cambie el toggle de inactivas o pageSize
+  
+  // pageSize control exists to request a larger page size (default 100).
+
+  useEffect(() => {
+    const calculateItemsPerPage = () => {
+      try {
+        const height = window.innerHeight || 800;
+        const available = height - 520;
+        const rowHeight = 100; // por fila en diseño admin
+        const calculated = Math.max(4, Math.min(12, Math.floor(available / rowHeight)));
+        setItemsPerPage(calculated);
+      } catch (err) {
+        setItemsPerPage(4);
+      }
+    };
+
+    calculateItemsPerPage();
+    window.addEventListener('resize', calculateItemsPerPage);
+    return () => window.removeEventListener('resize', calculateItemsPerPage);
+  }, []);
 
   // Detectar si viene del parámetro refresh en la URL
   useEffect(() => {
@@ -173,12 +177,12 @@ export default function CanchasPage() {
         console.log('✅ [AdminCanchas] Lista recargada desde servidor');
       }, 500);
       
-      alert('Cancha eliminada exitosamente');
+      show('success', 'Cancha eliminada exitosamente');
       console.log('✅ [AdminCanchas] Proceso de eliminación completado');
     } catch (error: any) {
       console.error('❌ [AdminCanchas] Error eliminando cancha:', error);
       const errorMsg = error?.message || 'Error desconocido';
-      alert(`Error al eliminar la cancha: ${errorMsg}`);
+      show('error', `Error al eliminar la cancha: ${errorMsg}`);
     }
   };
 
@@ -264,6 +268,8 @@ export default function CanchasPage() {
             {showInactive ? 'Mostrar todas' : 'Solo activas'}
           </button>
 
+          {/* Quitar botón 'Mostrar más' — errores con page_size altos */}
+
           <button className="export-button">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -323,21 +329,21 @@ export default function CanchasPage() {
             <tbody>
               {paginatedCourts.map((court) => (
                 <tr key={court.id}>
-                  <td>
+                  <td data-label="Nombre">
                     <div className="admin-cell-title">{court.name}</div>
                   </td>
-                  <td>
+                  <td data-label="Ubicación">
                     <div className="admin-cell-text">{court.location}</div>
                   </td>
-                  <td>
+                  <td data-label="Estado">
                     <span className={`status-badge px-2 py-1 text-xs rounded-full ${getStatusBadge(court.status)}`}>
                       {court.status}
                     </span>
                   </td>
-                  <td>
+                  <td data-label="Tipo">
                     <div className="admin-cell-text capitalize">{court.type}</div>
                   </td>
-                  <td>
+                  <td data-label="Acciones">
                     <div className="admin-actions-container">
                       {/* Botón Editar */}
                       <button 
@@ -347,21 +353,6 @@ export default function CanchasPage() {
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                      </button>
-                      
-                      {/* Botón Duplicar/Clonar */}
-                      <button 
-                        className="btn-action" 
-                        title="Duplicar cancha"
-                        onClick={() => router.push(`/admin/canchas/crear?duplicarDesde=${court.id}`)}
-                        style={{ 
-                          backgroundColor: '#3b82f6',
-                          color: 'white'
-                        }}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
                       </button>
                       

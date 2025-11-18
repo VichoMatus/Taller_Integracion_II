@@ -24,7 +24,8 @@ export class GetMisRecursos {
       complejos,
       canchas,
       total_reservas: reservas.length,
-      ingresos_mes: estadisticas.ingresos_totales
+      // Ingresos del mes (si existen en las estadísticas del repo), fallback a ingresos_totales
+      ingresos_mes: estadisticas.ingresos_mes ?? estadisticas.ingresos_totales
     };
   }
 }

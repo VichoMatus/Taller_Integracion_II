@@ -22,6 +22,11 @@ interface Environment {
   LOG_LEVEL: string;
   /** CORS origin permitido */
   CORS_ORIGIN: string;
+  /** Configuración Cloudflare R2 */
+  CLOUDFLARE_R2_ENDPOINT: string;
+  CLOUDFLARE_R2_ACCESS_KEY: string;
+  CLOUDFLARE_R2_SECRET_KEY: string;
+  CLOUDFLARE_R2_BUCKET: string;
 }
 
 /**
@@ -49,6 +54,10 @@ export const ENV: Environment = {
   DATABASE_URL: process.env.DATABASE_URL,
   LOG_LEVEL: getEnvVar("LOG_LEVEL", "info"),
   CORS_ORIGIN: getEnvVar("CORS_ORIGIN", "*"),
+  CLOUDFLARE_R2_ENDPOINT: getEnvVar("URL3_Subida_Canchas"),
+  CLOUDFLARE_R2_ACCESS_KEY: getEnvVar("ID_Subida_Canchas"),
+  CLOUDFLARE_R2_SECRET_KEY: getEnvVar("Clave_Subida_Canchas"),
+  CLOUDFLARE_R2_BUCKET: getEnvVar("BUCKET_Subida_Canchas"),
 };
 
 /**

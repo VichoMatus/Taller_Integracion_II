@@ -7,8 +7,7 @@ import LocationMap from '../../../components/LocationMap';
 import Sidebar from '../../../components/layout/Sidebar';
 import StatsCard from '../../../components/charts/StatsCard';
 import { useAuthStatus } from '@/hooks/useAuthStatus';
-import { useComplejos } from '@/hooks/useComplejos'; // 🔥 NUEVO HOOK
-import { canchaService } from '@/services/canchaService';
+import { useCanchasSport } from '@/hooks/useCanchasSport'; // 🔥 HOOK OPTIMIZADO PARA DEPORTES
 import styles from './page.module.css';
 
 // 🔥 DATOS PARA LAS ESTADÍSTICAS DE FÚTBOL
@@ -52,163 +51,32 @@ export default function FutbolPage() {
   const [cardsToShow, setCardsToShow] = useState(4);
   const [isClient, setIsClient] = useState(false);
 
-  // 🔥 ESTADOS PARA CANCHAS DEL BACKEND
-  const [canchas, setCanchas] = useState<any[]>([]);
-  const [loadingCanchas, setLoadingCanchas] = useState(true);
-  const [errorCanchas, setErrorCanchas] = useState<string | null>(null);
-
-  // 🔥 HOOKS
+  // 🔥 Hook de autenticación
   const { buttonProps } = useAuthStatus();
-  const { 
-    complejos, 
-    loading: loadingComplejos, 
-    error: errorComplejos, 
-    getComplejoById 
-  } = useComplejos(); // 🔥 USAR EL NUEVO HOOK
 
-  // 🔥 CARGAR CANCHAS CON DATOS REALES DE COMPLEJOS
-  useEffect(() => {
-  const loadCanchas = async () => {
-    try {
-      setLoadingCanchas(true);
-      setErrorCanchas(null);
-      
-      console.log('🔄 [FutbolPage] Cargando canchas del backend...');
-      
-      // 🔥 OBTENER TODAS LAS CANCHAS
-      const response = await canchaService.getCanchas();
-      console.log('✅ [FutbolPage] Respuesta de canchas:', response);
-      
-      // 🔥 VALIDAR QUE LA RESPUESTA SEA UN ARRAY
-      const todasLasCanchas = Array.isArray(response) 
-        ? response 
-        : Array.isArray(response?.data) 
-          ? response.data 
-          : Array.isArray(response?.items) 
-            ? response.items 
-            : [];
-      
-      if (!Array.isArray(todasLasCanchas)) {
-        throw new Error('La respuesta del servidor no contiene un array de canchas válido');
+  // 🔥 USAR NUEVO HOOK OPTIMIZADO PARA DEPORTES
+  const {
+    canchas,
+    loading: loadingCanchas,
+    error: errorCanchas
+  } = useCanchasSport({
+    deporte: 'futbol',
+    deportesRelacionados: ['futsal', 'futbolito'],
+    fallbackComplejos: {
+      1: {
+        nombre: "Complejo Deportivo Norte",
+        direccion: "Av. Alemania 1234, Temuco, Chile"
+      },
+      2: {
+        nombre: "Complejo Deportivo Centro",
+        direccion: "Av. Pedro de Valdivia 567, Temuco, Chile"
+      },
+      3: {
+        nombre: "Complejo Deportivo Sur",
+        direccion: "Calle Montt 890, Temuco, Chile"
       }
-      
-      console.log('✅ [FutbolPage] Canchas validadas:', todasLasCanchas.length);
-      
-      // 🔥 FILTRAR CANCHAS DE FÚTBOL, FUTSAL Y FUTBOLITO
-      const canchasDeFutbol = todasLasCanchas.filter((cancha: any) => {
-        return ['futbol', 'futsal', 'futbolito'].includes(cancha.tipo);
-      });
-
-      console.log('⚽ [FutbolPage] Canchas de fútbol encontradas:', canchasDeFutbol.length);
-      
-      if (canchasDeFutbol.length === 0) {
-        throw new Error('No se encontraron canchas de fútbol en la respuesta del servidor');
-      }
-      
-      // 🔥 MAPEAR CANCHAS CON DATOS REALES DE COMPLEJOS
-      const canchasMapeadas = canchasDeFutbol.map((cancha: any) => {
-        let addressInfo = `Complejo ${cancha.establecimientoId}`;
-        let complejoNombre = `Complejo ${cancha.establecimientoId}`;
-        let rating = cancha.rating || 4.5;
-        
-        // 🔥 BUSCAR COMPLEJO EN LA LISTA YA CARGADA
-        if (cancha.establecimientoId && complejos.length > 0) {
-          const complejoData = complejos.find(c => c.id === cancha.establecimientoId);
-          
-          if (complejoData) {
-            complejoNombre = complejoData.nombre;
-            addressInfo = `${complejoData.nombre} - ${complejoData.direccion}`;
-            rating = complejoData.rating_promedio || cancha.rating || 4.5;
-            
-            console.log(`✅ [FutbolPage] Complejo encontrado para cancha ${cancha.id}:`, {
-              nombre: complejoData.nombre,
-              direccion: complejoData.direccion,
-              rating: complejoData.rating_promedio
-            });
-          } else {
-            console.warn(`⚠️ [FutbolPage] No se encontró complejo ${cancha.establecimientoId} para cancha ${cancha.id}`);
-          }
-        }
-        
-        // 🔥 MAPEAR CANCHA CON DATOS REALES DEL COMPLEJO
-        const mappedCancha = {
-          id: cancha.id,
-          imageUrl: `/sports/futbol/canchas/Cancha${cancha.id}.png`,
-          name: cancha.nombre || `Cancha ${cancha.id}`,
-          address: addressInfo,
-          rating: rating,
-          tags: [
-            cancha.techada ? "Techada" : "Al aire libre",
-            cancha.activa ? "Disponible" : "No disponible",
-            cancha.tipo.charAt(0).toUpperCase() + cancha.tipo.slice(1)
-          ],
-          description: `Cancha de ${cancha.tipo} en ${complejoNombre}`,
-          price: cancha.precioPorHora?.toString() || "25",
-          nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
-          sport: cancha.tipo,
-          establecimientoId: cancha.establecimientoId,
-          techada: cancha.techada,
-          activa: cancha.activa,
-          complejoNombre: complejoNombre
-        };
-        
-        return mappedCancha;
-      });
-      
-      console.log('🎉 [FutbolPage] Canchas con datos reales de complejo:', canchasMapeadas.length);
-      setCanchas(canchasMapeadas);
-      
-    } catch (error: any) {
-      console.error('❌ [FutbolPage] ERROR cargando canchas:', error);
-      setErrorCanchas(`Error: ${error.message}`);333333333333333333333333333
-        
-        // 🔥 FALLBACK CON DATOS ESTÁTICOS
-        const canchasEstaticas = [
-          {
-            id: 1,
-            imageUrl: "/sports/futbol/canchas/Cancha1.png",
-            name: "🚨 FALLBACK - Fútbol Centro",
-            address: "🚨 FALLBACK - Complejo Deportivo Norte - Av. Alemania 1234, Temuco",
-            rating: 4.8,
-            tags: ["DATOS OFFLINE", "Estacionamiento", "Iluminación"],
-            description: "🚨 Datos de fallback - API no disponible",
-            price: "35",
-            nextAvailable: "20:00-21:00",
-            sport: "futbol",
-            establecimientoId: 1,
-            techada: false,
-            activa: true,
-            complejoNombre: "🚨 FALLBACK - Complejo Norte"
-          },
-          {
-            id: 2,
-            imageUrl: "/sports/futbol/canchas/Cancha2.png",
-            name: "🚨 FALLBACK - Futsal Norte",
-            address: "🚨 FALLBACK - Complejo Deportivo Centro - Av. Pedro de Valdivia 567, Temuco",
-            rating: 3.5,
-            tags: ["DATOS OFFLINE", "Estacionamiento", "Futsal"],
-            description: "🚨 Datos de fallback - API no disponible",
-            price: "92",
-            nextAvailable: "14:30-15:30",
-            sport: "futsal",
-            establecimientoId: 2,
-            techada: true,
-            activa: true,
-            complejoNombre: "🚨 FALLBACK - Complejo Centro"
-          }
-        ];
-        
-        setCanchas(canchasEstaticas);
-      } finally {
-      setLoadingCanchas(false);
     }
-  };
-
-  // 🔥 SOLO CARGAR CUANDO LOS COMPLEJOS NO ESTÉN CARGANDO
-  if (!loadingComplejos) {
-    loadCanchas();
-  }
-}, [loadingComplejos, complejos]); // 🔥 CAMBIAR DEPENDENCIAS: quitar getComplejoById, agregar complejosActualizados
+  });
 
   useEffect(() => {
     setIsClient(true);
@@ -238,7 +106,7 @@ export default function FutbolPage() {
   }, []);
 
   // 🔥 USAR CANCHAS REALES PARA EL CARRUSEL
-  const topRatedCourts = canchas.slice(0, 6);
+  const topRatedCourts = canchas.slice(0, 6); // Máximo 6 canchas para el carrusel
   const totalSlides = Math.max(1, topRatedCourts.length - cardsToShow + 1);
 
   const nextSlide = () => {
@@ -266,6 +134,7 @@ export default function FutbolPage() {
     router.push(`/sports/futbol/canchas/canchaseleccionada?id=${court.id}`);
   };
 
+  // 🔥 Manejador del botón de usuario
   const handleUserButtonClick = () => {
     if (!buttonProps.disabled) {
       router.push(buttonProps.href);
@@ -276,26 +145,22 @@ export default function FutbolPage() {
   const updatedStats = [
     {
       ...footballStats[0],
-      value: canchas.filter(c => c.nextAvailable !== "No disponible").length.toString()
+      value: canchas.filter((c: any) => c.nextAvailable !== "No disponible").length.toString()
     },
     {
       ...footballStats[1],
       value: canchas.length > 0 ? 
-        `$${Math.min(...canchas.map(c => parseInt(c.price || '0')))}-${Math.max(...canchas.map(c => parseInt(c.price || '0')))}` : 
+        `$${Math.min(...canchas.map((c: any) => parseInt(c.price || '0')))}-${Math.max(...canchas.map((c: any) => parseInt(c.price || '0')))}` : 
         "$20-40"
     },
     {
       ...footballStats[2],
       value: canchas.length > 0 ? 
-        `${(canchas.reduce((acc, c) => acc + c.rating, 0) / canchas.length).toFixed(1)}⭐` : 
+        `${(canchas.reduce((acc: number, c: any) => acc + c.rating, 0) / canchas.length).toFixed(1)}⭐` : 
         "4.5⭐"
     },
-    footballStats[3]
+    footballStats[3] // Mantener jugadores por defecto
   ];
-
-  // 🔥 MOSTRAR ESTADO DE CARGA MIENTRAS SE CARGAN COMPLEJOS Y CANCHAS
-  const isLoading = loadingComplejos || loadingCanchas;
-  const hasError = errorComplejos || errorCanchas;
 
   if (!isClient) {
     return (
@@ -339,13 +204,11 @@ export default function FutbolPage() {
           </div>
         </div>
 
+        {/* 🔥 STATS CARDS CON DATOS ACTUALIZADOS */}
         <div className={styles.statsSection}>
           <h2 className={styles.statsTitle}>
             <span className={styles.statsTitleIcon}>📊</span>
             Estadísticas del Fútbol en Temuco
-            {/* 🔥 INDICADORES DE ESTADO */}
-            {loadingComplejos && <span style={{ fontSize: '12px', marginLeft: '10px', color: '#6b7280' }}>⏳ Cargando complejos...</span>}
-            {errorComplejos && <span style={{ fontSize: '12px', marginLeft: '10px', color: '#dc2626' }}>⚠️ Complejos offline</span>}
           </h2>
           <div className={styles.statsContainer}>
             {updatedStats.map((stat, index) => (
@@ -382,22 +245,21 @@ export default function FutbolPage() {
           </button>
         </div>
 
+        {/* 🔥 CARRUSEL CON DATOS REALES */}
         <div className={styles.topRatedSection}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
               <span className={styles.sectionIcon}>⭐</span>
               Canchas mejor calificadas
-              {/* 🔥 INDICADORES DE ESTADO DETALLADOS */}
-              {isLoading && <span style={{ fontSize: '14px', marginLeft: '10px', color: '#6b7280' }}>⏳ Cargando datos...</span>}
-              {hasError && <span style={{ fontSize: '14px', marginLeft: '10px', color: '#dc2626' }}>⚠️ Usando datos offline</span>}
-              {!isLoading && !hasError && <span style={{ fontSize: '14px', marginLeft: '10px', color: '#059669' }}>✅ Datos actualizados</span>}
+              {loadingCanchas && <span style={{ fontSize: '14px', marginLeft: '10px' }}>Cargando...</span>}
+              {errorCanchas && <span style={{ fontSize: '14px', marginLeft: '10px', color: 'red' }}>⚠️ Usando datos offline</span>}
             </h2>
             <div className={styles.carouselControls}>
               <button 
                 onClick={prevSlide} 
                 className={styles.carouselButton}
-                disabled={currentSlide === 0 || isLoading}
-                style={{ opacity: currentSlide === 0 || isLoading ? 0.5 : 1 }}
+                disabled={currentSlide === 0 || loadingCanchas}
+                style={{ opacity: currentSlide === 0 || loadingCanchas ? 0.5 : 1 }}
               >
                 ←
               </button>
@@ -407,8 +269,8 @@ export default function FutbolPage() {
               <button 
                 onClick={nextSlide} 
                 className={styles.carouselButton}
-                disabled={currentSlide === totalSlides - 1 || isLoading}
-                style={{ opacity: currentSlide === totalSlides - 1 || isLoading ? 0.5 : 1 }}
+                disabled={currentSlide === totalSlides - 1 || loadingCanchas}
+                style={{ opacity: currentSlide === totalSlides - 1 || loadingCanchas ? 0.5 : 1 }}
               >
                 →
               </button>
@@ -416,9 +278,9 @@ export default function FutbolPage() {
           </div>
           
           <div className={styles.carouselContainer}>
-            {isLoading ? (
+            {loadingCanchas ? (
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
-                <p>⏳ Cargando canchas y complejos...</p>
+                <p>Cargando canchas...</p>
               </div>
             ) : (
               <div 
@@ -427,7 +289,7 @@ export default function FutbolPage() {
                   transform: `translateX(-${currentSlide * (320 + 20)}px)`,
                 }}
               >
-                {topRatedCourts.map((court, index) => (
+                {topRatedCourts.map((court: any, index: number) => (
                   <CourtCard 
                     key={court.id || index} 
                     {...court} 
@@ -440,16 +302,9 @@ export default function FutbolPage() {
           </div>
         </div>
 
+        {/* Ubicación en el mapa */}
         <div className={styles.mapSection}>
-          <h2 className={styles.sectionTitle}>
-            Ubicación en el mapa de las canchas
-            {/* 🔥 MOSTRAR CANTIDAD DE COMPLEJOS CARGADOS */}
-            {!loadingComplejos && complejos.length > 0 && (
-              <span style={{ fontSize: '14px', marginLeft: '10px', color: '#6b7280' }}>
-                📍 {complejos.length} complejos disponibles
-              </span>
-            )}
-          </h2>
+          <h2 className={styles.sectionTitle}>Ubicación en el mapa de las canchas</h2>
           
           <div className={styles.locationSearch}>
             <div className={styles.locationInputContainer}>

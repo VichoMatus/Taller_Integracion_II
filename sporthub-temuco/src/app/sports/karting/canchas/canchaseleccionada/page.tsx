@@ -1,15 +1,18 @@
 'use client';
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar'; 
 import SearchBar from '@/components/SearchBar'; 
-import LocationMap from '@/components/LocationMap'; 
+import ReviewModal from '@/components/ReviewModal';
+import ReviewsList from '@/components/ReviewsList';
 import styles from './canchaseleccionada.module.css';
 
 import { useAuthStatus } from '@/hooks/useAuthStatus';
 import { canchaService } from '../../../../../services/canchaService';
 import { complejosService } from '../../../../../services/complejosService';
+import { resenaService } from '@/services/resenaService';
+import type { Resena } from '@/types/resena';
 
 // 🏁 DATOS ESTÁTICOS PARA CAMPOS NO DISPONIBLES EN LA API
 const staticContactData = {
@@ -43,11 +46,21 @@ function KartingPistaSeleccionadaContent() {
   const searchParams = useSearchParams();
   const { user, isLoading, isAuthenticated, buttonProps, refreshAuth } = useAuthStatus();
   
+  const mapInstanceRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+  
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [dataLoading, setDataLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [pista, setPista] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isMapLoaded, setIsMapLoaded] = useState(false);
+  
+  // 🆕 ESTADOS PARA RESEÑAS
+  const [reviews, setReviews] = useState<Resena[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
 
   // 🏁 OBTENER ID DE LA PISTA DESDE URL
   const pistaId = searchParams?.get('id') || searchParams?.get('pista');
@@ -170,6 +183,9 @@ function KartingPistaSeleccionadaContent() {
 
         setPista(mappedPista);
         
+        // 🆕 CARGAR RESEÑAS DESPUÉS DE CARGAR LA PISTA
+        await loadReviews(parseInt(pistaId));
+        
       } catch (error: any) {
         console.error('❌ Error cargando pista:', error);
         setError(`Error cargando pista: ${error.message}`);
@@ -205,6 +221,108 @@ function KartingPistaSeleccionadaContent() {
 
     loadPistaData();
   }, [pistaId]);
+  
+  // 🆕 FUNCIÓN PARA CARGAR RESEÑAS
+  const loadReviews = async (canchaId: number) => {
+    try {
+      setReviewsLoading(true);
+      setReviewError(null);
+      console.log('🔍 Cargando reseñas para pista ID:', canchaId);
+      
+      const resenasData = await resenaService.obtenerResenasPorCancha(canchaId);
+      console.log('✅ Reseñas cargadas:', resenasData);
+      setReviews(resenasData);
+    } catch (error: any) {
+      console.error('❌ Error cargando reseñas:', error);
+      setReviewError(`Error cargando reseñas: ${error.message}`);
+      setReviews([]);
+    } finally {
+      setReviewsLoading(false);
+    }
+  };
+  
+  // 🆕 FUNCIÓN PARA ENVIAR NUEVA RESEÑA
+  const handleSubmitReview = async (rating: number, comment: string) => {
+    if (!isAuthenticated) {
+      alert('Debes iniciar sesión para escribir una reseña');
+      router.push('/login');
+      return;
+    }
+    
+    if (!pistaId) {
+      alert('Error: No se puede identificar la pista');
+      return;
+    }
+    
+    try {
+      console.log('📝 Enviando reseña:', { rating, comment, pistaId: parseInt(pistaId) });
+      
+      await resenaService.crearResena({
+        id_cancha: parseInt(pistaId),
+        calificacion: rating,
+        comentario: comment.trim() || undefined
+      });
+      
+      console.log('✅ Reseña enviada exitosamente');
+      
+      await loadReviews(parseInt(pistaId));
+      setShowReviewModal(false);
+      alert('¡Reseña publicada exitosamente!');
+    } catch (error: any) {
+      console.error('❌ Error enviando reseña:', error);
+      let errorMessage = error?.response?.data?.message || error?.message || 'Error al enviar la reseña';
+      
+      if (typeof errorMessage !== 'string') {
+        errorMessage = JSON.stringify(errorMessage);
+      }
+      
+      throw new Error(errorMessage);
+    }
+  };
+
+  // 🗺️ INICIALIZAR MAPA DE GOOGLE
+  useEffect(() => {
+    if (!pista || !pista.coordinates || isMapLoaded) return;
+    
+    const initMap = () => {
+      const mapElement = document.getElementById('karting-map');
+      if (!mapElement || typeof window === 'undefined' || !(window as any).google) return;
+      
+      const { google } = window as any;
+      mapInstanceRef.current = new google.maps.Map(mapElement, {
+        center: { lat: pista.coordinates.lat, lng: pista.coordinates.lng },
+        zoom: 15,
+      });
+      
+      markerRef.current = new google.maps.Marker({
+        position: { lat: pista.coordinates.lat, lng: pista.coordinates.lng },
+        map: mapInstanceRef.current,
+        title: pista.name,
+        animation: google.maps.Animation.DROP,
+      });
+      
+      const infoWindowContent = `<h4>🏎️ ${pista.name}</h4><p>📍 ${pista.location}</p><p>🏟️ ${pista.capacity}</p><p>💰 $${pista.priceFrom}/h</p><p>⭐ ${pista.rating}/5</p>`;
+      const infoWindow = new google.maps.InfoWindow({ content: infoWindowContent });
+      (markerRef.current as any).infoWindow = infoWindow;
+      markerRef.current.addListener('click', () => {
+        document.querySelectorAll('[role="dialog"]').forEach((w: any) => w.style.display = 'none');
+        infoWindow.open(mapInstanceRef.current, markerRef.current);
+      });
+      infoWindow.open(mapInstanceRef.current, markerRef.current);
+      setIsMapLoaded(true);
+    };
+    
+    if (!(window as any).google) {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBMIE36wrh9juIn2RXAGVoBwnc-hhFfwd4&libraries=places`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => setTimeout(initMap, 100);
+      if (!document.querySelector(`script[src="${script.src}"]`)) document.head.appendChild(script);
+    } else {
+      setTimeout(initMap, 100);
+    }
+  }, [pista, isMapLoaded]);
 
   // 🏁 RESTO DE FUNCIONES ADAPTADAS
   const handleUserButtonClick = () => {
@@ -276,7 +394,12 @@ function KartingPistaSeleccionadaContent() {
   };
 
   const handleWriteReview = () => {
-    alert(`Función de escribir reseña de karting próximamente...`);
+    if (!isAuthenticated) {
+      alert('Debes iniciar sesión para escribir una reseña');
+      router.push('/login');
+      return;
+    }
+    setShowReviewModal(true);
   };
 
   // 🏁 LOADING Y ERROR
@@ -424,14 +547,7 @@ function KartingPistaSeleccionadaContent() {
           <div className={styles.locationSection}>
             <h3 className={styles.sectionTitle}>Ubicación del Kartódromo</h3>
             <div className={styles.mapContainer}>
-              <LocationMap 
-                latitude={pista.coordinates.lat} 
-                longitude={pista.coordinates.lng}
-                address={pista.location}
-                zoom={15}
-                height="250px"
-                sport="karting"
-              />
+              <div id="karting-map" style={{ width: '100%', height: '400px', borderRadius: '8px', overflow: 'hidden' }} />
               <div className={styles.locationInfo}>
                 <p className={styles.locationAddress}>{pista.location}</p>
                 <button className={styles.directionsButton} onClick={handleDirections}>
@@ -508,38 +624,26 @@ function KartingPistaSeleccionadaContent() {
 
         {/* Reviews Section */}
         <div className={styles.reviewsSection}>
-          <div className={styles.reviewsHeader}>
-            <div className={styles.reviewsTitle}>
-              <span className={styles.reviewsIcon}>⭐</span>
-              <span>{pista.rating.toFixed(1)} • {pista.reviews} reseñas de karting</span>
+          <ReviewsList
+            reviews={reviews}
+            isLoading={reviewsLoading}
+            onWriteReview={handleWriteReview}
+            showWriteButton={true}
+          />
+          {reviewError && (
+            <div style={{ color: 'red', textAlign: 'center', marginTop: '1rem' }}>
+              ⚠️ {reviewError}
             </div>
-            <button className={styles.writeReviewButton} onClick={handleWriteReview}>
-              ✏️ Escribir reseña
-            </button>
-          </div>
-
-          <div className={styles.reviewsList}>
-            {pista.reviewsList.map((review: any, index: number) => (
-                <div key={index} className={styles.reviewCard}>
-                  <div className={styles.reviewHeader}>
-                    <div className={styles.reviewUser}>
-                      <div className={styles.userAvatar}>
-                        {review.name.charAt(0)}
-                      </div>
-                      <div className={styles.userInfo}>
-                        <span className={styles.userName}>{review.name}</span>
-                        <div className={styles.reviewStars}>
-                          {renderStars(review.rating)}
-                        </div>
-                      </div>
-                    </div>
-                    <span className={styles.reviewDate}>{review.date}</span>
-                  </div>
-                  <p className={styles.reviewComment}>{review.comment}</p>
-                </div>
-              ))}
-          </div>
+          )}
         </div>
+
+        {/* Review Modal */}
+        <ReviewModal
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          onSubmit={handleSubmitReview}
+          canchaName={pista?.name || 'Pista de Karting'}
+        />
 
         {/* Help Button */}
         <div className={styles.helpSection}>

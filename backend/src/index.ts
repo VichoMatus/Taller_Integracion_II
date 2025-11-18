@@ -28,6 +28,7 @@ import favoritosRoutes from './favoritos/routes/favoritosRoute';
 import adminRoutes from './admin/presentation/routes/admin.routes';
 import bloqueoRoutes from './bloqueos/presentation/routes/bloqueos.routes';
 import reservasRoutes from './reservas/presentation/routes/reservas.routes';
+import reservasRoutesNew from './reservas/reservas.routes.new';
 import disponibilidadRoutes from './disponibilidad/presentation/routes/disponibilidad.routes';
 import pricingRoutes from './pricing/presentation/routes/pricing.routes';
 import pagosRoutes from './pagos/presentation/routes/pagos.routes';
@@ -35,6 +36,8 @@ import resenasRoutes from './resenas/presentation/routes/resenas.routes';
 import uploadsRoutes from './uploads/presentation/routes/uploads.routes';
 import canchasRoutes from './canchas/routes/canchas.routes';
 import complejosRoutes from './complejos/presentation/routes/complejos.routes';
+import canchaImagesRoutes from './canchas/presentation/routes/canchaImages.routes';
+import denunciasRoutes from './denuncias/routes/denunciasRoutes';
 
 /**
  * CONFIGURACIÓN E IMPORTACIONES
@@ -61,6 +64,10 @@ const allowedOrigins = [
   
   // Frontend Develop 
   'https://frontend-develop-yqgrkr-0246e7-168-232-167-73.traefik.me',
+  
+  // Google OAuth domains
+  'https://accounts.google.com',
+  'https://www.google.com',
   
   // Variables de entorno dinámicas
   process.env.FRONTEND_URL,
@@ -104,17 +111,25 @@ app.use(cors({
       return callback(null, true);
     }
     
+    // Permitir dominios de Google
+    if (origin.includes('google.com') || origin.includes('googleapis.com')) {
+      console.log('✅ CORS: Permitiendo dominio Google:', origin);
+      return callback(null, true);
+    }
+    
     console.log('❌ CORS: Origin NO permitido:', origin);
     console.log('📋 Origins permitidos explícitos:', allowedOrigins);
-    console.log('📋 Patrones permitidos: localhost:*, *.traefik.me, *168.232.167.73*');
+    console.log('📋 Patrones permitidos: localhost:*, *.traefik.me, *168.232.167.73*, *.google.com');
     
     const corsError = new Error(`CORS policy: Origin ${origin} is not allowed`);
     return callback(corsError);
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-  optionsSuccessStatus: 200
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Length', 'X-Request-Id'],
+  optionsSuccessStatus: 200,
+  preflightContinue: false
 }));
 
 // Parse JSON bodies
@@ -176,7 +191,16 @@ app.use('/api/pricing', pricingRoutes);
 // Rutas de pagos
 app.use('/api/pagos', pagosRoutes);
 
-// Rutas de reservas
+// ============================================
+// Rutas de reservas (NUEVA IMPLEMENTACIÓN LIMPIA)
+// ============================================
+console.log('🆕 Montando rutas de reservas (NUEVA IMPLEMENTACIÓN)...');
+app.use('/api/v1/reservas', reservasRoutesNew);
+
+// ============================================
+// Rutas de reservas LEGACY (para admin)
+// ============================================
+console.log('📦 Montando rutas de reservas LEGACY (para admin)...');
 app.use('/api/reservas', reservasRoutes);
 
 // Rutas de reseñas
@@ -187,6 +211,8 @@ app.use('/api/uploads', uploadsRoutes);
 
 // Rutas de canchas
 app.use('/api/canchas', canchasRoutes);
+// Rutas públicas/privadas relacionadas con imágenes de canchas
+app.use('/api/canchas', canchaImagesRoutes);
 
 // Rutas de complejos
 app.use('/api/complejos', complejosRoutes);
@@ -242,6 +268,9 @@ app.use('/api/notificaciones', notificacionesRoutes);
 
 // Rutas de favoritos
 app.use('/api/favoritos', favoritosRoutes);
+
+// Rutas de denuncias
+app.use('/api/denuncias', denunciasRoutes);
 
 // Ruta de información general
 app.get('/api', (req, res) => {

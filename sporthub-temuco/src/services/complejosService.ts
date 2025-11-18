@@ -69,14 +69,30 @@ export const complejosService = {
   },
 
   /**
-   * Obtener canchas de un complejo
+   * Obtener canchas del admin logueado (todas sus canchas del complejo)
    */
   async getCanchasDeComplejo(idComplejo: number) {
     try {
-      const response = await apiBackend.get(`/complejos/${idComplejo}/canchas`);
-      return response.data;
+      // Usar el endpoint de canchas del admin que devuelve todas las canchas del complejo del admin
+      const response = await apiBackend.get('/canchas/admin', {
+        params: {
+          page: 1,
+          page_size: 100 // Obtener todas las canchas (max 100)
+        }
+      });
+      console.log('🏟️ [getCanchasDeComplejo] Respuesta del backend:', response.data);
+      
+      // El backend devuelve { ok: true, data: { items: [...], total: X, page: 1, page_size: 20 } }
+      const data = response.data.data || response.data;
+      const canchas = data.items || data;
+      
+      console.log('🏟️ [getCanchasDeComplejo] Canchas obtenidas:', canchas?.length || 0);
+      console.log('🏟️ [getCanchasDeComplejo] Total en BD:', data.total);
+      
+      return canchas;
     } catch (error: any) {
-      throw new Error('Error al obtener canchas del complejo: ' + (error.response?.data?.message || error.message));
+      console.error('❌ [getCanchasDeComplejo] Error:', error);
+      throw new Error('Error al obtener canchas del admin: ' + (error.response?.data?.message || error.message));
     }
   },
 

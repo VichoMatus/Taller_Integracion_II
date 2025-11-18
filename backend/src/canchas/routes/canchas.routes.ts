@@ -107,7 +107,9 @@ router.get("/", async (req, res) => {
     };
     
     const { data } = await http.get('/canchas', { params });
-    res.json({ ok: true, data });
+    
+    // 🔥 RETORNAR RESPUESTA
+    return res.json({ ok: true, data });
   } catch (error: any) {
     res.status(error.response?.status || 500).json({ 
       ok: false, 
@@ -123,6 +125,10 @@ router.get("/admin", authMiddleware, requireRole("admin", "super_admin"), async 
     const http = buildHttpClient(ENV.FASTAPI_URL, () => getBearerFromReq(req));
     
     // Parámetros específicos para el panel admin
+    // Ajustes: validar page_size para evitar que FastAPI devuelva 422 al pedir demasiados items
+    const requestedPageSize = Number(req.query.page_size || 20);
+    const pageSize = Number.isFinite(requestedPageSize) ? Math.max(1, Math.min(requestedPageSize, 100)) : 20;
+
     const params = {
       id_complejo: req.query.id_complejo,
       q: req.query.q,
@@ -130,11 +136,25 @@ router.get("/admin", authMiddleware, requireRole("admin", "super_admin"), async 
       sort_by: req.query.sort_by || 'nombre',
       order: req.query.order || 'asc',
       page: req.query.page || 1,
-      page_size: req.query.page_size || 20,
+      page_size: pageSize,
     };
     
-    const { data } = await http.get('/canchas/admin', { params });
-    res.json({ ok: true, data });
+    try {
+      const { data } = await http.get('/canchas/admin', { params });
+      return res.json({ ok: true, data });
+    } catch (error: any) {
+      // Si FastAPI devuelve 422 por page_size, intentar con un page_size menor
+      if (error?.response?.status === 422 && pageSize > 20) {
+        try {
+          const smaller = { ...params, page_size: 20 };
+          const { data } = await http.get('/canchas/admin', { params: smaller });
+          return res.json({ ok: true, data });
+        } catch (err2: any) {
+          return res.status(err2.response?.status || 500).json({ ok: false, error: { code: err2.response?.status || 500, message: err2.message } });
+        }
+      }
+      return res.status(error.response?.status || 500).json({ ok: false, error: { code: error.response?.status || 500, message: error.message } });
+    }
   } catch (error: any) {
     res.status(error.response?.status || 500).json({ 
       ok: false, 

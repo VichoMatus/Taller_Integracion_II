@@ -119,7 +119,7 @@ export default function SeguridadPage() {
   const fullName = userData ? `${userData.nombre} ${userData.apellido}` : "Usuario";
 
   return (
-    <UserLayout userName={fullName} notificationCount={2}>
+    <UserLayout userName={fullName}>
       <div className="seguridad-wrapper">
         <div className="seguridad-container">
           

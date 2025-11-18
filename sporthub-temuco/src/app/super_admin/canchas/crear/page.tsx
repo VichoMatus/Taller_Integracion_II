@@ -15,11 +15,10 @@ const TIPOS_CANCHA = [
 ];
 
 interface Complejo {
-  id_complejo: number;
+  id: number;
   nombre: string;
   direccion?: string;
   comuna?: string;
-  activo: boolean;
 }
 
 export default function CrearCanchaPage() {
@@ -30,18 +29,22 @@ export default function CrearCanchaPage() {
   const [success, setSuccess] = useState('');
   const [complejos, setComplejos] = useState<Complejo[]>([]);
   const [imagenPreview, setImagenPreview] = useState<string>('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [canchaCreada, setCanchaCreada] = useState<any>(null);
 
   // Estado del formulario
   const [formData, setFormData] = useState({
     nombre: '',
     tipo: 'futbol',
     techada: false,
-    id_complejo: 0,
+    id_complejo: '' as any, // Iniciar como string vacío, se convertirá a número al seleccionar
     precioPorHora: 0,
     capacidad: 10,
     descripcion: '',
-    id_deporte: 0,
-    imagenUrl: ''
+    imagenUrl: '',
+    iluminacion: false,
+    largo: 0,
+    ancho: 0
   });
 
   // Cargar complejos disponibles al montar el componente
@@ -49,31 +52,64 @@ export default function CrearCanchaPage() {
     const cargarComplejos = async () => {
       try {
         setIsLoadingComplejos(true);
-        console.log('🔍 Cargando complejos disponibles...');
+        console.log('🔍 [SuperAdmin] Cargando complejos disponibles...');
         const data = await complejosService.getComplejos();
-        console.log('✅ Complejos cargados:', data);
+        console.log('✅ [SuperAdmin] Complejos cargados (raw):', data);
+        console.log('📊 [SuperAdmin] Tipo de data:', typeof data, 'Es array?:', Array.isArray(data));
         
         // Adaptar estructura según respuesta del backend
-        let complejosArray: Complejo[] = [];
+        let complejosArray: any[] = [];
         if (Array.isArray(data)) {
           complejosArray = data;
+          console.log('📋 [SuperAdmin] Usando array directo');
         } else if (data.data && Array.isArray(data.data)) {
           complejosArray = data.data;
+          console.log('📋 [SuperAdmin] Extrayendo de .data');
         } else if (data.items && Array.isArray(data.items)) {
           complejosArray = data.items;
+          console.log('📋 [SuperAdmin] Extrayendo de .items');
         }
         
-        setComplejos(complejosArray.filter(c => c.activo));
+        console.log('📋 [SuperAdmin] Complejos array length:', complejosArray.length);
+        if (complejosArray.length > 0) {
+          console.log('📋 [SuperAdmin] Primer complejo (raw):', complejosArray[0]);
+        }
+        
+        // Mapear a formato esperado con id normalizado
+        const complejosFormateados = complejosArray
+          .filter((c: any) => {
+            const esValido = c && c.activo !== false && (c.id || c.id_complejo);
+            if (!esValido) console.log('⚠️ [SuperAdmin] Complejo filtrado:', c);
+            return esValido;
+          })
+          .map((c: any) => {
+            const complejo = {
+              id: c.id || c.id_complejo || 0,
+              nombre: c.nombre || 'Sin nombre',
+              direccion: c.direccion || '',
+              comuna: c.comuna || ''
+            };
+            console.log('✅ [SuperAdmin] Complejo mapeado:', complejo);
+            return complejo;
+          });
+        
+        console.log('📋 [SuperAdmin] Total complejos formateados:', complejosFormateados.length);
+        setComplejos(complejosFormateados);
         
         // Si hay complejos, establecer el primero por defecto
-        if (complejosArray.length > 0) {
+        if (complejosFormateados.length > 0 && complejosFormateados[0].id > 0) {
+          const primerComplejo = complejosFormateados[0];
+          console.log('🎯 [SuperAdmin] Estableciendo complejo por defecto:', primerComplejo);
           setFormData(prev => ({
             ...prev,
-            id_complejo: complejosArray[0].id_complejo
+            id_complejo: primerComplejo.id
           }));
+          console.log('✅ [SuperAdmin] FormData actualizado con id_complejo:', primerComplejo.id);
+        } else {
+          console.warn('⚠️ [SuperAdmin] No hay complejos disponibles para seleccionar');
         }
       } catch (err: any) {
-        console.error('❌ Error al cargar complejos:', err);
+        console.error('❌ [SuperAdmin] Error al cargar complejos:', err);
         setError('Error al cargar los complejos. Recarga la página.');
       } finally {
         setIsLoadingComplejos(false);
@@ -87,10 +123,22 @@ export default function CrearCanchaPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
     
+    // Lista de campos que deben ser números
+    const camposNumericos = ['id_complejo', 'precioPorHora', 'capacidad', 'largo', 'ancho'];
+    
+    let valorProcesado: any = value;
+    
+    if (type === 'checkbox') {
+      valorProcesado = (e.target as HTMLInputElement).checked;
+    } else if (type === 'number' || camposNumericos.includes(name)) {
+      // Convertir a número solo si el valor no está vacío
+      const numValue = value === '' ? 0 : Number(value);
+      valorProcesado = isNaN(numValue) ? 0 : numValue;
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : 
-               type === 'number' ? Number(value) : value
+      [name]: valorProcesado
     }));
   };
 
@@ -146,7 +194,7 @@ export default function CrearCanchaPage() {
         throw new Error('La capacidad debe ser al menos 1');
       }
 
-      if (formData.id_complejo === 0) {
+      if (!formData.id_complejo || formData.id_complejo === 0 || formData.id_complejo === '') {
         throw new Error('Debe seleccionar un complejo deportivo');
       }
 
@@ -159,12 +207,17 @@ export default function CrearCanchaPage() {
         precioPorHora: formData.precioPorHora,
         capacidad: formData.capacidad,
         descripcion: formData.descripcion.trim() || undefined,
-        imagenUrl: formData.imagenUrl || undefined
+        imagenUrl: formData.imagenUrl || undefined,
+        iluminacion: formData.iluminacion,
+        largo: formData.largo > 0 ? formData.largo : undefined,
+        ancho: formData.ancho > 0 ? formData.ancho : undefined
       });
 
       console.log('✅ Cancha creada exitosamente:', nuevaCancha);
       
-      setSuccess('Cancha creada exitosamente');
+      // Mostrar modal de éxito
+      setCanchaCreada(nuevaCancha);
+      setShowSuccessModal(true);
       
       // Redirigir después de 2 segundos
       setTimeout(() => {
@@ -287,12 +340,12 @@ export default function CrearCanchaPage() {
                   required
                   disabled={isLoading || isLoadingComplejos}
                 >
-                  <option value={0} disabled>
+                  <option value="" disabled>
                     {isLoadingComplejos ? 'Cargando complejos...' : 'Seleccione un complejo'}
                   </option>
-                  {complejos.map(complejo => (
-                    <option key={complejo.id_complejo} value={complejo.id_complejo}>
-                      {complejo.nombre} {complejo.comuna && `- ${complejo.comuna}`}
+                  {complejos.map((complejo, index) => (
+                    <option key={`complejo-${complejo.id}-${index}`} value={complejo.id}>
+                      {complejo.nombre} {complejo.comuna && `- ${complejo.comuna}`} (ID: {complejo.id})
                     </option>
                   ))}
                 </select>
@@ -313,6 +366,60 @@ export default function CrearCanchaPage() {
                   />
                   <span>Cancha Techada</span>
                 </label>
+              </div>
+
+              <div className="edit-form-group">
+                <label className="edit-checkbox-label">
+                  <input
+                    type="checkbox"
+                    name="iluminacion"
+                    checked={formData.iluminacion}
+                    onChange={handleChange}
+                    disabled={isLoading}
+                    className="edit-checkbox-input"
+                  />
+                  <span>Tiene Iluminación</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          {/* Dimensiones */}
+          <div className="edit-section">
+            <h3 className="edit-section-title">Dimensiones de la Cancha</h3>
+            <div className="edit-form-grid">
+              <div className="edit-form-group">
+                <label htmlFor="largo" className="edit-form-label">Largo (metros):</label>
+                <input
+                  type="number"
+                  id="largo"
+                  name="largo"
+                  value={formData.largo || ''}
+                  onChange={handleChange}
+                  className="edit-form-input"
+                  placeholder="Ej: 40"
+                  min="0"
+                  step="0.5"
+                  disabled={isLoading}
+                />
+                <small className="edit-form-help">Largo de la cancha en metros (opcional)</small>
+              </div>
+
+              <div className="edit-form-group">
+                <label htmlFor="ancho" className="edit-form-label">Ancho (metros):</label>
+                <input
+                  type="number"
+                  id="ancho"
+                  name="ancho"
+                  value={formData.ancho || ''}
+                  onChange={handleChange}
+                  className="edit-form-input"
+                  placeholder="Ej: 20"
+                  min="0"
+                  step="0.5"
+                  disabled={isLoading}
+                />
+                <small className="edit-form-help">Ancho de la cancha en metros (opcional)</small>
               </div>
             </div>
           </div>
@@ -379,51 +486,183 @@ export default function CrearCanchaPage() {
           <div className="edit-section">
             <h3 className="edit-section-title">Imagen de la Cancha</h3>
             <div className="edit-form-group">
-              <label htmlFor="imagen" className="edit-form-label">Foto de la Cancha (Opcional):</label>
-              <input
-                type="file"
-                id="imagen"
-                name="imagen"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="edit-form-input"
-                disabled={isLoading}
-              />
-              <small className="edit-form-help">
-                Formatos aceptados: JPG, PNG, GIF (máx. 5MB)
-              </small>
+              <label className="edit-form-label">Foto de la Cancha (Opcional):</label>
               
-              {/* Preview de la imagen */}
-              {imagenPreview && (
-                <div style={{ marginTop: '1rem' }}>
-                  <img 
-                    src={imagenPreview} 
-                    alt="Preview" 
-                    style={{ 
-                      maxWidth: '300px', 
-                      maxHeight: '200px', 
-                      objectFit: 'cover',
-                      borderRadius: '8px',
-                      border: '2px solid #e5e7eb'
-                    }} 
+              {!imagenPreview ? (
+                <div>
+                  <input
+                    type="file"
+                    id="imagen"
+                    name="imagen"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    style={{ display: 'none' }}
+                    disabled={isLoading}
                   />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setImagenPreview('');
-                      setFormData(prev => ({ ...prev, imagenUrl: '' }));
+                  <label 
+                    htmlFor="imagen" 
+                    className="btn-guardar"
+                    style={{ 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      gap: '0.5rem',
+                      cursor: isLoading ? 'not-allowed' : 'pointer',
+                      opacity: isLoading ? 0.5 : 1
                     }}
-                    className="btn-volver"
-                    style={{ marginTop: '0.5rem', padding: '0.5rem 1rem', fontSize: '0.875rem' }}
                   >
-                    Eliminar imagen
-                  </button>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Seleccionar Imagen
+                  </label>
+                  <small className="edit-form-help" style={{ display: 'block', marginTop: '0.5rem' }}>
+                    Formatos aceptados: JPG, PNG, GIF (máx. 5MB)
+                  </small>
+                </div>
+              ) : (
+                <div style={{ marginTop: '1rem' }}>
+                  <div style={{
+                    position: 'relative',
+                    display: 'inline-block',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+                    border: '3px solid #10b981'
+                  }}>
+                    <img 
+                      src={imagenPreview} 
+                      alt="Vista previa de la cancha" 
+                      style={{ 
+                        maxWidth: '400px', 
+                        maxHeight: '300px', 
+                        objectFit: 'cover',
+                        display: 'block'
+                      }} 
+                    />
+                  </div>
+                  <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem' }}>
+                    <input
+                      type="file"
+                      id="imagen-change"
+                      name="imagen"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      style={{ display: 'none' }}
+                      disabled={isLoading}
+                    />
+                    <label 
+                      htmlFor="imagen-change" 
+                      className="btn-volver"
+                      style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem',
+                        cursor: isLoading ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      Cambiar imagen
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagenPreview('');
+                        setFormData(prev => ({ ...prev, imagenUrl: '' }));
+                        const input = document.getElementById('imagen') as HTMLInputElement;
+                        if (input) input.value = '';
+                      }}
+                      className="btn-volver"
+                      style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem',
+                        backgroundColor: '#ef4444',
+                        borderColor: '#ef4444'
+                      }}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Eliminar
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
           </div>
         </form>
       </div>
+
+      {/* Modal de Éxito */}
+      {showSuccessModal && canchaCreada && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '2rem',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            animation: 'slideIn 0.3s ease-out'
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                backgroundColor: '#d1fae5',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1rem'
+              }}>
+                <svg style={{ width: '32px', height: '32px', color: '#10b981' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#111827', marginBottom: '0.5rem' }}>
+                ¡Cancha Creada Exitosamente!
+              </h3>
+              <p style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem' }}>
+                La cancha <strong>{canchaCreada.nombre}</strong> ha sido creada correctamente.
+              </p>
+              <div style={{
+                backgroundColor: '#f9fafb',
+                borderRadius: '8px',
+                padding: '1rem',
+                textAlign: 'left',
+                marginTop: '1rem'
+              }}>
+                <div style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '0.5rem' }}>
+                  <strong>Tipo:</strong> {canchaCreada.tipo?.charAt(0).toUpperCase() + canchaCreada.tipo?.slice(1) || 'N/A'}
+                </div>
+                <div style={{ fontSize: '0.875rem', color: '#374151', marginBottom: '0.5rem' }}>
+                  <strong>Complejo:</strong> {complejos.find(c => c.id === formData.id_complejo)?.nombre || 'N/A'}
+                </div>
+                <div style={{ fontSize: '0.875rem', color: '#374151' }}>
+                  <strong>Estado:</strong> <span style={{ color: '#10b981' }}>● Activa</span>
+                </div>
+              </div>
+            </div>
+            <div style={{ textAlign: 'center', fontSize: '0.875rem', color: '#9ca3af' }}>
+              Redirigiendo al panel de canchas...
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

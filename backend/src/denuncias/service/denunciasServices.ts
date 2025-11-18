@@ -7,35 +7,58 @@ import {
   DenunciaListQuery,
 } from "../types/denunciasTypes";
 
-const API_BASE = "http://api-h1d7oi-6fc869-168-232-167-73.traefik.me";
+// URL del taller4 backend - SIEMPRE usar la API subida
+const API_BASE = "http://api-h1d7oi-a881cc-168-232-167-73.traefik.me/api/v1";
 
 export class DenunciasService {
-  async listar(params?: DenunciaListQuery): Promise<Denuncia[]> {
-    const { data } = await axios.get(`${API_BASE}/denuncias`, { params });
+  /**
+   * Listar mis denuncias (usuario autenticado)
+   */
+  async listarMias(token: string): Promise<Denuncia[]> {
+    const { data } = await axios.get(`${API_BASE}/denuncias/mias`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     return data;
   }
 
-  async obtener(id: string | number): Promise<Denuncia> {
-    const { data } = await axios.get(`${API_BASE}/denuncias/${id}`);
+  /**
+   * Crear nueva denuncia
+   */
+  async crear(payload: DenunciaCreate, token: string): Promise<Denuncia> {
+    const { data } = await axios.post(`${API_BASE}/denuncias`, payload, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     return data;
   }
 
-  async crear(payload: DenunciaCreate): Promise<Denuncia> {
-    const { data } = await axios.post(`${API_BASE}/denuncias`, payload);
+  /**
+   * Listar todas las denuncias (solo admin)
+   */
+  async listarAdmin(params: DenunciaListQuery, token: string): Promise<Denuncia[]> {
+    const { data } = await axios.get(`${API_BASE}/denuncias/admin`, {
+      params,
+      headers: { Authorization: `Bearer ${token}` }
+    });
     return data;
   }
 
-  async actualizar(id: string | number, payload: DenunciaUpdate): Promise<Denuncia> {
-    const { data } = await axios.put(`${API_BASE}/denuncias/${id}`, payload);
+  /**
+   * Ver detalle de una denuncia (solo admin)
+   */
+  async obtenerAdmin(id: number, token: string): Promise<Denuncia> {
+    const { data } = await axios.get(`${API_BASE}/denuncias/admin/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     return data;
   }
 
-  async eliminar(id: string | number): Promise<void> {
-    await axios.delete(`${API_BASE}/denuncias/${id}`);
-  }
-
-  async cambiarEstado(id: string | number, estado: Denuncia["estado"]): Promise<Denuncia> {
-    const { data } = await axios.patch(`${API_BASE}/denuncias/${id}/estado`, { estado });
+  /**
+   * Actualizar estado de una denuncia (solo admin)
+   */
+  async actualizarAdmin(id: number, payload: DenunciaUpdate, token: string): Promise<Denuncia> {
+    const { data } = await axios.put(`${API_BASE}/denuncias/admin/${id}`, payload, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
     return data;
   }
 }

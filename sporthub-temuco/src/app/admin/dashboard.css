@@ -143,6 +143,29 @@
   margin-bottom: 24px;
   animation: slideInParallax 1s ease-out 0.3s both;
 }
+/* Force equal heights for columns by making grid rows share the same height */
+.management-sections-grid {
+  grid-auto-rows: 1fr; /* each grid row will be stretched to same height */
+}
+
+/* Make each management section stretch vertically and allow the inner table to scroll
+   so both panels are visually balanced and we can measure visible rows for mini-panels. */
+.management-sections-grid {
+  align-items: stretch;
+}
+
+.management-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 220px; /* ensures room for at least several rows */
+}
+
+.management-section .management-table {
+  flex: 1 1 auto;
+  height: 100%; /* stretch to panel height */
+  max-height: none; /* allow table to consume available space (equal height with sibling) */
+  overflow-y: visible; /* avoid scroll in mini panels, show all content in equal-height block */
+}
 
 @keyframes slideInParallax {
   from {
@@ -275,7 +298,7 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   border-collapse: separate;
   border-spacing: 0;
-  overflow: hidden;
+  overflow-x: auto; /* permitir scroll horizontal en resoluciones pequeñas */
   border: none;
   animation: tableSlideIn 0.8s ease-out 0.5s both;
 }
@@ -615,6 +638,7 @@
   
   .management-section {
     padding: 16px;
+    min-height: auto; /* allow stacking on small screens */
   }
   
   .section-header {
@@ -656,6 +680,8 @@
   
   .management-sections-grid {
     gap: 12px;
+    grid-template-columns: 1fr; /* stack sections vertically on phones */
+    grid-auto-rows: auto; /* allow panels to auto size */
   }
   
   .management-table {
@@ -671,6 +697,20 @@
     width: 24px;
     height: 24px;
     font-size: 11px;
+  }
+
+  /* Reduce StatsCard density for phone screens */
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .stats-card-override {
+    padding: 12px 10px !important;
+  }
+
+  .stats-card-override .text-2xl {
+    font-size: 18px !important;
   }
 }
 
@@ -1157,20 +1197,20 @@
 /* ESTILOS GENERALES PARA PÁGINAS DE GESTIÓN */
 /* ========================================= */
 
-/* Layout principal para páginas de gestión - OPTIMIZADO para usar más altura */
+/* Layout principal para páginas de gestión */
 .admin-page-layout {
   background-color: #e2e8f0; /* Fondo gris claro */
   min-height: 100vh;
-  padding: 16px; /* Reducido de 24px a 16px */
-  padding-top: calc(64px + 16px); /* Reducido espacio superior */
+  padding: 24px;
+  padding-top: calc(64px + 24px); /* Espacio para header fijo */
 }
 
-/* Header principal de páginas de gestión con animaciones - OPTIMIZADO */
+/* Header principal de páginas de gestión con animaciones */
 .admin-main-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px; /* Reducido de 32px a 20px */
+  margin-bottom: 32px;
   animation: headerSlideDown 0.8s ease-out;
   position: relative;
 }
@@ -1528,6 +1568,25 @@
 
 .btn-ver:hover {
   background-color: #4b5563;
+  transform: scale(1.05);
+}
+
+/* Botones confirmación y cancelación (usados en admin reservas) */
+.btn-action.btn-confirmar {
+  background-color: #10b981; /* verde */
+  color: white;
+}
+.btn-action.btn-confirmar:hover {
+  background-color: #059669;
+  transform: scale(1.05);
+}
+
+.btn-action.btn-cancelar {
+  background-color: #ef4444; /* rojo */
+  color: white;
+}
+.btn-action.btn-cancelar:hover {
+  background-color: #dc2626;
   transform: scale(1.05);
 }
 
@@ -2064,12 +2123,12 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(2, 6, 23, 0.55); /* overlay más sutil y oscuro */
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-  animation: modalFadeIn 0.2s ease-out;
+  z-index: 999999; /* asegurar que se muestre sobre todo */
+  animation: modalFadeIn 0.18s ease-out;
 }
 
 @keyframes modalFadeIn {
@@ -2079,14 +2138,15 @@
 
 /* Modal Container */
 .modal-container {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  max-width: 90vw;
-  max-height: 90vh;
-  width: 600px;
+  background: linear-gradient(180deg, var(--white) 0%, #fbfdfc 100%);
+  border-radius: 14px;
+  box-shadow: var(--card-shadow);
+  border: 1px solid rgba(14, 165, 122, 0.06);
+  max-width: 92vw;
+  max-height: 88vh;
+  width: min(720px, 92vw);
   overflow: hidden;
-  animation: modalSlideIn 0.3s ease-out;
+  animation: modalSlideIn 0.25s cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
 @keyframes modalSlideIn {
@@ -2118,29 +2178,103 @@
 }
 
 .modal-close {
-  background: none;
-  border: none;
+  background: rgba(0,0,0,0.03);
+  border: 1px solid rgba(0,0,0,0.03);
+  border-radius: 10px;
   cursor: pointer;
-  padding: 8px;
-  border-radius: 6px;
-  color: #6b7280;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 6px 10px;
+  color: var(--text-gray);
+  transition: all 0.12s ease;
 }
 
 .modal-close:hover {
-  background-color: #f3f4f6;
-  color: #374151;
+  background-color: rgba(0,0,0,0.06);
+  color: var(--text-dark);
 }
 
 /* Modal Body */
 .modal-body {
-  padding: 24px;
-  max-height: 60vh;
+  padding: 20px 24px;
+  max-height: calc(88vh - 120px);
   overflow-y: auto;
+  color: var(--text-dark);
 }
+
+/* Modal actions (botones) */
+.modal-actions {
+  display: flex;
+  justify-content: center; /* centrar botones */
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.method-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  align-items: center; /* centrar las opciones */
+}
+
+.method-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+.method-option input[type="radio"] {
+  width: 16px;
+  height: 16px;
+}
+
+.method-option.selected {
+  border-color: var(--teal-500);
+  background-color: #ecfeff;
+  box-shadow: 0 6px 18px rgba(20,184,166,0.08);
+}
+
+.admin-toast-container {
+  position: fixed;
+  top: 84px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1000000;
+}
+
+.admin-toast { 
+  min-width: 260px;
+  max-width: 420px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+  color: #fff;
+}
+.admin-toast-success { background: linear-gradient(135deg, #10b981, #059669);} 
+.admin-toast-error { background: linear-gradient(135deg, #ef4444, #dc2626);} 
+.admin-toast-info { background: linear-gradient(135deg, #3b82f6, #2563eb);} 
+.admin-toast-title { font-weight: 700; margin-bottom: 4px; }
+.admin-toast-message { font-size: 0.95rem; }
+
+.admin-search-box {
+  background: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+  padding: 8px;
+  border-radius: 6px;
+  margin-top: 8px;
+}
+.autocomplete-item {
+  padding: 8px;
+  cursor: pointer;
+}
+.autocomplete-item:hover { background: rgba(14,165,122,0.04) }
 
 .modal-info-grid {
   display: grid;
@@ -2166,6 +2300,11 @@
   font-size: 1rem;
   color: #111827;
   font-weight: 500;
+}
+
+.modal-title {
+  font-size: 1.125rem;
+  color: var(--text-dark);
 }
 
 .modal-rating {
@@ -2909,13 +3048,13 @@
   }
 }
 
-/* Estilos para la página de edición/visualización de canchas - OPTIMIZADO */
+/* Estilos para la página de edición/visualización de canchas */
 .edit-court-container {
-  padding: 1rem; /* Reducido de 2rem a 1rem */
+  padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-  min-height: calc(100vh - 140px); /* Reducido de 200px a 140px */
+  min-height: calc(100vh - 200px);
 }
 
 .edit-court-card {
@@ -2944,7 +3083,7 @@
 }
 
 .edit-section {
-  padding: 1.5rem; /* Reducido de 2.5rem a 1.5rem */
+  padding: 2.5rem;
   border-bottom: 1px solid rgba(229, 231, 235, 0.5);
   position: relative;
   transition: all 0.3s ease;
@@ -3279,12 +3418,16 @@
 }
 
 .error-container {
-  padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, #fee2e2, #fecaca);
-  border-radius: 12px;
-  border-left: 4px solid #dc2626;
-  margin: 1rem 0;
-  box-shadow: 0 4px 6px rgba(220, 38, 38, 0.1);
+  text-align: center;
+  padding: 4rem;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  border-radius: 20px;
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.1),
+    0 8px 16px rgba(0, 0, 0, 0.06);
+  margin: 2rem;
+  border: 1px solid rgba(229, 231, 235, 0.3);
+  backdrop-filter: blur(20px);
 }
 
 .error-container h2 {
@@ -3298,28 +3441,10 @@
 }
 
 .error-container p {
-  color: #991b1b;
-  font-size: 0.95rem;
-  margin: 0;
-  line-height: 1.5;
-  font-weight: 500;
-}
-
-.success-container {
-  padding: 1rem 1.5rem;
-  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-  border-radius: 12px;
-  border-left: 4px solid #10b981;
-  margin: 1rem 0;
-  box-shadow: 0 4px 6px rgba(16, 185, 129, 0.1);
-}
-
-.success-container p {
-  color: #065f46;
-  font-size: 0.95rem;
-  margin: 0;
-  line-height: 1.5;
-  font-weight: 500;
+  color: #6b7280;
+  font-size: 1.1rem;
+  margin-bottom: 2.5rem;
+  line-height: 1.6;
 }
 
 .loading-container {
@@ -3917,5 +4042,346 @@
   .btn-pagination {
     min-width: 36px;
     padding: 0.4rem 0.8rem;
+  }
+}
+
+/* ========================================
+   ESTILOS PARA RESEÑAS - TABS Y BANNERS
+   ======================================== */
+
+/* Tabs de navegación tipo filtro */
+.filter-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0;
+}
+
+.filter-tab {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  background-color: transparent;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  position: relative;
+  bottom: -2px;
+}
+
+.filter-tab:hover:not(.active) {
+  background-color: #f3f4f6;
+  color: #374151;
+  transform: translateY(-2px);
+}
+
+.filter-tab.active {
+  font-weight: 700;
+  background-color: #3b82f6;
+  color: white;
+  border-bottom: 3px solid #2563eb;
+  border-radius: 8px 8px 0 0;
+}
+
+/* Banners informativos (azul, verde, rojo) */
+.info-banner {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 1px solid;
+  animation: slideInFromLeft 0.4s ease-out;
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.info-banner.info-blue {
+  background-color: #e0f2fe;
+  border-color: #7dd3fc;
+}
+
+.info-banner.info-green {
+  background-color: #f0fdf4;
+  border-color: #86efac;
+}
+
+.info-banner.info-red {
+  background-color: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.info-banner .info-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.info-banner .info-content {
+  flex: 1;
+}
+
+.info-banner .info-title {
+  margin: 0 0 0.5rem 0;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.info-banner.info-blue .info-title {
+  color: #075985;
+}
+
+.info-banner.info-green .info-title {
+  color: #166534;
+}
+
+.info-banner.info-red .info-title {
+  color: #991b1b;
+}
+
+.info-banner .info-text {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.info-banner.info-blue .info-text {
+  color: #0c4a6e;
+}
+
+.info-banner.info-green .info-text {
+  color: #14532d;
+}
+
+.info-banner.info-red .info-text {
+  color: #7f1d1d;
+}
+
+/* Celda de calificación con emoji */
+.calificacion-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.calificacion-emoji {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.calificacion-numero {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 0.875rem;
+}
+
+/* Celda de comentario con ellipsis */
+.comentario-cell {
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #4b5563;
+  font-size: 0.875rem;
+}
+
+/* Botones de selección de tipo (complejo/cancha) */
+.tipo-selector-container {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.tipo-selector-button {
+  flex: 1;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  background-color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.tipo-selector-button:hover {
+  border-color: #93c5fd;
+  background-color: #f9fafb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.tipo-selector-button.active {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.tipo-selector-icon {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.tipo-selector-title {
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+  color: #1f2937;
+}
+
+.tipo-selector-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Responsive para tabs */
+@media (max-width: 768px) {
+  .filter-tabs {
+    flex-direction: column;
+    border-bottom: none;
+  }
+
+  .filter-tab {
+    border-bottom: none;
+    border-left: 3px solid transparent;
+    justify-content: flex-start;
+  }
+
+  .filter-tab.active {
+    border-left: 3px solid #2563eb;
+    border-bottom: none;
+    border-radius: 8px;
+  }
+
+  .info-banner {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .info-banner .info-icon {
+    font-size: 2rem;
+  }
+
+  .comentario-cell {
+    max-width: 200px;
+  }
+  
+  .tipo-selector-container {
+    flex-direction: column;
+  }
+  
+  .tipo-selector-button {
+    width: 100%;
+  }
+}
+
+.method-action-row {
+  display: flex;
+  justify-content: center; /* centrar las opciones (Sí / Sin pagar) */
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.method-action-row .btn-guardar.selected {
+  box-shadow: 0 6px 18px rgba(14,165,122,0.12);
+  transform: translateY(-1px);
+}
+
+/* Footer específico para tablas estilo admin - mantiene botones de paginación a la derecha */
+.admin-table-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  background-color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-table-footer .admin-pagination {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* RESPONSIVE TABLES - stacked on small screens */
+@media (max-width: 720px) {
+  /* Hide the table header and make each row a block (card-like) */
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table tbody tr {
+    display: block;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    padding: 10px;
+    background: var(--white);
+    box-shadow: var(--card-shadow);
+    border: 1px solid #e6edf3;
+  }
+
+  .admin-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    border-bottom: none;
+  }
+
+  .admin-table td:last-child { padding-bottom: 0; }
+
+  .admin-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-gray);
+    margin-right: 10px;
+    white-space: nowrap;
+    opacity: 0.95;
+  }
+
+  /* Action buttons full width at bottom of the card */
+  .admin-actions-container { width: 100%; display: flex; justify-content: flex-end; gap: 6px; }
+}
+
+/* Medium mobile improvements: hide less important columns when very small */
+@media (max-width: 520px) {
+  .admin-table td[data-label="Precio"],
+  .admin-table td[data-label="Pagado"],
+  .admin-table td[data-label="Estado"] {
+    display: none; /* hide non-essential detail columns on very small screens */
+  }
+}
+
+/* Mobile break: stack stats cards on phones (<= 720px) */
+@media (max-width: 720px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .management-sections-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Make the subtitle look clickable inside overridden card */
+  .stats-card-override.clickable .cardSubtitle {
+    cursor: pointer;
+    color: var(--blue-link) !important;
+    text-decoration: underline;
   }
 }

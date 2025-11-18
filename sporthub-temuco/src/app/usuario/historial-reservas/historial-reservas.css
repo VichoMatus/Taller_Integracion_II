@@ -467,6 +467,12 @@
   border: 1px solid #bbf7d0;
 }
 
+.status-badge.completada {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
 .status-badge.pendiente {
   background: #fffbeb;
   color: #92400e;

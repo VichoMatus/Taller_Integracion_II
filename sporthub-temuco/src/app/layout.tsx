@@ -26,6 +26,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        {/* Deshabilitar COOP para permitir Google OAuth */}
+        <meta httpEquiv="Cross-Origin-Opener-Policy" content="unsafe-none" />
+        <meta httpEquiv="Cross-Origin-Embedder-Policy" content="unsafe-none" />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}>
         <main className="flex-1">{children}</main>
         <Footer variant="full" layout="with-sidebar" />

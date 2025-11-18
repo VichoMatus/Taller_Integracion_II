@@ -9,6 +9,10 @@ export interface EstadisticasOwner {
   ocupacion_promedio: number;
   /** Número de reservas confirmadas en el mes */
   reservas_mes: number;
+  /** Ingresos del mes (últimos 30 días) */
+  ingresos_mes?: number;
+  /** Total de canchas (activas + inactivas) del owner */
+  total_canchas?: number;
   /** Cantidad de canchas activas que maneja el owner */
   canchas_activas: number;
 }
