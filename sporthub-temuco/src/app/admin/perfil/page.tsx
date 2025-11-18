@@ -119,6 +119,7 @@ export default function PerfilAdministrador() {
       userRole="admin" 
       userName={userData?.nombre || "Admin"} 
       notificationCount={0}
+      avatarUrl={userData?.avatar_url || null}
     >
       <div className="perfil-admin-container">
         <div className="perfil-admin-content">

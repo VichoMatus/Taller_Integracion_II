@@ -9,10 +9,11 @@ interface LayoutProps {
   userRole: 'admin' | 'usuario' | 'super_admin';
   userName: string;
   notificationCount?: number;
+  avatarUrl?: string | null;
   children: React.ReactNode;
 }
 
-const Layout = ({ userRole, userName, notificationCount = 0, children }: LayoutProps) => {
+const Layout = ({ userRole, userName, avatarUrl, children }: LayoutProps) => {
   return (
     <div className="flex bg-gray-50" style={{ margin: 0, padding: 0, minHeight: '100vh' }}>
       <Sidebar userRole={userRole} />
@@ -20,7 +21,7 @@ const Layout = ({ userRole, userName, notificationCount = 0, children }: LayoutP
         <Header 
           userRole={userRole} 
           userName={userName} 
-          notificationCount={notificationCount} 
+          avatarUrl={avatarUrl}
         />
         <main style={{ paddingLeft: 0, flex: 1, paddingBottom: '60px' }}>
           {children}

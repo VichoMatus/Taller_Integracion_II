@@ -181,22 +181,38 @@ export default function EditarPerfilAdministrador() {
         return;
       }
 
-      // Validar teléfono si tiene valor
       if (formData.telefono && formData.telefono !== '+56 9' && !validatePhoneNumber(formData.telefono)) {
         setError('El teléfono debe tener el formato +56 9 XXXX XXXX');
         return;
       }
 
-      // Usar FormData para enviar imagen si existe
-      const updateData = new FormData();
-      updateData.append('nombre', formData.nombre);
-      updateData.append('apellido', formData.apellido);
-      updateData.append('telefono', formData.telefono === '+56 9' ? '' : formData.telefono);
+      let avatarUrl = userData?.avatar_url || '';
+
+      // Si hay imagen nueva, súbela primero y obtén la URL pública
       if (formData.imagen) {
-        updateData.append('avatar', formData.imagen);
+        const imgForm = new FormData();
+        imgForm.append('images', formData.imagen); // 'images' es el nombre esperado por el backend
+        const res = await fetch('http://localhost:4100/upload', {
+          method: 'POST',
+          body: imgForm,
+        });
+        const data = await res.json();
+        if (!res.ok || !Array.isArray(data) || !data[0]?.url) {
+          setError('Error al subir la imagen de perfil');
+          setSaving(false);
+          return;
+        }
+        avatarUrl = data[0].url;
       }
 
-      // Verificar si hay cambios
+      // Ahora sí, actualiza el perfil con la URL pública
+      const updatePayload = {
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        telefono: formData.telefono === '+56 9' ? '' : formData.telefono,
+        avatar_url: avatarUrl,
+      };
+
       if (
         !formData.imagen &&
         formData.nombre === userData?.nombre &&
@@ -204,10 +220,11 @@ export default function EditarPerfilAdministrador() {
         (formData.telefono === userData?.telefono || (formData.telefono === '+56 9' && !userData?.telefono))
       ) {
         setSuccess('No se detectaron cambios para guardar');
+        setSaving(false);
         return;
       }
 
-      await authService.updateProfile(updateData);
+      await authService.updateProfile(updatePayload);
 
       setSuccess('Perfil actualizado correctamente');
 

@@ -15,7 +15,7 @@ interface User {
   apellido: string;
   email: string;
   telefono?: string;
-  imagen?: string;
+  avatar_url?: string | null;
   rol: string;
   fecha_creacion?: string;
 }
@@ -77,7 +77,7 @@ export default function PerfilSuperAdministrador() {
     nombre: '',
     apellido: '',
     telefono: '',
-    imagen: null as File | null
+    avatar: null as File | null
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -110,7 +110,7 @@ export default function PerfilSuperAdministrador() {
           nombre: data.nombre || '',
           apellido: data.apellido || '',
           telefono: data.telefono || '',
-          imagen: null
+          avatar: null
         });
       } catch (e) {
         console.error("Error al cargar usuario:", e);
@@ -212,7 +212,7 @@ export default function PerfilSuperAdministrador() {
         setError("El archivo debe ser una imagen");
         return;
       }
-      setEditedData({ ...editedData, imagen: file });
+      setEditedData({ ...editedData, avatar: file });
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -249,16 +249,30 @@ export default function PerfilSuperAdministrador() {
         setIsSaving(false);
         return;
       }
+      let avatarUrl = user?.avatar_url || '';
+      if (editedData.avatar) {
+        // Subir imagen al backend y obtener la URL pública
+        const formData = new FormData();
+        formData.append('images', editedData.avatar);
+        const response = await fetch('http://localhost:4100/upload', {
+          method: 'POST',
+          body: formData
+        });
+        if (!response.ok) {
+          throw new Error('Error al subir la imagen');
+        }
+        const data = await response.json();
+        if (Array.isArray(data) && data[0]?.url) {
+          avatarUrl = data[0].url;
+        }
+      }
       const updatePayload: Partial<User> = {
         nombre: editedData.nombre.trim(),
         apellido: editedData.apellido.trim(),
+        avatar_url: avatarUrl
       };
       if (editedData.telefono && editedData.telefono.trim()) {
         updatePayload.telefono = editedData.telefono.trim();
-      }
-      if (editedData.imagen) {
-        // Aquí deberías manejar la subida de imagen si tu backend lo permite
-        console.log("Imagen seleccionada:", editedData.imagen.name);
       }
       const updatedUser = await authService.updateProfile(updatePayload) as User;
       setUser(updatedUser);
@@ -266,8 +280,9 @@ export default function PerfilSuperAdministrador() {
         nombre: updatedUser.nombre || '',
         apellido: updatedUser.apellido || '',
         telefono: updatedUser.telefono || '',
-        imagen: null
+        avatar: null
       });
+      // Actualizar localStorage para reflejar la nueva imagen y datos
       const storedUserData = localStorage.getItem('userData');
       if (storedUserData) {
         const userData = JSON.parse(storedUserData);
@@ -275,6 +290,9 @@ export default function PerfilSuperAdministrador() {
         userData.apellido = updatedUser.apellido;
         if (updatedUser.telefono) {
           userData.telefono = updatedUser.telefono;
+        }
+        if (updatedUser.avatar_url) {
+          userData.avatar_url = updatedUser.avatar_url;
         }
         localStorage.setItem('userData', JSON.stringify(userData));
       }
@@ -343,7 +361,7 @@ export default function PerfilSuperAdministrador() {
   );
 
   return (
-    <AdminLayout userRole="super_admin" userName={user.nombre || "Super Admin"} notificationCount={3}>
+    <AdminLayout userRole="super_admin" userName={user.nombre || "Super Admin"} notificationCount={3} avatarUrl={user.avatar_url || null}>
       <div className="perfil-super-container">
         <div className="perfil-super-content">
           
@@ -354,9 +372,9 @@ export default function PerfilSuperAdministrador() {
               
               <div className="perfil-avatar-section">
                 <div className="perfil-avatar-wrapper">
-                  {imagePreview || user.imagen ? (
+                  {imagePreview || user.avatar_url ? (
                     <img 
-                      src={imagePreview || user.imagen} 
+                      src={imagePreview || user.avatar_url} 
                       alt="Foto de perfil" 
                       className="perfil-avatar-img"
                     />
@@ -677,7 +695,14 @@ export default function PerfilSuperAdministrador() {
                       <span className="demo-badge">⚠️ Falta endpoint backend</span>
                       <span className="demo-info">
                         Para mostrar datos reales aquí, el backend debe implementar un endpoint como:<br />
-                        <code style={{background:'#f5f5f5',padding:'2px 6px',borderRadius:'4px',fontSize:'0.97em'}}>
+                        <code style={{
+                          background:'#f5f5f5',
+                          padding:'2px 6px',
+                          borderRadius:'4px',
+                          fontSize:'0.97em',
+                          color:'#d32f2f', // rojo material
+                          fontWeight:'bold'
+                        }}>
                           GET /api/v1/superadmin/logs
                         </code>
                       </span>
