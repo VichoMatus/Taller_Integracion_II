@@ -111,6 +111,15 @@ function FutbolCanchaSeleccionadaContent() {
             console.log('🔍 Cargando complejo ID:', canchaData.establecimientoId);
             complejoInfo = await complejosService.getComplejoById(canchaData.establecimientoId);
             console.log('✅ Complejo cargado:', complejoInfo);
+            console.log('📋 Datos del complejo:', {
+              id: complejoInfo?.id,
+              nombre: complejoInfo?.nombre,
+              direccion: complejoInfo?.direccion,
+              latitud: complejoInfo?.latitud,
+              longitud: complejoInfo?.longitud,
+              latitudType: typeof complejoInfo?.latitud,
+              longitudType: typeof complejoInfo?.longitud
+            });
             
             // 🔥 GUARDAR DATOS DEL COMPLEJO EN EL ESTADO
             setComplejoData(complejoInfo);
@@ -122,12 +131,30 @@ function FutbolCanchaSeleccionadaContent() {
             }
             
             // ⚽ USAR COORDENADAS DEL COMPLEJO SI ESTÁN DISPONIBLES
-            if (complejoInfo.latitud && complejoInfo.longitud) {
+            // 🔥 MEJORADO: Manejar strings, números, null, undefined, espacios en blanco
+            const lat = complejoInfo?.latitud;
+            const lng = complejoInfo?.longitud;
+            
+            const latNum = lat !== null && lat !== undefined && lat !== '' ? parseFloat(String(lat).trim()) : null;
+            const lngNum = lng !== null && lng !== undefined && lng !== '' ? parseFloat(String(lng).trim()) : null;
+            
+            console.log('🔍 Procesando coordenadas:', {
+              latRaw: lat,
+              lngRaw: lng,
+              latParsed: latNum,
+              lngParsed: lngNum,
+              latIsValid: !isNaN(latNum || NaN),
+              lngIsValid: !isNaN(lngNum || NaN)
+            });
+            
+            if (!isNaN(latNum || NaN) && !isNaN(lngNum || NaN) && latNum !== null && lngNum !== null) {
               coordinates = {
-                lat: parseFloat(complejoInfo.latitud),
-                lng: parseFloat(complejoInfo.longitud)
+                lat: latNum,
+                lng: lngNum
               };
-              console.log('🗺️ Coordenadas obtenidas del complejo:', coordinates);
+              console.log('✅ 🗺️ Coordenadas obtenidas del complejo:', coordinates);
+            } else {
+              console.warn('⚠️ Coordenadas inválidas en la base de datos, usando fallback');
             }
             
           } catch (complejoError: any) {
