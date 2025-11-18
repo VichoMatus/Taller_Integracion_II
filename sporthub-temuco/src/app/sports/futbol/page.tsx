@@ -91,18 +91,32 @@ export default function FutbolPage() {
         
         // Obtener todos los complejos del backend
         const response = await complejosService.getComplejos();
-        console.log('✅ Complejos cargados:', response);
+        console.log('✅ Respuesta bruta de complejos:', response);
+        console.log('📋 Tipo de respuesta:', typeof response);
         
-        // Extraer array de complejos
-        const complejosArray = Array.isArray(response) ? response : response?.data || [];
+        // Extraer array de complejos - más robusto
+        let complejosArray = [];
+        if (Array.isArray(response)) {
+          complejosArray = response;
+        } else if (response?.data && Array.isArray(response.data)) {
+          complejosArray = response.data;
+        } else if (response?.items && Array.isArray(response.items)) {
+          complejosArray = response.items;
+        } else {
+          console.warn('⚠️ Estructura de respuesta no reconocida:', response);
+          complejosArray = [];
+        }
+        
         setComplejos(complejosArray);
         
         console.log('📋 Total de complejos:', complejosArray.length);
-        complejosArray.forEach((c: any) => {
-          console.log(`  - ${c.nombre}: Lat=${c.latitud}, Lng=${c.longitud}, Dirección=${c.direccion}`);
+        complejosArray.forEach((c: any, idx: number) => {
+          console.log(`[${idx}] Nombre: ${c.nombre}, Lat: ${c.latitud}, Lng: ${c.longitud}, Dir: ${c.direccion}`);
         });
       } catch (error: any) {
         console.error('❌ Error cargando complejos:', error);
+        console.error('   Error message:', error.message);
+        console.error('   Error details:', error);
         setComplejos([]);
       } finally {
         setLoadingComplejos(false);
@@ -141,43 +155,66 @@ export default function FutbolPage() {
 
   // 🔥 EFECTO: INICIALIZAR MAPA CON MARCADORES DE COMPLEJOS
   useEffect(() => {
-    if (!isClient || complejos.length === 0 || loadingComplejos) return;
+    if (!isClient) return;
 
     const initMapWithMarkers = () => {
       const mapElement = document.getElementById('futbol-complejos-map');
-      if (!mapElement || typeof window === 'undefined' || !(window as any).google) {
+      if (!mapElement) {
+        console.warn('⚠️ No se encontró elemento del mapa');
+        return;
+      }
+
+      if (typeof window === 'undefined' || !(window as any).google) {
+        console.warn('⚠️ Google Maps no está disponible aún');
         if (!(window as any).google) {
           setTimeout(() => initMapWithMarkers(), 500);
         }
         return;
       }
 
-      if (mapElement && !mapInstanceRef.current && (window as any).google) {
-        const { google } = window as any;
-        
-        console.log('🗺️ [FutbolPage] Inicializando mapa de complejos...');
-        
-        // 🔥 CALCULAR CENTRO DEL MAPA (PROMEDIO DE COORDENADAS)
-        let centerLat = -38.7359;
-        let centerLng = -72.5904;
-        let validCoordinates = 0;
+      if (mapInstanceRef.current) {
+        console.log('ℹ️ El mapa ya está inicializado');
+        return;
+      }
 
-        complejos.forEach((complejo: any) => {
-          if (complejo.latitud && complejo.longitud) {
-            centerLat += parseFloat(String(complejo.latitud).trim());
-            centerLng += parseFloat(String(complejo.longitud).trim());
+      const { google } = window as any;
+      
+      console.log('🗺️ [FutbolPage] Inicializando mapa de complejos...');
+      console.log('📊 Datos de complejos disponibles:', complejos.length);
+      
+      // 🔥 CALCULAR CENTRO DEL MAPA (PROMEDIO DE COORDENADAS)
+      let centerLat = -38.7359; // Temuco default
+      let centerLng = -72.5904; // Temuco default
+      let validCoordinates = 0;
+
+      // Procesar complejos con coordenadas válidas
+      complejos.forEach((complejo: any, idx: number) => {
+        if (complejo.latitud && complejo.longitud) {
+          const lat = parseFloat(String(complejo.latitud).trim());
+          const lng = parseFloat(String(complejo.longitud).trim());
+          
+          if (!isNaN(lat) && !isNaN(lng)) {
+            console.log(`✅ Complejo ${idx}: ${complejo.nombre} -> (${lat}, ${lng})`);
+            centerLat += lat;
+            centerLng += lng;
             validCoordinates++;
+          } else {
+            console.warn(`⚠️ Coordenadas inválidas para ${complejo.nombre}: lat=${complejo.latitud}, lng=${complejo.longitud}`);
           }
-        });
-
-        if (validCoordinates > 0) {
-          centerLat /= (validCoordinates + 1);
-          centerLng /= (validCoordinates + 1);
+        } else {
+          console.warn(`⚠️ Complejo sin coordenadas: ${complejo.nombre}`);
         }
+      });
 
-        console.log(`📍 Centro del mapa: Lat=${centerLat}, Lng=${centerLng}`);
+      if (validCoordinates > 0) {
+        centerLat /= (validCoordinates + 1);
+        centerLng /= (validCoordinates + 1);
+      }
 
-        // 🔥 CREAR MAPA
+      console.log(`📍 Centro del mapa calculado: Lat=${centerLat}, Lng=${centerLng} (${validCoordinates} complejos válidos)`);
+
+      // 🔥 CREAR MAPA
+      try {
         mapInstanceRef.current = new google.maps.Map(mapElement, {
           center: { lat: centerLat, lng: centerLng },
           zoom: 13,
@@ -189,19 +226,26 @@ export default function FutbolPage() {
             }
           ]
         });
+        console.log('✅ Mapa de Google Maps creado exitosamente');
+      } catch (mapError: any) {
+        console.error('❌ Error creando mapa:', mapError);
+        return;
+      }
 
-        // 🔥 LIMPIAR MARCADORES ANTERIORES
-        markersRef.current.forEach((marker: any) => marker.setMap(null));
-        markersRef.current = [];
+      // 🔥 LIMPIAR MARCADORES ANTERIORES
+      markersRef.current.forEach((marker: any) => marker.setMap(null));
+      markersRef.current = [];
 
-        // 🔥 CREAR MARCADORES PARA CADA COMPLEJO
-        complejos.forEach((complejo: any, index: number) => {
-          const lat = complejo.latitud ? parseFloat(String(complejo.latitud).trim()) : null;
-          const lng = complejo.longitud ? parseFloat(String(complejo.longitud).trim()) : null;
+      // 🔥 CREAR MARCADORES PARA CADA COMPLEJO
+      let markersCreated = 0;
+      complejos.forEach((complejo: any, index: number) => {
+        const lat = complejo.latitud ? parseFloat(String(complejo.latitud).trim()) : null;
+        const lng = complejo.longitud ? parseFloat(String(complejo.longitud).trim()) : null;
 
-          if (lat && lng && !isNaN(lat) && !isNaN(lng)) {
-            console.log(`📌 Marcador ${index + 1}: ${complejo.nombre} (${lat}, ${lng})`);
+        if (lat !== null && lng !== null && !isNaN(lat) && !isNaN(lng)) {
+          console.log(`📌 Creando marcador ${index + 1}: ${complejo.nombre} (${lat}, ${lng})`);
 
+          try {
             const marker = new google.maps.Marker({
               position: { lat, lng },
               map: mapInstanceRef.current,
@@ -223,6 +267,7 @@ export default function FutbolPage() {
                 <h4 style="margin: 0 0 8px 0; color: #333; font-size: 16px;">⚽ ${complejo.nombre}</h4>
                 <p style="margin: 4px 0; color: #666; font-size: 14px;">📍 ${complejo.direccion || 'Dirección no disponible'}</p>
                 <p style="margin: 4px 0; color: #666; font-size: 14px;">📝 ${complejo.descripcion || 'Sin descripción'}</p>
+                <p style="margin: 8px 0 0 0; color: #999; font-size: 12px;">Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}</p>
               </div>
             `;
 
@@ -234,14 +279,22 @@ export default function FutbolPage() {
               infoWindow.open(mapInstanceRef.current, marker);
             });
 
-            markersRef.current.push(marker);
-          } else {
-            console.warn(`⚠️ Complejo sin coordenadas válidas: ${complejo.nombre}`);
-          }
-        });
+            // Abrir el infowindow del primer marcador automáticamente
+            if (index === 0) {
+              infoWindow.open(mapInstanceRef.current, marker);
+            }
 
-        console.log(`✅ Mapa inicializado con ${markersRef.current.length} marcadores`);
-      }
+            markersRef.current.push(marker);
+            markersCreated++;
+          } catch (markerError: any) {
+            console.error(`❌ Error creando marcador para ${complejo.nombre}:`, markerError);
+          }
+        } else {
+          console.log(`⏭️ Omitiendo complejo sin coordenadas válidas: ${complejo.nombre}`);
+        }
+      });
+
+      console.log(`✅ Mapa inicializado con ${markersCreated} marcadores de ${complejos.length} complejos`);
     };
 
     // Si ya hay una instancia de google cargada
@@ -264,15 +317,20 @@ export default function FutbolPage() {
         console.log('✅ [FutbolPage] Script de Google Maps cargado');
         initMapWithMarkers();
       };
+      script.onerror = () => {
+        console.error('❌ [FutbolPage] Error cargando script de Google Maps');
+      };
     } else {
+      console.log('ℹ️ Script de Google Maps ya existe');
       existingScript.addEventListener('load', initMapWithMarkers);
+      initMapWithMarkers();
     }
 
     return () => {
       // Limpiar marcadores al desmontar
       markersRef.current.forEach((marker: any) => marker.setMap(null));
     };
-  }, [complejos, loadingComplejos, isClient]);
+  }, [complejos, isClient]);
 
   // 🔥 USAR CANCHAS REALES PARA EL CARRUSEL
   const topRatedCourts = canchas.slice(0, 6); // Máximo 6 canchas para el carrusel
