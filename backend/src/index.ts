@@ -60,18 +60,10 @@ const allowedOrigins = [
   'http://127.0.0.1:3000',
   
   // Frontend Main (producción)
-  'http://frontend-cdrhos-0246e7-168-232-167-73.traefik.me',
   'https://frontend-cdrhos-0246e7-168-232-167-73.traefik.me',
   
   // Frontend Develop 
-  'http://frontend-develop-msocdn-e268a6-168-232-167-73.traefik.me',
-  'https://frontend-develop-msocdn-e268a6-168-232-167-73.traefik.me',
-  'http://frontend-develop-yqgrkr-0246e7-168-232-167-73.traefik.me',
   'https://frontend-develop-yqgrkr-0246e7-168-232-167-73.traefik.me',
-  
-  // Backend develop (para google oauth)
-  'http://backend-develop-0kbdnu-ec3ee3-168-232-167-73.traefik.me',
-  'https://backend-develop-0kbdnu-ec3ee3-168-232-167-73.traefik.me',
   
   // Google OAuth domains
   'https://accounts.google.com',
