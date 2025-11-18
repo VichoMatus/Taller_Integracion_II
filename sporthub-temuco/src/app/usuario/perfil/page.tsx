@@ -143,9 +143,11 @@ export default function PerfilUsuario() {
     );
   }
 
+  // Log visual para depuración de avatar
+  console.log('[PERFIL] Valor de userData.avatar:', userData.avatar);
   return (
     <div id="tailwind-wrapper">
-      <UserLayout userName={userData.name}>
+      <UserLayout userName={userData.name} avatarUrl={userData.avatar}>
         <div className="perfil-wrapper">
           <div className="profile-card">
             {/* SIDEBAR IZQUIERDA */}
@@ -153,7 +155,7 @@ export default function PerfilUsuario() {
               <div className="perfil-header-gradient"></div>
               
               <div className="avatar-iniciales">
-                {userData.avatar ? (
+                {userData.avatar && userData.avatar !== 'AVATAR' && userData.avatar !== '' && userData.avatar !== null && userData.avatar.startsWith('http') ? (
                   <img src={userData.avatar} alt="Avatar" />
                 ) : (
                   <span>{userInitial}</span>

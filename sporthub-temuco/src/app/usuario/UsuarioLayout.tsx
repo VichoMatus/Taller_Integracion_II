@@ -9,14 +9,15 @@ import './UserLayout.css';
 interface UserLayoutProps {
   children: React.ReactNode;
   userName: string;
-  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | undefined; //Por ahora quiza solo esta esto asi
-  // pero en un futuoro la idea es que se muestre el deporte para que el usuario vea su deporte favorito, esto si aun no se implementa
+  avatarUrl?: string | null;
+  sport?: 'basquetbol' | 'futbol' | 'tenis' | 'voleibol' | 'padel' | undefined;
 }
 
 const UserLayout = ({
   children,
   userName,
-  sport = undefined, // Ya está correcto
+  avatarUrl = null,
+  sport = undefined,
 }: UserLayoutProps) => {
   return (
     <div className="user-layout-container">
@@ -24,6 +25,7 @@ const UserLayout = ({
       <Header
         userName={userName}
         userRole="usuario"
+        avatarUrl={avatarUrl}
       />
 
       <div className="user-layout-main">

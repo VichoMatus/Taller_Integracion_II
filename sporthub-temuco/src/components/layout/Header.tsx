@@ -7,9 +7,10 @@ import { NotificacionesDropdown } from '@/components/notificacionesdrop/Notifica
 interface HeaderProps {
   userName: string;
   userRole: 'usuario' | 'admin' | 'super_admin';
+  avatarUrl?: string | null;
 }
 
-const Header = ({ userName, userRole }: HeaderProps) => {
+const Header = ({ userName, userRole, avatarUrl }: HeaderProps) => {
   const userTitle = userRole === 'super_admin' ? 'Superadministrador' : userRole === 'admin' ? 'Administrador' : 'Usuario';
   const userInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase();
 
@@ -46,7 +47,11 @@ const Header = ({ userName, userRole }: HeaderProps) => {
             <p className="user-role">{userTitle}</p>
           </div>
           <div className="user-avatar">
-            {userInitials}
+            {avatarUrl && avatarUrl !== 'AVATAR' && avatarUrl !== '' && avatarUrl !== null && avatarUrl.startsWith('http') ? (
+              <img src={avatarUrl} alt="Avatar" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
+            ) : (
+              userInitials
+            )}
           </div>
         </div>
       </div>

@@ -20,6 +20,7 @@ export default function EditarPerfil() {
     bio: "",
     avatar: null as string | null,
     imagen: null as File | null,
+    id_usuario: 0,
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -30,7 +31,6 @@ export default function EditarPerfil() {
       try {
         const data = await authService.me();
 
-        // Formatear el teléfono con el prefijo
         let phoneFormatted = data.telefono || "";
         if (phoneFormatted && !phoneFormatted.startsWith(PHONE_PREFIX)) {
           phoneFormatted = PHONE_PREFIX + " " + phoneFormatted.replace(/^\+?56\s?9?\s?/, "");
@@ -46,6 +46,7 @@ export default function EditarPerfil() {
           bio: data.bio || "",
           avatar: data.avatar_url || null,
           imagen: null,
+          id_usuario: data.id_usuario,
         });
         setImagePreview(null);
       } catch {
@@ -58,25 +59,55 @@ export default function EditarPerfil() {
     fetchUser();
   }, []);
 
-  // Manejar cambio de imagen
+  // Subir imagen de perfil para usuario normal
+  async function uploadProfileImage(file: File, userId: number, token: string): Promise<string | null> {
+    const formData = new FormData();
+    formData.append('images', file); // El campo debe ser 'images'
+
+    try {
+      // Cambia el puerto al correcto según tu backend
+      const response = await fetch('http://localhost:4100/upload', {
+        method: 'POST',
+        body: formData
+        // No pongas Content-Type, fetch lo maneja solo con FormData
+      });
+      if (!response.ok) {
+        // Intenta leer el mensaje de error del backend
+        let errorMsg = "No se pudo subir la imagen";
+        try {
+          const errData = await response.text();
+          if (errData) errorMsg += `: ${errData}`;
+        } catch {}
+        console.error("[UPLOAD FAIL]", errorMsg);
+        throw new Error(errorMsg);
+      }
+      const data = await response.json();
+      if (data[0]?.url) {
+        console.log("[UPLOAD SUCCESS] Imagen subida correctamente:", data[0].url);
+      } else {
+        console.warn("[UPLOAD WARNING] Respuesta inesperada del backend:", data);
+      }
+      // Usa la URL pública retornada por el backend
+      return data[0]?.url || null;
+    } catch (err) {
+      console.error("[UPLOAD ERROR] Error subiendo imagen:", err);
+      return null;
+    }
+  }
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validar tamaño (máx 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setError("La imagen no debe superar los 5MB");
         return;
       }
-
-      // Validar tipo
       if (!file.type.startsWith('image/')) {
         setError("El archivo debe ser una imagen");
         return;
       }
-
       setFormData(prev => ({ ...prev, imagen: file }));
 
-      // Crear preview
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -96,11 +127,9 @@ export default function EditarPerfil() {
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value;
-
     if (!value.startsWith(PHONE_PREFIX)) {
       value = PHONE_PREFIX + " ";
     }
-
     const numberPart = value.slice(PHONE_PREFIX.length).trim();
     const cleanNumber = numberPart.replace(/[^\d\s]/g, '');
     let formattedNumber = cleanNumber.replace(/\s/g, '');
@@ -147,16 +176,34 @@ export default function EditarPerfil() {
 
     try {
       const phoneNumber = formData.phone.replace(PHONE_PREFIX, "").trim();
+      let avatarUrl = formData.avatar;
 
-      // Usar FormData para enviar imagen si existe
-      const updatePayload = new FormData();
-      updatePayload.append('nombre', formData.nombre);
-      updatePayload.append('apellido', formData.apellido);
-      updatePayload.append('telefono', phoneNumber.length > 0 ? formData.phone : "");
-      updatePayload.append('bio', formData.bio);
-      if (formData.imagen) {
-        updatePayload.append('avatar', formData.imagen);
+      // Validar que el id_usuario esté presente
+      if (!formData.id_usuario) {
+        setError("No se pudo obtener el ID del usuario.");
+        setIsLoading(false);
+        return;
       }
+
+      // Si hay una nueva imagen, súbela primero y obtén la URL pública
+      if (formData.imagen) {
+        const token = localStorage.getItem('token') || "";
+        const url = await uploadProfileImage(formData.imagen, formData.id_usuario, token);
+        if (!url) {
+          setError("No se pudo subir la imagen de perfil.");
+          setIsLoading(false);
+          return;
+        }
+        avatarUrl = url;
+      }
+
+      const updatePayload = {
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        telefono: phoneNumber.length > 0 ? formData.phone : "",
+        bio: formData.bio,
+        avatar_url: avatarUrl === null ? undefined : avatarUrl,
+      };
 
       await authService.updateProfile(updatePayload);
       setSuccess("✅ Perfil actualizado correctamente");
@@ -177,7 +224,7 @@ export default function EditarPerfil() {
 
   return (
     <div id="tailwind-wrapper">
-      <UserLayout userName={fullName || "Usuario"}>
+      <UserLayout userName={fullName || "Usuario"} avatarUrl={imagePreview || formData.avatar}>
         <div className="editar-perfil-wrapper">
           <div className="editar-perfil-container">
             {/* SIDEBAR IZQUIERDA */}

@@ -35,7 +35,18 @@ export class PerfilImageService {
       ContentType: 'image/webp',
     };
     await this.r2.send(new PutObjectCommand(uploadParams));
-    const url = `${process.env.URL3_Subida_Perfil}/${this.bucket}/${filename}`;
-    return { filename, url };
+
+    // Construir la URL pública .r2.dev
+    // Formato: https://<bucket>.<account-id>.r2.dev/<filename>
+    // Extraer el account-id desde la URL del endpoint
+    let accountId = '';
+    if (process.env.URL3_Subida_Perfil) {
+      const match = process.env.URL3_Subida_Perfil.match(/https:\/\/(.*?)\.r2/);
+      if (match && match[1]) {
+        accountId = match[1];
+      }
+    }
+    const publicUrl = `https://${this.bucket}.${accountId}.r2.dev/${filename}`;
+    return { filename, url: publicUrl };
   }
 }

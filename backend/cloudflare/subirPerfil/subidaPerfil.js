@@ -1,5 +1,6 @@
-require('dotenv').config({ path: '../.env' });
+require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
@@ -31,6 +32,8 @@ function getFilenameById(id) {
 const sharp = require('sharp');
 
 const app = express();
+// Permitir CORS desde el frontend en localhost:3000
+app.use(cors({ origin: 'http://localhost:3000' }));
 
 // Configuración de multer para limitar tamaños de archivo (50MB máximo)
 const upload = multer({
@@ -38,6 +41,10 @@ const upload = multer({
   limits: { fileSize: 50 * 1024 * 1024 } // 50MB máximo
 });
 
+console.log('ID_Subida_Perfil:', process.env.ID_Subida_Perfil);
+console.log('Clave_Subida_Perfil:', process.env.Clave_Subida_Perfil);
+console.log('URL3_Subida_Perfil:', process.env.URL3_Subida_Perfil);
+console.log('BUCKET_Subida_Perfil:', process.env.BUCKET_Subida_Perfil);
 
 // Configuración de Cloudflare R2
 const R2 = new S3Client({
@@ -126,7 +133,11 @@ app.post('/upload', upload.array('images'), async (req, res) => {
     try {
       await R2.send(new PutObjectCommand(uploadParams));
       saveImageMap(id, filename);
-      resultados.push({ id, filename });
+      // Construir la URL pública usando la base real de Cloudflare R2 (pub-...)
+      // Debe estar definida en una variable de entorno, por ejemplo: R2_PUBLIC_URL
+      const publicBaseUrl = process.env.R2_PUBLIC_URL || 'https://pub-29176d5f93014614a0002765168aa6d6.r2.dev';
+      const publicUrl = `${publicBaseUrl}/${filename}`;
+      resultados.push({ id, filename, url: publicUrl });
     } catch (err) {
       resultados.push({ error: 'Error al subir la imagen: ' + err.message, file: file.originalname });
     }
@@ -137,7 +148,7 @@ app.post('/upload', upload.array('images'), async (req, res) => {
 
 
 
-// Iniciar servidor en el puerto 3000
-app.listen(3000, () => {
-  console.log('Servidor iniciado en http://localhost:3000');
+// Iniciar servidor en el puerto 4100
+app.listen(4100, () => {
+  console.log('Servidor iniciado en http://localhost:4100');
 });
