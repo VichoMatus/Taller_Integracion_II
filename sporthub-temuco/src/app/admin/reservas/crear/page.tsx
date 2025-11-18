@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAdminToast } from '@/components/admin/AdminToast';
+import { useAdminToast } from '@/components/admin/AdminToast';
 import { useRouter } from 'next/navigation';
 import { reservaService } from '@/services/reservaService';
+import { usuariosService } from '@/services/usuariosService';
 import { canchaService } from '@/services/canchaService';
 import { CreateReservaInput, MetodoPago } from '@/types/reserva';
 import { Cancha } from '@/types/cancha';
@@ -172,6 +174,7 @@ export default function CreateReservaPage() {
       
       // Convertir fechas a formato requerido por backend
       // ⚠️ IMPORTANTE: Usar formato local, NO convertir a UTC para evitar diferencias horarias
+      // ⚠️ IMPORTANTE: Usar formato local, NO convertir a UTC para evitar diferencias horarias
       const fechaInicioDate = new Date(formData.fechaInicio);
       const fechaFinDate = new Date(formData.fechaFin);
       
@@ -193,6 +196,7 @@ export default function CreateReservaPage() {
         hora_inicio,
         hora_fin,
         id_usuario: targetUserId || Number(formData.usuarioId) || currentUserId,
+        id_usuario: targetUserId || Number(formData.usuarioId) || currentUserId,
         notas: formData.notas || ''
       };
       
@@ -205,6 +209,8 @@ export default function CreateReservaPage() {
       // Mostrar mensaje de éxito y redirigir
       showToast('success', 'Reserva creada exitosamente como administrador');
       router.push('/admin/reservas');
+      showToast('success', 'Reserva creada exitosamente como administrador');
+      router.push('/admin/reservas');
     } catch (err: any) {
       console.error('Error al crear la reserva:', err);
       const errorMessage = typeof err?.message === 'string' 
@@ -212,6 +218,8 @@ export default function CreateReservaPage() {
         : err?.response?.data?.message 
         || JSON.stringify(err?.message || err) 
         || 'No se pudo crear la reserva. Verifique los datos e intente nuevamente.';
+      showToast('error', errorMessage || 'No se pudo crear la reserva.');
+      setError(errorMessage);
       showToast('error', errorMessage || 'No se pudo crear la reserva.');
       setError(errorMessage);
     } finally {
@@ -301,6 +309,7 @@ export default function CreateReservaPage() {
                   name="usuarioId"
                   value={formData.usuarioId || currentUserId}
                 />
+
 
                 <p className="text-sm text-gray-600 mt-1">
                   ℹ️ La reserva se creará a nombre del usuario actual autenticado (no es posible especificar otro usuario desde el Front).
