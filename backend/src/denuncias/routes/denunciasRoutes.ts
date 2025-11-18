@@ -8,16 +8,17 @@ const controller = new DenunciasController();
 /**
  * Montar en app:
  * app.use("/api/denuncias", denunciasRouter)
+ * 
+ * Rutas que coinciden con taller4/backend (schema simplificado)
  */
 
-// CRUD
-router.get("/", controller.listar);
-router.get("/:id", controller.obtener);
-router.post("/", controller.crear);
-router.put("/:id", controller.actualizar);
-router.delete("/:id", controller.eliminar);
+// Rutas de usuario
+router.get("/mias", controller.listarMias);           // GET /api/denuncias/mias
+router.post("/", controller.crear);                   // POST /api/denuncias
 
-// Cambiar estado (ABIERTA | EN_REVISION | RESUELTA | RECHAZADA)
-router.patch("/:id/estado", controller.cambiarEstado);
+// Rutas de admin
+router.get("/admin", controller.listarAdmin);         // GET /api/denuncias/admin
+router.get("/admin/:id", controller.obtenerAdmin);    // GET /api/denuncias/admin/:id
+router.put("/admin/:id", controller.actualizarAdmin); // PUT /api/denuncias/admin/:id
 
 export default router;

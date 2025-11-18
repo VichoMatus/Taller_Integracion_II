@@ -144,3 +144,26 @@
     font-size: 10px;
   }
 }
+
+/* Mejoras para mobile - pantallas de teléfono pequeñas */
+@media (max-width: 480px) {
+  .chartContainer {
+    height: 220px;
+    padding: 12px;
+  }
+
+  .barsContainer {
+    padding: 0 8px;
+    gap: 6px;
+  }
+
+  .barWrapper {
+    width: 22%; /* aumentar ancho para barras legibles con pocos items */
+  }
+
+  .xAxisLabel {
+    font-size: 11px;
+    white-space: normal;
+    word-break: break-word;
+  }
+}

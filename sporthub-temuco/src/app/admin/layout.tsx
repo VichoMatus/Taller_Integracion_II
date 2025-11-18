@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import AdminsLayout from '@/components/layout/AdminsLayout';
 import { useAdminProtection } from '@/hooks/useAdminProtection';
+import { AdminToastProvider } from '@/components/admin/AdminToast';
 import './dashboard.css'; // Asegurar que el CSS se carga en todo el admin
 
 export default function AdminLayout({
@@ -23,12 +24,14 @@ export default function AdminLayout({
   }, []);
 
   return (
-    <AdminsLayout 
-      userRole="admin" 
-      userName={userName}
-      notificationCount={3}
-    >
-      {children}
-    </AdminsLayout>
+    <AdminToastProvider>
+      <AdminsLayout 
+        userRole="admin" 
+        userName={userName}
+        notificationCount={3}
+      >
+        {children}
+      </AdminsLayout>
+    </AdminToastProvider>
   );
 }

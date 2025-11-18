@@ -66,6 +66,15 @@ export interface ResenaRepository {
   listResenas(filters: ResenaFilters): Promise<Resena[]>;
 
   /**
+   * Obtiene una reseña específica por ID.
+   * GET /resenas/{id}
+   * @param id - ID de la reseña
+   * @returns Promise con la reseña encontrada
+   * @throws Error si la reseña no existe
+   */
+  getResena(id: number): Promise<Resena>;
+
+  /**
    * Crea una nueva reseña (requiere reserva confirmada).
    * POST /resenas
    * @param input - Datos de la reseña a crear

@@ -4,30 +4,33 @@ import React, { useState, useEffect } from 'react';
 import './perfiladmin.css';
 import AdminLayout from '@/components/layout/AdminsLayout';
 import { authService } from '@/services/authService';
-import horasTrabajoService, { type ResumenSemanal } from '@/services/horasTrabajoService';
+import { adminService } from '@/services/adminService';
+import { MeResponse } from '@/types/auth';
+import { MisRecursosResponse, Complejo } from '@/types/admin';
+import { useEstadisticas } from '@/hooks/useEstadisticas';
 import { useRouter } from 'next/navigation';
 
-interface UserProfile {
-  id_usuario: number;
-  nombre: string;
-  apellido: string;
-  email: string;
-  telefono?: string;
-  avatar_url?: string;
-  rol: string;
-}
-
 export default function PerfilAdministrador() {
-  const [userData, setUserData] = useState<UserProfile | null>(null);
-  const [horasData, setHorasData] = useState<ResumenSemanal | null>(null);
+  const [userData, setUserData] = useState<MeResponse | null>(null);
+  const [recursosData, setRecursosData] = useState<MisRecursosResponse | null>(null);
+  const [complejos, setComplejos] = useState<Complejo[]>([]);
+  const [complejoSeleccionado, setComplejoSeleccionado] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loadingHoras, setLoadingHoras] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [hoveredDia, setHoveredDia] = useState<string | null>(null);
+  const [recursosError, setRecursosError] = useState<string | null>(null);
   const router = useRouter();
 
+  const complejoId = complejoSeleccionado ?? (complejos.length > 0 ? complejos[0]?.id || null : null);
+
+  // Hook de estadísticas
+  const {
+    estadisticas,
+    isLoading: loadingEstadisticas,
+    errorEstadisticas
+  } = useEstadisticas(complejoId);
+
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchUserData = async () => {
       try {
         setLoading(true);
         
@@ -36,60 +39,50 @@ export default function PerfilAdministrador() {
           return;
         }
 
-        // Cargar datos del usuario
-        const userDataResponse = await authService.me() as UserProfile;
-        console.log('Datos del usuario desde auth/me:', userDataResponse);
+        const userDataResponse = await authService.me();
         setUserData(userDataResponse);
-
-        // Intentar cargar datos de horas trabajadas
+        
         try {
-          setLoadingHoras(true);
-          const resumenHoras = await horasTrabajoService.obtenerResumenSemanal();
-          console.log('Resumen de horas:', resumenHoras);
-          setHorasData(resumenHoras);
-        } catch (errorHoras: any) {
-          console.warn('⚠️ Backend de horas no disponible, usando datos de ejemplo:', errorHoras.message);
-          // Si el backend no está listo, usar datos de ejemplo
-          setHorasData({
-            total_horas: 32,
-            promedio_diario: 4.6,
-            dia_mas_productivo: 'Jueves',
-            horas_por_dia: [
-              { dia: 'Lunes', horas: 6, color: '#5a6993' },
-              { dia: 'Martes', horas: 7, color: '#6b7aa3' },
-              { dia: 'Miércoles', horas: 5, color: '#7a89b3' },
-              { dia: 'Jueves', horas: 8, color: '#8998c3' },
-              { dia: 'Viernes', horas: 4, color: '#98a7d3' },
-              { dia: 'Sábado', horas: 2, color: '#a7b6e3' },
-              { dia: 'Domingo', horas: 0, color: '#b6c5f3' },
-            ]
-          });
-        } finally {
-          setLoadingHoras(false);
+          const recursosResponse = await adminService.getMisRecursos();
+          setRecursosData(recursosResponse);
+          
+          if (recursosResponse.complejos && recursosResponse.complejos.length > 0) {
+            const complejosValidos = recursosResponse.complejos.filter(complejo => 
+              complejo.id !== undefined && complejo.id !== null
+            );
+            
+            setComplejos(complejosValidos);
+            
+            if (complejosValidos.length > 0) {
+              setComplejoSeleccionado(complejosValidos[0].id);
+            } else {
+              setComplejoSeleccionado(null);
+            }
+          } else {
+            setComplejos([]);
+            setComplejoSeleccionado(null);
+          }
+        } catch (recursosError: any) {
+          console.error('Error cargando recursos:', recursosError);
+          setRecursosError(recursosError.message || 'Error al cargar recursos');
+          setComplejos([]);
+          setComplejoSeleccionado(null);
         }
         
       } catch (err) {
-        console.error('Error fetching user data:', err);
+        console.error('Error en fetchData:', err);
         setError('Error al cargar los datos del perfil');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
+    fetchUserData();
   }, [router]);
-
-  const getInitial = (name: string) => {
-    return name ? name.charAt(0).toUpperCase() : 'A';
-  };
-
-  const handleEditProfile = () => {
-    router.push('/admin/editarperfil');
-  };
 
   if (loading) {
     return (
-      <AdminLayout userRole="admin" userName="Admin" notificationCount={3}>
+      <AdminLayout userRole="admin" userName="Admin" notificationCount={0}>
         <div className="perfil-admin-container">
           <div className="loading-spinner">
             <div className="spinner"></div>
@@ -102,7 +95,7 @@ export default function PerfilAdministrador() {
 
   if (error) {
     return (
-      <AdminLayout userRole="admin" userName="Admin" notificationCount={3}>
+      <AdminLayout userRole="admin" userName="Admin" notificationCount={0}>
         <div className="perfil-admin-container">
           <div className="error-container">
             <p>{error}</p>
@@ -114,23 +107,23 @@ export default function PerfilAdministrador() {
   }
 
   const userName = userData ? `${userData.nombre} ${userData.apellido}`.trim() : "Administrador";
-  
-  // Usar datos reales o de ejemplo
-  const horasPorDia = horasData?.horas_por_dia || [];
-  const totalHoras = horasData?.total_horas || 0;
-  const promedioDiario = horasData?.promedio_diario || 0;
-  const diaMaxHoras = horasData?.dia_mas_productivo || 'N/A';
+  const getInitial = (name: string) => name ? name.charAt(0).toUpperCase() : 'A';
+
+  // Calcular datos adicionales
+  const totalCanchas = recursosData?.canchas?.length || 0;
+  const totalReservas = recursosData?.total_reservas || 0;
+  const ingresosMes = recursosData?.ingresos_mes || 0;
 
   return (
     <AdminLayout 
       userRole="admin" 
       userName={userData?.nombre || "Admin"} 
-      notificationCount={3}
+      notificationCount={0}
     >
       <div className="perfil-admin-container">
         <div className="perfil-admin-content">
           
-          {/* SIDEBAR - Igual que Super Admin */}
+          {/* SIDEBAR */}
           <aside className="perfil-sidebar">
             <div className="perfil-card">
               <div className="perfil-header-gradient"></div>
@@ -154,6 +147,9 @@ export default function PerfilAdministrador() {
                 <div className="perfil-user-info">
                   <h2 className="perfil-user-name">{userName}</h2>
                   <span className="perfil-user-role">Administrador</span>
+                  {userData?.verificado && (
+                    <span className="perfil-verified-badge">✓ Verificado</span>
+                  )}
                 </div>
               </div>
 
@@ -182,11 +178,23 @@ export default function PerfilAdministrador() {
                   </div>
                 </div>
 
+                {complejos.length > 0 && (
+                  <div className="perfil-detail-item">
+                    <div className="perfil-detail-icon">🏟️</div>
+                    <div className="perfil-detail-content">
+                      <span className="perfil-detail-label">Complejos</span>
+                      <span className="perfil-detail-value">{complejos.length} activos</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="perfil-detail-item">
-                  <div className="perfil-detail-icon">💼</div>
+                  <div className="perfil-detail-icon">📊</div>
                   <div className="perfil-detail-content">
-                    <span className="perfil-detail-label">Encargado de</span>
-                    <span className="perfil-detail-value perfil-highlight">Reservas y Gestión</span>
+                    <span className="perfil-detail-label">Miembro desde</span>
+                    <span className="perfil-detail-value">
+                      {userData?.fecha_creacion ? new Date(userData.fecha_creacion).toLocaleDateString('es-CL') : 'Fecha no disponible'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -194,7 +202,7 @@ export default function PerfilAdministrador() {
               <div className="perfil-actions">
                 <button
                   className="perfil-btn perfil-btn-primary"
-                  onClick={handleEditProfile}
+                  onClick={() => router.push('/admin/editarperfil')}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -208,160 +216,324 @@ export default function PerfilAdministrador() {
 
           {/* PANEL PRINCIPAL */}
           <main className="perfil-main">
-            <div className="perfil-main-header">
-              <div>
-                <h1 className="perfil-main-title">Panel del Administrador</h1>
-                <p className="perfil-main-subtitle">Bienvenido de vuelta, aquí tienes tu resumen semanal</p>
+            
+            {/* Header Fijo */}
+            <div className="perfil-main-header-fixed">
+              <div className="perfil-main-header-content">
+                <div>
+                  <h1 className="perfil-main-title">Perfil de Administrador</h1>
+                  <p className="perfil-main-subtitle">
+                    Bienvenido {userData?.nombre} - Este es tu Perfil de Administrador
+                  </p>
+                </div>
+                
+                <div className="header-controls">
+                  {complejos.length > 0 && (
+                    <div className="complejo-selector">
+                      <span>Complejo: </span>
+                      <select 
+                        value={complejoSeleccionado ?? ''} 
+                        onChange={(e) => setComplejoSeleccionado(Number(e.target.value))}
+                        className="complejo-select"
+                      >
+                        {complejos.map((complejo, index) => (
+                          <option 
+                            key={`complejo-${complejo.id || index}-${complejo.nombre || 'sin-nombre'}`} 
+                            value={complejo.id}
+                          >
+                            {complejo.nombre}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Gráfico de Horas - DINÁMICO */}
-            {loadingHoras ? (
-              <div className="chart-card-large">
-                <div className="loading-spinner">
-                  <div className="spinner"></div>
-                  <p>Cargando estadísticas...</p>
-                </div>
-              </div>
-            ) : (
-              <div className="chart-card-large">
-                <div className="chart-card-header">
-                  <div>
-                    <h3 className="chart-card-title">Análisis de Horas Trabajadas</h3>
-                    <p className="chart-card-subtitle">
-                      Resumen detallado de tu actividad semanal
-                      {horasData?.fecha_inicio && horasData?.fecha_fin && (
-                        <> - {new Date(horasData.fecha_inicio).toLocaleDateString('es-CL')} 
-                           al {new Date(horasData.fecha_fin).toLocaleDateString('es-CL')}</>
-                      )}
-                    </p>
+            {/* Contenido Scrolleable */}
+            <div className="perfil-main-content">
+              
+              {recursosError && (
+                <div className="demo-banner error">
+                  <div className="demo-banner-icon">⚠️</div>
+                  <div className="demo-banner-content">
+                    <strong>Error al cargar recursos</strong>
+                    <p>{recursosError}</p>
                   </div>
-                  <div className="header-actions">
-                    <button className="btn-period active">Semanal</button>
-                    <button className="btn-period">Mensual</button>
-                    <button className="btn-export">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
-                      </svg>
-                      Exportar
-                    </button>
+                </div>
+              )}
+
+              {/* SECCIÓN DE RESUMEN EJECUTIVO */}
+              <div className="resumen-section">
+                <div className="section-header-premium">
+                  <div className="section-title-wrapper">
+                    <span className="section-icon-premium">🚀</span>
+                    <div>
+                      <h2 className="section-title-premium">Resumen Ejecutivo</h2>
+                      <p className="section-subtitle-premium">
+                        Vista general de tu gestión deportiva
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="chart-body-large">
-                  <div className="chart-bars-container-large">
-                    {horasPorDia.map((dia, index) => (
-                      <div
-                        key={dia.dia}
-                        className="chart-bar-wrapper-large"
-                        onMouseEnter={() => setHoveredDia(dia.dia)}
-                        onMouseLeave={() => setHoveredDia(null)}
-                      >
-                        {hoveredDia === dia.dia && (
-                          <div className="chart-tooltip-large">
-                            <div className="tooltip-header">
-                              <strong>{dia.dia}</strong>
-                            </div>
-                            <div className="tooltip-body">
-                              <span className="tooltip-hours">{dia.horas} horas</span>
-                              <span className="tooltip-percentage">
-                                {totalHoras > 0 ? ((dia.horas / totalHoras) * 100).toFixed(1) : 0}% del total
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                        
-                        <div className="chart-bar-track-large">
-                          <div 
-                            className={`chart-bar-fill-large ${hoveredDia === dia.dia ? 'hovered' : ''}`}
-                            style={{ 
-                              height: `${(dia.horas / 10) * 100}%`,
-                              background: `linear-gradient(180deg, ${dia.color}, ${dia.color}dd)`
-                            }}
-                          >
-                            <div className="chart-bar-glow" style={{ background: dia.color }}></div>
-                            <div className="chart-bar-shine"></div>
-                          </div>
+                <div className="resumen-grid">
+                  <div className="resumen-card destacado">
+                    <div className="resumen-icon">🏟️</div>
+                    <div className="resumen-content">
+                      <h3>Complejos Activos</h3>
+                      <div className="resumen-value">{complejos.length}</div>
+                      <p>Gestionando instalaciones deportivas</p>
+                    </div>
+                  </div>
+
+                  <div className="resumen-card">
+                    <div className="resumen-icon">⚽</div>
+                    <div className="resumen-content">
+                      <h3>Total Canchas</h3>
+                      <div className="resumen-value">{totalCanchas}</div>
+                      <p>Canchas disponibles para reservas</p>
+                    </div>
+                  </div>
+
+                  <div className="resumen-card">
+                    <div className="resumen-icon">📅</div>
+                    <div className="resumen-content">
+                      <h3>Reservas Totales</h3>
+                      <div className="resumen-value">{totalReservas}</div>
+                      <p>Reservas procesadas en el sistema</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECCIÓN DE ESTADÍSTICAS RÁPIDAS */}
+              <div className="estadisticas-section">
+                <div className="section-header-premium">
+                  <div className="section-title-wrapper">
+                    <span className="section-icon-premium">📊</span>
+                    <div>
+                      <h2 className="section-title-premium">
+                        {complejos.length > 0 ? 'Estadísticas del Complejo' : 'Estadísticas Generales'}
+                      </h2>
+                      <p className="section-subtitle-premium">
+                        {estadisticas?.complejo_nombre || 'Selecciona un complejo para ver estadísticas detalladas'}
+                      </p>
+                      <br />
+                    </div>
+                  </div>
+
+                  <button 
+                    className="btn-estadisticas-completas"
+                    onClick={() => router.push('/admin/estadisticas')}
+                  >
+                    <span>Ver Estadísticas Completas</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Estados de carga y error */}
+                {loadingEstadisticas && (
+                  <div className="estadisticas-loading">
+                    <div className="spinner-small"></div>
+                    <p>Cargando estadísticas...</p>
+                  </div>
+                )}
+
+                {errorEstadisticas && (
+                  <div className="estadisticas-error">
+                    <p>⚠️ Error al cargar estadísticas</p>
+                    <p className="error-subtext">Las estadísticas detalladas estarán disponibles pronto</p>
+                  </div>
+                )}
+
+                {/* KPIs Principales - 3 TARJETAS */}
+                {!loadingEstadisticas && (
+                  <div className="kpis-grid">
+                    {/* Total Canchas */}
+                    <div className="kpi-card">
+                      <div className="kpi-icon-wrapper gradient-blue">
+                        <span className="kpi-icon">🏟️</span>
+                      </div>
+                      <div className="kpi-content">
+                        <h3 className="kpi-title">Canchas</h3>
+                        <div className="kpi-values">
+                          <span className="kpi-main-value">{estadisticas?.canchas_activas || 0}</span>
+                          <span className="kpi-sub-value">activas</span>
                         </div>
-                        
-                        <span className="chart-bar-label-large">{dia.dia}</span>
-                        <span className="chart-bar-value-large">{dia.horas}h</span>
+                        <div className="kpi-detail">
+                          <span className="kpi-detail-text">
+                            {estadisticas?.canchas_inactivas || 0} inactivas
+                          </span>
+                        </div>
                       </div>
-                    ))}
+                    </div>
+
+                    {/* Reservas del Mes */}
+                    <div className="kpi-card">
+                      <div className="kpi-icon-wrapper gradient-green">
+                        <span className="kpi-icon">📅</span>
+                      </div>
+                      <div className="kpi-content">
+                        <h3 className="kpi-title">Reservas del Mes</h3>
+                        <div className="kpi-values">
+                          <span className="kpi-main-value">{estadisticas?.reservas_confirmadas_ultimo_mes || 0}</span>
+                          <span className="kpi-sub-value">confirmadas</span>
+                        </div>
+                        <div className="kpi-detail">
+                          <span className="kpi-detail-text">
+                            {estadisticas?.reservas_pendientes_ultimo_mes || 0} pendientes
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Ingresos Mensuales */}
+                    <div className="kpi-card">
+                      <div className="kpi-icon-wrapper gradient-purple">
+                        <span className="kpi-icon">💰</span>
+                      </div>
+                      <div className="kpi-content">
+                        <h3 className="kpi-title">Ingresos Mensuales</h3>
+                        <div className="kpi-values">
+                          <span className="kpi-main-value">
+                            ${(estadisticas?.ingresos_ultimo_mes || 0).toLocaleString('es-CL')}
+                          </span>
+                        </div>
+                        <div className="kpi-detail">
+                          <span className="kpi-detail-text">CLP</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Mensaje informativo */}
+                <div className="info-message">
+                  <div className="info-icon">💡</div>
+                  <div className="info-content">
+                    <strong>¿Necesitas más datos?</strong>
+                    <p>Accede a las estadísticas completas para ver análisis detallados, tendencias y reportes avanzados de tu complejo.</p>
                   </div>
                 </div>
+              </div>
 
-                <div className="chart-card-footer-large">
-                  <div className="chart-stats-large">
-                    <div className="chart-stat-item-large">
-                      <div className="stat-icon-wrapper" style={{ background: 'linear-gradient(135deg, #667eea, #764ba2)' }}>
-                        <span className="chart-stat-icon-large">📊</span>
-                      </div>
-                      <div className="chart-stat-info-large">
-                        <span className="chart-stat-label-large">Total Semanal</span>
-                        <span className="chart-stat-value-large">{totalHoras} horas</span>
-                      </div>
+              {/* INFORMACIÓN DEL ADMINISTRADOR */}
+              <div className="perfil-info-section">
+                <div className="section-header-premium">
+                  <div className="section-title-wrapper">
+                    <span className="section-icon-premium">👤</span>
+                    <div>
+                      <h2 className="section-title-premium">Información del Administrador</h2>
+                      <p className="section-subtitle-premium">Datos de tu cuenta y gestión</p>
                     </div>
-                    
-                    <div className="chart-stat-separator-large"></div>
-                    
-                    <div className="chart-stat-item-large">
-                      <div className="stat-icon-wrapper" style={{ background: 'linear-gradient(135deg, #f093fb, #f5576c)' }}>
-                        <span className="chart-stat-icon-large">📈</span>
-                      </div>
-                      <div className="chart-stat-info-large">
-                        <span className="chart-stat-label-large">Promedio Diario</span>
-                        <span className="chart-stat-value-large">{promedioDiario.toFixed(1)} horas</span>
-                      </div>
+                  </div>
+                </div>
+                
+                <div className="info-grid-premium">
+                  <div className="info-card-premium">
+                    <div className="info-card-icon-wrapper gradient-purple">
+                      <span className="info-card-icon-premium">👤</span>
                     </div>
-                    
-                    <div className="chart-stat-separator-large"></div>
-                    
-                    <div className="chart-stat-item-large">
-                      <div className="stat-icon-wrapper" style={{ background: 'linear-gradient(135deg, #4facfe, #00f2fe)' }}>
-                        <span className="chart-stat-icon-large">🎯</span>
-                      </div>
-                      <div className="chart-stat-info-large">
-                        <span className="chart-stat-label-large">Meta Semanal</span>
-                        <span className="chart-stat-value-large">40 horas</span>
-                      </div>
-                    </div>
-                    
-                    <div className="chart-stat-separator-large"></div>
-                    
-                    <div className="chart-stat-item-large">
-                      <div className="stat-icon-wrapper" style={{ background: 'linear-gradient(135deg, #fa709a, #fee140)' }}>
-                        <span className="chart-stat-icon-large">⭐</span>
-                      </div>
-                      <div className="chart-stat-info-large">
-                        <span className="chart-stat-label-large">Día Más Productivo</span>
-                        <span className="chart-stat-value-large">{diaMaxHoras}</span>
-                      </div>
+                    <div className="info-card-body">
+                      <h3 className="info-card-title">Nombre Completo</h3>
+                      <p className="info-card-value-premium">{userName}</p>
                     </div>
                   </div>
 
-                  <div className="progress-section">
-                    <div className="progress-header">
-                      <span className="progress-label">Progreso hacia la meta</span>
-                      <span className="progress-value">{((totalHoras / 40) * 100).toFixed(0)}%</span>
+                  <div className="info-card-premium">
+                    <div className="info-card-icon-wrapper gradient-blue">
+                      <span className="info-card-icon-premium">📧</span>
                     </div>
-                    <div className="progress-bar-container">
-                      <div 
-                        className="progress-bar-fill"
-                        style={{ width: `${Math.min((totalHoras / 40) * 100, 100)}%` }}
-                      >
-                        <div className="progress-bar-glow"></div>
+                    <div className="info-card-body">
+                      <h3 className="info-card-title">Correo Electrónico</h3>
+                      <p className="info-card-value-premium">{userData?.email}</p>
+                    </div>
+                  </div>
+
+                  <div className="info-card-premium">
+                    <div className="info-card-icon-wrapper gradient-green">
+                      <span className="info-card-icon-premium">🏟️</span>
+                    </div>
+                    <div className="info-card-body">
+                      <h3 className="info-card-title">Complejos Administrados</h3>
+                      <p className="info-card-value-premium">
+                        {complejos.length > 0 ? `${complejos.length} complejo${complejos.length > 1 ? 's' : ''}` : 'Sin complejos'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="info-card-premium">
+                    <div className="info-card-icon-wrapper gradient-orange">
+                      <span className="info-card-icon-premium">📱</span>
+                    </div>
+                    <div className="info-card-body">
+                      <h3 className="info-card-title">Estado de Cuenta</h3>
+                      <p className="info-card-value-premium">
+                        {userData?.verificado ? 'Verificada ✓' : 'Pendiente de verificación'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="info-card-premium">
+                    <div className="info-card-icon-wrapper gradient-pink">
+                      <span className="info-card-icon-premium">🆔</span>
+                    </div>
+                    <div className="info-card-body">
+                      <h3 className="info-card-title">ID de Usuario</h3>
+                      <p className="info-card-value-premium">#{userData?.id_usuario}</p>
+                    </div>
+                  </div>
+
+                  <div className="info-card-premium">
+                    <div className="info-card-icon-wrapper gradient-teal">
+                      <span className="info-card-icon-premium">📅</span>
+                    </div>
+                    <div className="info-card-body">
+                      <h3 className="info-card-title">Miembro Desde</h3>
+                      <p className="info-card-value-premium">
+                        {userData?.fecha_creacion ? new Date(userData.fecha_creacion).toLocaleDateString('es-CL') : 'No disponible'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mensaje-admin-card">
+                    <div className="mensaje-admin-header">
+                      <div className="mensaje-admin-icon">💼</div>
+                      <div className="mensaje-admin-title">
+                        <h3>Mensaje Importante</h3>
+                        <p>Para administradores del sistema</p>
+                      </div>
+                    </div>
+                    <div className="mensaje-admin-content">
+                      <p>
+                        Como administrador de complejos deportivos, recuerda que tu rol es fundamental para garantizar 
+                        la mejor experiencia a los usuarios. Mantén actualizada la información de tus complejos, 
+                        revisa regularmente las reservas y asegúrate de que los precios y horarios sean precisos.
+                      </p>
+                      <div className="mensaje-admin-tips">
+                        <div className="tip-item">
+                          <span className="tip-icon">✅</span>
+                          <span>Verifica diariamente las reservas pendientes</span>
+                        </div>
+                        <div className="tip-item">
+                          <span className="tip-icon">✅</span>
+                          <span>Mantén actualizados los horarios de atención</span>
+                        </div>
+                        <div className="tip-item">
+                          <span className="tip-icon">✅</span>
+                          <span>Responde prontamente a las consultas de usuarios</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            )}
-
+            </div>
           </main>
-
         </div>
       </div>
     </AdminLayout>

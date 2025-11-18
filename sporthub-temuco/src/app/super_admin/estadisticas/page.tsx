@@ -1,49 +1,164 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import BarChart from '@/components/charts/BarChart';
 import StatsCard from '@/components/charts/StatsCard';
+import { useEstadisticasSuperAdmin } from '@/hooks/useEstadisticasSuperAdmin';
+import { superAdminService } from '@/services/superAdminService';
 import styles from './estadisticas.module.css';
 
 export default function EstadisticasPage() {
-  // Datos para las métricas principales, luego vendrian de la API
-  const statsData = [
-    { label: 'Ingresos Totales', value: 500 },
-    { label: 'Reservas Totales', value: 40 },
-    { label: 'Ocupación Mensual', value: 95 },
-    { label: 'Valoración Promedio', value: 4.7 }
-  ];
+  const { estadisticas, isLoading, error, cargarEstadisticas } = useEstadisticasSuperAdmin();
+  const [mounted, setMounted] = useState(false);
+  const [complejos, setComplejos] = useState<any[]>([]);
 
-  // Datos para el gráfico de barras - Reservas por día
-  const reservasPorDia = [
-    { label: 'Lun', value: 15 },
-    { label: 'Mar', value: 25 },
-    { label: 'Mié', value: 12 },
-    { label: 'Jue', value: 30 },
-    { label: 'Vie', value: 20 },
-    { label: 'Sáb', value: 35 },
-    { label: 'Dom', value: 18 }
-  ];
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  // Datos para el gráfico de barras - Reservas por deporte
-  const reservasPorDeporte = [
-    { label: 'Futbol', value: 35 },
-    { label: 'Basquetbol', value: 25 },
-    { label: 'Volleyball', value: 20 },
-    { label: 'Tenis', value: 15 },
-    { label: 'Padel', value: 5 }
-  ];
+  // Cargar complejos para poder mapear los nombres
+  useEffect(() => {
+    const cargarComplejos = async () => {
+      try {
+        console.log('🏢 [Estadísticas] Cargando complejos...');
+        const complejosData = await superAdminService.listarComplejos({ page_size: 100 });
+        console.log('✅ [Estadísticas] Complejos cargados:', complejosData);
+        setComplejos(complejosData);
+      } catch (err) {
+        console.error('❌ [Estadísticas] Error al cargar complejos:', err);
+      }
+    };
 
-  // Datos para la tabla de canchas populares
-  const canchasPopulares = [
-    { nombre: 'Cancha Central', reservas: 100, ocupacion: 92 },
-    { nombre: 'Cancha Sur', reservas: 76, ocupacion: 85 }
-  ];
+    if (mounted) {
+      cargarComplejos();
+      cargarEstadisticas();
+    }
+  }, [mounted, cargarEstadisticas]);
 
-  // Datos para la tabla de horarios populares
-  const horariosPopulares = [
-    { horario: 'Sábado 16:00-18:00', reservas: 42, ingresos: 126000 },
-    { horario: 'Domingo 10:00-12:00', reservas: 38, ingresos: 114000 }
-  ];
+  // Debug: ver qué datos llegan
+  useEffect(() => {
+    if (estadisticas) {
+      console.log('📊 [Estadísticas] ===== DATOS RECIBIDOS DEL HOOK =====');
+      console.log('📊 [Estadísticas] Estructura completa:', JSON.stringify(estadisticas, null, 2));
+      console.log('📊 [Estadísticas] Detalle por sección:');
+      console.log('   - reservas_por_dia:', estadisticas.reservas_por_dia);
+      console.log('   - reservas_por_deporte:', estadisticas.reservas_por_deporte);
+      console.log('   - top_canchas:', estadisticas.top_canchas);
+      console.log('   - top_horarios:', estadisticas.top_horarios);
+      console.log('📊 [Estadísticas] Cantidades:');
+      console.log('   - reservas_por_dia length:', estadisticas.reservas_por_dia?.length || 0);
+      console.log('   - reservas_por_deporte length:', estadisticas.reservas_por_deporte?.length || 0);
+      console.log('   - top_canchas length:', estadisticas.top_canchas?.length || 0);
+      console.log('   - top_horarios length:', estadisticas.top_horarios?.length || 0);
+      console.log('📊 [Estadísticas] =======================================');
+    } else {
+      console.warn('⚠️ [Estadísticas] No hay datos de estadísticas (null)');
+    }
+  }, [estadisticas]);
+
+  // Transformar datos para los gráficos
+  // ARREGLO: Agrupar reservas por día de la semana (suma acumulada)
+  const reservasPorDia = (() => {
+    if (!estadisticas?.reservas_por_dia) {
+      console.warn('⚠️ [Estadísticas] No hay datos de reservas_por_dia para el gráfico');
+      return [];
+    }
+    
+    console.log('🔄 [Estadísticas] Transformando reservas_por_dia:', estadisticas.reservas_por_dia);
+    
+    const diasAgrupados = new Map<string, number>();
+    const ordenDias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+    
+    // Agrupar por día de la semana
+    estadisticas.reservas_por_dia.forEach(item => {
+      const dia = item.dia_semana;
+      const cantidadActual = diasAgrupados.get(dia) || 0;
+      diasAgrupados.set(dia, cantidadActual + item.cantidad_reservas);
+    });
+    
+    // Convertir a array ordenado
+    const resultado = ordenDias
+      .filter(dia => diasAgrupados.has(dia))
+      .map(dia => ({
+        label: dia.substring(0, 3),
+        value: diasAgrupados.get(dia) || 0
+      }));
+    
+    console.log('✅ [Estadísticas] Datos transformados para gráfico por día:', resultado);
+    return resultado;
+  })();
+
+  const reservasPorDeporte = (() => {
+    if (!estadisticas?.reservas_por_deporte) {
+      console.warn('⚠️ [Estadísticas] No hay datos de reservas_por_deporte');
+      return [];
+    }
+    
+    console.log('🔄 [Estadísticas] Transformando reservas_por_deporte:', estadisticas.reservas_por_deporte);
+    
+    const resultado = estadisticas.reservas_por_deporte.map(item => ({
+      label: item.deporte,
+      value: item.cantidad_reservas
+    }));
+    
+    console.log('✅ [Estadísticas] Datos transformados para gráfico por deporte:', resultado);
+    return resultado;
+  })();
+
+  const canchasPopulares = estadisticas?.top_canchas?.map((item, index) => {
+    // Buscar el complejo correspondiente por ID
+    const complejoId = item.complejo_id || item.id_complejo || item.id_establecimiento;
+    const complejo = complejos.find(c => 
+      c.id === complejoId || 
+      c.id_complejo === complejoId || 
+      c.id_establecimiento === complejoId
+    );
+    
+    const nombreComplejo = complejo?.nombre || complejo?.nombre_complejo || item.complejo_nombre;
+    
+    console.log(`🏟️ [Estadísticas] Cancha ${index}:`, {
+      cancha_nombre: item.cancha_nombre,
+      complejo_id: complejoId,
+      complejo_encontrado: !!complejo,
+      nombre_complejo: nombreComplejo,
+      todoItem: item
+    });
+    
+    return {
+      nombre: item.cancha_nombre || 'Sin nombre',
+      complejo: nombreComplejo || 'N/A',
+      reservas: item.cantidad_reservas || 0,
+      ocupacion: item.ocupacion_porcentaje || 0
+    };
+  }) || [];
+
+  const horariosPopulares = estadisticas?.top_horarios?.map(item => ({
+    horario: `${item.dia_semana} ${item.hora_inicio}`,
+    reservas: item.cantidad_reservas,
+    ingresos: item.ingresos
+  })) || [];
+
+  // Mostrar error si hay
+  if (error) {
+    return (
+      <div className={styles.estadisticasPage}>
+        <div style={{ padding: '20px', backgroundColor: '#FEE2E2', color: '#DC2626', borderRadius: '8px', marginBottom: '20px' }}>
+          <strong>Error:</strong> {error}
+          <p style={{ marginTop: '10px', fontSize: '14px' }}>
+            El endpoint de estadísticas aún no está implementado en el backend. 
+            Las estadísticas estarán disponibles una vez que se implemente el endpoint 
+            <code>/super_admin/estadisticas/completas</code>.
+          </p>
+        </div>
+        <button 
+          onClick={() => cargarEstadisticas()}
+          style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#f97316', color: 'white', border: 'none', borderRadius: '6px' }}
+        >
+          Reintentar
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.estadisticasPage}>
@@ -62,31 +177,45 @@ export default function EstadisticasPage() {
       <div className={styles.estadisticasStatsGrid}>
         <StatsCard
           title="Ingresos totales"
-          value={`$${statsData[0].value.toLocaleString()}`}
+          value={estadisticas?.metricas_mensuales?.ganancias_mes 
+            ? `$${estadisticas.metricas_mensuales.ganancias_mes.toLocaleString()}` 
+            : '$0'}
+          emoji="💰"
           icon={<span className="text-3xl opacity-80">💰</span>}
           color="blue"
           className={styles.estadisticasCard}
+          loading={isLoading}
         />
         <StatsCard
           title="Reservas totales"
-          value={statsData[1].value.toString()}
+          value={estadisticas?.metricas_mensuales?.reservas_totales_mes || 0}
+          emoji="📅"
           icon={<span className="text-3xl opacity-80">📅</span>}
           color="green"
           className={styles.estadisticasCard}
+          loading={isLoading}
         />
         <StatsCard
           title="Ocupación Mensual"
-          value={`${statsData[2].value}%`}
+          value={estadisticas?.metricas_mensuales?.ocupacion_mensual 
+            ? `${estadisticas.metricas_mensuales.ocupacion_mensual}%` 
+            : '0%'}
+          emoji="📊"
           icon={<span className="text-3xl opacity-80">📊</span>}
           color="purple"
           className={styles.estadisticasCard}
+          loading={isLoading}
         />
         <StatsCard
           title="Valoración promedio"
-          value={`${statsData[3].value}/5`}
+          value={estadisticas?.metricas_mensuales?.valoracion_promedio 
+            ? `${estadisticas.metricas_mensuales.valoracion_promedio.toFixed(1)}/5` 
+            : '0/5'}
+          emoji="⭐"
           icon={<span className="text-3xl opacity-80">⭐</span>}
-          color="blue"
+          color="yellow"
           className={styles.estadisticasCard}
+          loading={isLoading}
         />
       </div>
 
@@ -95,28 +224,53 @@ export default function EstadisticasPage() {
         <div className={styles.estadisticasChartContainer}>
           <div className={styles.estadisticasChartBackground}>
             <h3 className={styles.estadisticasTextLg + ' ' + styles.estadisticasFontSemibold + ' ' + styles.estadisticasTextGray900 + ' ' + styles.estadisticasMb6}>Reservas por día</h3>
-            <BarChart 
-              data={reservasPorDia} 
-              primaryColor="#9fb5b8"
-              animate={true}
-              showValues={true}
-              maxValue={40}
-              className={styles.estadisticasPx2}
-            />
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+              </div>
+            ) : reservasPorDia.length === 0 ? (
+              <div className="flex justify-center items-center h-64 text-gray-500">
+                No hay datos disponibles
+              </div>
+            ) : (
+              <BarChart 
+                data={reservasPorDia} 
+                primaryColor="#9fb5b8"
+                animate={true}
+                showValues={true}
+                maxValue={Math.max(...reservasPorDia.map(d => d.value)) + 5}
+                className={styles.estadisticasPx2}
+              />
+            )}
           </div>
         </div>
         
         <div className={styles.estadisticasChartContainer}>
           <div className={styles.estadisticasChartBackground}>
             <h3 className={styles.estadisticasTextLg + ' ' + styles.estadisticasFontSemibold + ' ' + styles.estadisticasTextGray900 + ' ' + styles.estadisticasMb4}>Reservas por deporte</h3>
-            <BarChart 
-              data={reservasPorDeporte} 
-              primaryColor="#14b8a6"
-              animate={true}
-              showValues={true}
-              maxValue={40}
-              className={styles.estadisticasPx2}
-            />
+            {isLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+              </div>
+            ) : reservasPorDeporte.length === 0 ? (
+              <div className="flex flex-col justify-center items-center h-64 text-gray-500">
+                <p className="text-lg mb-2">No hay datos disponibles</p>
+                <p className="text-sm text-gray-400">
+                  {estadisticas?.reservas_por_deporte === undefined 
+                    ? 'El backend no está enviando datos de "reservas_por_deporte"' 
+                    : 'No hay reservas registradas en el sistema'}
+                </p>
+              </div>
+            ) : (
+              <BarChart 
+                data={reservasPorDeporte} 
+                primaryColor="#14b8a6"
+                animate={true}
+                showValues={true}
+                maxValue={Math.max(...reservasPorDeporte.map(d => d.value)) + 5}
+                className={styles.estadisticasPx2}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -133,44 +287,60 @@ export default function EstadisticasPage() {
               <thead>
                 <tr>
                   <th>Cancha</th>
+                  <th>Complejo</th>
                   <th>Reservas</th>
                   <th>Ocupación</th>
-                  <th>Tendencia</th>
                 </tr>
               </thead>
               <tbody>
-                {canchasPopulares.map((cancha, index) => (  
-                  <tr key={index}>
-                    <td>
-                      <div className={styles.estadisticasCellTitle}>
-                        <div className={styles.estadisticasAvatar + ' ' + styles.estadisticasTextEmerald800} style={{backgroundColor: '#dcfce7'}}>
-                          {cancha.nombre.charAt(0)}
-                        </div>
-                        {cancha.nombre}
-                      </div>
-                    </td>
-                    <td>
-                      <div className={styles.estadisticasCellSubtitle}>{cancha.reservas}</div>
-                    </td>
-                    <td>
-                      <span className={`${styles.estadisticasStatusBadge} ${
-                        cancha.ocupacion > 80 ? styles.estadisticasStatusActivo :
-                        cancha.ocupacion > 50 ? styles.estadisticasStatusPorRevisar :
-                        styles.estadisticasStatusInactivo
-                      }`}>
-                        {cancha.ocupacion}%
-                      </span>
-                    </td>
-                    <td>
-                      <div className={styles.estadisticasFlex + ' ' + styles.estadisticasItemsCenter + ' ' + styles.estadisticasSpaceX1}>
-                        <svg className={styles.estadisticasW5 + ' ' + styles.estadisticasH5 + ' ' + styles.estadisticasTextEmerald500} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                        </svg>
-                        <span className={styles.estadisticasTextEmerald500 + ' ' + styles.estadisticasFontMedium}>+{index === 0 ? '12' : '8'}%</span>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-8">
+                      <div className="flex justify-center items-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
                       </div>
                     </td>
                   </tr>
-                ))}
+                ) : canchasPopulares.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-8">
+                      <div className="text-gray-500 mb-2">No hay datos disponibles</div>
+                      <div className="text-sm text-gray-400">
+                        {estadisticas?.top_canchas === undefined 
+                          ? 'El backend no está enviando datos de "top_canchas"' 
+                          : 'No hay canchas con reservas registradas'}
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  canchasPopulares.map((cancha, index) => (  
+                    <tr key={index}>
+                      <td>
+                        <div className={styles.estadisticasCellTitle}>
+                          <div className={styles.estadisticasAvatar + ' ' + styles.estadisticasTextEmerald800} style={{backgroundColor: '#dcfce7'}}>
+                            {cancha.nombre.charAt(0)}
+                          </div>
+                          {cancha.nombre}
+                        </div>
+                      </td>
+                      <td>
+                        <div className={styles.estadisticasCellSubtitle}>{cancha.complejo}</div>
+                      </td>
+                      <td>
+                        <div className={styles.estadisticasCellSubtitle}>{cancha.reservas}</div>
+                      </td>
+                      <td>
+                        <span className={`${styles.estadisticasStatusBadge} ${
+                          cancha.ocupacion > 80 ? styles.estadisticasStatusActivo :
+                          cancha.ocupacion > 50 ? styles.estadisticasStatusPorRevisar :
+                          styles.estadisticasStatusInactivo
+                        }`}>
+                          {cancha.ocupacion}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -188,38 +358,45 @@ export default function EstadisticasPage() {
                   <th>Horarios</th>
                   <th>Reservas</th>
                   <th>Ingresos</th>
-                  <th>Tendencia</th>
                 </tr>
               </thead>
               <tbody>
-                {horariosPopulares.map((horario, index) => (  
-                  <tr key={index}>
-                    <td>
-                      <div className={styles.estadisticasCellTitle}>
-                        <div className={styles.estadisticasAvatar} style={{backgroundColor: '#dbeafe', color: '#1e40af'}}>
-                          {horario.horario.charAt(0)}
-                        </div>
-                        {horario.horario}
-                      </div>
-                    </td>
-                    <td>
-                      <div className={styles.estadisticasCellSubtitle}>{horario.reservas}</div>
-                    </td>
-                    <td>
-                      <div className={styles.estadisticasCellText + ' ' + styles.estadisticasFontMedium + ' ' + styles.estadisticasTextEmerald600}>
-                        ${horario.ingresos.toLocaleString('es-CL')}
-                      </div>
-                    </td>
-                    <td>
-                      <div className={styles.estadisticasFlex + ' ' + styles.estadisticasItemsCenter + ' ' + styles.estadisticasSpaceX1}>
-                        <svg className={styles.estadisticasW5 + ' ' + styles.estadisticasH5 + ' ' + styles.estadisticasTextEmerald500} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                        </svg>
-                        <span className={styles.estadisticasTextEmerald500 + ' ' + styles.estadisticasFontMedium}>+{index === 0 ? '15' : '10'}%</span>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={3} className="text-center py-8">
+                      <div className="flex justify-center items-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
                       </div>
                     </td>
                   </tr>
-                ))}
+                ) : horariosPopulares.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} className="text-center py-8 text-gray-500">
+                      No hay datos disponibles
+                    </td>
+                  </tr>
+                ) : (
+                  horariosPopulares.map((horario, index) => (  
+                    <tr key={index}>
+                      <td>
+                        <div className={styles.estadisticasCellTitle}>
+                          <div className={styles.estadisticasAvatar} style={{backgroundColor: '#dbeafe', color: '#1e40af'}}>
+                            {horario.horario.charAt(0)}
+                          </div>
+                          {horario.horario}
+                        </div>
+                      </td>
+                      <td>
+                        <div className={styles.estadisticasCellSubtitle}>{horario.reservas}</div>
+                      </td>
+                      <td>
+                        <div className={styles.estadisticasCellText + ' ' + styles.estadisticasFontMedium + ' ' + styles.estadisticasTextEmerald600}>
+                          ${horario.ingresos.toLocaleString('es-CL')}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

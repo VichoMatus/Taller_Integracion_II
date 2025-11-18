@@ -19,7 +19,7 @@ export default function EditarPerfil() {
     email: "",
     bio: "",
     avatar: null as string | null,
-    avatarFile: null as File | null,
+    imagen: null as File | null,
   });
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -29,7 +29,7 @@ export default function EditarPerfil() {
     async function fetchUser() {
       try {
         const data = await authService.me();
-        
+
         // Formatear el teléfono con el prefijo
         let phoneFormatted = data.telefono || "";
         if (phoneFormatted && !phoneFormatted.startsWith(PHONE_PREFIX)) {
@@ -37,7 +37,7 @@ export default function EditarPerfil() {
         } else if (!phoneFormatted) {
           phoneFormatted = PHONE_PREFIX + " ";
         }
-        
+
         setFormData({
           nombre: data.nombre || "",
           apellido: data.apellido || "",
@@ -45,10 +45,10 @@ export default function EditarPerfil() {
           email: data.email,
           bio: data.bio || "",
           avatar: data.avatar_url || null,
-          avatarFile: null,
+          imagen: null,
         });
+        setImagePreview(null);
       } catch {
-        // Si falla, inicializa con el prefijo
         setFormData(prev => ({
           ...prev,
           phone: PHONE_PREFIX + " "
@@ -57,73 +57,6 @@ export default function EditarPerfil() {
     }
     fetchUser();
   }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value;
-    
-    // Si intentan borrar el prefijo, lo restauramos
-    if (!value.startsWith(PHONE_PREFIX)) {
-      value = PHONE_PREFIX + " ";
-    }
-    
-    // Remover el prefijo para procesar solo los números
-    const numberPart = value.slice(PHONE_PREFIX.length).trim();
-    
-    // Permitir solo números y espacios después del prefijo
-    const cleanNumber = numberPart.replace(/[^\d\s]/g, '');
-    
-    // Formatear automáticamente: XXXX XXXX
-    let formattedNumber = cleanNumber.replace(/\s/g, '');
-    if (formattedNumber.length > 4) {
-      formattedNumber = formattedNumber.slice(0, 4) + ' ' + formattedNumber.slice(4, 8);
-    }
-    
-    // Limitar a 8 dígitos
-    if (formattedNumber.replace(/\s/g, '').length > 8) {
-      formattedNumber = formattedNumber.slice(0, 9); // 4 + espacio + 4
-    }
-    
-    setFormData({
-      ...formData,
-      phone: PHONE_PREFIX + " " + formattedNumber
-    });
-  };
-
-  const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    const input = e.currentTarget;
-    const cursorPosition = input.selectionStart || 0;
-    
-    // Prevenir borrar el prefijo
-    if ((e.key === 'Backspace' || e.key === 'Delete') && cursorPosition <= PHONE_PREFIX.length + 1) {
-      e.preventDefault();
-    }
-  };
-
-  const handlePhoneFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    const input = e.target;
-    // Colocar el cursor después del prefijo
-    setTimeout(() => {
-      input.setSelectionRange(PHONE_PREFIX.length + 1, PHONE_PREFIX.length + 1);
-    }, 0);
-  };
-
-  const handlePhoneClick = (e: React.MouseEvent<HTMLInputElement>) => {
-    const input = e.currentTarget;
-    const cursorPosition = input.selectionStart || 0;
-    
-    // No permitir que el cursor esté antes del prefijo
-    if (cursorPosition < PHONE_PREFIX.length + 1) {
-      input.setSelectionRange(PHONE_PREFIX.length + 1, PHONE_PREFIX.length + 1);
-    }
-  };
 
   // Manejar cambio de imagen
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -141,8 +74,8 @@ export default function EditarPerfil() {
         return;
       }
 
-      setFormData(prev => ({ ...prev, avatarFile: file }));
-      
+      setFormData(prev => ({ ...prev, imagen: file }));
+
       // Crear preview
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -153,8 +86,57 @@ export default function EditarPerfil() {
     }
   };
 
-  const handleChangePhoto = () => {
-    document.getElementById('avatar-upload')?.click();
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value;
+
+    if (!value.startsWith(PHONE_PREFIX)) {
+      value = PHONE_PREFIX + " ";
+    }
+
+    const numberPart = value.slice(PHONE_PREFIX.length).trim();
+    const cleanNumber = numberPart.replace(/[^\d\s]/g, '');
+    let formattedNumber = cleanNumber.replace(/\s/g, '');
+    if (formattedNumber.length > 4) {
+      formattedNumber = formattedNumber.slice(0, 4) + ' ' + formattedNumber.slice(4, 8);
+    }
+    if (formattedNumber.replace(/\s/g, '').length > 8) {
+      formattedNumber = formattedNumber.slice(0, 9);
+    }
+    setFormData({
+      ...formData,
+      phone: PHONE_PREFIX + " " + formattedNumber
+    });
+  };
+
+  const handlePhoneKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    const cursorPosition = input.selectionStart || 0;
+    if ((e.key === 'Backspace' || e.key === 'Delete') && cursorPosition <= PHONE_PREFIX.length + 1) {
+      e.preventDefault();
+    }
+  };
+
+  const handlePhoneFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    const input = e.target;
+    setTimeout(() => {
+      input.setSelectionRange(PHONE_PREFIX.length + 1, PHONE_PREFIX.length + 1);
+    }, 0);
+  };
+
+  const handlePhoneClick = (e: React.MouseEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    const cursorPosition = input.selectionStart || 0;
+    if (cursorPosition < PHONE_PREFIX.length + 1) {
+      input.setSelectionRange(PHONE_PREFIX.length + 1, PHONE_PREFIX.length + 1);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -162,29 +144,23 @@ export default function EditarPerfil() {
     setError(null);
     setSuccess(null);
     setIsLoading(true);
-    
+
     try {
-      // Extraer solo el número sin el prefijo para guardar
       const phoneNumber = formData.phone.replace(PHONE_PREFIX, "").trim();
-      
-      // Preparar FormData para enviar imagen
-      const updateFormData = new FormData();
-      updateFormData.append('nombre', formData.nombre);
-      updateFormData.append('apellido', formData.apellido);
-      updateFormData.append('telefono', phoneNumber.length > 0 ? formData.phone : "");
-      
-      if (formData.bio) {
-        updateFormData.append('bio', formData.bio);
+
+      // Usar FormData para enviar imagen si existe
+      const updatePayload = new FormData();
+      updatePayload.append('nombre', formData.nombre);
+      updatePayload.append('apellido', formData.apellido);
+      updatePayload.append('telefono', phoneNumber.length > 0 ? formData.phone : "");
+      updatePayload.append('bio', formData.bio);
+      if (formData.imagen) {
+        updatePayload.append('avatar', formData.imagen);
       }
 
-      // Agregar imagen si existe
-      if (formData.avatarFile) {
-        updateFormData.append('avatar', formData.avatarFile);
-      }
-
-      await authService.updateProfile(updateFormData);
+      await authService.updateProfile(updatePayload);
       setSuccess("✅ Perfil actualizado correctamente");
-      
+
       setTimeout(() => {
         router.push("/usuario/perfil");
       }, 2000);
@@ -201,44 +177,34 @@ export default function EditarPerfil() {
 
   return (
     <div id="tailwind-wrapper">
-      <UserLayout userName={fullName || "Usuario"} notificationCount={2}>
+      <UserLayout userName={fullName || "Usuario"}>
         <div className="editar-perfil-wrapper">
           <div className="editar-perfil-container">
             {/* SIDEBAR IZQUIERDA */}
             <div className="editar-perfil-left">
               <div className="editar-header-gradient"></div>
-              
+
               <div className="avatar-section">
                 <div className="avatar-iniciales-editar">
                   {imagePreview || formData.avatar ? (
-                    <img src={imagePreview || formData.avatar || ''} alt="Avatar" />
+                    <img src={imagePreview || formData.avatar!} alt="Avatar" />
                   ) : (
                     <span>{userInitial}</span>
                   )}
                 </div>
-                
-                <input 
-                  id="avatar-upload"
-                  type="file" 
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  style={{ display: 'none' }}
-                />
-                
-                <button 
-                  type="button"
-                  onClick={handleChangePhoto} 
-                  className="btn-change-photo"
-                >
+                <label htmlFor="image-upload" className="btn-change-photo" style={{ cursor: "pointer" }}>
                   📷 Cambiar Foto
-                </button>
-
+                  <input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    style={{ display: "none" }}
+                  />
+                </label>
                 {imagePreview && (
-                  <div className="image-preview-badge">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="20 6 9 17 4 12"/>
-                    </svg>
-                    <span>Nueva imagen seleccionada</span>
+                  <div className="image-preview-info" style={{ fontSize: "0.9em", color: "#666", marginTop: "0.5em" }}>
+                    <span>Imagen lista para guardar</span>
                   </div>
                 )}
               </div>
@@ -247,7 +213,7 @@ export default function EditarPerfil() {
                 <div className="editar-form-groups">
                   <div className="input-group">
                     <label className="input-label">👤 Nombre</label>
-                    <input 
+                    <input
                       type="text"
                       name="nombre"
                       value={formData.nombre}
@@ -260,7 +226,7 @@ export default function EditarPerfil() {
 
                   <div className="input-group">
                     <label className="input-label">👥 Apellido</label>
-                    <input 
+                    <input
                       type="text"
                       name="apellido"
                       value={formData.apellido}
@@ -273,7 +239,7 @@ export default function EditarPerfil() {
 
                   <div className="input-group">
                     <label className="input-label">📱 Teléfono</label>
-                    <input 
+                    <input
                       type="tel"
                       name="phone"
                       value={formData.phone}
@@ -288,7 +254,7 @@ export default function EditarPerfil() {
 
                   <div className="input-group">
                     <label className="input-label">📧 Email</label>
-                    <input 
+                    <input
                       type="email"
                       value={formData.email}
                       disabled
@@ -327,7 +293,7 @@ export default function EditarPerfil() {
                   <div className="contacto-grid">
                     <div className="input-group">
                       <label className="input-label">Email Principal</label>
-                      <input 
+                      <input
                         type="email"
                         value={formData.email}
                         disabled
@@ -340,7 +306,7 @@ export default function EditarPerfil() {
 
                     <div className="input-group">
                       <label className="input-label">Teléfono Móvil</label>
-                      <input 
+                      <input
                         type="tel"
                         name="phone"
                         value={formData.phone}
@@ -363,11 +329,11 @@ export default function EditarPerfil() {
                   <h3 className="editar-section-title">
                     🔒 Seguridad de la Cuenta
                   </h3>
-                  
+
                   <div className="security-card">
                     <h4>Contraseña Segura</h4>
                     <p>
-                      Para proteger tu cuenta, te recomendamos cambiar tu contraseña regularmente. 
+                      Para proteger tu cuenta, te recomendamos cambiar tu contraseña regularmente.
                       Dirígete a la sección de seguridad para actualizar tu contraseña.
                     </p>
                     <Link href="/usuario/seguridad" className="btn-security">
@@ -377,7 +343,7 @@ export default function EditarPerfil() {
 
                   <div className="input-group">
                     <label className="input-label">Contraseña Actual</label>
-                    <input 
+                    <input
                       type="password"
                       value="************"
                       disabled
@@ -394,9 +360,9 @@ export default function EditarPerfil() {
                   <h3 className="editar-section-title">
                     💬 Sobre mí
                   </h3>
-                  
+
                   <p className="bio-description">
-                    Cuéntanos sobre ti, tus intereses deportivos, o cualquier otra información 
+                    Cuéntanos sobre ti, tus intereses deportivos, o cualquier otra información
                     que desees compartir con la comunidad de SportHub.
                   </p>
 
@@ -417,7 +383,7 @@ export default function EditarPerfil() {
                   </div>
 
                   <div className="form-actions">
-                    <button 
+                    <button
                       type="submit"
                       onClick={handleSubmit}
                       className="btn-save"

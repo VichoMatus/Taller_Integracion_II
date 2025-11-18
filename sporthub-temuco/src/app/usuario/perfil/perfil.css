@@ -1,4 +1,3 @@
-/* ===== VARIABLES ===== */
 :root {
   --primary: #8B5FBF;
   --primary-dark: #6B46C1;
@@ -1074,5 +1073,50 @@ input:checked + .slider:before {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* Animaciones para el perfil de usuario */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Aplica animación al contenedor principal */
+.perfil-wrapper {
+  animation: fadeInUp 0.7s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* Animación para la tarjeta principal */
+.profile-card {
+  animation: fadeInScale 0.7s 0.1s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+/* Animación para el avatar */
+.avatar-iniciales {
+  animation: fadeInScale 0.8s 0.2s cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+/* Animación para los box de información y seguridad */
+.info-box,
+.security-box,
+.preferences-box {
+  animation: fadeInUp 0.8s 0.25s cubic-bezier(0.23, 1, 0.32, 1) both;
 }
 

@@ -19,6 +19,41 @@ export class ListResenas {
 }
 
 /**
+ * Caso de uso para obtener una reseña específica por ID.
+ * Llama directamente al endpoint GET /resenas/{id} de FastAPI.
+ */
+export class GetResena {
+  constructor(private repo: ResenaRepository) {}
+  
+  /**
+   * Obtiene una reseña por su ID.
+   * @param id - ID de la reseña
+   * @returns Promise con la reseña encontrada
+   */
+  async execute(id: number): Promise<Resena> {
+    console.log(`🔍 [GetResena] Buscando reseña con ID: ${id}`);
+    
+    try {
+      const resena = await this.repo.getResena(id);
+      console.log(`✅ [GetResena] Reseña encontrada:`, resena);
+      return resena;
+    } catch (error: any) {
+      console.error(`❌ [GetResena] Error al obtener reseña con ID ${id}:`, error.message);
+      
+      // Si es un error 404, lanzar un error más específico
+      if (error.statusCode === 404) {
+        const notFoundError: any = new Error(`Reseña con ID ${id} no encontrada`);
+        notFoundError.statusCode = 404;
+        throw notFoundError;
+      }
+      
+      // Re-lanzar otros errores
+      throw error;
+    }
+  }
+}
+
+/**
  * Caso de uso para crear una nueva reseña.
  * Basado en POST /resenas de la API de Taller4.
  * La API valida que el usuario tenga una reserva confirmada.

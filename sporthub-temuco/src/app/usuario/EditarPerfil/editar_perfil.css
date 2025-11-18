@@ -1,4 +1,3 @@
-/* ===== VARIABLES ===== */
 :root {
   --primary: #8B5FBF;
   --primary-dark: #6B46C1;
@@ -75,7 +74,7 @@
   margin-bottom: 1.5rem;
 }
 
-/* ===== AVATAR SECTION ===== */
+/* Avatar Section */
 .avatar-section {
   display: flex;
   flex-direction: column;
@@ -129,40 +128,7 @@
   box-shadow: 0 6px 16px rgba(139, 95, 191, 0.4);
 }
 
-/* Badge de preview de imagen */
-.image-preview-badge {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.65rem 1rem;
-  background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
-  border-radius: 8px;
-  color: #22543d;
-  font-size: 0.8rem;
-  font-weight: 600;
-  animation: slideInBadge 0.3s ease-out;
-}
-
-@keyframes slideInBadge {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.image-preview-badge svg {
-  flex-shrink: 0;
-}
-
-.image-preview-badge span {
-  font-size: 0.85rem;
-}
-
-/* ===== FORM GROUPS EN SIDEBAR ===== */
+/* Form Groups en Sidebar */
 .editar-form-groups {
   display: flex;
   flex-direction: column;
@@ -477,7 +443,7 @@
   font-weight: 500;
 }
 
-/* ===== RESPONSIVE ===== */
+/* Responsive */
 @media (max-width: 1400px) {
   .editar-perfil-container {
     grid-template-columns: 300px 1fr;
@@ -531,5 +497,134 @@
 
   .editar-titulo {
     font-size: 1.8rem;
+  }
+}
+
+.avatar-section,
+.avatar-section-edit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.avatar-iniciales-editar,
+.avatar-wrapper-edit {
+  width: 110px;
+  height: 110px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 42px;
+  font-weight: 700;
+  box-shadow: 0 8px 25px rgba(139, 95, 191, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.avatar-iniciales-editar:hover,
+.avatar-wrapper-edit:hover {
+  transform: scale(1.08);
+  box-shadow: 0 10px 30px rgba(139, 95, 191, 0.5);
+}
+
+.avatar-iniciales-editar img,
+.avatar-wrapper-edit img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-default-edit {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid var(--bg-white);
+  box-shadow: 0 6px 20px rgba(139, 95, 191, 0.2);
+}
+
+.avatar-initial-edit {
+  font-size: 3rem;
+  font-weight: 700;
+  color: white;
+}
+
+.avatar-status-edit {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  width: 20px;
+  height: 20px;
+  background: var(--success);
+  border: 3px solid var(--bg-white);
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(72, 187, 120, 0.4);
+}
+
+/* Botón Cambiar Foto */
+.btn-change-photo,
+.change-photo-btn-modern {
+  padding: 0.7rem 1.5rem;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(139, 95, 191, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+  width: 100%;
+  user-select: none;
+}
+
+.btn-change-photo:hover,
+.change-photo-btn-modern:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(139, 95, 191, 0.4);
+  background: linear-gradient(135deg, var(--primary-light), var(--primary));
+}
+
+.btn-change-photo:active,
+.change-photo-btn-modern:active {
+  transform: translateY(0);
+}
+
+/* Imagen preview info */
+.image-preview-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+  border-radius: 8px;
+  color: #22543d;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: 0.75rem;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

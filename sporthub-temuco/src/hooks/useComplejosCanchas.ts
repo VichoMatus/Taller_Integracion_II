@@ -1,252 +1,144 @@
 import { useState, useEffect } from 'react';
-import { complejosService } from '@/services/complejosService';
+import { canchaService } from '../services/canchaService';
+import { complejosService } from '../services/complejosService';
 
-export interface Complejo {
-  id_complejo: number;
-  id_dueno: number;
-  nombre: string;
-  direccion: string;
-  comuna: string;
-  descripcion: string;
-  actividad: string;
-  rating_promedio: number;
-  total_resenas: number;
-  distancia_km: number;
-  latitud?: number;
-  longitud?: number;
+export interface CanchaMapeada {
+  id: number;
+  imageUrl: string;
+  name: string;
+  address: string;
+  rating: number;
+  tags: string[];
+  description: string;
+  price: string;
+  nextAvailable: string;
+  sport: string;
+  complejoNombre?: string;
+  complejoDireccion?: string;
 }
 
-interface UseComplejosReturn {
-  complejos: Complejo[];
-  loading: boolean;
-  error: string | null;
-  getComplejoById: (id: number) => Complejo | null;
-  refreshComplejos: () => Promise<void>;
+interface UseComplejosCanchasOptions {
+  deportes: string[]; // Ej: ['futbol', 'futsal', 'futbolito']
+  fallbackComplejos?: Record<number, { nombre: string; direccion: string }>;
 }
 
-export const useComplejos = (): UseComplejosReturn => {
-  const [complejos, setComplejos] = useState<Complejo[]>([]);
+export const useComplejosCanchas = ({ deportes, fallbackComplejos }: UseComplejosCanchasOptions) => {
+  const [canchas, setCanchas] = useState<CanchaMapeada[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadComplejos = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      console.log('🔄 [useComplejos] Cargando desde API...');
-      
-      const response = await complejosService.getComplejos();
-      
-      console.log('🔍 [useComplejos] Response RAW completo:', JSON.stringify(response, null, 2));
-      
-      let complejosData: any[] = [];
-      
-      if (Array.isArray(response)) {
-        complejosData = response;
-        console.log('✅ [useComplejos] Response es array directo');
-      } else if (response && Array.isArray(response.data)) {
-        complejosData = response.data;
-        console.log('✅ [useComplejos] Array encontrado en response.data');
-      } else if (response && Array.isArray(response.items)) {
-        complejosData = response.items;
-        console.log('✅ [useComplejos] Array encontrado en response.items');
-      } else if (response && Array.isArray(response.complejos)) {
-        complejosData = response.complejos;
-        console.log('✅ [useComplejos] Array encontrado en response.complejos');
-      } else {
-        console.error('❌ [useComplejos] No se encontró array en la respuesta');
-        throw new Error('No se encontró array de complejos en la respuesta');
-      }
-      
-      console.log(`📊 [useComplejos] Complejos extraídos: ${complejosData.length}`);
-      
-      // 🔥 DEBUG CRÍTICO: VER ESTRUCTURA COMPLETA DEL PRIMER COMPLEJO
-      if (complejosData.length > 0) {
-        const primero = complejosData[0];
-        console.log('🔍 [useComplejos] ========== PRIMER COMPLEJO RAW ==========');
-        console.log(JSON.stringify(primero, null, 2));
-        console.log('🔍 [useComplejos] ========================================');
-        console.log('🔍 [useComplejos] Claves del objeto:', Object.keys(primero));
-        console.log('🔍 [useComplejos] Intentando extraer ID con diferentes nombres:');
-        console.log('  - primero.id_complejo:', primero.id_complejo);
-        console.log('  - primero.id:', primero.id);
-        console.log('  - primero.idComplejo:', primero.idComplejo);
-        console.log('  - primero.complejo_id:', primero.complejo_id);
-        console.log('  - primero.establecimiento_id:', primero.establecimiento_id);
-        console.log('  - primero.establecimientoId:', primero.establecimientoId);
-      }
-      
-      // 🔥 MAPEAR CON TODAS LAS VARIANTES POSIBLES DE CAMPO ID
-      const complejosMapeados = complejosData.map((complejo: any, index: number) => {
-        // 🔥 INTENTAR EXTRAER ID DE TODAS LAS FORMAS POSIBLES
-        const id = complejo.id_complejo || 
-                   complejo.id || 
-                   complejo.idComplejo || 
-                   complejo.complejo_id ||
-                   complejo.establecimiento_id ||
-                   complejo.establecimientoId ||
-                   index + 1; // 🔥 ÚLTIMO RECURSO: usar índice + 1
-        
-        const nombre = complejo.nombre || `Complejo ${index + 1}`;
-        const direccion = complejo.direccion || complejo.direccion_completa || complejo.address || 'Dirección no disponible';
-        
-        console.log(`🔄 [useComplejos] Mapeando complejo ${index + 1}:`);
-        console.log(`  - ID extraído: ${id} (de: ${Object.keys(complejo).find(k => complejo[k] === id) || 'índice'})`);
-        console.log(`  - Nombre: ${nombre}`);
-        console.log(`  - Dirección: ${direccion}`);
-        
-        return {
-          id_complejo: Number(id), // 🔥 ASEGURAR QUE SEA NÚMERO
-          id_dueno: Number(complejo.id_dueno || complejo.idDueno || complejo.dueno_id || 1),
-          nombre: nombre,
-          direccion: direccion,
-          comuna: complejo.comuna || 'Temuco',
-          descripcion: complejo.descripcion || '',
-          actividad: complejo.actividad || 'Deportes',
-          rating_promedio: Number(complejo.rating_promedio || complejo.ratingPromedio || complejo.rating || 4.5),
-          total_resenas: Number(complejo.total_resenas || complejo.totalResenas || complejo.reviews || 0),
-          distancia_km: Number(complejo.distancia_km || complejo.distanciaKm || complejo.distance || 0),
-          latitud: complejo.latitud ? Number(complejo.latitud) : (complejo.lat ? Number(complejo.lat) : -38.7359),
-          longitud: complejo.longitud ? Number(complejo.longitud) : (complejo.lng || complejo.lon ? Number(complejo.lng || complejo.lon) : -72.5904)
-        };
-      });
-      
-      console.log('✅ [useComplejos] Complejos mapeados:', complejosMapeados.length);
-      console.log('✅ [useComplejos] IDs finales:');
-      complejosMapeados.forEach(c => {
-        console.log(`  - ID ${c.id_complejo}: ${c.nombre}`);
-      });
-      
-      // 🔥 VERIFICACIÓN FINAL: ASEGURAR QUE TODOS TENGAN ID
-      const sinID = complejosMapeados.filter(c => !c.id_complejo || isNaN(c.id_complejo));
-      if (sinID.length > 0) {
-        console.error('❌ [useComplejos] Complejos sin ID válido:', sinID);
-      }
-      
-      setComplejos(complejosMapeados);
-      
-    } catch (err: any) {
-      console.error('❌ [useComplejos] Error completo:', err);
-      console.error('❌ [useComplejos] Stack:', err.stack);
-      setError(`Error cargando complejos: ${err.message}`);
-      
-      // 🔥 FALLBACK CON DATOS ESTÁTICOS
-      console.warn('⚠️ [useComplejos] Usando datos de fallback');
-      const complejosFallback: Complejo[] = [
-        {
-          id_complejo: 1,
-          id_dueno: 1,
-          nombre: "🚨 FALLBACK - Complejo Deportivo Norte",
-          direccion: "Av. Alemania 1234, Temuco, Chile",
-          comuna: "Temuco",
-          descripcion: "Complejo deportivo con canchas de fútbol",
-          actividad: "Fútbol",
-          rating_promedio: 4.5,
-          total_resenas: 25,
-          distancia_km: 2.5,
-          latitud: -38.7359,
-          longitud: -72.5904
-        },
-        {
-          id_complejo: 2,
-          id_dueno: 1,
-          nombre: "🚨 FALLBACK - Complejo Deportivo Centro",
-          direccion: "Av. Pedro de Valdivia 567, Temuco, Chile",
-          comuna: "Temuco",
-          descripcion: "Complejo deportivo céntrico",
-          actividad: "Múltiples deportes",
-          rating_promedio: 4.2,
-          total_resenas: 18,
-          distancia_km: 1.8,
-          latitud: -38.7400,
-          longitud: -72.5900
-        },
-        {
-          id_complejo: 3,
-          id_dueno: 2,
-          nombre: "🚨 FALLBACK - Complejo Deportivo Sur",
-          direccion: "Calle Montt 890, Temuco, Chile",
-          comuna: "Temuco",
-          descripcion: "Complejo deportivo zona sur",
-          actividad: "Fútbol y básquet",
-          rating_promedio: 4.0,
-          total_resenas: 12,
-          distancia_km: 3.2,
-          latitud: -38.7450,
-          longitud: -72.5850
-        },
-        {
-          id_complejo: 4,
-          id_dueno: 2,
-          nombre: "🚨 FALLBACK - Complejo Deportivo Este",
-          direccion: "Av. Balmaceda 456, Temuco, Chile",
-          comuna: "Temuco",
-          descripcion: "Complejo deportivo zona este",
-          actividad: "Fútbol",
-          rating_promedio: 4.3,
-          total_resenas: 20,
-          distancia_km: 2.0,
-          latitud: -38.7380,
-          longitud: -72.5800
-        },
-        {
-          id_complejo: 5,
-          id_dueno: 3,
-          nombre: "🚨 FALLBACK - Complejo Deportivo Oeste",
-          direccion: "Av. Caupolicán 789, Temuco, Chile",
-          comuna: "Temuco",
-          descripcion: "Complejo deportivo zona oeste",
-          actividad: "Múltiples deportes",
-          rating_promedio: 4.1,
-          total_resenas: 15,
-          distancia_km: 2.8,
-          latitud: -38.7340,
-          longitud: -72.6000
-        },
-        {
-          id_complejo: 6,
-          id_dueno: 3,
-          nombre: "🚨 FALLBACK - Complejo Deportivo Pueblo Nuevo",
-          direccion: "Av. Rudecindo Ortega 321, Temuco, Chile",
-          comuna: "Temuco",
-          descripcion: "Complejo deportivo Pueblo Nuevo",
-          actividad: "Fútbol y tenis",
-          rating_promedio: 4.4,
-          total_resenas: 22,
-          distancia_km: 1.5,
-          latitud: -38.7320,
-          longitud: -72.5950
-        }
-      ];
-      
-      setComplejos(complejosFallback);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getComplejoById = (id: number): Complejo | null => {
-    const complejo = complejos.find(c => c.id_complejo === id);
-    console.log(`🔍 [useComplejos] Buscando complejo ID ${id}:`, complejo);
-    return complejo || null;
-  };
-
-  const refreshComplejos = async () => {
-    console.log('🔄 [useComplejos] Refresh manual solicitado');
-    await loadComplejos();
-  };
-
   useEffect(() => {
-    console.log('🚀 [useComplejos] Hook montado, iniciando carga...');
-    loadComplejos();
-  }, []);
+    const loadCanchas = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        console.log(`🔄 [useComplejosCanchas] Cargando canchas para deportes:`, deportes);
+        
+        // 🔥 PASO 1: OBTENER TODAS LAS CANCHAS
+        const response = await canchaService.getCanchas();
+        console.log('✅ [useComplejosCanchas] Respuesta de canchas:', response);
+        
+        // Extraer el array de canchas de la respuesta
+        const todasLasCanchas = response.items || [];
+        console.log('✅ [useComplejosCanchas] Total de canchas obtenidas:', todasLasCanchas.length);
+        
+        if (!Array.isArray(todasLasCanchas) || todasLasCanchas.length === 0) {
+          console.warn('⚠️ [useComplejosCanchas] No se encontraron canchas');
+          setCanchas([]);
+          setLoading(false);
+          return;
+        }
+        
+        // 🔥 PASO 2: FILTRAR POR TIPO DE DEPORTE
+        const canchasFiltradas = todasLasCanchas.filter((cancha: any) => {
+          const tipoCancha = cancha.tipo?.toLowerCase();
+          const esDeporteValido = deportes.some(deporte => 
+            tipoCancha === deporte.toLowerCase()
+          );
+          
+          if (esDeporteValido) {
+            console.log(`✅ [useComplejosCanchas] Cancha ${cancha.id} (${cancha.tipo}) incluida`);
+          }
+          
+          return esDeporteValido;
+        });
+        
+        console.log(`⚽ [useComplejosCanchas] Canchas filtradas: ${canchasFiltradas.length}`);
+        
+        // 🔥 PASO 3: OBTENER DATOS DE COMPLEJOS PARA CADA CANCHA
+        const canchasMapeadas = await Promise.all(
+          canchasFiltradas.map(async (cancha: any) => {
+            let complejoNombre = 'Complejo Deportivo';
+            let complejoDireccion = 'Dirección no disponible';
+            
+            // 🔥 INTENTAR OBTENER DATOS DEL COMPLEJO
+            if (cancha.establecimientoId) {
+              try {
+                console.log(`🔍 [useComplejosCanchas] Obteniendo complejo ${cancha.establecimientoId} para cancha ${cancha.id}`);
+                const complejoData = await complejosService.getComplejoById(cancha.establecimientoId);
+                
+                if (complejoData) {
+                  complejoNombre = complejoData.nombre || complejoNombre;
+                  complejoDireccion = complejoData.direccion || complejoDireccion;
+                  console.log(`✅ [useComplejosCanchas] Complejo encontrado: ${complejoNombre}`);
+                }
+                
+              } catch (complejoError: any) {
+                console.warn(`⚠️ [useComplejosCanchas] Error cargando complejo ${cancha.establecimientoId}:`, complejoError.message);
+                
+                // 🔥 USAR FALLBACK SI ESTÁ DISPONIBLE
+                if (fallbackComplejos && fallbackComplejos[cancha.establecimientoId]) {
+                  const fallback = fallbackComplejos[cancha.establecimientoId];
+                  complejoNombre = fallback.nombre;
+                  complejoDireccion = fallback.direccion;
+                  console.log(`🔄 [useComplejosCanchas] Usando datos de fallback para complejo ${cancha.establecimientoId}`);
+                }
+              }
+            }
+            
+            // 🔥 MAPEAR CANCHA CON DATOS DEL COMPLEJO
+            const canchaMapeada: CanchaMapeada = {
+              id: cancha.id,
+              imageUrl: `/sports/${deportes[0]}/canchas/Cancha${cancha.id}.png`,
+              name: cancha.nombre || `Cancha ${cancha.id}`,
+              address: `${complejoNombre} - ${complejoDireccion}`,
+              rating: cancha.promedioCalificacion || 4.5,
+              tags: [
+                cancha.techada ? "Techada" : "Al aire libre",
+                cancha.activa ? "Disponible" : "No disponible",
+                cancha.tipo ? cancha.tipo.charAt(0).toUpperCase() + cancha.tipo.slice(1) : "Deporte"
+              ],
+              description: `${cancha.tipo || 'Cancha'} - ${cancha.nombre || `Cancha ${cancha.id}`}`,
+              price: cancha.precioPorHora?.toString() || "25",
+              nextAvailable: cancha.activa ? "Disponible ahora" : "No disponible",
+              sport: cancha.tipo || deportes[0],
+              complejoNombre,
+              complejoDireccion
+            };
+            
+            return canchaMapeada;
+          })
+        );
+        
+        console.log('🎉 [useComplejosCanchas] Canchas mapeadas con datos de complejo:', canchasMapeadas.length);
+        setCanchas(canchasMapeadas);
+        setLoading(false);
+        
+      } catch (err: any) {
+        console.error('❌ [useComplejosCanchas] Error cargando canchas:', err);
+        setError(err.message || 'Error desconocido');
+        setCanchas([]);
+        setLoading(false);
+      }
+    };
+
+    loadCanchas();
+  }, [deportes.join(',')]); // Re-ejecutar si cambian los deportes
 
   return {
-    complejos,
+    canchas,
     loading,
-    error,
-    getComplejoById,
-    refreshComplejos
+    error
   };
 };

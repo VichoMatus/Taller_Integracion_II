@@ -47,6 +47,13 @@ export const DEPORTES_MAP: Record<string, DeporteInfo> = {
     nombreDisplay: 'Básquetbol',
     variantes: ['basquet', 'básquet', 'basketball', 'basquetbol', 'básquetbol']
   },
+  // Alias para el nombre real de BD (basquetbol)
+  'basquetbol': {
+    id: 2,
+    nombre: 'basquetbol',
+    nombreDisplay: 'Básquetbol',
+    variantes: ['basquet', 'básquet', 'basketball', 'basquetbol', 'básquetbol']
+  },
   'tenis': {
     id: 3,
     nombre: 'tenis', // Nombre EXACTO en BD
@@ -59,15 +66,36 @@ export const DEPORTES_MAP: Record<string, DeporteInfo> = {
     nombreDisplay: 'Pádel',
     variantes: ['padel', 'pádel', 'paddle']
   },
+  // Alias para el nombre real de BD (paddle)
+  'paddle': {
+    id: 4,
+    nombre: 'paddle',
+    nombreDisplay: 'Pádel',
+    variantes: ['padel', 'pádel', 'paddle']
+  },
   'volley': {
     id: 5,
     nombre: 'voleibol', // ⚠️ En BD es "voleibol" (con i), NO "volley"
     nombreDisplay: 'Voleibol',
     variantes: ['volley', 'voley', 'voleibol', 'volleyball']
   },
+  // Alias para el nombre real de BD (voleibol)
+  'voleibol': {
+    id: 5,
+    nombre: 'voleibol',
+    nombreDisplay: 'Voleibol',
+    variantes: ['volley', 'voley', 'voleibol', 'volleyball']
+  },
   'futbol_sala': {
     id: 6,
     nombre: 'futbolito', // ⚠️ En BD es "futbolito", NO "futbol_sala"
+    nombreDisplay: 'Fútbol Sala',
+    variantes: ['futbol_sala', 'futbol sala', 'futsal', 'fútbol sala', 'futbolito']
+  },
+  // Alias para el nombre real de BD (futbolito)
+  'futbolito': {
+    id: 6,
+    nombre: 'futbolito',
     nombreDisplay: 'Fútbol Sala',
     variantes: ['futbol_sala', 'futbol sala', 'futsal', 'fútbol sala', 'futbolito']
   }

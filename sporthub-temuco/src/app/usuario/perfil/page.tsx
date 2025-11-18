@@ -5,85 +5,38 @@ import React, { useState, useEffect } from 'react';
 import UserLayout from '../UsuarioLayout';
 import Link from 'next/link';
 import authService from '@/services/authService';
-import userStatsService, { UserStats } from '@/services/userStatsService';
-import userPreferencesService, { UserPreferences } from '@/services/userPreferencesService';
 import { useAuthProtection } from '@/hooks/useAuthProtection';
 import { useRouter } from 'next/navigation';
+
+// Simulación de servicio de preferencias (ajusta según tu implementación real)
+const userPreferencesService = {
+  getPreferences: async () => ({
+    notificaciones_email: true,
+    notificaciones_promociones: true,
+    notificaciones_recordatorios: true,
+  }),
+  updatePreference: async (key: string, value: boolean) => {},
+};
+
+type UserPreferences = {
+  notificaciones_email: boolean;
+  notificaciones_promociones: boolean;
+  notificaciones_recordatorios: boolean;
+};
 
 export default function PerfilUsuario() {
   useAuthProtection(['usuario']);
   
   const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState<any>(null);
-  const [userStats, setUserStats] = useState<UserStats>({
-    reservas_totales: 0,
-    canchas_reservadas: 0,
-    total_gastado: 0,
-    favoritos: 0
-  });
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [userPreferences, setUserPreferences] = useState<UserPreferences>({
     notificaciones_email: true,
     notificaciones_promociones: true,
     notificaciones_recordatorios: true
   });
-  const [loadingStats, setLoadingStats] = useState(true);
   const [loadingPreferences, setLoadingPreferences] = useState(true);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const router = useRouter();
-
-  // Función para cargar estadísticas
-  const loadUserStats = async () => {
-    try {
-      setLoadingStats(true);
-      const stats = await userStatsService.getUserStats();
-      setUserStats(stats);
-      console.log("Estadísticas cargadas:", stats);
-    } catch (error) {
-      console.error('Error cargando estadísticas:', error);
-    } finally {
-      setLoadingStats(false);
-    }
-  };
-
-  // Función para cargar preferencias
-  const loadUserPreferences = async () => {
-    try {
-      setLoadingPreferences(true);
-      const preferences = await userPreferencesService.getPreferences();
-      setUserPreferences(preferences);
-      console.log("Preferencias cargadas:", preferences);
-    } catch (error) {
-      console.error('Error cargando preferencias:', error);
-    } finally {
-      setLoadingPreferences(false);
-    }
-  };
-
-  // Función para actualizar una preferencia
-  const handlePreferenceChange = async (key: keyof UserPreferences, value: boolean) => {
-    try {
-      // Actualizar estado local inmediatamente para mejor UX
-      setUserPreferences(prev => ({
-        ...prev,
-        [key]: value
-      }));
-
-      // Actualizar en el backend
-      await userPreferencesService.updatePreference(key, value);
-      
-      console.log(`✅ Preferencia ${key} actualizada a ${value}`);
-    } catch (error) {
-      console.error('Error actualizando preferencia:', error);
-      
-      // Revertir cambio si falla
-      setUserPreferences(prev => ({
-        ...prev,
-        [key]: !value
-      }));
-      
-      alert('No se pudo actualizar la preferencia. Inténtalo de nuevo.');
-    }
-  };
 
   // Función para cargar los datos del usuario
   const loadUserData = async () => {
@@ -112,16 +65,47 @@ export default function PerfilUsuario() {
     }
   };
 
+  // Función para cargar preferencias
+  const loadUserPreferences = async () => {
+    try {
+      setLoadingPreferences(true);
+      const preferences = await userPreferencesService.getPreferences();
+      setUserPreferences(preferences);
+      console.log("Preferencias cargadas:", preferences);
+    } catch (error) {
+      console.error('Error cargando preferencias:', error);
+    } finally {
+      setLoadingPreferences(false);
+    }
+  };
+
+  // Función para actualizar una preferencia
+  const handlePreferenceChange = async (key: keyof UserPreferences, value: boolean) => {
+    try {
+      setUserPreferences(prev => ({
+        ...prev,
+        [key]: value
+      }));
+      await userPreferencesService.updatePreference(key, value);
+      console.log(`✅ Preferencia ${key} actualizada a ${value}`);
+    } catch (error) {
+      console.error('Error actualizando preferencia:', error);
+      setUserPreferences(prev => ({
+        ...prev,
+        [key]: !value
+      }));
+      alert('No se pudo actualizar la preferencia. Inténtalo de nuevo.');
+    }
+  };
+
   useEffect(() => {
     loadUserData();
-    loadUserStats();
-    loadUserPreferences(); // Cargar preferencias
+    loadUserPreferences();
 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         loadUserData();
-        loadUserStats();
-        loadUserPreferences(); // Recargar preferencias
+        loadUserPreferences();
       }
     };
     
@@ -136,7 +120,7 @@ export default function PerfilUsuario() {
 
   if (isLoading) {
     return (
-      <UserLayout userName={userData?.name || "Usuario"} notificationCount={2}>
+      <UserLayout userName={userData?.name || "Usuario"}>
         <div className="perfil-wrapper">
           <div className="loading-spinner">
             <div className="spinner"></div>
@@ -149,7 +133,7 @@ export default function PerfilUsuario() {
 
   if (!userData) {
     return (
-      <UserLayout userName="Usuario" notificationCount={2}>
+      <UserLayout userName="Usuario">
         <div className="perfil-wrapper">
           <div className="loading-spinner">
             <p>No se pudo cargar el perfil.</p>
@@ -161,7 +145,7 @@ export default function PerfilUsuario() {
 
   return (
     <div id="tailwind-wrapper">
-      <UserLayout userName={userData.name} notificationCount={2}>
+      <UserLayout userName={userData.name}>
         <div className="perfil-wrapper">
           <div className="profile-card">
             {/* SIDEBAR IZQUIERDA */}
@@ -238,50 +222,6 @@ export default function PerfilUsuario() {
                   )}
                 </div>
 
-                {/* ESTADÍSTICAS CON DATOS REALES */}
-                <div className="stats-box">
-                  <h3>📊 Estadísticas</h3>
-                  {loadingStats ? (
-                    <div className="stats-loading">
-                      <div className="spinner-small"></div>
-                      <p>Cargando estadísticas...</p>
-                    </div>
-                  ) : (
-                    <div className="stats-grid">
-                      <div className="stat-card">
-                        <div className="stat-icon">🏟️</div>
-                        <div className="stat-info">
-                          <div className="stat-value">{userStats.reservas_totales}</div>
-                          <div className="stat-label">Reservas Totales</div>
-                        </div>
-                      </div>
-                      <div className="stat-card">
-                        <div className="stat-icon">⚽</div>
-                        <div className="stat-info">
-                          <div className="stat-value">{userStats.canchas_reservadas}</div>
-                          <div className="stat-label">Canchas Reservadas</div>
-                        </div>
-                      </div>
-                      <div className="stat-card">
-                        <div className="stat-icon">💰</div>
-                        <div className="stat-info">
-                          <div className="stat-value">
-                            ${userStats.total_gastado.toLocaleString('es-CL')}
-                          </div>
-                          <div className="stat-label">Total Gastado</div>
-                        </div>
-                      </div>
-                      <div className="stat-card">
-                        <div className="stat-icon">⭐</div>
-                        <div className="stat-info">
-                          <div className="stat-value">{userStats.favoritos}</div>
-                          <div className="stat-label">Favoritos</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
                 {/* INFORMACIÓN DE SEGURIDAD */}
                 <div className="security-box">
                   <h3>🔒 Seguridad de la Cuenta</h3>
@@ -324,7 +264,7 @@ export default function PerfilUsuario() {
                   </div>
                 </div>
 
-                {/* PREFERENCIAS CON FUNCIONALIDAD REAL */}
+                {/* PREFERENCIAS */}
                 <div className="preferences-box">
                   <h3>⚙️ Preferencias</h3>
                   {loadingPreferences ? (

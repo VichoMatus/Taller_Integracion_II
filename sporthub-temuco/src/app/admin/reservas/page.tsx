@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { reservaService } from '@/services/reservaService';
+import Modal from '@/components/Modal';
+import { useAdminToast } from '@/components/admin/AdminToast';
 import { apiBackend } from '@/config/backend';
 import { Reserva, EstadoReserva } from '@/types/reserva';
 import '../dashboard.css';
@@ -15,33 +17,7 @@ export default function ReservasPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedEstado, setSelectedEstado] = useState<EstadoReserva | ''>('');
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [reservaToConfirm, setReservaToConfirm] = useState<number | null>(null);
-  const [itemsPerPage, setItemsPerPage] = useState(10); // 🔥 Dinámico según resolución
-  
-  // 🔥 NUEVO: Estados para modales personalizados
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showErrorModal, setShowErrorModal] = useState(false);
-  const [modalMessage, setModalMessage] = useState('');
-
-  // 🔥 Calcular items por página según altura de viewport
-  useEffect(() => {
-    const calculateItemsPerPage = () => {
-      const height = window.innerHeight;
-      // Cada fila de tabla ocupa ~80px, header ~250px, filtros ~100px, footer ~100px
-      const availableHeight = height - 450;
-      const rowHeight = 80;
-      const calculatedItems = Math.floor(availableHeight / rowHeight);
-      // Mínimo 5, máximo 20
-      const finalItems = Math.max(5, Math.min(20, calculatedItems));
-      setItemsPerPage(finalItems);
-      console.log(`📐 Altura viewport: ${height}px → ${finalItems} reservas por página`);
-    };
-
-    calculateItemsPerPage();
-    window.addEventListener('resize', calculateItemsPerPage);
-    return () => window.removeEventListener('resize', calculateItemsPerPage);
-  }, []);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Cargar reservas desde el backend usando endpoint admin
   const loadReservas = async () => {
@@ -49,10 +25,58 @@ export default function ReservasPage() {
       setLoading(true);
       setError(null);
       
-      // La API filtra automáticamente por el token del admin
-      // No necesitamos enviar complejo_id manualmente
-      console.log('🔍 [loadReservas] Llamando a getAdminReservas() (filtrado automático por token)');
-      const response: any = await reservaService.getAdminReservas();
+      // 1. Obtener ID del usuario actual
+      const userData = localStorage.getItem('userData');
+      let adminId: number | undefined;
+      let complejoId: number | undefined;
+      
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          adminId = user?.id_usuario || user?.id;
+          console.log('🔍 [loadReservas] Admin ID:', adminId);
+          
+          // 2. ⚠️ WORKAROUND: Obtener complejo del admin consultando /complejos/admin/:adminId
+          // Esto es temporal hasta que el backend agregue complejoId a /auth/me
+          if (adminId) {
+            try {
+              console.log('🔍 [loadReservas] Obteniendo complejo del admin...');
+              const complejosResponse = await apiBackend.get(`/complejos/admin/${adminId}`);
+              console.log('� [loadReservas] Respuesta de complejos:', complejosResponse.data);
+              
+              // Manejar diferentes formatos de respuesta
+              let complejos = [];
+              if (Array.isArray(complejosResponse.data)) {
+                complejos = complejosResponse.data;
+              } else if (complejosResponse.data?.items && Array.isArray(complejosResponse.data.items)) {
+                complejos = complejosResponse.data.items;
+              } else if (complejosResponse.data?.data && Array.isArray(complejosResponse.data.data)) {
+                complejos = complejosResponse.data.data;
+              }
+              
+              if (complejos.length > 0) {
+                // Usar el primer complejo (un admin generalmente tiene un solo complejo)
+                complejoId = complejos[0]?.id_complejo || complejos[0]?.id || complejos[0]?.complejoId;
+                console.log('✅ [loadReservas] Complejo encontrado:', complejoId);
+              } else {
+                console.warn('⚠️ [loadReservas] El admin no tiene complejos asociados');
+              }
+            } catch (err) {
+              console.error('❌ [loadReservas] Error al obtener complejo del admin:', err);
+            }
+          }
+        } catch (err) {
+          console.warn('⚠️ [loadReservas] No se pudo parsear userData');
+        }
+      } else {
+        console.warn('⚠️ [loadReservas] No hay userData en localStorage');
+      }
+      
+      // 3. Llamar al servicio de reservas con el filtro de complejo
+      console.log('🔍 [loadReservas] Llamando a getAdminReservas() con filtros:', { complejoId });
+      // Pedimos una page_size mayor para panel admin (min 100) — el backend soporta paginación
+      const filtros: any = complejoId ? { complejoId, page_size: 100 } : { page_size: 100 };
+      const response: any = await reservaService.getAdminReservas(filtros);
       
       console.log("📥 [loadReservas] Respuesta completa del servidor:", response);
       console.log("📥 [loadReservas] Tipo de response:", typeof response);
@@ -96,41 +120,6 @@ export default function ReservasPage() {
       
       console.log("📊 Total de reservas procesadas:", reservasArray.length);
       
-      // 🔍 DEBUG: Mostrar estructura de la primera reserva
-      if (reservasArray.length > 0) {
-        console.log("🔍 [loadReservas] Primera reserva (completa):", JSON.stringify(reservasArray[0], null, 2));
-        console.log("🔍 [loadReservas] Campos disponibles:", Object.keys(reservasArray[0]));
-        console.log("🔍 [loadReservas] ¿Tiene usuario?:", !!reservasArray[0].usuario);
-        console.log("🔍 [loadReservas] ¿Tiene cancha?:", !!reservasArray[0].cancha);
-        
-        // Intentar todos los posibles nombres de campos para IDs
-        const possibleUsuarioIds = [
-          reservasArray[0].usuarioId,
-          reservasArray[0].usuario_id,
-          reservasArray[0].id_usuario,
-          reservasArray[0]['usuarioId'],
-          reservasArray[0]['usuario_id'],
-          reservasArray[0]['id_usuario']
-        ];
-        const possibleCanchaIds = [
-          reservasArray[0].canchaId,
-          reservasArray[0].cancha_id,
-          reservasArray[0].id_cancha,
-          reservasArray[0]['canchaId'],
-          reservasArray[0]['cancha_id'],
-          reservasArray[0]['id_cancha']
-        ];
-        
-        console.log("🔍 [loadReservas] Posibles usuarioIds:", possibleUsuarioIds);
-        console.log("🔍 [loadReservas] Posibles canchaIds:", possibleCanchaIds);
-        console.log("🔍 [loadReservas] usuarioId encontrado:", possibleUsuarioIds.find(id => id != null));
-        console.log("🔍 [loadReservas] canchaId encontrado:", possibleCanchaIds.find(id => id != null));
-        
-        // Mostrar todos los campos snake_case
-        const snakeFields = Object.keys(reservasArray[0]).filter(k => k.includes('_'));
-        console.log("🔍 [loadReservas] Campos con snake_case:", snakeFields);
-      }
-      
       setReservas(reservasArray);
       
       if (reservasArray.length === 0) {
@@ -158,10 +147,30 @@ export default function ReservasPage() {
     }
   };
 
-  // Cargar datos al inicio
+  // Cargar datos al inicio y cuando cambien los filtros
   useEffect(() => {
+    // Recalcular items por página según altura disponible (más o menos filas)
+    const calculateItemsPerPage = () => {
+      try {
+        const height = window.innerHeight || 800;
+        // Reservar espacio para headers y controles
+        const availableHeight = height - 520;
+        const rowHeight = 78; // aproximación de altura por fila
+        const calculated = Math.max(4, Math.min(20, Math.floor(availableHeight / rowHeight)));
+        setItemsPerPage(calculated);
+      } catch (err) {
+        setItemsPerPage(10);
+      }
+    };
+
+    calculateItemsPerPage();
+    window.addEventListener('resize', calculateItemsPerPage);
+
+    // Cargar reservas cuando cambie la página, búsqueda o estado
     loadReservas();
-  }, []); // Solo cargar una vez al montar
+
+    return () => window.removeEventListener('resize', calculateItemsPerPage);
+  }, [currentPage, searchTerm, selectedEstado]);
 
   // Función para navegar a editar reserva
   const editReservation = (reservationId: number) => {
@@ -173,61 +182,117 @@ export default function ReservasPage() {
     router.push('/admin/reservas/crear');
   };
 
-  // Función para confirmar reserva (admin) - Abre el modal
-  const confirmarReservation = (reservationId: number) => {
-    setReservaToConfirm(reservationId);
-    setShowConfirmModal(true);
-  };
-
-  // 🔥 Funciones helper para mostrar modales personalizados
-  const showSuccess = (message: string) => {
-    setModalMessage(message);
-    setShowSuccessModal(true);
-    setTimeout(() => setShowSuccessModal(false), 3000);
-  };
-
-  const showError = (message: string) => {
-    setModalMessage(message);
-    setShowErrorModal(true);
-  };
-
-  // Función que se ejecuta cuando se confirma el pago
-  const handleConfirmarEfectivo = async () => {
-    if (!reservaToConfirm) return;
-    
-    setShowConfirmModal(false);
-    
-    try {
-      await reservaService.confirmarReservaConMetodo(reservaToConfirm, 'efectivo');
-      showSuccess('✅ Reserva confirmada y marcada como pagada');
-      loadReservas(); // Recargar la lista
-    } catch (err: any) {
-      console.error('Error al confirmar reserva:', err);
-      showError(err.message || 'No se pudo confirmar la reserva');
-    } finally {
-      setReservaToConfirm(null);
-    }
-  };
-
-  // Función cuando se cancela o no se pagó en efectivo
-  const handleCancelarConfirmacion = () => {
-    setShowConfirmModal(false);
-    setReservaToConfirm(null);
-    showSuccess('ℹ️ La reserva no se confirmará hasta que el pago quede registrado.');
-  };
+  // Función para eliminar reserva (como admin)
+  // Nota: Eliminar reserva no se usa actualmente en el panel.
+  // Se mantiene la función si más adelante se habilita, pero por ahora no se expone en la UI.
 
   // Función para cancelar reserva como administrador (forzar cancelación)
   const cancelReservationAdmin = async (reservationId: number) => {
-    // Usar modal personalizado en lugar de confirm() nativo
-    if (confirm('¿Deseas cancelar esta reserva como administrador? Esta acción es permanente.')) {
+    if (window.confirm('¿Deseas cancelar esta reserva como administrador? Esta acción es permanente.')) {
       try {
         await reservaService.cancelarReservaAdmin(reservationId);
-        showSuccess('Reserva cancelada exitosamente');
+        showToast('success', 'Reserva cancelada exitosamente');
         loadReservas(); // Recargar la lista
       } catch (err: any) {
         console.error('Error al cancelar reserva:', err);
-        showError(err.message || 'No se pudo cancelar la reserva');
+        showToast('error', err.message || 'No se pudo cancelar la reserva');
       }
+    }
+  };
+
+  // Función para confirmar reserva como administrador
+  // Modal-driven confirmation flow
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmingReservationId, setConfirmingReservationId] = useState<number | null>(null);
+  const [optionSelected, setOptionSelected] = useState<'none' | 'paid' | 'notPaid'>('none');
+  const [selectedMetodo, setSelectedMetodo] = useState<string>('efectivo');
+
+  const openConfirmModal = (reservationId: number) => {
+    setConfirmingReservationId(reservationId);
+    setOptionSelected('none');
+    setSelectedMetodo('efectivo');
+    setShowConfirmModal(true);
+  };
+
+  const { show: showToast } = useAdminToast();
+
+  const closeConfirmModal = () => {
+    setShowConfirmModal(false);
+    setConfirmingReservationId(null);
+  };
+
+  useEffect(() => {
+    console.log('[ReservasPage] showConfirmModal=', showConfirmModal);
+  }, [showConfirmModal]);
+
+  const handleConfirmReservation = async () => {
+    if (!confirmingReservationId) return;
+
+    try {
+      if (optionSelected === 'paid') {
+        await reservaService.confirmarReservaConMetodo(confirmingReservationId, selectedMetodo);
+        showToast('success', `Reserva confirmada y marcada como pagada (${selectedMetodo})`);
+      } else if (optionSelected === 'notPaid') {
+        // Si seleccionó 'Sin pagar' entonces cancelar la reserva, no confirmarla
+        await reservaService.cancelarReservaAdmin(confirmingReservationId);
+        showToast('info', 'Reserva cancelada: No fue confirmada porque no estaba pagada');
+      } else {
+        // Opción no seleccionada - no hace nada
+        return;
+      }
+      closeConfirmModal();
+      loadReservas();
+    } catch (err: any) {
+      console.error('Error al confirmar reserva desde modal:', err);
+      showToast('error', err?.message || 'Error al confirmar reserva');
+    }
+  };
+
+  const handleNotPaid = async () => {
+    if (!confirmingReservationId) return;
+
+    // Cancelación automática: la reserva se cancela inmediatamente cuando el admin
+    // decide que no está pagada (no se muestra diálogo adicional).
+
+    try {
+      await reservaService.cancelarReservaAdmin(confirmingReservationId);
+      showToast('info', 'Reserva cancelada: no fue confirmada por no estar pagada');
+      closeConfirmModal();
+      loadReservas();
+    } catch (err: any) {
+      console.error('Error al cancelar reserva (sin pagar):', err);
+      showToast('error', err?.message || 'Error al cancelar reserva');
+    }
+  };
+
+  // Reintroducir el flujo estándar (sin modal) para depuración y pruebas rápidas
+  const confirmReservationAdmin = async (reservationId: number) => {
+    console.log('[confirmReservationAdmin] inicio', reservationId);
+    const continuar = window.confirm('¿Deseas confirmar esta reserva como administrador?');
+    if (!continuar) return;
+
+    const pagoRealizado = window.confirm('¿Ya se ha realizado el pago de esta reserva? (Aceptar = Sí, Cancelar = No)');
+
+    try {
+      if (pagoRealizado) {
+        let metodo = window.prompt('Indica el método de pago (efectivo, tarjeta, transferencia, online). Dejar vacío = efectivo.');
+        metodo = (metodo || 'efectivo').toLowerCase();
+        const validos = ['efectivo', 'tarjeta', 'transferencia', 'online', 'webpay'];
+        if (!validos.includes(metodo)) metodo = 'efectivo';
+
+        console.log('[confirmReservationAdmin] confirmar con metodo', metodo);
+        await reservaService.confirmarReservaConMetodo(reservationId, metodo);
+        showToast('success', 'Reserva confirmada y marcada como pagada (' + metodo + ')');
+      } else {
+        console.log('[confirmReservationAdmin] confirmar sin pago');
+        await reservaService.confirmarReserva(reservationId);
+        showToast('info', 'Reserva confirmada sin método de pago establecido');
+      }
+
+      loadReservas();
+    } catch (err: any) {
+      console.error('Error al confirmar la reserva (estandar):', err);
+      showToast('error', err?.message || 'No se pudo confirmar la reserva (estandar)');
     }
   };
 
@@ -250,49 +315,19 @@ export default function ReservasPage() {
   };
 
   // Función para formatear fecha
+  // ⚠️ FIX ZONA HORARIA: Extraer fecha/hora directamente del string ISO sin conversión UTC
   const formatFecha = (fechaISO: string) => {
-    const fecha = new Date(fechaISO);
-    return fecha.toLocaleDateString('es-CL', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    // Si viene con Z al final, quitarla para evitar conversión UTC
+    const fechaSinZ = fechaISO.replace('Z', '').replace(/\.\d{3}/, ''); // Quitar Z y milisegundos
+    
+    // Extraer componentes manualmente
+    const [datePart, timePart] = fechaSinZ.split('T');
+    const [year, month, day] = datePart.split('-');
+    const [hour, minute] = (timePart || '00:00').split(':');
+    
+    // Formatear manualmente sin conversión
+    return `${day}/${month}/${year} ${hour}:${minute}`;
   };
-
-  // Filtrar reservas basado en búsqueda y estado
-  const filteredReservas = reservas.filter(reserva => {
-    // Filtro de búsqueda
-    const matchesSearch = searchTerm === '' || 
-      (reserva.usuario?.nombre?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (reserva.usuario?.apellido?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (reserva.usuario?.email?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (reserva.cancha?.nombre?.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (reserva.notas?.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    // Filtro de estado
-    const matchesEstado = selectedEstado === '' || reserva.estado === selectedEstado;
-    
-    return matchesSearch && matchesEstado;
-  });
-
-  // 🔧 ORDENAR: Más nuevas primero (por fecha de inicio descendente)
-  const sortedReservas = [...filteredReservas].sort((a, b) => {
-    const fechaA = new Date(a.fechaInicio).getTime();
-    const fechaB = new Date(b.fechaInicio).getTime();
-    return fechaB - fechaA; // Descendente: más reciente primero
-  });
-
-  // Paginación
-  const totalPages = Math.ceil(sortedReservas.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedReservas = sortedReservas.slice(startIndex, startIndex + itemsPerPage);
-
-  // Resetear a página 1 cuando cambian los filtros
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedEstado]);
 
   if (loading) {
     return (
@@ -305,7 +340,8 @@ export default function ReservasPage() {
   }
 
   return (
-    <div className="admin-dashboard-container">
+    <>
+      <div className="admin-dashboard-container">
       {/* Header Principal */}
       <div className="estadisticas-header">
         <h1 className="text-2xl font-bold text-gray-900">Panel de Gestión de Reservas</h1>
@@ -388,57 +424,62 @@ export default function ReservasPage() {
               </tr>
             </thead>
             <tbody>
-              {paginatedReservas.map((reserva, index) => (
+              {reservas
+                .filter(r => {
+                  // Filtros por búsqueda básica y estado
+                  const term = searchTerm.trim().toLowerCase();
+                  if (term) {
+                    const inUsuario = (r.usuario?.nombre || '').toLowerCase().includes(term) || (r.usuario?.apellido || '').toLowerCase().includes(term) || (r.usuario?.email || '').toLowerCase().includes(term);
+                    const inCancha = (r.cancha?.nombre || `cancha ${r.canchaId}`).toLowerCase().includes(term);
+                    if (!inUsuario && !inCancha) return false;
+                  }
+                  if (selectedEstado !== '') {
+                    return r.estado === (selectedEstado as EstadoReserva);
+                  }
+                  return true;
+                })
+                .slice((currentPage - 1) * itemsPerPage, (currentPage - 1) * itemsPerPage + itemsPerPage)
+                .map((reserva, index) => (
                 <tr key={reserva.id || `reserva-${index}`}>
-                  <td>
+                  <td data-label="Usuario">
                     <div className="admin-cell-title">
                       {reserva.usuario ? 
                         `${reserva.usuario.nombre || ''} ${reserva.usuario.apellido || ''}`.trim() || reserva.usuario.email 
-                        : `Usuario #${reserva.usuarioId || 'ID desconocido'}`
+                        : `Usuario ${reserva.usuarioId}`
                       }
                     </div>
                     {reserva.usuario?.email && (
                       <div className="admin-cell-subtitle">{reserva.usuario.email}</div>
                     )}
-                    {!reserva.usuario && reserva.usuarioId && (
-                      <div className="admin-cell-subtitle" style={{ fontSize: '0.75rem', color: 'var(--text-gray)' }}>
-                        ID: {reserva.usuarioId}
-                      </div>
-                    )}
                   </td>
-                  <td>
+                  <td data-label="Cancha">
                     <div className="admin-cell-subtitle">
-                      {reserva.cancha?.nombre || `Cancha #${reserva.canchaId || 'ID desconocido'}`}
+                      {reserva.cancha?.nombre || `Cancha ${reserva.canchaId}`}
                     </div>
                     {reserva.cancha?.tipo && (
                       <div className="admin-cell-text" style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>
                         {reserva.cancha.tipo}
                       </div>
                     )}
-                    {!reserva.cancha && reserva.canchaId && (
-                      <div className="admin-cell-text" style={{ fontSize: '0.75rem', color: 'var(--text-gray)' }}>
-                        ID: {reserva.canchaId}
-                      </div>
-                    )}
                   </td>
-                  <td>
+                  <td data-label="Estado">
                     {getStatusBadge(reserva.estado)}
                   </td>
-                  <td>
+                  <td data-label="Fecha/Hora">
                     <div className="admin-cell-text">{formatFecha(reserva.fechaInicio)}</div>
                     <div className="admin-cell-text" style={{ fontSize: '0.8rem', color: 'var(--text-gray)' }}>
                       hasta {formatFecha(reserva.fechaFin)}
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Precio">
                     <div className="admin-cell-text">${reserva.precioTotal.toLocaleString()}</div>
                   </td>
-                  <td>
+                  <td data-label="Pagado">
                     <span className={`status-badge ${reserva.pagado ? 'status-activo' : 'status-por-revisar'}`}>
                       {reserva.pagado ? 'Pagado' : 'Pendiente'}
                     </span>
                   </td>
-                  <td>
+                  <td data-label="Acciones">
                     <div className="admin-actions-container">
                       {/* Botón Editar */}
                       <button 
@@ -451,28 +492,11 @@ export default function ReservasPage() {
                         </svg>
                       </button>
                       
-                      {/* Botón Confirmar (solo si está pendiente) */}
-                      {reserva.estado === 'pendiente' && (
-                        <button 
-                          className="btn-action" 
-                          title="Confirmar Reserva"
-                          onClick={() => confirmarReservation(reserva.id)}
-                          style={{ 
-                            backgroundColor: '#10b981',
-                            color: 'white'
-                          }}
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </button>
-                      )}
-                      
-                      {/* Botón Cancelar Admin (solo si no está cancelada o completada) */}
+                      {/* Botón Cancelar (solo si no está cancelada o completada) */}
                       {reserva.estado !== 'cancelada' && reserva.estado !== 'completada' && (
                         <button 
-                          className="btn-action btn-eliminar" 
-                          title="Cancelar Reserva (Admin)"
+                          className="btn-action btn-cancelar" 
+                          title="Cancelar Reserva"
                           onClick={() => cancelReservationAdmin(reserva.id)}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -480,6 +504,21 @@ export default function ReservasPage() {
                           </svg>
                         </button>
                       )}
+                      {/* Botón Confirmar (solo si está pendiente) */}
+                      {reserva.estado === 'pendiente' && (
+                        <button
+                          className="btn-action btn-confirmar"
+                          type="button"
+                          title="Confirmar Reserva"
+                          onClick={() => openConfirmModal(reserva.id)}
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </button>
+                      )}
+                      
+                      {/* Eliminado: botón Borrar no se utiliza. */}
                     </div>
                   </td>
                 </tr>
@@ -488,129 +527,116 @@ export default function ReservasPage() {
           </table>
         </div>
 
-        {/* Paginación - Estilo Canchas */}
-        <div className="admin-pagination-container">
+        {/* Paginación */}
+        <div className="admin-table-footer">
           <div className="admin-pagination-info">
-            Mostrando {startIndex + 1} a {Math.min(startIndex + itemsPerPage, sortedReservas.length)} de {sortedReservas.length} reservas
+            <span>
+              {(() => {
+                // Calcular info de paginación
+                const filtered = reservas.filter(r => {
+                  const term = searchTerm.trim().toLowerCase();
+                  if (term) {
+                    const inUsuario = (r.usuario?.nombre || '').toLowerCase().includes(term) || (r.usuario?.apellido || '').toLowerCase().includes(term) || (r.usuario?.email || '').toLowerCase().includes(term);
+                    const inCancha = (r.cancha?.nombre || `cancha ${r.canchaId}`).toLowerCase().includes(term);
+                    if (!inUsuario && !inCancha) return false;
+                  }
+                  if (selectedEstado !== '') {
+                    return r.estado === (selectedEstado as EstadoReserva);
+                  }
+                  return true;
+                });
+
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = Math.min(startIndex + itemsPerPage, filtered.length);
+
+                return `Mostrando ${startIndex + 1} a ${endIndex} de ${filtered.length} reservas`;
+              })()}
+            </span>
           </div>
           
-          <div className="admin-pagination-controls">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          <div className="admin-pagination">
+            <button 
+              className="btn-pagination" 
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
-              className="btn-pagination"
             >
               Anterior
             </button>
             
-            <div className="admin-pagination-numbers">
-              {[...Array(totalPages)].map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`btn-pagination ${currentPage === i + 1 ? 'active' : ''}`}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
+            <span className="pagination-current">
+              Página {currentPage}
+            </span>
             
-            <button
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="btn-pagination"
+            <button 
+              className="btn-pagination" 
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              disabled={reservas.filter(r => {
+                const term = searchTerm.trim().toLowerCase();
+                if (term) {
+                  const inUsuario = (r.usuario?.nombre || '').toLowerCase().includes(term) || (r.usuario?.apellido || '').toLowerCase().includes(term) || (r.usuario?.email || '').toLowerCase().includes(term);
+                  const inCancha = (r.cancha?.nombre || `cancha ${r.canchaId}`).toLowerCase().includes(term);
+                  if (!inUsuario && !inCancha) return false;
+                }
+                if (selectedEstado !== '') {
+                  return r.estado === (selectedEstado as EstadoReserva);
+                }
+                return true;
+              }).length < itemsPerPage}
             >
               Siguiente
             </button>
           </div>
         </div>
       </div>
+      </div>
+      {/* Modal para confirmar reserva y método de pago */}
+      <Modal open={showConfirmModal} onClose={closeConfirmModal}>
+        <div className="modal-container">
+          <div className="modal-header">
+            <h3 className="modal-title">Confirmar Reserva</h3>
+            <button className="modal-close" onClick={closeConfirmModal}>×</button>
+          </div>
+          <div className="modal-body">
+            <p>¿Deseas confirmar la reserva como administrador?</p>
+            <div style={{ marginTop: '12px' }} className="method-action-row">
+              <button
+                type="button"
+                onClick={() => setOptionSelected('paid')}
+                className={`btn-guardar ${optionSelected === 'paid' ? 'selected' : ''}`}
+                style={{ marginRight: 8 }}
+              >
+                Sí, elegir método de pago
+              </button>
 
-      {/* Modal de Confirmación de Pago */}
-      {showConfirmModal && (
-        <div className="modal-overlay" onClick={handleCancelarConfirmacion}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Confirmar Pago de Reserva</h3>
-              <button className="modal-close" onClick={handleCancelarConfirmacion}>
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              <button
+                type="button"
+                onClick={() => { setOptionSelected('notPaid'); handleNotPaid(); }}
+                className="btn-volver"
+              >
+                Sin pagar
               </button>
             </div>
-            
-            <div className="modal-body">
-              <div className="modal-icon modal-icon-question">
-                <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+
+            {optionSelected === 'paid' && (
+              <div className="method-group">
+                <label style={{ fontWeight: 600, marginTop: 8 }}>Selecciona el método de pago</label>
+                {['efectivo', 'tarjeta', 'transferencia', 'online', 'webpay'].map((m) => (
+                  <div key={m} className={`method-option ${selectedMetodo === m ? 'selected' : ''}`} onClick={() => setSelectedMetodo(m)}>
+                    <input type="radio" id={`m-${m}`} name="metodoPago" value={m} checked={selectedMetodo === m} onChange={() => setSelectedMetodo(m)} />
+                    <label htmlFor={`m-${m}`} style={{ textTransform: 'capitalize' }}>{m}</label>
+                  </div>
+                ))}
               </div>
-              
-              <h4>¿Se pagó esta reserva?</h4>
-              <p className="modal-description">
-                Si el cliente ya realizó el pago por <strong>cualquier medio</strong> (efectivo, transferencia, tarjeta, etc.), 
-                selecciona <strong>Sí</strong> para confirmar la reserva.
-                <br /><br />
-                Si aún <strong>no se ha recibido el pago</strong>, selecciona <strong>No</strong> y la reserva permanecerá 
-                pendiente hasta que se registre el pago.
-              </p>
-            </div>
-            
-            <div className="modal-footer">
-              <button 
-                className="btn-modal btn-modal-cancel" 
-                onClick={handleCancelarConfirmacion}
-              >
-                No, aún no se ha pagado
-              </button>
-              <button 
-                className="btn-modal btn-modal-confirm" 
-                onClick={handleConfirmarEfectivo}
-              >
-                Sí, ya se pagó
-              </button>
-            </div>
+            )}
           </div>
+            {optionSelected === 'paid' && (
+              <div className="modal-actions">
+                <button type="button" onClick={closeConfirmModal} className="btn-volver">Cancelar</button>
+                <button type="button" onClick={handleConfirmReservation} className="btn-guardar btn-confirmar">Confirmar</button>
+              </div>
+            )}
         </div>
-      )}
-
-      {/* Modal de Éxito */}
-      {showSuccessModal && (
-        <div className="modal-overlay">
-          <div className="modal-content modal-success">
-            <div className="modal-icon-success">
-              <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h3 className="modal-title">¡Éxito!</h3>
-            <p className="modal-description">{modalMessage}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Modal de Error */}
-      {showErrorModal && (
-        <div className="modal-overlay" onClick={() => setShowErrorModal(false)}>
-          <div className="modal-content modal-error" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-icon-error">
-              <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </div>
-            <h3 className="modal-title">Error</h3>
-            <p className="modal-description">{modalMessage}</p>
-            <div className="modal-footer">
-              <button 
-                className="btn-modal btn-modal-confirm" 
-                onClick={() => setShowErrorModal(false)}
-              >
-                Entendido
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+      </Modal>
+    </>
   );
 }

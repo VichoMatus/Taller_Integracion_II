@@ -44,45 +44,66 @@ export default function SuperAdminDashboard() {
     setError('');
     
     try {
-      // Cargar usuarios regulares
-      const usuariosData = await superAdminService.listarUsuarios();
-      setUsuarios(usuariosData.slice(0, 3)); // Primeros 3 para la tabla
+      let newStats: DashboardStats;
+      let usuariosData: Usuario[] = [];
+      let adminsData: Usuario[] = [];
       
-      // Cargar administradores
-      const adminsData = await superAdminService.listarAdministradores();
-      setAdministradores(adminsData.slice(0, 3)); // Primeros 3 para la tabla
+      // Estrategia híbrida: Calcular manualmente Usuarios y Canchas, usar backend para Admins y Reservas
+      try {
+        console.log('📊 [Dashboard] Solicitando métricas desde endpoint optimizado...');
+        const metricas = await superAdminService.obtenerMetricasGenerales();
+        
+        // Cargar TODOS los datos para cálculo manual
+        console.log('📊 [Dashboard] Cargando listas completas para cálculo manual...');
+        usuariosData = await superAdminService.listarUsuarios({ page_size: 100 });
+        adminsData = await superAdminService.listarAdministradores({ page_size: 100 });
+        
+        // Obtener TODAS las canchas (sin límite de paginación)
+        const todasLasCanchasResponse = await canchaService.getCanchasAdmin({ 
+          page_size: 100,
+          incluir_inactivas: true
+        }) as any;
+        const todasLasCanchas = Array.isArray(todasLasCanchasResponse.items) 
+          ? todasLasCanchasResponse.items 
+          : [];
+        
+        // ✅ CALCULAR MANUALMENTE: Usuarios Totales y Canchas Totales
+        const usuariosTotalesCalculados = usuariosData.length + adminsData.length;
+        const canchasTotalesCalculadas = todasLasCanchas.length;
+        
+        console.log('📊 [Dashboard] Cálculos manuales:', {
+          usuarios: usuariosData.length,
+          administradores: adminsData.length,
+          usuariosTotales: usuariosTotalesCalculados,
+          canchasTotales: canchasTotalesCalculadas
+        });
+        
+        // ✅ Estadísticas finales (3 manuales + 1 del backend)
+        newStats = {
+          totalUsuarios: usuariosTotalesCalculados,  // ✅ Manual
+          totalCanchas: canchasTotalesCalculadas,    // ✅ Manual
+          totalAdministradores: adminsData.length,   // ✅ Manual
+          reservasHoy: metricas.reservas_hoy || 0    // ✅ Backend (único que sigue usando el endpoint)
+        };
+        
+        console.log('✅ [Dashboard] Métricas finales (híbrido):', newStats);
+        
+      } catch (endpointError: any) {
+        console.error('❌ [Dashboard] Error al obtener métricas del backend:', endpointError);
+        throw endpointError;
+      }
       
-      // Cargar canchas - La respuesta incluye el total del sistema
+      // Actualizar estados
+      setStats(newStats);
+      setUsuarios(usuariosData.slice(0, 3));
+      setAdministradores(adminsData.slice(0, 3));
+      
+      // Cargar canchas para la tabla
       const canchasResponse = await canchaService.getCanchas({ page: 1, page_size: 3 }) as any;
       const canchasArray = Array.isArray(canchasResponse.items) ? canchasResponse.items : [];
       setCanchas(canchasArray);
       
-      // El backend devuelve el total de canchas en el campo 'total' de la respuesta paginada
-      const totalCanchas = canchasResponse.total || canchasArray.length;
-      
-      console.log('🏠 Respuesta de canchas:', canchasResponse);
-      console.log('🏠 Total canchas del sistema:', totalCanchas);
-      
-      // Calcular total de usuarios (usuarios regulares + administradores, excluyendo super_admins)
-      const totalUsuariosConAdmins = usuariosData.length + adminsData.length;
-      
-      // Actualizar estadísticas
-      const newStats = {
-        totalUsuarios: totalUsuariosConAdmins, // Incluye usuarios regulares + administradores
-        totalCanchas: totalCanchas,
-        totalAdministradores: adminsData.length,
-        reservasHoy: 0 // Por ahora 0, se implementará después
-      };
-      
-      console.log('📊 Estadísticas del dashboard:', newStats);
-      console.log('👥 Total usuarios (incluyendo admins):', totalUsuariosConAdmins);
-      console.log('👤 Usuarios regulares:', usuariosData.length);
-      console.log('🏠 Total canchas:', totalCanchas);
-      console.log('🧑‍💼 Total administradores:', adminsData.length);
-      
-      setStats(newStats);
-      
-      console.log('✅ Datos del dashboard cargados exitosamente');
+      console.log('✅ Dashboard cargado exitosamente');
     } catch (error: any) {
       console.error('❌ Error cargando datos del dashboard:', error);
       setError('Error al cargar los datos del dashboard');
@@ -180,7 +201,7 @@ export default function SuperAdminDashboard() {
         />
         
         <StatsCard
-          title="Reservas Hoy"
+          title="Reservas totales"
           emoji="📅"
           value={stats.reservasHoy}
           icon={
@@ -192,7 +213,7 @@ export default function SuperAdminDashboard() {
           loading={isLoading}
           empty={stats.reservasHoy === 0}
           emptyMessage="Por implementar"
-          ariaLabel="Reservas de hoy"
+          ariaLabel="Reservas totales"
         />
       </div>
 
