@@ -32,7 +32,7 @@ if (missingEnvVars.length > 0) {
 export const API_CONFIG = {
   baseURL: process.env.API_BASE_URL!,  // Ya validamos que existe arriba
   apiKey: process.env.API_KEY || '',
-  timeout: parseInt(process.env.API_TIMEOUT || '10000'),
+  timeout: parseInt(process.env.API_TIMEOUT || '30000'), // 30 segundos para FastAPI lento
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',

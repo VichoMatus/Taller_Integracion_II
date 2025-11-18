@@ -139,13 +139,19 @@ export const googleAuthService = {
     } else if ((googleResponse as any).access_token) {
       // Formato directo
       responseData = googleResponse;
+    } else if ((googleResponse as any).data) {
+      // Otro formato posible
+      responseData = (googleResponse as any).data;
     } else {
-      throw new Error('Error al verificar con Google');
+      // Si no hay data en ningún formato, usar la respuesta completa
+      responseData = googleResponse;
     }
     
     console.log('🔍 [loginWithGoogle] responseData:', responseData);
     console.log('🔍 [loginWithGoogle] responseData.access_token existe?', !!responseData.access_token);
     console.log('🔍 [loginWithGoogle] responseData.user existe?', !!responseData.user);
+    console.log('🔍 [loginWithGoogle] responseData.fallback existe?', !!responseData.fallback);
+    console.log('🔍 [loginWithGoogle] responseData.profile existe?', !!responseData.profile);
 
     // Caso 1: Respuesta completa de FastAPI (access_token + user)
     if (responseData.access_token && responseData.user) {
@@ -154,15 +160,15 @@ export const googleAuthService = {
       console.log('  - access_token:', responseData.access_token.substring(0, 50) + '...');
       console.log('  - user:', responseData.user);
       
-      // Guardar token y datos del usuario
-      localStorage.setItem('auth_token', responseData.access_token);
+      // Guardar token y datos del usuario (usar access_token para compatibilidad con interceptor)
+      localStorage.setItem('access_token', responseData.access_token);
       localStorage.setItem('refresh_token', responseData.refresh_token || '');
       localStorage.setItem('userData', JSON.stringify(responseData.user));
       localStorage.setItem('user_role', responseData.user.rol || 'usuario');
       
       console.log('✅ Datos guardados en localStorage');
       console.log('🔍 Verificando localStorage inmediatamente después:');
-      console.log('  - auth_token:', localStorage.getItem('auth_token') ? 'EXISTS' : 'NULL');
+      console.log('  - access_token:', localStorage.getItem('access_token') ? 'EXISTS' : 'NULL');
       console.log('  - userData:', localStorage.getItem('userData') ? 'EXISTS' : 'NULL');
       console.log('  - user_role:', localStorage.getItem('user_role'));
 
@@ -196,7 +202,7 @@ export const googleAuthService = {
       
       // Generar token temporal para desarrollo (NO usar en producción)
       const tempToken = `temp_google_${profile.sub}_${Date.now()}`;
-      localStorage.setItem('auth_token', tempToken);
+      localStorage.setItem('access_token', tempToken);
 
       return {
         success: true,
