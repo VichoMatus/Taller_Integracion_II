@@ -26,7 +26,7 @@ const complejosDeportivos: ComplejoDeportivo[] = [
     id: 1,
     nombre: "Complejo Deportivo Norte",
     direccion: "Camino Las Mariposas 03395, Temuco",
-    coordenadas: { lat: -38.7088947, lng: -72.5745226 },
+    coordenadas: { lat: -38.7197942, lng: -72.6784801 },
     deportes: ["Fútbol", "Básquetbol", "Tenis"],
     telefono: "(45) 555-1234",
     horario: "6:00 - 23:00",
